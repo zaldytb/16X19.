@@ -2194,13 +2194,50 @@ function toggleComparisonMode() {
     renderComparisonPresets();
 
     if (comparisonSlots.length === 0) {
-      // Auto-add first slot with current setup
-      addComparisonSlot();
+      // Auto-add first slot pre-populated with the home screen setup
+      addComparisonSlotFromHome();
     }
   } else {
     $('#single-view').classList.remove('hidden');
     $('#comparison-view').classList.add('hidden');
   }
+}
+
+function addComparisonSlotFromHome() {
+  if (comparisonSlots.length >= 3) return;
+  const setup = getCurrentSetup();
+  const slotData = {
+    id: Date.now(),
+    racquetId: '',
+    stringId: '',
+    tension: 55,
+    isHybrid: false,
+    mainsId: '',
+    crossesId: '',
+    mainsTension: 55,
+    crossesTension: 53,
+    stats: null,
+    identity: null
+  };
+
+  if (setup) {
+    slotData.racquetId = setup.racquet.id;
+    if (setup.stringConfig.isHybrid) {
+      slotData.isHybrid = true;
+      slotData.mainsId = setup.stringConfig.mains.id;
+      slotData.crossesId = setup.stringConfig.crosses.id;
+      slotData.mainsTension = setup.stringConfig.mainsTension;
+      slotData.crossesTension = setup.stringConfig.crossesTension;
+    } else {
+      slotData.isHybrid = false;
+      slotData.stringId = setup.stringConfig.string.id;
+      slotData.tension = setup.stringConfig.tension;
+    }
+  }
+
+  comparisonSlots.push(slotData);
+  // Recalculate stats for the slot
+  recalcSlot(comparisonSlots.length - 1);
 }
 
 function addComparisonSlot() {
@@ -2666,6 +2703,7 @@ function initTuneMode(setup) {
   renderOptimalZone(sliderMin, sliderMax);
   renderSweepChart(setup);
   renderBestValueMove();
+  renderRecommendedBuilds(setup);
 }
 
 function runTensionSweep(setup) {
@@ -2866,6 +2904,8 @@ function renderSweepChart(setup) {
       tension: 0.3,
       borderWidth: 2,
       pointRadius: 0,
+      pointHoverRadius: 0,
+      pointStyle: false,
       pointHitRadius: 8
     },
     {
@@ -2877,6 +2917,8 @@ function renderSweepChart(setup) {
       tension: 0.3,
       borderWidth: 2,
       pointRadius: 0,
+      pointHoverRadius: 0,
+      pointStyle: false,
       pointHitRadius: 8
     },
     {
@@ -2888,6 +2930,8 @@ function renderSweepChart(setup) {
       tension: 0.3,
       borderWidth: 2,
       pointRadius: 0,
+      pointHoverRadius: 0,
+      pointStyle: false,
       pointHitRadius: 8
     },
     {
@@ -2900,6 +2944,8 @@ function renderSweepChart(setup) {
       borderWidth: 1.5,
       borderDash: [4, 3],
       pointRadius: 0,
+      pointHoverRadius: 0,
+      pointStyle: false,
       pointHitRadius: 8
     }
   ];
@@ -2994,8 +3040,10 @@ function renderSweepChart(setup) {
             font: { family: "'General Sans', sans-serif", size: 11, weight: 500 },
             color: legendColor,
             usePointStyle: true,
+            pointStyle: 'circle',
             padding: 16,
-            pointStyleWidth: 10
+            boxWidth: 8,
+            boxHeight: 8
           }
         },
         tooltip: {
@@ -3075,6 +3123,135 @@ function renderBestValueMove() {
       <span><strong>Best Value Move:</strong> ${direction} ${Math.abs(diff)} lbs to ${anchor} lbs for peak balanced performance.</span>
     </div>`;
   }
+}
+
+// ---- Recommended Builds ----
+function renderRecommendedBuilds(setup) {
+  const container = $('#recs-content');
+  const { racquet, stringConfig } = setup;
+
+  // Score every string in the DB for this frame at its optimal tension
+  const candidates = [];
+  const midTension = Math.round((racquet.tensionRange[0] + racquet.tensionRange[1]) / 2);
+  const sweepMin = Math.max(racquet.tensionRange[0] - 3, 30);
+  const sweepMax = Math.min(racquet.tensionRange[1] + 3, 75);
+
+  STRINGS.forEach(s => {
+    // Run a mini-sweep for each string to find its peak composite tension
+    let bestScore = -1;
+    let bestTension = midTension;
+    let bestStats = null;
+
+    for (let t = sweepMin; t <= sweepMax; t += 1) {
+      const cfg = { isHybrid: false, string: s, tension: t };
+      const stats = predictSetup(racquet, cfg);
+      const score = stats.control * 0.30 + stats.comfort * 0.25 + stats.spin * 0.20 + stats.power * 0.15 + stats.playability * 0.10;
+      if (score > bestScore) {
+        bestScore = score;
+        bestTension = t;
+        bestStats = stats;
+      }
+    }
+
+    candidates.push({
+      string: s,
+      tension: bestTension,
+      score: bestScore,
+      stats: bestStats
+    });
+  });
+
+  // Sort by score descending, take top 5
+  candidates.sort((a, b) => b.score - a.score);
+  const top = candidates.slice(0, 5);
+
+  // Identify current string
+  let currentStringId = null;
+  if (!stringConfig.isHybrid && stringConfig.string) {
+    currentStringId = stringConfig.string.id;
+  }
+
+  const isCurrentInTop = currentStringId && top.some(c => c.string.id === currentStringId);
+
+  container.innerHTML = `
+    <div class="recs-list">
+      ${top.map((c, i) => {
+        const isCurrent = currentStringId === c.string.id;
+        return `
+          <div class="recs-item ${isCurrent ? 'recs-item-current' : ''}">
+            <div class="recs-rank">${i + 1}</div>
+            <div class="recs-info">
+              <div class="recs-name">${c.string.name} <span class="recs-gauge">${c.string.gauge}</span></div>
+              <div class="recs-meta">
+                <span class="recs-material">${c.string.material}</span>
+                <span class="recs-tension-rec">${c.tension} lbs</span>
+                ${isCurrent ? '<span class="recs-badge-current">CURRENT</span>' : ''}
+              </div>
+            </div>
+            <div class="recs-scores">
+              <span class="recs-score-item" title="Control">CTL ${c.stats.control}</span>
+              <span class="recs-score-item" title="Comfort">CMF ${c.stats.comfort}</span>
+              <span class="recs-score-item" title="Spin">SPN ${c.stats.spin}</span>
+              <span class="recs-score-item" title="Power">PWR ${c.stats.power}</span>
+            </div>
+            <div class="recs-composite">
+              <span class="recs-composite-value">${c.score.toFixed(1)}</span>
+              <span class="recs-composite-label">Score</span>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+    <p class="recs-footnote">Composite score: Control 30% + Comfort 25% + Spin 20% + Power 15% + Playability 10%, evaluated at optimal tension for <strong>${racquet.name}</strong>.</p>
+  `;
+
+  // Show "Try a Different String" section if current string isn't in top 5
+  renderExplorePrompt(setup, isCurrentInTop, top);
+}
+
+function renderExplorePrompt(setup, isCurrentInTop, topBuilds) {
+  const row = $('#tune-row-explore');
+  const container = $('#explore-content');
+  const { stringConfig } = setup;
+
+  // If hybrid, always show a subtle nudge to try full-bed top strings
+  if (stringConfig.isHybrid) {
+    row.classList.remove('hidden');
+    container.innerHTML = `
+      <div class="explore-prompt">
+        <div class="explore-icon">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3v14m-5-5l5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="explore-text">
+          <p class="explore-headline">Curious how a full-bed setup compares?</p>
+          <p class="explore-body">Your hybrid is dialed in — but the top-rated strings above are scored as full-bed setups. Try swapping to one of them on the main page and re-enter Tune to see how the response curves shift.</p>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  if (isCurrentInTop) {
+    // Current string is already top-rated — hide this section
+    row.classList.add('hidden');
+    container.innerHTML = '';
+    return;
+  }
+
+  // Current string isn't in top 5 — encourage exploration
+  const topName = topBuilds[0]?.string?.name || 'a top-rated string';
+  row.classList.remove('hidden');
+  container.innerHTML = `
+    <div class="explore-prompt">
+      <div class="explore-icon">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M10 7v3l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="explore-text">
+        <p class="explore-headline">Try a different string?</p>
+        <p class="explore-body">Your current string didn't make the top 5 for this frame. Consider switching to <strong>${topName}</strong> or another recommended build above — swap on the main page, then re-enter Tune to compare the tension response curves.</p>
+      </div>
+    </div>
+  `;
 }
 
 function onTuneSliderInput(e) {

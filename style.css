@@ -2243,3 +2243,251 @@ body {
     font-size: 0.65rem;
   }
 }
+
+/* ============================================
+   RECOMMENDED BUILDS
+   ============================================ */
+
+.recs-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.recs-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: 8px;
+  background: var(--bg-base);
+  border: 1px solid var(--border-subtle);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.recs-item:hover {
+  background: var(--bg-elevated);
+  border-color: var(--border-medium);
+}
+
+.recs-item-current {
+  border-color: var(--lime);
+  background: rgba(199, 246, 58, 0.04);
+}
+
+.recs-rank {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.recs-item-current .recs-rank {
+  background: var(--lime);
+  color: #1a1a1a;
+}
+
+.recs-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.recs-name {
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recs-gauge {
+  font-weight: 400;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.recs-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: 2px;
+}
+
+.recs-material {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.recs-tension-rec {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.recs-badge-current {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #1a1a1a;
+  background: var(--lime);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.recs-scores {
+  display: flex;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.recs-score-item {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.recs-composite {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  min-width: 44px;
+}
+
+.recs-composite-value {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.recs-composite-label {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-faint);
+}
+
+.recs-footnote {
+  margin-top: var(--space-3);
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.recs-footnote strong {
+  color: var(--text-secondary);
+}
+
+/* ============================================
+   TRY A DIFFERENT STRING — EXPLORE PROMPT
+   ============================================ */
+
+.explore-prompt {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: 10px;
+  background: var(--bg-base);
+  border: 1px solid var(--border-subtle);
+  border-left: 3px solid var(--lime);
+}
+
+.explore-icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(199, 246, 58, 0.12);
+  color: var(--lime);
+}
+
+[data-theme="light"] .explore-icon {
+  color: #6b8f00;
+  background: rgba(199, 246, 58, 0.18);
+}
+
+.explore-text {
+  flex: 1;
+}
+
+.explore-headline {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-1) 0;
+}
+
+.explore-body {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.explore-body strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.tune-card-explore {
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+/* ============================================
+   MOBILE RESPONSIVE — RECS + EXPLORE
+   ============================================ */
+
+@media (max-width: 600px) {
+  .recs-item {
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .recs-scores {
+    flex-basis: 100%;
+    order: 3;
+    justify-content: flex-start;
+    gap: var(--space-3);
+    padding-left: 36px;
+  }
+
+  .recs-composite {
+    order: 2;
+  }
+
+  .explore-prompt {
+    flex-direction: column;
+    padding: var(--space-3);
+  }
+}

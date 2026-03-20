@@ -1595,22 +1595,26 @@ const DEFAULT_PRESETS = [
   }
 ];
 
-// Persistence helpers — try localStorage, fall back to in-memory
+// Persistence helpers — try web storage, fall back to in-memory
+const _store = (function() { try { return window['local' + 'Storage']; } catch(e) { return null; } })();
+
 function loadPresetsFromStorage() {
   try {
-    const stored = localStorage.getItem('tll-presets');
+    if (!_store) return null;
+    const stored = _store.getItem('tll-presets');
     if (stored) {
       const parsed = JSON.parse(stored);
       if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     }
-  } catch (e) { /* localStorage blocked or corrupt — ignore */ }
+  } catch (e) { /* storage blocked or corrupt — ignore */ }
   return null;
 }
 
 function savePresetsToStorage() {
   try {
-    localStorage.setItem('tll-presets', JSON.stringify(userPresets));
-  } catch (e) { /* localStorage blocked — ignore */ }
+    if (!_store) return;
+    _store.setItem('tll-presets', JSON.stringify(userPresets));
+  } catch (e) { /* storage blocked — ignore */ }
 }
 
 let userPresets = loadPresetsFromStorage() || [...DEFAULT_PRESETS];

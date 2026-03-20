@@ -1182,11 +1182,15 @@ function lerp(val, inMin, inMax, outMin, outMax) {
   return outMin + t * (outMax - outMin);
 }
 
+function norm(val, min, max) {
+  return Math.max(0, Math.min(1, (val - min) / (max - min)));
+}
+
 function getPatternOpenness(pattern) {
   const [mains, crosses] = pattern.split('x').map(Number);
-  // 16x19 = 304, 18x20 = 360 — lower total = more open
+  // 16x18=288 (most open) to 18x20=360 (densest)
   const total = mains * crosses;
-  return lerp(total, 360, 304, 0, 1); // 0 = dense, 1 = open
+  return norm(total, 360, 288); // 0=densest, 1=most open
 }
 
 function getAvgBeam(beamWidth) {
@@ -1197,67 +1201,279 @@ function getMaxBeam(beamWidth) {
   return Math.max(...beamWidth);
 }
 
+function getMinBeam(beamWidth) {
+  return Math.min(...beamWidth);
+}
+
 function isVariableBeam(beamWidth) {
   return Math.max(...beamWidth) - Math.min(...beamWidth) > 2;
 }
 
+// ============================================
+// FRAME METADATA — captures what raw specs can't
+// Per-frame adjustments for technology, aero, generation improvements
+// Scale: 0 = none, 0.5 = minor, 1 = moderate, 1.5 = significant, 2+ = exceptional
+// ============================================
+const FRAME_META = {
+  // Babolat Pure Aero family
+  'babolat-pure-aero-100-2023': {
+    aeroBonus: 0, comfortTech: 0, spinTech: 0.5, genBonus: 0
+  },
+  'babolat-pure-aero-98-2026': {
+    aeroBonus: 1, comfortTech: 1.5, spinTech: 0.5, genBonus: 1
+  },
+  'babolat-pure-aero-100-2026': {
+    aeroBonus: 1.5, comfortTech: 1.5, spinTech: 1, genBonus: 1.5
+  },
+  'babolat-pure-aero-team-2026': {
+    aeroBonus: 1.5, comfortTech: 1.5, spinTech: 1, genBonus: 1
+  },
+  // Head Speed family
+  'head-speed-mp-2024': {
+    aeroBonus: 0, comfortTech: 1, spinTech: 0, genBonus: 0
+  },
+  'head-speed-mp-legend-2025': {
+    aeroBonus: 0, comfortTech: 2, spinTech: 0, genBonus: 1
+  },
+  'head-speed-pro-legend-2025': {
+    aeroBonus: 0, comfortTech: 1.5, spinTech: 0, genBonus: 1
+  },
+  'head-speed-pro-2024': {
+    aeroBonus: 0, comfortTech: 1, spinTech: 0, genBonus: 0
+  },
+  'head-speed-mp-2026': {
+    aeroBonus: 0, comfortTech: 2, spinTech: 0, genBonus: 1.5
+  },
+  'head-speed-pro-2026': {
+    aeroBonus: 0, comfortTech: 1.5, spinTech: 0, genBonus: 1.5
+  },
+  'head-speed-mp-l-2026': {
+    aeroBonus: 0, comfortTech: 1.5, spinTech: 0, genBonus: 1
+  },
+  // Head Gravity family
+  'head-gravity-pro-2025': {
+    aeroBonus: 0, comfortTech: 1, spinTech: 0, genBonus: 0.5
+  },
+  'head-gravity-tour-2025': {
+    aeroBonus: 0, comfortTech: 1, spinTech: 0.5, genBonus: 0.5
+  },
+  'head-gravity-mp-2025': {
+    aeroBonus: 0, comfortTech: 1, spinTech: 0.5, genBonus: 0.5
+  },
+  // Wilson Blade
+  'wilson-blade-98-v8': {
+    aeroBonus: 0, comfortTech: 0.5, spinTech: 0, genBonus: 0
+  },
+  // Babolat Pure Drive
+  'babolat-pure-drive-2024': {
+    aeroBonus: 0, comfortTech: 0.5, spinTech: 0, genBonus: 0
+  },
+  // Yonex EZONE
+  'yonex-ezone-100-2024': {
+    aeroBonus: 0, comfortTech: 1.5, spinTech: 0, genBonus: 0
+  },
+  // Wilson Pro Staff
+  'wilson-pro-staff-97-v14': {
+    aeroBonus: 0, comfortTech: 0.5, spinTech: 0, genBonus: 0
+  },
+  // Yonex Muse
+  'yonex-muse-98-2026': {
+    aeroBonus: 0, comfortTech: 2, spinTech: 1, genBonus: 1.5
+  },
+  'yonex-muse-100-2026': {
+    aeroBonus: 0, comfortTech: 2.5, spinTech: 1, genBonus: 1.5
+  },
+  // Yonex VCORE
+  'yonex-vcore-100-2023': {
+    aeroBonus: 0, comfortTech: 0.5, spinTech: 1, genBonus: 0
+  },
+  // Wilson Shift
+  'wilson-shift-99-2025': {
+    aeroBonus: 0, comfortTech: 0.5, spinTech: 1, genBonus: 0.5
+  },
+  'wilson-shift-99l-2025': {
+    aeroBonus: 0, comfortTech: 0.5, spinTech: 1, genBonus: 0
+  },
+  // Wilson RF01
+  'wilson-rf01-pro-2025': {
+    aeroBonus: 0, comfortTech: 0.5, spinTech: 0, genBonus: 0.5
+  },
+  'wilson-rf01-2025': {
+    aeroBonus: 0, comfortTech: 1.5, spinTech: 0, genBonus: 0.5
+  },
+  // Babolat Pure Strike
+  'babolat-pure-strike-97-2025': {
+    aeroBonus: 0, comfortTech: 1, spinTech: 0, genBonus: 0.5
+  },
+  'babolat-pure-strike-98-16x19-2025': {
+    aeroBonus: 0, comfortTech: 0.5, spinTech: 0, genBonus: 0.5
+  },
+  'babolat-pure-strike-98-18x20-2025': {
+    aeroBonus: 0, comfortTech: 0.5, spinTech: 0, genBonus: 0.5
+  },
+  'babolat-pure-strike-100-16x19-2025': {
+    aeroBonus: 0, comfortTech: 0.5, spinTech: 0, genBonus: 0.5
+  },
+  // Solinco Whiteout
+  'solinco-whiteout-v2-290-2025': {
+    aeroBonus: 0, comfortTech: 0.5, spinTech: 0, genBonus: 0
+  },
+  'solinco-whiteout-v2-305-2025': {
+    aeroBonus: 0, comfortTech: 0.5, spinTech: 0, genBonus: 0
+  },
+  // Solinco Blackout
+  'solinco-blackout-v2-300-2025': {
+    aeroBonus: 0.5, comfortTech: 1, spinTech: 0, genBonus: 0
+  },
+  'solinco-blackout-v2-285-2025': {
+    aeroBonus: 0.5, comfortTech: 1, spinTech: 0, genBonus: 0
+  }
+};
+
 function calcFrameBase(racquet) {
-  const { stiffness, beamWidth, swingweight, pattern, headSize } = racquet;
+  const { stiffness, beamWidth, swingweight, pattern, headSize, strungWeight, balance, id } = racquet;
   const avgBeam = getAvgBeam(beamWidth);
   const maxBeam = getMaxBeam(beamWidth);
-  const openness = getPatternOpenness(pattern);
-  const variable = isVariableBeam(beamWidth);
+  const minBeam = getMinBeam(beamWidth);
+  const [mains, crosses] = pattern.split('x').map(Number);
+  const patternDensity = mains * crosses;
+  const meta = FRAME_META[id] || { aeroBonus: 0, comfortTech: 0, spinTech: 0, genBonus: 0 };
 
-  // Power: stiffness (55-75 → 30-80), beam (20-27 → 0-20), swingweight (310-340 → 0-10)
-  let power = lerp(stiffness, 55, 75, 30, 80);
-  power += lerp(maxBeam, 20, 27, 0, 20);
-  power += lerp(swingweight, 310, 340, 0, 10);
+  // Balance in pts HL: 34.29cm = 0 pts, each 0.3175cm toward handle = +1 pt
+  const balancePtsHL = (34.29 - balance) / 0.3175;
 
-  // Spin: pattern openness, head size, variable beam
-  let spin = 40 + openness * 30;
-  spin += lerp(headSize, 95, 105, -5, 15);
-  if (variable) spin += 5;
+  // ---- Normalized inputs [0, 1] ----
+  const raNorm = norm(stiffness, 55, 72);         // 0=soft, 1=stiff
+  const swNorm = norm(swingweight, 300, 340);      // 0=light, 1=heavy
+  const wtNorm = norm(strungWeight, 290, 340);     // 0=light, 1=heavy
+  const hsNorm = norm(headSize, 95, 102);          // 0=small, 1=large
+  const avgBeamNorm = norm(avgBeam, 18, 27);       // 0=thin, 1=thick
+  const maxBeamNorm = norm(maxBeam, 18, 27);       // 0=thin, 1=thick
+  const hlNorm = norm(balancePtsHL, 0, 8);         // 0=even/HH, 1=very HL
+  const densityNorm = norm(patternDensity, 288, 360); // 0=open, 1=dense
+  const beamRange = maxBeam - minBeam;
+  const beamVarNorm = norm(beamRange, 0, 8);       // 0=constant, 1=extreme variable
+  const openness = 1 - densityNorm;
 
-  // Control: inverse power + swingweight stability + pattern density
-  let control = 100 - power * 0.5;
-  control += lerp(swingweight, 310, 340, 0, 15);
-  control += (1 - openness) * 15;
+  // ===== POWER =====
+  let power = 50;
+  power += raNorm * 18 - 5;
+  power += maxBeamNorm * 14 - 4;
+  power += swNorm * 8 - 2;
+  power += openness * 4 - 2;
+  power += beamVarNorm * 4;
+  power -= hlNorm * 3;
+  power += meta.aeroBonus * 1.5;
+  power += meta.genBonus * 1;
 
-  // Launch: variable beam, stiffness (inverse), pattern openness
-  let launch = 40;
-  if (variable) launch += 12;
-  launch += lerp(stiffness, 55, 75, 10, -5);
-  launch += openness * 8;
+  // ===== SPIN =====
+  let spin = 50;
+  spin += openness * 18 - 6;
+  spin += hsNorm * 8 - 2;
+  spin += beamVarNorm * 4;
+  spin += meta.spinTech * 3;
+  spin += meta.aeroBonus * 2;
+  spin += meta.genBonus * 0.5;
 
-  // Comfort: inverse stiffness
-  let comfort = lerp(stiffness, 55, 75, 85, 30);
-  // Lower beam = slightly more feel/comfort from flex
-  comfort += lerp(avgBeam, 20, 27, 5, -5);
+  // ===== CONTROL =====
+  let control = 50;
+  control += densityNorm * 14 - 4;
+  control += (1 - hsNorm) * 8 - 2;
+  control += swNorm * 6 - 1.5;
+  control += (1 - maxBeamNorm) * 6 - 2;
+  control += hlNorm * 3;
+  control += meta.genBonus * 0.5;
+  control += raNorm > 0.3 ? (raNorm - 0.3) * 4 : (raNorm - 0.3) * 6;
 
-  // Stability: swingweight (primary), weight
-  let stability = lerp(swingweight, 310, 340, 35, 85);
-  stability += lerp(racquet.strungWeight, 310, 330, 0, 10);
+  // ===== LAUNCH =====
+  let launch = 50;
+  launch += beamVarNorm * 10;
+  launch += (1 - raNorm) * 8 - 3;
+  launch += openness * 5 - 2;
+  launch += maxBeamNorm * 4 - 1.5;
+  launch += meta.spinTech * 1.5;
 
-  // Forgiveness: head size, swingweight
-  let forgiveness = lerp(headSize, 95, 105, 30, 70);
-  forgiveness += lerp(swingweight, 310, 340, 5, 20);
-  if (variable) forgiveness += 5;
+  // ===== COMFORT =====
+  let comfort = 50;
+  comfort += (1 - raNorm) * 20 - 5;
+  comfort += (1 - avgBeamNorm) * 5 - 1;
+  comfort += meta.comfortTech * 3;
+  comfort += meta.genBonus * 1;
+  if (wtNorm > 0.7) comfort -= (wtNorm - 0.7) * 8;
 
-  // Feel: inverse stiffness, thin beam, weight
-  let feel = lerp(stiffness, 55, 75, 80, 40);
-  feel += lerp(avgBeam, 20, 27, 10, -5);
+  // ===== STABILITY =====
+  let stability = 50;
+  stability += swNorm * 20 - 6;
+  stability += wtNorm * 10 - 3;
+  stability += raNorm * 5 - 1.5;
+  stability -= hlNorm * 4;
+  stability += meta.genBonus * 0.5;
+
+  // ===== FORGIVENESS =====
+  let forgiveness = 48;
+  forgiveness += hsNorm * 24 - 8;
+  forgiveness += swNorm * 10 - 4;
+  forgiveness += beamVarNorm * 5;
+  forgiveness += avgBeamNorm * 7 - 2.5;
+  forgiveness += meta.comfortTech * 1.5;
+  forgiveness += (1 - raNorm) * 6 - 2;
+  forgiveness += wtNorm * 5 - 2;
+
+  // ===== FEEL =====
+  let feel = 50;
+  feel += (1 - raNorm) * 20 - 6;
+  feel += (1 - avgBeamNorm) * 10 - 3;
+  feel += hlNorm * 4;
+  feel += wtNorm * 4 - 1;
+  feel += meta.genBonus * 1.5;
+  feel += densityNorm * 4 - 2;
+  feel += meta.comfortTech > 1.5 ? -1 : meta.comfortTech * 0.5;
+
+  // ===== TRADEOFF ENFORCEMENT =====
+  if (power + control > 145) {
+    const excess = (power + control - 145) * 0.4;
+    if (power > control) power -= excess;
+    else control -= excess;
+  }
+  if (power + comfort > 140) {
+    const excess = (power + comfort - 140) * 0.3;
+    if (raNorm > 0.5) comfort -= excess;
+    else power -= excess;
+  }
+
+  // ===== SCORE COMPRESSION =====
+  // Target: 50-60 avg, 60-75 strong, 75-85 excellent, 85+ rare
+  const compress = (val, spread) => {
+    const mid = 62;
+    const s = spread || 0.85;
+    return Math.max(30, Math.min(90, mid + (val - mid) * s));
+  };
 
   return {
-    power: clamp(power),
-    spin: clamp(spin),
-    control: clamp(control),
-    launch: clamp(launch),
-    comfort: clamp(comfort),
-    stability: clamp(stability),
-    forgiveness: clamp(forgiveness),
-    feel: clamp(feel),
-    durability: 50, // baseline, string determines
-    playability: 50  // baseline, string determines
+    power: clamp(compress(power)),
+    spin: clamp(compress(spin)),
+    control: clamp(compress(control)),
+    launch: clamp(compress(launch)),
+    comfort: clamp(compress(comfort)),
+    stability: clamp(compress(stability)),
+    forgiveness: clamp(compress(forgiveness, 0.92)),  // wider spread for narrower natural range
+    feel: clamp(compress(feel)),
+    durability: 50,
+    playability: 50,
+    _frameDebug: {
+      raNorm: +raNorm.toFixed(3),
+      swNorm: +swNorm.toFixed(3),
+      wtNorm: +wtNorm.toFixed(3),
+      hsNorm: +hsNorm.toFixed(3),
+      avgBeamNorm: +avgBeamNorm.toFixed(3),
+      maxBeamNorm: +maxBeamNorm.toFixed(3),
+      hlNorm: +hlNorm.toFixed(3),
+      densityNorm: +densityNorm.toFixed(3),
+      beamVarNorm: +beamVarNorm.toFixed(3),
+      openness: +openness.toFixed(3),
+      variable: isVariableBeam(beamWidth),
+      meta: id
+    }
   };
 }
 
@@ -1468,7 +1684,7 @@ function predictSetup(racquet, stringConfig) {
   };
 
   // Attach debug info for inspection
-  stats._debug = { frameBase, stringProfile, stringMod, tensionMod };
+  stats._debug = { frameBase, stringProfile, stringMod, tensionMod, _frameDebug: frameBase._frameDebug };
 
   return stats;
 }

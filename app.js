@@ -2309,7 +2309,7 @@ function renderComparisonSlots() {
         ${fullbedHTML}
         ${hybridHTML}
       </div>
-      ${slot.stats ? renderSlotStats(slot.stats, index) : '<div style="padding:8px;text-align:center;color:var(--text-muted);font-size:0.8rem;">Configure to see stats</div>'}
+      ${slot.stats ? renderSlotStats(slot.stats, index) + `<button class="slot-tune-btn" onclick="openTuneForSlot(${index})" title="Open Tune for Setup ${SLOT_COLORS[index].label}"><svg width="14" height="14" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.5"/><circle cx="9" cy="9" r="2" fill="currentColor"/></svg> Tune</button>` : '<div style="padding:8px;text-align:center;color:var(--text-muted);font-size:0.8rem;">Configure to see stats</div>'}
     `;
 
     container.appendChild(div);
@@ -2571,6 +2571,627 @@ function setHybridMode(isHybrid) {
 }
 
 // ============================================
+// TUNE MODE — TENSION TUNING LAB
+// ============================================
+
+let isTuneMode = false;
+let sweepChart = null;
+let tuneState = {
+  baselineTension: 55,       // The tension from the main page (source of truth)
+  exploredTension: 55,       // The slider's current position
+  hybridDimension: 'linked', // 'mains', 'crosses', or 'linked'
+  sweepData: null,           // cached sweep results
+  baselineStats: null,       // stats at baseline tension
+  optimalWindow: null        // { low, high, anchor, reason }
+};
+
+function toggleTuneMode() {
+  const setup = getCurrentSetup();
+  if (!setup) {
+    // No setup configured — don't open
+    return;
+  }
+
+  isTuneMode = !isTuneMode;
+  const overlay = $('#tune-overlay');
+  const btn = $('#btn-toggle-tune');
+  btn.classList.toggle('active', isTuneMode);
+
+  if (isTuneMode) {
+    overlay.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    initTuneMode(setup);
+  } else {
+    overlay.classList.add('hidden');
+    document.body.style.overflow = '';
+  }
+}
+
+function closeTuneMode() {
+  isTuneMode = false;
+  $('#tune-overlay').classList.add('hidden');
+  $('#btn-toggle-tune').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function initTuneMode(setup) {
+  const { racquet, stringConfig } = setup;
+
+  // Set subtitle
+  let subtitle = racquet.name;
+  if (stringConfig.isHybrid) {
+    subtitle += ` — ${stringConfig.mains.name} / ${stringConfig.crosses.name}`;
+  } else {
+    subtitle += ` — ${stringConfig.string.name}`;
+  }
+  $('#tune-subtitle').textContent = subtitle;
+
+  // Show/hide panels
+  $('#tune-empty').classList.add('hidden');
+  $('#tune-panels').classList.remove('hidden');
+
+  // Set baseline tension from main page
+  if (stringConfig.isHybrid) {
+    tuneState.baselineTension = Math.round((stringConfig.mainsTension + stringConfig.crossesTension) / 2);
+  } else {
+    tuneState.baselineTension = stringConfig.tension;
+  }
+  tuneState.exploredTension = tuneState.baselineTension;
+  tuneState.hybridDimension = 'linked';
+
+  // Configure slider range from racquet
+  const sliderMin = Math.max(racquet.tensionRange[0] - 5, 30);
+  const sliderMax = Math.min(racquet.tensionRange[1] + 5, 75);
+  const slider = $('#tune-slider');
+  slider.min = sliderMin;
+  slider.max = sliderMax;
+  slider.value = tuneState.baselineTension;
+  $('#slider-label-min').textContent = sliderMin;
+  $('#slider-label-max').textContent = sliderMax;
+  $('#slider-current-value').textContent = `${tuneState.baselineTension} lbs`;
+
+  // Hybrid toggle
+  renderTuneHybridToggle(stringConfig);
+
+  // Run full sweep
+  runTensionSweep(setup);
+
+  // Calculate optimal window
+  calculateOptimalWindow(setup);
+
+  // Render all modules
+  renderOptimalBuildWindow();
+  renderDeltaVsBaseline();
+  renderBaselineMarker(sliderMin, sliderMax);
+  renderOptimalZone(sliderMin, sliderMax);
+  renderSweepChart(setup);
+  renderBestValueMove();
+}
+
+function runTensionSweep(setup) {
+  const { racquet, stringConfig } = setup;
+  const sweepMin = Math.max(racquet.tensionRange[0] - 5, 30);
+  const sweepMax = Math.min(racquet.tensionRange[1] + 5, 75);
+  const results = [];
+
+  for (let t = sweepMin; t <= sweepMax; t++) {
+    let modifiedConfig;
+    if (stringConfig.isHybrid) {
+      const diff = stringConfig.mainsTension - stringConfig.crossesTension;
+      if (tuneState.hybridDimension === 'mains') {
+        modifiedConfig = { ...stringConfig, mainsTension: t };
+      } else if (tuneState.hybridDimension === 'crosses') {
+        modifiedConfig = { ...stringConfig, crossesTension: t };
+      } else {
+        // Linked: maintain the differential
+        modifiedConfig = { ...stringConfig, mainsTension: t, crossesTension: t - diff };
+      }
+    } else {
+      modifiedConfig = { ...stringConfig, tension: t };
+    }
+    const stats = predictSetup(racquet, modifiedConfig);
+    results.push({ tension: t, stats });
+  }
+
+  tuneState.sweepData = results;
+
+  // Also cache baseline stats
+  tuneState.baselineStats = results.find(r => r.tension === tuneState.baselineTension)?.stats
+    || predictSetup(racquet, stringConfig);
+}
+
+function calculateOptimalWindow(setup) {
+  const { racquet } = setup;
+  const data = tuneState.sweepData;
+  if (!data || data.length === 0) return;
+
+  // Score each tension: weighted combination of key stats
+  // Playability-weighted: control * 0.3 + comfort * 0.25 + spin * 0.2 + power * 0.15 + playability * 0.1
+  const scored = data.map(d => {
+    const s = d.stats;
+    const score = s.control * 0.30 + s.comfort * 0.25 + s.spin * 0.20 + s.power * 0.15 + s.playability * 0.10;
+    return { tension: d.tension, score, stats: s };
+  });
+
+  // Find peak
+  scored.sort((a, b) => b.score - a.score);
+  const anchor = scored[0].tension;
+  const peakScore = scored[0].score;
+
+  // Window = all tensions within 2% of peak score
+  const threshold = peakScore * 0.98;
+  const inWindow = scored.filter(s => s.score >= threshold).map(s => s.tension);
+  const low = Math.min(...inWindow);
+  const high = Math.max(...inWindow);
+
+  // Reason
+  const anchorStats = scored[0].stats;
+  let reason = 'Balanced performance';
+  if (anchorStats.control >= 80) reason = 'Control Anchor — precision peaks here';
+  else if (anchorStats.comfort >= 75) reason = 'Comfort Anchor — arm-friendly sweet spot';
+  else if (anchorStats.spin >= 78) reason = 'Spin Anchor — maximum rotation';
+  else reason = 'Balanced Anchor — best all-round performance';
+
+  tuneState.optimalWindow = { low, high, anchor, reason };
+}
+
+function renderOptimalBuildWindow() {
+  const container = $('#optimal-content');
+  const w = tuneState.optimalWindow;
+  if (!w) {
+    container.innerHTML = '<p class="tune-muted">No data</p>';
+    return;
+  }
+
+  const anchorStats = tuneState.sweepData.find(d => d.tension === w.anchor)?.stats;
+  if (!anchorStats) return;
+
+  container.innerHTML = `
+    <div class="optimal-range">
+      <div class="optimal-range-visual">
+        <span class="optimal-range-low">${w.low}</span>
+        <div class="optimal-range-bar">
+          <div class="optimal-range-fill"></div>
+          <div class="optimal-range-anchor" style="left:${w.high > w.low ? ((w.anchor - w.low) / (w.high - w.low)) * 100 : 50}%">
+            <span class="optimal-anchor-label">${w.anchor} lbs</span>
+          </div>
+        </div>
+        <span class="optimal-range-high">${w.high}</span>
+      </div>
+      <p class="optimal-reason">${w.reason}</p>
+    </div>
+    <div class="optimal-stats-grid">
+      <div class="optimal-stat">
+        <span class="optimal-stat-label">Control</span>
+        <span class="optimal-stat-value">${anchorStats.control}</span>
+      </div>
+      <div class="optimal-stat">
+        <span class="optimal-stat-label">Comfort</span>
+        <span class="optimal-stat-value">${anchorStats.comfort}</span>
+      </div>
+      <div class="optimal-stat">
+        <span class="optimal-stat-label">Spin</span>
+        <span class="optimal-stat-value">${anchorStats.spin}</span>
+      </div>
+      <div class="optimal-stat">
+        <span class="optimal-stat-label">Power</span>
+        <span class="optimal-stat-value">${anchorStats.power}</span>
+      </div>
+    </div>
+  `;
+}
+
+function renderDeltaVsBaseline() {
+  const container = $('#delta-content');
+  const data = tuneState.sweepData;
+  if (!data) return;
+
+  const baselineEntry = data.find(d => d.tension === tuneState.baselineTension);
+  const exploredEntry = data.find(d => d.tension === tuneState.exploredTension);
+  if (!baselineEntry || !exploredEntry) return;
+
+  const base = baselineEntry.stats;
+  const explored = exploredEntry.stats;
+  const deltaKeys = ['control', 'power', 'comfort', 'spin', 'launch', 'feel'];
+  const deltaLabels = ['Control', 'Power', 'Comfort', 'Spin', 'Launch', 'Feel'];
+
+  const isAtBaseline = tuneState.exploredTension === tuneState.baselineTension;
+
+  container.innerHTML = `
+    <div class="delta-header-row">
+      <span class="delta-baseline-label">Baseline: ${tuneState.baselineTension} lbs</span>
+      <span class="delta-explored-label">${isAtBaseline ? 'At baseline' : `Exploring: ${tuneState.exploredTension} lbs`}</span>
+    </div>
+    <div class="delta-stats-grid">
+      ${deltaKeys.map((key, i) => {
+        const diff = Math.round(explored[key] - base[key]);
+        const cls = diff > 0 ? 'delta-positive' : diff < 0 ? 'delta-negative' : 'delta-neutral';
+        const sign = diff > 0 ? '+' : '';
+        return `
+          <div class="delta-stat-row">
+            <span class="delta-stat-label">${deltaLabels[i]}</span>
+            <div class="delta-stat-bar-track">
+              <div class="delta-stat-bar-baseline" style="width:${base[key]}%"></div>
+              ${!isAtBaseline ? `<div class="delta-stat-bar-explored ${cls}" style="width:${explored[key]}%"></div>` : ''}
+            </div>
+            <span class="delta-stat-diff ${cls}">${isAtBaseline ? '—' : `${sign}${diff}`}</span>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+function renderBaselineMarker(sliderMin, sliderMax) {
+  const marker = $('#slider-baseline-marker');
+  const pct = ((tuneState.baselineTension - sliderMin) / (sliderMax - sliderMin)) * 100;
+  marker.style.left = `${pct}%`;
+  marker.title = `Baseline: ${tuneState.baselineTension} lbs`;
+}
+
+function renderOptimalZone(sliderMin, sliderMax) {
+  const zone = $('#slider-optimal-zone');
+  const w = tuneState.optimalWindow;
+  if (!w) { zone.style.display = 'none'; return; }
+  const leftPct = ((w.low - sliderMin) / (sliderMax - sliderMin)) * 100;
+  const rightPct = ((w.high - sliderMin) / (sliderMax - sliderMin)) * 100;
+  zone.style.left = `${leftPct}%`;
+  zone.style.width = `${rightPct - leftPct}%`;
+  zone.style.display = '';
+  zone.title = `Optimal: ${w.low}–${w.high} lbs`;
+}
+
+function renderSweepChart(setup) {
+  const data = tuneState.sweepData;
+  if (!data || data.length === 0) return;
+
+  const ctx = document.getElementById('sweep-chart').getContext('2d');
+  const tensions = data.map(d => d.tension);
+  const isDark = document.documentElement.dataset.theme === 'dark';
+
+  const curveColors = {
+    control: { border: '#C7F63A', bg: 'rgba(199,246,58,0.10)' },
+    comfort: { border: '#7CCBFF', bg: 'rgba(124,203,255,0.10)' },
+    spin:    { border: '#FF9A57', bg: 'rgba(255,154,87,0.10)' },
+    power:   { border: isDark ? 'rgba(255,255,255,0.40)' : 'rgba(0,0,0,0.35)', bg: 'transparent' }
+  };
+
+  const datasets = [
+    {
+      label: 'Control',
+      data: data.map(d => d.stats.control),
+      borderColor: curveColors.control.border,
+      backgroundColor: curveColors.control.bg,
+      fill: true,
+      tension: 0.3,
+      borderWidth: 2,
+      pointRadius: 0,
+      pointHitRadius: 8
+    },
+    {
+      label: 'Comfort',
+      data: data.map(d => d.stats.comfort),
+      borderColor: curveColors.comfort.border,
+      backgroundColor: curveColors.comfort.bg,
+      fill: true,
+      tension: 0.3,
+      borderWidth: 2,
+      pointRadius: 0,
+      pointHitRadius: 8
+    },
+    {
+      label: 'Spin',
+      data: data.map(d => d.stats.spin),
+      borderColor: curveColors.spin.border,
+      backgroundColor: curveColors.spin.bg,
+      fill: true,
+      tension: 0.3,
+      borderWidth: 2,
+      pointRadius: 0,
+      pointHitRadius: 8
+    },
+    {
+      label: 'Power',
+      data: data.map(d => d.stats.power),
+      borderColor: curveColors.power.border,
+      backgroundColor: curveColors.power.bg,
+      fill: false,
+      tension: 0.3,
+      borderWidth: 1.5,
+      borderDash: [4, 3],
+      pointRadius: 0,
+      pointHitRadius: 8
+    }
+  ];
+
+  const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)';
+  const tickColor = isDark ? 'rgba(255,255,255,0.30)' : 'rgba(0,0,0,0.30)';
+  const legendColor = isDark ? 'rgba(255,255,255,0.50)' : 'rgba(0,0,0,0.48)';
+
+  // Annotation lines for baseline and explored
+  const baselinePlugin = {
+    id: 'tuneAnnotations',
+    afterDraw(chart) {
+      const { ctx, chartArea, scales } = chart;
+      const xScale = scales.x;
+      const yScale = scales.y;
+
+      // Baseline marker
+      const bx = xScale.getPixelForValue(tuneState.baselineTension);
+      if (bx >= chartArea.left && bx <= chartArea.right) {
+        ctx.save();
+        ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.20)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(bx, chartArea.top);
+        ctx.lineTo(bx, chartArea.bottom);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.40)';
+        ctx.font = "500 10px 'General Sans', sans-serif";
+        ctx.textAlign = 'center';
+        ctx.fillText('BASELINE', bx, chartArea.top - 6);
+        ctx.restore();
+      }
+
+      // Explored marker
+      if (tuneState.exploredTension !== tuneState.baselineTension) {
+        const ex = xScale.getPixelForValue(tuneState.exploredTension);
+        if (ex >= chartArea.left && ex <= chartArea.right) {
+          ctx.save();
+          ctx.strokeStyle = '#C7F63A';
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([]);
+          ctx.beginPath();
+          ctx.moveTo(ex, chartArea.top);
+          ctx.lineTo(ex, chartArea.bottom);
+          ctx.stroke();
+          ctx.fillStyle = '#C7F63A';
+          ctx.font = "600 10px 'General Sans', sans-serif";
+          ctx.textAlign = 'center';
+          ctx.fillText(`${tuneState.exploredTension} lbs`, ex, chartArea.top - 6);
+          ctx.restore();
+        }
+      }
+
+      // Optimal window shading
+      const w = tuneState.optimalWindow;
+      if (w) {
+        const lx = xScale.getPixelForValue(w.low);
+        const rx = xScale.getPixelForValue(w.high);
+        ctx.save();
+        ctx.fillStyle = isDark ? 'rgba(199,246,58,0.06)' : 'rgba(199,246,58,0.10)';
+        ctx.fillRect(lx, chartArea.top, rx - lx, chartArea.bottom - chartArea.top);
+        ctx.restore();
+      }
+    }
+  };
+
+  if (sweepChart) {
+    sweepChart.data.labels = tensions;
+    sweepChart.data.datasets = datasets;
+    sweepChart.options.scales.x.grid.color = gridColor;
+    sweepChart.options.scales.y.grid.color = gridColor;
+    sweepChart.options.scales.x.ticks.color = tickColor;
+    sweepChart.options.scales.y.ticks.color = tickColor;
+    sweepChart.options.plugins.legend.labels.color = legendColor;
+    sweepChart.update('active');
+    return;
+  }
+
+  sweepChart = new Chart(ctx, {
+    type: 'line',
+    data: { labels: tensions, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          display: true,
+          labels: {
+            font: { family: "'General Sans', sans-serif", size: 11, weight: 500 },
+            color: legendColor,
+            usePointStyle: true,
+            padding: 16,
+            pointStyleWidth: 10
+          }
+        },
+        tooltip: {
+          backgroundColor: isDark ? 'rgba(20,20,20,0.95)' : 'rgba(255,255,255,0.95)',
+          titleColor: isDark ? '#fff' : '#1a1a1a',
+          bodyColor: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)',
+          borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+          borderWidth: 1,
+          titleFont: { family: "'JetBrains Mono', monospace", size: 12, weight: 600 },
+          bodyFont: { family: "'General Sans', sans-serif", size: 11 },
+          padding: 10,
+          cornerRadius: 6,
+          callbacks: {
+            title: (items) => `${items[0].label} lbs`,
+            label: (item) => `  ${item.dataset.label}: ${item.raw}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: 'Tension (lbs)',
+            font: { family: "'General Sans', sans-serif", size: 11, weight: 500 },
+            color: tickColor
+          },
+          grid: { color: gridColor, lineWidth: 0.5 },
+          ticks: {
+            font: { family: "'JetBrains Mono', monospace", size: 10 },
+            color: tickColor,
+            stepSize: 2
+          }
+        },
+        y: {
+          min: 0,
+          max: 100,
+          title: {
+            display: true,
+            text: 'Rating',
+            font: { family: "'General Sans', sans-serif", size: 11, weight: 500 },
+            color: tickColor
+          },
+          grid: { color: gridColor, lineWidth: 0.5 },
+          ticks: {
+            font: { family: "'JetBrains Mono', monospace", size: 10 },
+            color: tickColor,
+            stepSize: 25
+          }
+        }
+      },
+      animation: { duration: 400, easing: 'easeOutQuart' }
+    },
+    plugins: [baselinePlugin]
+  });
+}
+
+function renderBestValueMove() {
+  const container = $('#slider-best-value');
+  const data = tuneState.sweepData;
+  const w = tuneState.optimalWindow;
+  if (!data || !w) { container.innerHTML = ''; return; }
+
+  const baseline = tuneState.baselineTension;
+  const anchor = w.anchor;
+  const diff = anchor - baseline;
+
+  if (Math.abs(diff) <= 1) {
+    container.innerHTML = `<div class="best-value-callout best-value-ok">
+      <span class="best-value-icon">●</span>
+      <span>You're in the optimal zone. No adjustment needed.</span>
+    </div>`;
+  } else {
+    const direction = diff > 0 ? 'up' : 'down';
+    const arrowIcon = diff > 0 ? '↑' : '↓';
+    container.innerHTML = `<div class="best-value-callout best-value-move">
+      <span class="best-value-icon">${arrowIcon}</span>
+      <span><strong>Best Value Move:</strong> ${direction} ${Math.abs(diff)} lbs to ${anchor} lbs for peak balanced performance.</span>
+    </div>`;
+  }
+}
+
+function onTuneSliderInput(e) {
+  const val = parseInt(e.target.value);
+  tuneState.exploredTension = val;
+  $('#slider-current-value').textContent = `${val} lbs`;
+
+  // Update delta display
+  renderDeltaVsBaseline();
+
+  // Update chart annotation
+  if (sweepChart) sweepChart.update('none');
+}
+
+function renderTuneHybridToggle(stringConfig) {
+  const container = $('#tune-hybrid-toggle');
+  if (!stringConfig.isHybrid) {
+    container.innerHTML = '';
+    container.style.display = 'none';
+    return;
+  }
+  container.style.display = 'flex';
+  container.innerHTML = `
+    <button class="tune-dim-btn ${tuneState.hybridDimension === 'linked' ? 'active' : ''}" data-dim="linked">Linked</button>
+    <button class="tune-dim-btn ${tuneState.hybridDimension === 'mains' ? 'active' : ''}" data-dim="mains">Mains</button>
+    <button class="tune-dim-btn ${tuneState.hybridDimension === 'crosses' ? 'active' : ''}" data-dim="crosses">Crosses</button>
+  `;
+  container.querySelectorAll('.tune-dim-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      tuneState.hybridDimension = btn.dataset.dim;
+      container.querySelectorAll('.tune-dim-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      // Re-run sweep with new dimension
+      const setup = getCurrentSetup();
+      if (setup) {
+        runTensionSweep(setup);
+        calculateOptimalWindow(setup);
+        renderOptimalBuildWindow();
+        renderDeltaVsBaseline();
+        const slider = $('#tune-slider');
+        renderOptimalZone(parseInt(slider.min), parseInt(slider.max));
+        renderSweepChart(setup);
+        renderBestValueMove();
+      }
+    });
+  });
+}
+
+// Bi-directional sync: when Tune slider changes, update main tension inputs
+function syncTuneToMain(tension) {
+  const setup = getCurrentSetup();
+  if (!setup) return;
+  const { stringConfig } = setup;
+
+  if (stringConfig.isHybrid) {
+    const diff = stringConfig.mainsTension - stringConfig.crossesTension;
+    if (tuneState.hybridDimension === 'mains') {
+      $('#input-tension-mains').value = tension;
+    } else if (tuneState.hybridDimension === 'crosses') {
+      $('#input-tension-crosses').value = tension;
+    } else {
+      $('#input-tension-mains').value = tension;
+      $('#input-tension-crosses').value = tension - diff;
+    }
+  } else {
+    $('#input-tension-full').value = tension;
+  }
+  tuneState.baselineTension = tension;
+  tuneState.exploredTension = tension;
+  renderDashboard();
+}
+
+// Apply explored tension as new baseline
+function applyExploredTension() {
+  syncTuneToMain(tuneState.exploredTension);
+  // Re-init with new baseline
+  const setup = getCurrentSetup();
+  if (setup) initTuneMode(setup);
+}
+
+// Compare page entry: open tune for a specific comparison slot
+function openTuneForSlot(slotIndex) {
+  const slot = comparisonSlots[slotIndex];
+  if (!slot || !slot.stats) return;
+
+  // Load slot config into main page first
+  const racquet = RACQUETS.find(r => r.id === slot.racquetId);
+  if (!racquet) return;
+
+  $('#select-racquet').value = slot.racquetId;
+  showFrameSpecs(racquet);
+
+  if (slot.isHybrid) {
+    setHybridMode(true);
+    $('#select-string-mains').value = slot.mainsId;
+    $('#input-tension-mains').value = slot.mainsTension;
+    $('#select-string-crosses').value = slot.crossesId;
+    $('#input-tension-crosses').value = slot.crossesTension;
+  } else {
+    setHybridMode(false);
+    $('#select-string-full').value = slot.stringId;
+    $('#input-tension-full').value = slot.tension;
+  }
+  renderDashboard();
+
+  // Now open tune mode
+  if (!isTuneMode) {
+    isTuneMode = true;
+    $('#tune-overlay').classList.remove('hidden');
+    $('#btn-toggle-tune').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+  const setup = getCurrentSetup();
+  if (setup) initTuneMode(setup);
+}
+
+// ============================================
 // THEME TOGGLE
 // ============================================
 
@@ -2594,6 +3215,14 @@ function toggleTheme() {
     updateComparisonRadar();
     // Re-render comparison slots with updated colors
     renderComparisonSlots();
+  }
+
+  // Refresh sweep chart if tune mode is open
+  if (isTuneMode && sweepChart) {
+    sweepChart.destroy();
+    sweepChart = null;
+    const setup = getCurrentSetup();
+    if (setup) renderSweepChart(setup);
   }
 }
 
@@ -2653,6 +3282,11 @@ function init() {
   $('#btn-toggle-comparison').addEventListener('click', toggleComparisonMode);
   $('#btn-add-slot').addEventListener('click', addComparisonSlot);
   $('#btn-exit-comparison').addEventListener('click', toggleComparisonMode);
+
+  // Tune mode
+  $('#btn-toggle-tune').addEventListener('click', toggleTuneMode);
+  $('#btn-exit-tune').addEventListener('click', closeTuneMode);
+  $('#tune-slider').addEventListener('input', onTuneSliderInput);
 
   // Theme
   $('#btn-theme').addEventListener('click', toggleTheme);

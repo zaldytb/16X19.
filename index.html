@@ -64,6 +64,10 @@
         </div>
       </div>
       <div class="header-actions">
+        <button class="btn-tune" id="btn-toggle-tune" title="Open Tension Tuning Lab">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.5"/><line x1="9" y1="2" x2="9" y2="5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="9" y1="13" x2="9" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="2" y1="9" x2="5" y2="9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="13" y1="9" x2="16" y2="9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="9" cy="9" r="2" fill="currentColor"/></svg>
+          <span>Tune</span>
+        </button>
         <button class="btn-comparison" id="btn-toggle-comparison" title="Toggle Comparison Mode">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="3" width="6" height="12" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="3" width="6" height="12" rx="1" stroke="currentColor" stroke-width="1.5"/><line x1="9" y1="6" x2="9" y2="12" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 2"/></svg>
           <span>Compare</span>
@@ -268,6 +272,103 @@
           <canvas id="comparison-radar-chart"></canvas>
         </div>
         <div class="comparison-deltas" id="comparison-deltas"></div>
+      </div>
+    </div>
+
+    <!-- Tune Mode Overlay -->
+    <div class="tune-overlay hidden" id="tune-overlay">
+      <div class="tune-container">
+        <div class="tune-header">
+          <div class="tune-header-left">
+            <h2 class="tune-title">TENSION TUNING LAB</h2>
+            <p class="tune-subtitle" id="tune-subtitle">— Select a setup to begin tuning</p>
+          </div>
+          <button class="btn-exit-tune" id="btn-exit-tune">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><line x1="4" y1="4" x2="14" y2="14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="14" y1="4" x2="4" y2="14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Close
+          </button>
+        </div>
+
+        <!-- Tune Content -->
+        <div class="tune-content" id="tune-content">
+          <!-- Empty state when no setup -->
+          <div class="tune-empty" id="tune-empty">
+            <p>Configure a frame and string on the main page first, then open Tune to explore tension tradeoffs.</p>
+          </div>
+
+          <!-- Active tune panels -->
+          <div class="tune-panels hidden" id="tune-panels">
+            <!-- Row 1: Optimal Build Window + Delta vs Baseline -->
+            <div class="tune-row tune-row-top">
+              <!-- Optimal Build Window -->
+              <div class="tune-card tune-card-optimal" id="tune-card-optimal">
+                <div class="tune-card-header">
+                  <h3 class="tune-card-title">OPTIMAL BUILD WINDOW</h3>
+                  <span class="tune-card-tag tag-modeled">MODELED</span>
+                </div>
+                <div class="optimal-content" id="optimal-content">
+                  <!-- Filled by JS -->
+                </div>
+              </div>
+
+              <!-- Delta vs Baseline -->
+              <div class="tune-card tune-card-delta" id="tune-card-delta">
+                <div class="tune-card-header">
+                  <h3 class="tune-card-title">DELTA VS BASELINE</h3>
+                  <span class="tune-card-tag tag-modeled">MODELED</span>
+                </div>
+                <div class="delta-content" id="delta-content">
+                  <!-- Filled by JS -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Row 2: Interactive Slider -->
+            <div class="tune-row tune-row-slider">
+              <div class="tune-card tune-card-slider" id="tune-card-slider">
+                <div class="tune-card-header">
+                  <h3 class="tune-card-title">TENSION EXPLORER</h3>
+                  <div class="tune-hybrid-toggle" id="tune-hybrid-toggle">
+                    <!-- Only shows for hybrid: Mains / Crosses / Linked -->
+                  </div>
+                </div>
+                <div class="slider-content" id="slider-content">
+                  <div class="slider-track-wrapper">
+                    <div class="slider-labels">
+                      <span class="slider-label-min" id="slider-label-min">40</span>
+                      <span class="slider-label-max" id="slider-label-max">70</span>
+                    </div>
+                    <div class="slider-track" id="slider-track">
+                      <div class="slider-optimal-zone" id="slider-optimal-zone"></div>
+                      <div class="slider-baseline-marker" id="slider-baseline-marker"></div>
+                      <input type="range" class="tune-slider" id="tune-slider" min="40" max="70" step="1" value="55">
+                    </div>
+                    <div class="slider-value-display">
+                      <span class="slider-current-label">Exploring</span>
+                      <span class="slider-current-value" id="slider-current-value">55 lbs</span>
+                    </div>
+                  </div>
+                  <div class="slider-best-value" id="slider-best-value">
+                    <!-- Best Value Move callout -->
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Row 3: Tension Sweep Chart -->
+            <div class="tune-row tune-row-chart">
+              <div class="tune-card tune-card-chart" id="tune-card-chart">
+                <div class="tune-card-header">
+                  <h3 class="tune-card-title">RESPONSE ACROSS TENSION</h3>
+                  <span class="tune-card-tag tag-modeled">MODELED</span>
+                </div>
+                <div class="sweep-chart-container">
+                  <canvas id="sweep-chart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </main>

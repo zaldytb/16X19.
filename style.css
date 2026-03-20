@@ -1572,3 +1572,674 @@ body {
    RADIUS FULL COMPAT
    ============================================ */
 /* Needed for some JS that uses --radius-full */
+
+/* ============================================
+   TUNE MODE — TENSION TUNING LAB
+   ============================================ */
+
+/* Tune button in header */
+.btn-tune {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-tune:hover {
+  border-color: var(--lime);
+  color: var(--lime);
+}
+
+.btn-tune.active {
+  background: var(--lime);
+  border-color: var(--lime);
+  color: var(--bg-base);
+}
+
+/* Tune overlay — full-screen modal */
+.tune-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  background: var(--bg-base);
+  overflow-y: auto;
+  animation: tuneSlideIn 0.3s ease;
+}
+
+@keyframes tuneSlideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.tune-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-6) var(--space-10);
+}
+
+/* Tune header */
+.tune-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--space-8);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.tune-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.tune-title {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text-primary);
+}
+
+.tune-subtitle {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.btn-exit-tune {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-exit-tune:hover {
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+}
+
+/* Empty state */
+.tune-empty {
+  text-align: center;
+  padding: var(--space-10) 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* Tune panels grid */
+.tune-panels {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.tune-row {
+  display: flex;
+  gap: var(--space-5);
+}
+
+.tune-row-top {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-5);
+}
+
+.tune-row-slider {
+  display: block;
+}
+
+.tune-row-chart {
+  display: block;
+}
+
+/* Tune card */
+.tune-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+
+.tune-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+
+.tune-card-title {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+.tune-card-tag {
+  font-size: 0.6rem;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+/* Optimal Build Window */
+.optimal-range {
+  margin-bottom: var(--space-4);
+}
+
+.optimal-range-visual {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.optimal-range-low,
+.optimal-range-high {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  min-width: 24px;
+  text-align: center;
+}
+
+.optimal-range-bar {
+  flex: 1;
+  height: 8px;
+  background: var(--bg-elevated);
+  border-radius: 4px;
+  position: relative;
+  overflow: visible;
+}
+
+.optimal-range-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, rgba(199,246,58,0.25), rgba(199,246,58,0.45));
+  border-radius: 4px;
+}
+
+.optimal-range-anchor {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  background: var(--lime);
+  border-radius: 50%;
+  border: 2px solid var(--bg-card);
+  box-shadow: 0 0 0 1px var(--lime);
+}
+
+.optimal-anchor-label {
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--lime);
+  white-space: nowrap;
+}
+
+.optimal-reason {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-style: italic;
+  margin: 0;
+}
+
+.optimal-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-3);
+}
+
+.optimal-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-2);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+}
+
+.optimal-stat-label {
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.optimal-stat-value {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* Delta vs Baseline */
+.delta-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3);
+}
+
+.delta-baseline-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.delta-explored-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--lime);
+  font-weight: 600;
+}
+
+.delta-stats-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.delta-stat-row {
+  display: grid;
+  grid-template-columns: 60px 1fr 36px;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.delta-stat-label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.delta-stat-bar-track {
+  height: 6px;
+  background: var(--bg-elevated);
+  border-radius: 3px;
+  position: relative;
+  overflow: hidden;
+}
+
+.delta-stat-bar-baseline {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--text-faint);
+  border-radius: 3px;
+  transition: width 0.2s ease;
+}
+
+.delta-stat-bar-explored {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.2s ease;
+  opacity: 0.85;
+}
+
+.delta-stat-bar-explored.delta-positive { background: var(--lime); }
+.delta-stat-bar-explored.delta-negative { background: #FF6B6B; }
+.delta-stat-bar-explored.delta-neutral { background: var(--text-faint); }
+
+.delta-stat-diff {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: right;
+}
+
+.delta-stat-diff.delta-positive { color: var(--lime); }
+.delta-stat-diff.delta-negative { color: #FF6B6B; }
+.delta-stat-diff.delta-neutral { color: var(--text-faint); }
+
+/* Slider card */
+.slider-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.slider-track-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-faint);
+  font-weight: 500;
+}
+
+.slider-track {
+  position: relative;
+  height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+.slider-optimal-zone {
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  background: rgba(199,246,58,0.12);
+  border-radius: 4px;
+  border: 1px solid rgba(199,246,58,0.20);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.slider-baseline-marker {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  background: var(--text-faint);
+  border-radius: 1px;
+  transform: translateX(-50%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.slider-baseline-marker::after {
+  content: '▼';
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 8px;
+  color: var(--text-faint);
+}
+
+/* Range slider styling */
+.tune-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background: var(--bg-elevated);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+  z-index: 3;
+}
+
+.tune-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--lime);
+  border: 2px solid var(--bg-base);
+  box-shadow: 0 0 0 2px var(--lime), 0 2px 8px rgba(0,0,0,0.2);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tune-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 0 0 3px var(--lime), 0 2px 12px rgba(0,0,0,0.25);
+}
+
+.tune-slider::-webkit-slider-thumb:active {
+  transform: scale(1.05);
+}
+
+.tune-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--lime);
+  border: 2px solid var(--bg-base);
+  box-shadow: 0 0 0 2px var(--lime), 0 2px 8px rgba(0,0,0,0.2);
+  cursor: pointer;
+}
+
+.slider-value-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.slider-current-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.slider-current-value {
+  font-family: var(--font-mono);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--lime);
+}
+
+/* Best value callout */
+.best-value-callout {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.best-value-ok {
+  background: rgba(199,246,58,0.08);
+  border: 1px solid rgba(199,246,58,0.15);
+}
+
+.best-value-move {
+  background: rgba(124,203,255,0.08);
+  border: 1px solid rgba(124,203,255,0.15);
+}
+
+.best-value-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  font-weight: 700;
+}
+
+.best-value-ok .best-value-icon { color: var(--lime); }
+.best-value-move .best-value-icon { color: #7CCBFF; }
+
+/* Sweep chart */
+.sweep-chart-container {
+  height: 320px;
+  position: relative;
+}
+
+/* Hybrid dimension toggle in Tune slider card */
+.tune-hybrid-toggle {
+  display: flex;
+  gap: 2px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+}
+
+.tune-dim-btn {
+  padding: 3px 10px;
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tune-dim-btn:hover {
+  color: var(--text-secondary);
+}
+
+.tune-dim-btn.active {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+/* Slot tune button on comparison cards */
+.slot-tune-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  width: 100%;
+  padding: var(--space-2) 0;
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.slot-tune-btn:hover {
+  color: var(--lime);
+  background: rgba(199,246,58,0.05);
+}
+
+/* Tune muted text */
+.tune-muted {
+  color: var(--text-faint);
+  font-size: 0.78rem;
+}
+
+/* ============================================
+   TUNE MODE — RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+  .tune-container {
+    padding: var(--space-4) var(--space-3) var(--space-8);
+  }
+
+  .tune-row-top {
+    grid-template-columns: 1fr;
+  }
+
+  .optimal-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .sweep-chart-container {
+    height: 240px;
+  }
+
+  .tune-header {
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .btn-exit-tune {
+    align-self: flex-end;
+  }
+}
+
+@media (max-width: 480px) {
+  .tune-title {
+    font-size: 0.75rem;
+  }
+
+  .tune-card {
+    padding: var(--space-3);
+  }
+
+  .delta-stat-row {
+    grid-template-columns: 50px 1fr 32px;
+    gap: var(--space-2);
+  }
+}
+
+/* Tune mobile fixes */
+@media (max-width: 480px) {
+  .tune-card-header {
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .tune-hybrid-toggle {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+
+  .tune-dim-btn {
+    font-size: 0.62rem;
+    padding: 3px 8px;
+    white-space: nowrap;
+  }
+
+  .delta-header-row {
+    flex-wrap: wrap;
+    gap: var(--space-1);
+  }
+
+  .delta-explored-label {
+    font-size: 0.65rem;
+  }
+
+  .delta-baseline-label {
+    font-size: 0.65rem;
+  }
+}

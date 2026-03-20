@@ -1969,6 +1969,9 @@ function renderDashboard() {
 
   // Warnings
   renderWarnings(warnings);
+
+  // If Tune mode is open, refresh its panels with the updated setup
+  refreshTuneIfActive();
 }
 
 function renderSummary(racquet, stringConfig, badge) {
@@ -2612,6 +2615,7 @@ function setHybridMode(isHybrid) {
 // ============================================
 
 let isTuneMode = false;
+let _tuneRefreshing = false;
 let sweepChart = null;
 let tuneState = {
   baselineTension: 55,       // The tension from the main page (source of truth)
@@ -2624,7 +2628,7 @@ let tuneState = {
 
 function toggleTuneMode() {
   const setup = getCurrentSetup();
-  if (!setup) {
+  if (!setup && !isTuneMode) {
     // No setup configured — don't open
     return;
   }
@@ -2637,18 +2641,110 @@ function toggleTuneMode() {
   if (isTuneMode) {
     overlay.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
+    // Move builder panel into Tune configurator dock
+    dockBuilderPanel(true);
     initTuneMode(setup);
   } else {
+    // Return builder panel to Home
+    dockBuilderPanel(false);
     overlay.classList.add('hidden');
     document.body.style.overflow = '';
+    // Refresh home dashboard to reflect any changes made in Tune
+    renderDashboard();
   }
 }
 
 function closeTuneMode() {
   isTuneMode = false;
+  dockBuilderPanel(false);
   $('#tune-overlay').classList.add('hidden');
   $('#btn-toggle-tune').classList.remove('active');
   document.body.style.overflow = '';
+  renderDashboard();
+}
+
+function dockBuilderPanel(inTune) {
+  const panel = $('#builder-panel');
+  if (inTune) {
+    // Move into Tune overlay
+    const dock = $('#tune-configurator');
+    dock.appendChild(panel);
+    panel.classList.add('in-tune-mode');
+  } else {
+    // Return to Home layout
+    const home = $('#single-view');
+    const dashboard = home.querySelector('.dashboard');
+    home.insertBefore(panel, dashboard);
+    panel.classList.remove('in-tune-mode');
+  }
+}
+
+// Auto-refresh Tune panels when user changes setup while Tune is open
+function refreshTuneIfActive() {
+  if (!isTuneMode || _tuneRefreshing) return;
+  _tuneRefreshing = true;
+  try {
+    const setup = getCurrentSetup();
+    if (setup) {
+      initTuneMode(setup);
+    } else {
+      // Setup became invalid — show empty state
+      $('#tune-empty').classList.remove('hidden');
+      $('#tune-panels').classList.add('hidden');
+    }
+  } finally {
+    _tuneRefreshing = false;
+  }
+}
+
+function getHybridBaselineTension(stringConfig, dimension) {
+  if (dimension === 'mains') return stringConfig.mainsTension;
+  if (dimension === 'crosses') return stringConfig.crossesTension;
+  // linked: average
+  return Math.round((stringConfig.mainsTension + stringConfig.crossesTension) / 2);
+}
+
+function updateSliderLabel() {
+  const val = tuneState.exploredTension;
+  const dim = tuneState.hybridDimension;
+  const setup = getCurrentSetup();
+  const isHybrid = setup && setup.stringConfig.isHybrid;
+  const labelEl = document.querySelector('.slider-current-label');
+  const valueEl = $('#slider-current-value');
+
+  if (isHybrid && dim === 'mains') {
+    labelEl.textContent = 'Exploring Mains';
+    valueEl.textContent = `${val} lbs`;
+  } else if (isHybrid && dim === 'crosses') {
+    labelEl.textContent = 'Exploring Crosses';
+    valueEl.textContent = `${val} lbs`;
+  } else if (isHybrid && dim === 'linked') {
+    const diff = setup.stringConfig.mainsTension - setup.stringConfig.crossesTension;
+    const mainsVal = val;
+    const crossesVal = val - diff;
+    labelEl.textContent = 'Exploring Linked';
+    valueEl.textContent = `M ${mainsVal} / X ${crossesVal} lbs`;
+  } else {
+    labelEl.textContent = 'Exploring';
+    valueEl.textContent = `${val} lbs`;
+  }
+}
+
+function updateDeltaTitle(stringConfig) {
+  const titleEl = $('#tune-card-delta .tune-card-title');
+  if (!titleEl) return;
+  const dim = tuneState.hybridDimension;
+  if (stringConfig && stringConfig.isHybrid) {
+    if (dim === 'mains') {
+      titleEl.textContent = 'DELTA VS BASELINE — MAINS ONLY';
+    } else if (dim === 'crosses') {
+      titleEl.textContent = 'DELTA VS BASELINE — CROSSES ONLY';
+    } else {
+      titleEl.textContent = 'DELTA VS BASELINE — LINKED';
+    }
+  } else {
+    titleEl.textContent = 'DELTA VS BASELINE';
+  }
 }
 
 function initTuneMode(setup) {
@@ -2667,14 +2763,18 @@ function initTuneMode(setup) {
   $('#tune-empty').classList.add('hidden');
   $('#tune-panels').classList.remove('hidden');
 
-  // Set baseline tension from main page
+  // Set baseline tension from main page, respecting hybrid dimension
   if (stringConfig.isHybrid) {
-    tuneState.baselineTension = Math.round((stringConfig.mainsTension + stringConfig.crossesTension) / 2);
+    // Preserve dimension if already set, default to linked
+    if (!['mains','crosses','linked'].includes(tuneState.hybridDimension)) {
+      tuneState.hybridDimension = 'linked';
+    }
+    tuneState.baselineTension = getHybridBaselineTension(stringConfig, tuneState.hybridDimension);
   } else {
     tuneState.baselineTension = stringConfig.tension;
+    tuneState.hybridDimension = 'linked';
   }
   tuneState.exploredTension = tuneState.baselineTension;
-  tuneState.hybridDimension = 'linked';
 
   // Configure slider range from racquet
   const sliderMin = Math.max(racquet.tensionRange[0] - 5, 30);
@@ -2685,7 +2785,8 @@ function initTuneMode(setup) {
   slider.value = tuneState.baselineTension;
   $('#slider-label-min').textContent = sliderMin;
   $('#slider-label-max').textContent = sliderMax;
-  $('#slider-current-value').textContent = `${tuneState.baselineTension} lbs`;
+  updateSliderLabel();
+  updateDeltaTitle(stringConfig);
 
   // Hybrid toggle
   renderTuneHybridToggle(stringConfig);
@@ -2834,11 +2935,33 @@ function renderDeltaVsBaseline() {
   const deltaLabels = ['Control', 'Power', 'Comfort', 'Spin', 'Launch', 'Feel'];
 
   const isAtBaseline = tuneState.exploredTension === tuneState.baselineTension;
+  const setup = getCurrentSetup();
+  const isHybrid = setup && setup.stringConfig.isHybrid;
+  const dim = tuneState.hybridDimension;
+
+  // Build dimension-aware baseline label
+  let baseLabel = `Baseline: ${tuneState.baselineTension} lbs`;
+  let exploreLabel = isAtBaseline ? 'At baseline' : `Exploring: ${tuneState.exploredTension} lbs`;
+  if (isHybrid) {
+    if (dim === 'mains') {
+      baseLabel = `Mains Baseline: ${tuneState.baselineTension} lbs`;
+      exploreLabel = isAtBaseline ? 'At baseline' : `Mains: ${tuneState.exploredTension} lbs`;
+    } else if (dim === 'crosses') {
+      baseLabel = `Crosses Baseline: ${tuneState.baselineTension} lbs`;
+      exploreLabel = isAtBaseline ? 'At baseline' : `Crosses: ${tuneState.exploredTension} lbs`;
+    } else {
+      const diff = setup.stringConfig.mainsTension - setup.stringConfig.crossesTension;
+      baseLabel = `Linked Baseline: M ${tuneState.baselineTension} / X ${tuneState.baselineTension - diff} lbs`;
+      if (!isAtBaseline) {
+        exploreLabel = `Linked: M ${tuneState.exploredTension} / X ${tuneState.exploredTension - diff} lbs`;
+      }
+    }
+  }
 
   container.innerHTML = `
     <div class="delta-header-row">
-      <span class="delta-baseline-label">Baseline: ${tuneState.baselineTension} lbs</span>
-      <span class="delta-explored-label">${isAtBaseline ? 'At baseline' : `Exploring: ${tuneState.exploredTension} lbs`}</span>
+      <span class="delta-baseline-label">${baseLabel}</span>
+      <span class="delta-explored-label">${exploreLabel}</span>
     </div>
     <div class="delta-stats-grid">
       ${deltaKeys.map((key, i) => {
@@ -3257,7 +3380,7 @@ function renderExplorePrompt(setup, isCurrentInTop, topBuilds) {
 function onTuneSliderInput(e) {
   const val = parseInt(e.target.value);
   tuneState.exploredTension = val;
-  $('#slider-current-value').textContent = `${val} lbs`;
+  updateSliderLabel();
 
   // Update delta display
   renderDeltaVsBaseline();
@@ -3287,11 +3410,19 @@ function renderTuneHybridToggle(stringConfig) {
       // Re-run sweep with new dimension
       const setup = getCurrentSetup();
       if (setup) {
+        // Recalculate baseline for the new dimension
+        tuneState.baselineTension = getHybridBaselineTension(setup.stringConfig, tuneState.hybridDimension);
+        tuneState.exploredTension = tuneState.baselineTension;
+        const slider = $('#tune-slider');
+        slider.value = tuneState.baselineTension;
+        updateSliderLabel();
+        updateDeltaTitle(setup.stringConfig);
+
         runTensionSweep(setup);
         calculateOptimalWindow(setup);
         renderOptimalBuildWindow();
         renderDeltaVsBaseline();
-        const slider = $('#tune-slider');
+        renderBaselineMarker(parseInt(slider.min), parseInt(slider.max));
         renderOptimalZone(parseInt(slider.min), parseInt(slider.max));
         renderSweepChart(setup);
         renderBestValueMove();
@@ -3363,6 +3494,7 @@ function openTuneForSlot(slotIndex) {
     $('#tune-overlay').classList.remove('hidden');
     $('#btn-toggle-tune').classList.add('active');
     document.body.style.overflow = 'hidden';
+    dockBuilderPanel(true);
   }
   const setup = getCurrentSetup();
   if (setup) initTuneMode(setup);

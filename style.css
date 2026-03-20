@@ -1625,9 +1625,68 @@ body {
 }
 
 .tune-container {
-  max-width: 1100px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: var(--space-6) var(--space-6) var(--space-10);
+}
+
+/* Tune 2-column layout: configurator + analysis */
+.tune-layout {
+  display: flex;
+  gap: var(--space-6);
+  align-items: flex-start;
+}
+
+.tune-configurator {
+  flex: 0 0 320px;
+  position: sticky;
+  top: var(--space-4);
+  max-height: calc(100vh - var(--space-8));
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.tune-analysis {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Builder panel overrides when docked in Tune mode */
+.builder-panel.in-tune-mode {
+  position: relative;
+  margin: 0;
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  padding: var(--space-5);
+}
+
+.builder-panel.in-tune-mode .builder-panel-title {
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  margin-bottom: var(--space-4);
+}
+
+.builder-panel.in-tune-mode .config-group {
+  margin-bottom: var(--space-3);
+}
+
+.builder-panel.in-tune-mode .config-group label {
+  font-size: 0.7rem;
+}
+
+.builder-panel.in-tune-mode select,
+.builder-panel.in-tune-mode input[type="number"] {
+  font-size: 0.78rem;
+  padding: var(--space-2) var(--space-3);
+}
+
+.builder-panel.in-tune-mode .string-mode-toggle {
+  margin-bottom: var(--space-3);
+}
+
+.builder-panel.in-tune-mode .config-actions {
+  margin-top: var(--space-3);
 }
 
 /* Tune header */
@@ -2173,6 +2232,19 @@ body {
 @media (max-width: 768px) {
   .tune-container {
     padding: var(--space-4) var(--space-3) var(--space-8);
+  }
+
+  /* Stack configurator on top on mobile */
+  .tune-layout {
+    flex-direction: column;
+  }
+
+  .tune-configurator {
+    flex: none;
+    width: 100%;
+    position: static;
+    max-height: none;
+    overflow-y: visible;
   }
 
   .tune-row-top {

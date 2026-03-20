@@ -289,15 +289,20 @@
           </button>
         </div>
 
-        <!-- Tune Content -->
-        <div class="tune-content" id="tune-content">
-          <!-- Empty state when no setup -->
-          <div class="tune-empty" id="tune-empty">
-            <p>Configure a frame and string on the main page first, then open Tune to explore tension tradeoffs.</p>
-          </div>
+        <!-- Tune 2-col layout: configurator + analysis -->
+        <div class="tune-layout">
+          <!-- Left: configurator dock (builder-panel moves here on open) -->
+          <div class="tune-configurator" id="tune-configurator"></div>
 
-          <!-- Active tune panels -->
-          <div class="tune-panels hidden" id="tune-panels">
+          <!-- Right: analysis panels -->
+          <div class="tune-analysis">
+            <!-- Empty state when no setup -->
+            <div class="tune-empty" id="tune-empty">
+              <p>Configure a frame and string, then explore tension tradeoffs.</p>
+            </div>
+
+            <!-- Active tune panels -->
+            <div class="tune-panels hidden" id="tune-panels">
             <!-- Row 1: Optimal Build Window + Delta vs Baseline -->
             <div class="tune-row tune-row-top">
               <!-- Optimal Build Window -->
@@ -390,7 +395,8 @@
               </div>
             </div>
           </div>
-        </div>
+          </div><!-- /tune-analysis -->
+        </div><!-- /tune-layout -->
       </div>
     </div>
   </main>

@@ -3349,6 +3349,297 @@ function renderBestValueMove() {
   }
 }
 
+// ---- What To Try Next — 3-bucket contextual recommendations ----
+
+const WTTN_ATTRS = ['spin','power','control','launch','feel','comfort','stability','forgiveness','durability','playability'];
+const WTTN_ATTR_LABELS = { spin:'Spin', power:'Power', control:'Control', launch:'Launch', feel:'Feel', comfort:'Comfort', stability:'Stability', forgiveness:'Forgiveness', durability:'Durability', playability:'Playability' };
+
+// Identity families: maps archetype keywords to broad families
+const IDENTITY_FAMILIES = [
+  { family: 'spin-control',   test: s => s.spin >= 75 && s.control >= 70 },
+  { family: 'control-first',  test: s => s.control >= 72 && s.spin < 75 && s.power < 65 },
+  { family: 'power-spin',     test: s => s.spin >= 72 && s.power >= 65 },
+  { family: 'power-first',    test: s => s.power >= 70 && s.spin < 72 },
+  { family: 'comfort-balanced',test: s => s.comfort >= 68 && s.power >= 55 && s.control >= 55 },
+  { family: 'feel-control',   test: s => s.feel >= 70 && s.control >= 65 },
+  { family: 'endurance',      test: s => s.playability >= 82 && s.durability >= 78 },
+  { family: 'balanced',       test: () => true },
+];
+
+function classifySetup(stats) {
+  // Sort attrs by value descending
+  const sorted = WTTN_ATTRS.map(a => ({ attr: a, val: stats[a] })).sort((a, b) => b.val - a.val);
+  const strongest = sorted.slice(0, 3);
+  const weakest = sorted.slice(-3).reverse();
+  const family = IDENTITY_FAMILIES.find(f => f.test(stats))?.family || 'balanced';
+  return { strongest, weakest, family };
+}
+
+function computeProfileSimilarity(statsA, statsB) {
+  // Cosine-like similarity on the 10-attr profile
+  let dotP = 0, magA = 0, magB = 0;
+  for (const a of WTTN_ATTRS) {
+    dotP += statsA[a] * statsB[a];
+    magA += statsA[a] * statsA[a];
+    magB += statsB[a] * statsB[a];
+  }
+  return dotP / (Math.sqrt(magA) * Math.sqrt(magB) + 1e-9);
+}
+
+function computeDeltas(currentStats, candidateStats) {
+  const deltas = {};
+  for (const a of WTTN_ATTRS) {
+    deltas[a] = Math.round(candidateStats[a] - currentStats[a]);
+  }
+  return deltas;
+}
+
+function topGains(deltas, n = 4) {
+  return Object.entries(deltas)
+    .filter(([, d]) => d > 0)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, n)
+    .map(([attr, d]) => ({ attr, delta: d }));
+}
+
+function topLosses(deltas, n = 3) {
+  return Object.entries(deltas)
+    .filter(([, d]) => d < 0)
+    .sort((a, b) => a[1] - b[1])
+    .slice(0, n)
+    .map(([attr, delta]) => ({ attr, delta }));
+}
+
+function generateNetDirection(gains, losses) {
+  if (gains.length === 0) return 'Marginal tradeoff';
+  const topGain = gains[0].attr;
+  const topLoss = losses.length > 0 ? losses[0].attr : null;
+
+  const phrases = {
+    comfort:     { gain: 'Softer',    pair: { control: 'less surgical', power: 'less explosive', spin: 'less spin-heavy' } },
+    spin:        { gain: 'Spinnier',  pair: { control: 'less precise', comfort: 'firmer', power: 'less raw pace' } },
+    power:       { gain: 'More pace', pair: { control: 'less precise', comfort: 'firmer', spin: 'less topspin' } },
+    control:     { gain: 'Sharper',   pair: { power: 'less free power', comfort: 'firmer', spin: 'less spin' } },
+    feel:        { gain: 'More feel', pair: { power: 'less pace', durability: 'less durable', comfort: 'less padded' } },
+    playability: { gain: 'More consistent over time', pair: { power: 'less pop', spin: 'less grip', control: 'less surgical' } },
+    durability:  { gain: 'Longer lasting', pair: { feel: 'less feel', comfort: 'firmer', spin: 'less grip' } },
+    forgiveness: { gain: 'More forgiving', pair: { control: 'less surgical', feel: 'less feedback', spin: 'less spin' } },
+    stability:   { gain: 'More stable', pair: { comfort: 'firmer', feel: 'less delicate', power: 'less explosive' } },
+    launch:      { gain: 'Higher launch', pair: { control: 'less flat', stability: 'less locked-in', feel: 'less connected' } },
+  };
+
+  const g = phrases[topGain];
+  if (!g) return 'Different profile balance';
+  let phrase = g.gain;
+  if (topLoss && g.pair[topLoss]) phrase += ', ' + g.pair[topLoss];
+  else if (topLoss) phrase += ', slightly less ' + WTTN_ATTR_LABELS[topLoss].toLowerCase();
+
+  return phrase;
+}
+
+function scoreClosestBetter(currentStats, classification, candidateStats, deltas) {
+  const similarity = computeProfileSimilarity(currentStats, candidateStats);
+  let weaknessGain = 0;
+  for (const w of classification.weakest) {
+    weaknessGain += Math.max(0, deltas[w.attr]);
+  }
+  let strengthLoss = 0;
+  for (const s of classification.strongest) {
+    strengthLoss += Math.max(0, -deltas[s.attr]);
+  }
+  // Same family bonus
+  const candClass = classifySetup(candidateStats);
+  const familyBonus = candClass.family === classification.family ? 8 : 0;
+
+  return (similarity * 30) + (weaknessGain * 3) - (strengthLoss * 4) + familyBonus;
+}
+
+function scoreMoreOfWhatYouWant(currentStats, classification, candidateStats, deltas) {
+  // Find what the user already excels at / likes — push one strength harder
+  // Or find the 2nd-weakest area and boost it meaningfully
+  let bestTargetScore = -Infinity;
+
+  // Try each attribute as a "target" — pick the one that scores best
+  for (const attr of WTTN_ATTRS) {
+    const targetGain = Math.max(0, deltas[attr]);
+    if (targetGain < 2) continue; // must be a meaningful gain
+
+    // Secondary gains
+    let secondaryGains = 0;
+    for (const a of WTTN_ATTRS) {
+      if (a !== attr && deltas[a] > 0) secondaryGains += deltas[a] * 0.5;
+    }
+
+    // Total loss
+    let totalLoss = 0;
+    for (const a of WTTN_ATTRS) {
+      if (deltas[a] < 0) totalLoss += Math.abs(deltas[a]);
+    }
+
+    const score = (targetGain * 5) + secondaryGains - (totalLoss * 1.5);
+    if (score > bestTargetScore) bestTargetScore = score;
+  }
+
+  return bestTargetScore === -Infinity ? -100 : bestTargetScore;
+}
+
+function scoreCorrective(currentStats, classification, candidateStats, deltas) {
+  // Biggest weakness fix
+  const weakest = classification.weakest[0]; // most limiting
+  const fix = Math.max(0, deltas[weakest.attr]);
+
+  // Secondary weakness fixes
+  let secondaryFix = 0;
+  for (let i = 1; i < classification.weakest.length; i++) {
+    secondaryFix += Math.max(0, deltas[classification.weakest[i].attr]) * 0.6;
+  }
+
+  // Total loss elsewhere
+  let totalLoss = 0;
+  for (const a of WTTN_ATTRS) {
+    if (deltas[a] < 0) totalLoss += Math.abs(deltas[a]);
+  }
+
+  return (fix * 6) + secondaryFix - (totalLoss * 1.0);
+}
+
+function candidateSimilarity(statsA, statsB) {
+  let sumSqDiff = 0;
+  for (const a of WTTN_ATTRS) {
+    const d = statsA[a] - statsB[a];
+    sumSqDiff += d * d;
+  }
+  return Math.sqrt(sumSqDiff);
+}
+
+function generateWhySentence(bucket, gains, losses, classification) {
+  const topG = gains.slice(0, 2).map(g => WTTN_ATTR_LABELS[g.attr].toLowerCase()).join(' and ');
+  const topL = losses.length > 0 ? losses[0] : null;
+
+  if (bucket === 'closest') {
+    if (topL) return `Preserves the current ${classification.family.replace('-',' ')} identity while improving ${topG}, with minimal ${WTTN_ATTR_LABELS[topL.attr].toLowerCase()} tradeoff.`;
+    return `Preserves the current ${classification.family.replace('-',' ')} identity while adding ${topG}.`;
+  }
+  if (bucket === 'more') {
+    return `Pushes ${topG} meaningfully harder${topL ? ', accepting some ' + WTTN_ATTR_LABELS[topL.attr].toLowerCase() + ' loss' : ''}.`;
+  }
+  if (bucket === 'corrective') {
+    const weakName = WTTN_ATTR_LABELS[classification.weakest[0].attr].toLowerCase();
+    return `Directly addresses the current setup's ${weakName} weakness${topL ? ', trading some ' + WTTN_ATTR_LABELS[topL.attr].toLowerCase() : ''}.`;
+  }
+  return 'An alternative profile worth exploring.';
+}
+
+function renderWhatToTryNext(setup, allCandidates) {
+  const container = $('#wttn-content');
+  const { racquet, stringConfig } = setup;
+
+  // Get current stats
+  const currentStats = predictSetup(racquet, stringConfig);
+  const classification = classifySetup(currentStats);
+
+  // Identify the current string to exclude from candidates
+  let currentStringId = null;
+  if (!stringConfig.isHybrid && stringConfig.string) {
+    currentStringId = stringConfig.string.id;
+  }
+
+  // Filter out the current string and compute deltas for each candidate
+  const scored = allCandidates
+    .filter(c => c.string.id !== currentStringId)
+    .map(c => {
+      const deltas = computeDeltas(currentStats, c.stats);
+      return {
+        ...c,
+        deltas,
+        closestScore: scoreClosestBetter(currentStats, classification, c.stats, deltas),
+        moreScore: scoreMoreOfWhatYouWant(currentStats, classification, c.stats, deltas),
+        correctiveScore: scoreCorrective(currentStats, classification, c.stats, deltas),
+      };
+    });
+
+  if (scored.length < 3) {
+    container.innerHTML = '<p class="wttn-empty">Not enough alternative builds to generate contextual recommendations.</p>';
+    return;
+  }
+
+  // Step 1: Pick Closest Better Version
+  scored.sort((a, b) => b.closestScore - a.closestScore);
+  const closest = scored[0];
+
+  // Step 2: Pick More of What You Want — penalize candidates similar to closest
+  const DISTINCTNESS_PENALTY = 15;
+  for (const c of scored) {
+    const sim = candidateSimilarity(c.stats, closest.stats);
+    if (sim < 6) c.moreScore -= DISTINCTNESS_PENALTY;
+  }
+  scored.sort((a, b) => b.moreScore - a.moreScore);
+  const more = scored.find(c => c.string.id !== closest.string.id) || scored[0];
+
+  // Step 3: Pick Corrective Move — penalize candidates similar to both previous picks
+  for (const c of scored) {
+    const simClosest = candidateSimilarity(c.stats, closest.stats);
+    const simMore = candidateSimilarity(c.stats, more.stats);
+    if (simClosest < 6) c.correctiveScore -= DISTINCTNESS_PENALTY;
+    if (simMore < 6) c.correctiveScore -= DISTINCTNESS_PENALTY;
+  }
+  scored.sort((a, b) => b.correctiveScore - a.correctiveScore);
+  const corrective = scored.find(c => c.string.id !== closest.string.id && c.string.id !== more.string.id) || scored[0];
+
+  const buckets = [
+    { key: 'closest', title: 'Closest Better Version', pick: closest,
+      icon: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1v14M1 8h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>' },
+    { key: 'more', title: 'More of What You Want', pick: more,
+      icon: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 13L8 3l5 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
+    { key: 'corrective', title: 'Corrective Move', pick: corrective,
+      icon: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 8a6 6 0 1 1 12 0A6 6 0 0 1 2 8z" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>' },
+  ];
+
+  container.innerHTML = buckets.map(b => {
+    const { pick, key, title, icon } = b;
+    const gains = topGains(pick.deltas, 4);
+    const losses = topLosses(pick.deltas, 3);
+    const netDir = generateNetDirection(gains, losses);
+    const why = generateWhySentence(key, gains, losses, classification);
+
+    // Limit to 2-4 gains and 1-3 losses as specified
+    const displayGains = gains.slice(0, 4).filter(g => g.delta >= 1);
+    const displayLosses = losses.slice(0, 3).filter(l => l.delta <= -1);
+
+    return `
+      <div class="wttn-card" data-bucket="${key}">
+        <div class="wttn-bucket-header">
+          <div class="wttn-bucket-icon">${icon}</div>
+          <span class="wttn-bucket-label">${title}</span>
+        </div>
+        <div>
+          <div class="wttn-build-name">${pick.string.name} <span class="wttn-gauge">${pick.string.gauge}</span></div>
+          <span class="wttn-build-tension">${pick.tension} lbs</span>
+        </div>
+        <p class="wttn-why">${why}</p>
+        <div class="wttn-deltas">
+          ${displayGains.length > 0 ? `<div class="wttn-delta-row">
+            <span class="wttn-delta-label">Gain</span>
+            <div class="wttn-delta-chips">
+              ${displayGains.map(g => `<span class="wttn-chip wttn-chip-gain">${WTTN_ATTR_LABELS[g.attr]} +${g.delta}</span>`).join('')}
+            </div>
+          </div>` : ''}
+          ${displayLosses.length > 0 ? `<div class="wttn-delta-row">
+            <span class="wttn-delta-label">Give Up</span>
+            <div class="wttn-delta-chips">
+              ${displayLosses.map(l => `<span class="wttn-chip wttn-chip-loss">${WTTN_ATTR_LABELS[l.attr]} ${l.delta}</span>`).join('')}
+            </div>
+          </div>` : ''}
+        </div>
+        <div class="wttn-net">
+          <span class="wttn-net-label">Net</span>
+          <span class="wttn-net-phrase">${netDir}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
 // ---- Recommended Builds ----
 function renderRecommendedBuilds(setup) {
   const container = $('#recs-content');
@@ -3431,6 +3722,9 @@ function renderRecommendedBuilds(setup) {
 
   // Show "Try a Different String" section if current string isn't in top 5
   renderExplorePrompt(setup, isCurrentInTop, top);
+
+  // Render What To Try Next using the full candidates list
+  renderWhatToTryNext(setup, candidates);
 }
 
 function renderExplorePrompt(setup, isCurrentInTop, topBuilds) {

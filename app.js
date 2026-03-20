@@ -1553,6 +1553,67 @@ let comparisonSlots = []; // array of { racquet, stringConfig, stats, identity }
 let isComparisonMode = false;
 
 // ============================================
+// PERSISTENT SHELL — MODE SYSTEM
+// ============================================
+let currentMode = 'overview';
+const scrollPositions = { overview: 0, tune: 0, compare: 0 };
+let _compareInitialized = false;
+let _tuneInitialized = false;
+
+function switchMode(mode) {
+  if (mode === currentMode) return;
+
+  // Save scroll position of current mode's workspace
+  const workspace = document.getElementById('workspace');
+  if (workspace) scrollPositions[currentMode] = workspace.scrollTop;
+
+  // Hide current mode section
+  const currentSection = document.getElementById('mode-' + currentMode);
+  if (currentSection) currentSection.classList.add('hidden');
+
+  // Update mode switcher buttons
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === mode);
+  });
+
+  const prevMode = currentMode;
+  currentMode = mode;
+
+  // Update legacy flags for backward compat
+  isTuneMode = (mode === 'tune');
+  isComparisonMode = (mode === 'compare');
+
+  // Show new mode section
+  const newSection = document.getElementById('mode-' + mode);
+  if (newSection) newSection.classList.remove('hidden');
+
+  // Restore scroll position
+  if (workspace) {
+    requestAnimationFrame(() => {
+      workspace.scrollTop = scrollPositions[mode] || 0;
+    });
+  }
+
+  // Mode-specific initialization
+  if (mode === 'overview') {
+    renderDashboard();
+  } else if (mode === 'tune') {
+    const setup = getCurrentSetup();
+    if (setup) {
+      initTuneMode(setup);
+    }
+  } else if (mode === 'compare') {
+    renderComparisonPresets();
+    if (comparisonSlots.length === 0) {
+      addComparisonSlotFromHome();
+    } else {
+      renderComparisonSlots();
+      updateComparisonRadar();
+    }
+  }
+}
+
+// ============================================
 // DYNAMIC PRESET SYSTEM
 // ============================================
 
@@ -2187,22 +2248,11 @@ function renderWarnings(warnings) {
 // ============================================
 
 function toggleComparisonMode() {
-  isComparisonMode = !isComparisonMode;
-  const btn = $('#btn-toggle-comparison');
-  btn.classList.toggle('active', isComparisonMode);
-
-  if (isComparisonMode) {
-    $('#single-view').classList.add('hidden');
-    $('#comparison-view').classList.remove('hidden');
-    renderComparisonPresets();
-
-    if (comparisonSlots.length === 0) {
-      // Auto-add first slot pre-populated with the home screen setup
-      addComparisonSlotFromHome();
-    }
+  // Legacy compat — now routes through switchMode
+  if (currentMode === 'compare') {
+    switchMode('overview');
   } else {
-    $('#single-view').classList.remove('hidden');
-    $('#comparison-view').classList.add('hidden');
+    switchMode('compare');
   }
 }
 
@@ -2627,61 +2677,30 @@ let tuneState = {
 };
 
 function toggleTuneMode() {
-  const setup = getCurrentSetup();
-  if (!setup && !isTuneMode) {
-    // No setup configured — don't open
-    return;
-  }
-
-  isTuneMode = !isTuneMode;
-  const overlay = $('#tune-overlay');
-  const btn = $('#btn-toggle-tune');
-  btn.classList.toggle('active', isTuneMode);
-
-  if (isTuneMode) {
-    overlay.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-    // Move builder panel into Tune configurator dock
-    dockBuilderPanel(true);
-    initTuneMode(setup);
+  // Legacy compat — now routes through switchMode
+  if (currentMode === 'tune') {
+    switchMode('overview');
   } else {
-    // Return builder panel to Home
-    dockBuilderPanel(false);
-    overlay.classList.add('hidden');
-    document.body.style.overflow = '';
-    // Refresh home dashboard to reflect any changes made in Tune
-    renderDashboard();
+    const setup = getCurrentSetup();
+    if (!setup) return; // No setup configured — don't open
+    switchMode('tune');
   }
 }
 
 function closeTuneMode() {
-  isTuneMode = false;
-  dockBuilderPanel(false);
-  $('#tune-overlay').classList.add('hidden');
-  $('#btn-toggle-tune').classList.remove('active');
-  document.body.style.overflow = '';
-  renderDashboard();
+  // Legacy compat — now routes through switchMode
+  switchMode('overview');
 }
 
+// dockBuilderPanel is no longer needed — builder stays permanently in build-dock
+// Kept as no-op for any lingering calls
 function dockBuilderPanel(inTune) {
-  const panel = $('#builder-panel');
-  if (inTune) {
-    // Move into Tune overlay
-    const dock = $('#tune-configurator');
-    dock.appendChild(panel);
-    panel.classList.add('in-tune-mode');
-  } else {
-    // Return to Home layout
-    const home = $('#single-view');
-    const dashboard = home.querySelector('.dashboard');
-    home.insertBefore(panel, dashboard);
-    panel.classList.remove('in-tune-mode');
-  }
+  // No-op: builder panel is now permanently in the left build-dock
 }
 
 // Auto-refresh Tune panels when user changes setup while Tune is open
 function refreshTuneIfActive() {
-  if (!isTuneMode || _tuneRefreshing) return;
+  if (currentMode !== 'tune' || _tuneRefreshing) return;
   _tuneRefreshing = true;
   try {
     const setup = getCurrentSetup();
@@ -3488,16 +3507,14 @@ function openTuneForSlot(slotIndex) {
   }
   renderDashboard();
 
-  // Now open tune mode
-  if (!isTuneMode) {
-    isTuneMode = true;
-    $('#tune-overlay').classList.remove('hidden');
-    $('#btn-toggle-tune').classList.add('active');
-    document.body.style.overflow = 'hidden';
-    dockBuilderPanel(true);
+  // Now switch to tune mode
+  if (currentMode !== 'tune') {
+    switchMode('tune');
+  } else {
+    // Already in tune mode, just re-init
+    const setup = getCurrentSetup();
+    if (setup) initTuneMode(setup);
   }
-  const setup = getCurrentSetup();
-  if (setup) initTuneMode(setup);
 }
 
 // ============================================
@@ -3527,7 +3544,7 @@ function toggleTheme() {
   }
 
   // Refresh sweep chart if tune mode is open
-  if (isTuneMode && sweepChart) {
+  if (currentMode === 'tune' && sweepChart) {
     sweepChart.destroy();
     sweepChart = null;
     const setup = getCurrentSetup();
@@ -3588,17 +3605,29 @@ function init() {
   $('#btn-save-preset').addEventListener('click', saveCurrentAsPreset);
 
   // Comparison
-  $('#btn-toggle-comparison').addEventListener('click', toggleComparisonMode);
   $('#btn-add-slot').addEventListener('click', addComparisonSlot);
-  $('#btn-exit-comparison').addEventListener('click', toggleComparisonMode);
 
-  // Tune mode
-  $('#btn-toggle-tune').addEventListener('click', toggleTuneMode);
-  $('#btn-exit-tune').addEventListener('click', closeTuneMode);
+  // Mode switcher buttons
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.dataset.mode;
+      if (mode) switchMode(mode);
+    });
+  });
+
+  // Tune slider
   $('#tune-slider').addEventListener('input', onTuneSliderInput);
 
   // Theme
   $('#btn-theme').addEventListener('click', toggleTheme);
+
+  // Set initial mode
+  const overviewBtn = document.querySelector('.mode-btn[data-mode="overview"]');
+  if (overviewBtn) overviewBtn.classList.add('active');
+  // Show overview section, hide others
+  document.getElementById('mode-overview')?.classList.remove('hidden');
+  document.getElementById('mode-tune')?.classList.add('hidden');
+  document.getElementById('mode-compare')?.classList.add('hidden');
 }
 
 document.addEventListener('DOMContentLoaded', init);

@@ -1874,6 +1874,10 @@ body {
   display: block;
 }
 
+.tune-row-obs {
+  display: block;
+}
+
 /* Tune card */
 .tune-card {
   background: var(--bg-card);
@@ -2544,6 +2548,192 @@ body {
 
 .recs-footnote strong {
   color: var(--text-secondary);
+}
+
+/* ============================================
+   OVERALL BUILD SCORE — RANK LADDER BAR
+   ============================================ */
+
+.obs-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.obs-top-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.obs-score-group {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.obs-score-value {
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.obs-score-label {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.obs-rank-badge {
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 3px 10px;
+  border-radius: 6px;
+}
+
+.obs-subtitle {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* Bar track */
+.obs-bar-wrapper {
+  position: relative;
+  padding-bottom: 42px;
+}
+
+.obs-bar-track {
+  position: relative;
+  height: 14px;
+  border-radius: 7px;
+  overflow: hidden;
+  background: linear-gradient(to right,
+    #5a7a5a 0%,
+    #6b8f4a 15%,
+    #8fa63e 30%,
+    #b5b536 45%,
+    #c9a832 55%,
+    #d49430 65%,
+    #c97040 78%,
+    #b85045 90%,
+    #a84040 100%
+  );
+}
+
+[data-theme="dark"] .obs-bar-track {
+  background: linear-gradient(to right,
+    #3d5a3d 0%,
+    #4a6b33 15%,
+    #6b8a2e 30%,
+    #8a8a28 45%,
+    #a88a24 55%,
+    #b87028 65%,
+    #a85838 78%,
+    #8a3838 90%,
+    #7a3030 100%
+  );
+}
+
+/* Zone dividers */
+.obs-bar-zones {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 14px;
+  pointer-events: none;
+}
+
+.obs-zone-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+[data-theme="dark"] .obs-zone-line {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Score marker */
+.obs-marker {
+  position: absolute;
+  top: -4px;
+  width: 3px;
+  height: 22px;
+  border-radius: 2px;
+  background: var(--text-primary);
+  transform: translateX(-1.5px);
+  box-shadow: 0 0 0 2px var(--bg-card);
+  transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 2;
+}
+
+/* ---- Rank Ladder — full brainrot label system ---- */
+.obs-ladder {
+  position: absolute;
+  top: 14px;
+  left: 0;
+  right: 0;
+  height: 28px;
+  pointer-events: none;
+}
+
+.obs-ladder-label {
+  position: absolute;
+  transform: translateX(-50%);
+  font-family: var(--font-display);
+  font-size: 0.52rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--text-muted);
+  opacity: 0.5;
+  transition: opacity 0.3s ease, color 0.3s ease;
+  line-height: 1;
+}
+
+/* Staggered rows: even tiers sit higher, odd tiers lower */
+.obs-ladder-label.obs-ladder-row-top {
+  top: 5px;
+}
+
+.obs-ladder-label.obs-ladder-row-bot {
+  top: 17px;
+}
+
+/* Active tier: fully opaque, bolder */
+.obs-ladder-label.obs-ladder-active {
+  color: var(--text-primary);
+  font-weight: 800;
+  opacity: 1;
+  font-size: 0.56rem;
+}
+
+@media (max-width: 600px) {
+  .obs-score-value {
+    font-size: 1.3rem;
+  }
+  .obs-ladder-label {
+    font-size: 0.42rem;
+  }
+  .obs-ladder-label.obs-ladder-active {
+    font-size: 0.46rem;
+  }
+  .obs-bar-wrapper {
+    padding-bottom: 38px;
+  }
 }
 
 /* ============================================

@@ -782,7 +782,7 @@ const STRINGS = [
     gaugeNum: 1.25,
     material: "Polyester",
     shape: "Octagonal",
-    stiffness: 233.7,
+    stiffness: 234,
     tensionLoss: 33.3,
     spinPotential: 4.6,
     twScore: { power: 55, spin: 82, comfort: 60, control: 85, feel: 80, playabilityDuration: 72, durability: 82 },
@@ -796,7 +796,7 @@ const STRINGS = [
     gaugeNum: 1.30,
     material: "Polyester",
     shape: "Octagonal",
-    stiffness: 232.6,
+    stiffness: 233,
     tensionLoss: 45.9,
     spinPotential: 4.5,
     twScore: { power: 50, spin: 80, comfort: 55, control: 88, feel: 78, playabilityDuration: 68, durability: 88 },
@@ -1020,7 +1020,7 @@ const STRINGS = [
     gaugeNum: 1.30,
     material: "Co-Polyester (elastic)",
     shape: "Round",
-    stiffness: 55,
+    stiffness: 115,  // originally 0.20 kg/mm; converted to lb/in scale for consistency
     tensionLoss: 10,
     spinPotential: 5.5,
     twScore: { power: 88, spin: 60, comfort: 95, control: 60, feel: 90, playabilityDuration: 92, durability: 50 },
@@ -1261,80 +1261,214 @@ function calcFrameBase(racquet) {
   };
 }
 
-function calcStringContribution(stringData) {
-  // String stiffness range: ~140 (gut) to ~234 (RPM Blast)
-  // Normalize: lower stiffness = more power, more comfort
-  const stiffNorm = lerp(stringData.stiffness, 140, 240, 1, 0); // 1 = soft, 0 = stiff
+// ============================================
+// LAYER 1: BASE STRING PROFILE
+// ============================================
+// Derives a standalone string profile from twScore + physical properties.
+// Score compression: 50-60 avg, 60-75 strong, 75-85 excellent, 85+ rare/exceptional.
+// No string should casually hit 90+ without being a genuine outlier.
+
+function compressScore(raw, floor = 30, ceiling = 95) {
+  // Compress twScore (raw 0-100) into a more realistic range.
+  // twScore ~38-98 → compressed ~32-88.
+  // Formula: soft sigmoid-like compression that pulls extremes toward center.
+  const mid = 65;
+  const spread = 0.55; // <1 compresses, >1 expands
+  const compressed = mid + (raw - mid) * spread;
+  return Math.max(floor, Math.min(ceiling, compressed));
+}
+
+function calcBaseStringProfile(stringData) {
+  const tw = stringData.twScore;
+  const stiff = stringData.stiffness; // lb/in: 115 (Truffle X elastic) to 234 (RPM Blast 17). All values TWU-measured or estimated in same unit.
+  const tLoss = stringData.tensionLoss; // %: 10 (gut/Truffle X) to 48.3 (Hawk Power). Percentage of initial tension lost after break-in.
+  const spinPot = stringData.spinPotential; // TWU lab scale: 4.5 (RPM Blast 16) to 9.4 (O-Toro). Measures friction-based spin generation.
+
+  // Normalize stiffness: 0 = stiffest (234), 1 = softest (115)
+  const stiffNorm = Math.max(0, Math.min(1, lerp(stiff, 115, 234, 1, 0)));
+
+  // Normalize tension loss: 0 = best maintenance (10%), 1 = worst (50%)
+  const tLossNorm = Math.max(0, Math.min(1, lerp(tLoss, 10, 50, 0, 1)));
+
+  // Normalize spin potential: 0 = low (4.5), 1 = high (9.0)
+  const spinNorm = Math.max(0, Math.min(1, lerp(spinPot, 4.5, 9.0, 0, 1)));
+
+  // --- Power: twScore primary, stiffness secondary ---
+  // Softer strings = more power (elastic return), but cap the bonus
+  let power = compressScore(tw.power);
+  power += stiffNorm * 5 - 2; // soft: up to +3, stiff: down to -2
+
+  // --- Control: twScore primary, inverse of power tendency ---
+  let control = compressScore(tw.control);
+  control += (1 - stiffNorm) * 4 - 1.5; // stiff: up to +2.5, soft: down to -1.5
+
+  // --- Spin: twScore + spinPotential blend ---
+  let spin = compressScore(tw.spin) * 0.6 + compressScore(spinPot * 12) * 0.4;
+  // Shaped strings get small bonus (already reflected in spinPotential mostly)
+
+  // --- Comfort: twScore primary, stiffness confirms ---
+  let comfort = compressScore(tw.comfort);
+  comfort += stiffNorm * 4 - 1.5; // soft: up to +2.5, stiff: down to -1.5
+
+  // --- Feel: twScore primary, stiffness + material secondary ---
+  let feel = compressScore(tw.feel);
+  if (stringData.material === 'Natural Gut') feel += 5; // gut has unmatched feel
+  feel += stiffNorm * 4 - 1; // soft: up to +3, stiff: down to -1
+  // Shaped strings have slightly less clean ball feedback than round
+  const isRound = stringData.shape && stringData.shape.toLowerCase().includes('round');
+  if (!isRound && stringData.material !== 'Natural Gut') feel -= 1.5;
+
+  // --- Durability: twScore directly, thin gauge penalty ---
+  let durability = compressScore(tw.durability);
+  if (stringData.gaugeNum <= 1.20) durability -= 3;
+  if (stringData.gaugeNum >= 1.30) durability += 2;
+
+  // --- Playability Duration: twScore + tension maintenance ---
+  let playability = compressScore(tw.playabilityDuration);
+  playability += (1 - tLossNorm) * 6 - 2; // good maintenance: up to +4, poor: down to -2
+
+  // --- Tradeoff enforcement ---
+  // If power + control sum is too high, tax the lesser one
+  const pcSum = power + control;
+  if (pcSum > 140) {
+    const excess = (pcSum - 140) * 0.5;
+    if (power > control) control -= excess;
+    else power -= excess;
+  }
+
+  // If comfort + control sum is unrealistically high, apply small tax
+  const ccSum = comfort + control;
+  if (ccSum > 145) {
+    const excess = (ccSum - 145) * 0.4;
+    if (comfort > control) comfort -= excess;
+    else control -= excess;
+  }
+
+  // --- Final clamp: nothing below 25, nothing above 92 for base string ---
+  const capLow = 25, capHigh = 92;
+  const profile = {
+    power: Math.round(Math.max(capLow, Math.min(capHigh, power))),
+    spin: Math.round(Math.max(capLow, Math.min(capHigh, spin))),
+    control: Math.round(Math.max(capLow, Math.min(capHigh, control))),
+    feel: Math.round(Math.max(capLow, Math.min(capHigh, feel))),
+    comfort: Math.round(Math.max(capLow, Math.min(capHigh, comfort))),
+    durability: Math.round(Math.max(capLow, Math.min(capHigh, durability))),
+    playability: Math.round(Math.max(capLow, Math.min(capHigh, playability)))
+  };
+
+  return profile;
+}
+
+// ============================================
+// LAYER 2: FRAME INTERACTION (string modifiers on frame)
+// ============================================
+// String properties create small modifiers on frame-driven stats.
+// These are intentionally small (-8 to +8 range) — the frame is primary for
+// spin/power/control/comfort/feel/launch; the string profile handles
+// durability and playability directly.
+
+function calcStringFrameMod(stringData) {
+  const stiff = stringData.stiffness;
+  // Clamped normalization: 0 = stiffest (234), 1 = softest (115)
+  const stiffNorm = Math.max(0, Math.min(1, lerp(stiff, 115, 234, 1, 0)));
+  const spinPot = stringData.spinPotential;
 
   return {
-    powerMod: stiffNorm * 25 - 10, // soft string adds power, stiff subtracts
-    spinMod: (stringData.spinPotential - 5) * 5, // center at 5, scale
-    controlMod: (1 - stiffNorm) * 15 - 5, // stiffer = more control
-    comfortMod: stiffNorm * 20 - 8,
-    feelMod: stringData.material === 'Natural Gut' ? 15 : (stiffNorm * 8 - 2),
-    durability: stringData.twScore.durability,
-    playability: stringData.twScore.playabilityDuration,
-    tensionLossMod: lerp(stringData.tensionLoss, 10, 50, 10, -15) // low loss = bonus playability
+    powerMod: stiffNorm * 8 - 3,      // soft: up to +5, stiff: -3
+    spinMod: (spinPot - 6.0) * 3,      // centered at 6.0, ±3 per point
+    controlMod: (1 - stiffNorm) * 6 - 2, // stiff: up to +4, soft: -2
+    comfortMod: stiffNorm * 7 - 2.5,    // soft: up to +4.5, stiff: -2.5
+    feelMod: stringData.material === 'Natural Gut' ? 6 : (stiffNorm * 5 - 1.5),
+    launchMod: stiffNorm * 3 - 1       // soft strings add slight launch
   };
 }
 
 function calcTensionModifier(tension, tensionRange) {
   const mid = (tensionRange[0] + tensionRange[1]) / 2;
   const diff = tension - mid;
-  // Every 2 lbs above midpoint: +3% control, -3% power
+  // Every 2 lbs above midpoint: +2 control, -2 power (reduced from old ±3)
   const factor = diff / 2;
 
   return {
-    powerMod: -factor * 3,
-    controlMod: factor * 3,
-    launchMod: -factor * 2,
-    comfortMod: -factor * 2,
-    spinMod: -Math.abs(factor) * 0.5 // extreme tensions slightly reduce spin
+    powerMod: -factor * 2,
+    controlMod: factor * 2,
+    launchMod: -factor * 1.5,
+    comfortMod: -factor * 1.5,
+    spinMod: -Math.abs(factor) * 0.4
   };
 }
+
+// ============================================
+// COMBINED PREDICTION: Frame Base + String Modifier + Tension + String Profile
+// ============================================
+// Frame-driven stats (spin, power, control, launch, feel, comfort, stability, forgiveness)
+// get frame base + small string mod + tension mod.
+// String-driven stats (durability, playability) come from the base string profile.
 
 function predictSetup(racquet, stringConfig) {
   const frameBase = calcFrameBase(racquet);
 
-  let stringContrib;
+  let stringMod, stringProfile;
   let avgTension;
 
   if (stringConfig.isHybrid) {
-    const mainsContrib = calcStringContribution(stringConfig.mains);
-    const crossesContrib = calcStringContribution(stringConfig.crosses);
+    const mainsMod = calcStringFrameMod(stringConfig.mains);
+    const crossesMod = calcStringFrameMod(stringConfig.crosses);
+    const mainsProfile = calcBaseStringProfile(stringConfig.mains);
+    const crossesProfile = calcBaseStringProfile(stringConfig.crosses);
 
-    // Mains 70%, crosses 30%
-    stringContrib = {
-      powerMod: mainsContrib.powerMod * 0.7 + crossesContrib.powerMod * 0.3,
-      spinMod: mainsContrib.spinMod * 0.7 + crossesContrib.spinMod * 0.3,
-      controlMod: mainsContrib.controlMod * 0.3 + crossesContrib.controlMod * 0.7,
-      comfortMod: mainsContrib.comfortMod * 0.7 + crossesContrib.comfortMod * 0.3,
-      feelMod: mainsContrib.feelMod * 0.7 + crossesContrib.feelMod * 0.3,
-      durability: mainsContrib.durability * 0.4 + crossesContrib.durability * 0.6,
-      playability: mainsContrib.playability * 0.7 + crossesContrib.playability * 0.3,
-      tensionLossMod: mainsContrib.tensionLossMod * 0.6 + crossesContrib.tensionLossMod * 0.4
+    // Mains-weighted for power/comfort/feel/spin, crosses-weighted for control
+    stringMod = {
+      powerMod: mainsMod.powerMod * 0.7 + crossesMod.powerMod * 0.3,
+      spinMod: mainsMod.spinMod * 0.7 + crossesMod.spinMod * 0.3,
+      controlMod: mainsMod.controlMod * 0.3 + crossesMod.controlMod * 0.7,
+      comfortMod: mainsMod.comfortMod * 0.7 + crossesMod.comfortMod * 0.3,
+      feelMod: mainsMod.feelMod * 0.7 + crossesMod.feelMod * 0.3,
+      launchMod: mainsMod.launchMod * 0.7 + crossesMod.launchMod * 0.3
     };
+
+    // Blend string profiles: mains dominant for most, crosses for durability
+    stringProfile = {
+      power: mainsProfile.power * 0.7 + crossesProfile.power * 0.3,
+      spin: mainsProfile.spin * 0.6 + crossesProfile.spin * 0.4,
+      control: mainsProfile.control * 0.4 + crossesProfile.control * 0.6,
+      feel: mainsProfile.feel * 0.7 + crossesProfile.feel * 0.3,
+      comfort: mainsProfile.comfort * 0.7 + crossesProfile.comfort * 0.3,
+      durability: mainsProfile.durability * 0.4 + crossesProfile.durability * 0.6,
+      playability: mainsProfile.playability * 0.6 + crossesProfile.playability * 0.4
+    };
+
     avgTension = (stringConfig.mainsTension + stringConfig.crossesTension) / 2;
   } else {
-    stringContrib = calcStringContribution(stringConfig.string);
+    stringMod = calcStringFrameMod(stringConfig.string);
+    stringProfile = calcBaseStringProfile(stringConfig.string);
+    stringMod.launchMod = stringMod.launchMod || 0;
     avgTension = stringConfig.tension;
   }
 
   const tensionMod = calcTensionModifier(avgTension, racquet.tensionRange);
 
-  // Combine
+  // --- Blend: frame base (primary) + string mod + tension mod ---
+  // Frame-driven stats: frame is ~70% weight, string profile ~20%, mods ~10%
+  const FW = 0.65; // frame weight
+  const SW = 0.35; // string profile weight
+
   const stats = {
-    spin: clamp(frameBase.spin + stringContrib.spinMod + tensionMod.spinMod),
-    power: clamp(frameBase.power + stringContrib.powerMod + tensionMod.powerMod),
-    control: clamp(frameBase.control + stringContrib.controlMod + tensionMod.controlMod),
-    launch: clamp(frameBase.launch + tensionMod.launchMod),
-    feel: clamp(frameBase.feel + stringContrib.feelMod),
-    comfort: clamp(frameBase.comfort + stringContrib.comfortMod + tensionMod.comfortMod),
-    stability: clamp(frameBase.stability),
+    spin:    clamp(frameBase.spin * FW + stringProfile.spin * SW + stringMod.spinMod + tensionMod.spinMod),
+    power:   clamp(frameBase.power * FW + stringProfile.power * SW + stringMod.powerMod + tensionMod.powerMod),
+    control: clamp(frameBase.control * FW + stringProfile.control * SW + stringMod.controlMod + tensionMod.controlMod),
+    launch:  clamp(frameBase.launch + stringMod.launchMod + tensionMod.launchMod),
+    feel:    clamp(frameBase.feel * FW + stringProfile.feel * SW + stringMod.feelMod),
+    comfort: clamp(frameBase.comfort * FW + stringProfile.comfort * SW + stringMod.comfortMod + tensionMod.comfortMod),
+    stability:   clamp(frameBase.stability),
     forgiveness: clamp(frameBase.forgiveness),
-    durability: clamp(stringContrib.durability),
-    playability: clamp(stringContrib.playability + stringContrib.tensionLossMod)
+    // String-only stats: directly from string profile
+    durability:  clamp(stringProfile.durability),
+    playability: clamp(stringProfile.playability)
   };
+
+  // Attach debug info for inspection
+  stats._debug = { frameBase, stringProfile, stringMod, tensionMod };
 
   return stats;
 }
@@ -2905,6 +3039,7 @@ function initTuneMode(setup) {
   renderOptimalZone(sliderMin, sliderMax);
   renderSweepChart(setup);
   renderBestValueMove();
+  renderOverallBuildScore(setup);
   renderRecommendedBuilds(setup);
 }
 
@@ -3347,6 +3482,81 @@ function renderBestValueMove() {
       <span><strong>Best Value Move:</strong> ${direction} ${Math.abs(diff)} lbs to ${anchor} lbs for peak balanced performance.</span>
     </div>`;
   }
+}
+
+// ---- Overall Build Score — Rank Ladder Bar ----
+
+const OBS_TIERS = [
+  { min: 0,  max: 10,  label: 'Delete This' },
+  { min: 10, max: 20,  label: 'Hospital Build' },
+  { min: 20, max: 30,  label: 'Bruh' },
+  { min: 30, max: 40,  label: 'Cooked' },
+  { min: 40, max: 50,  label: "This Ain't It" },
+  { min: 50, max: 60,  label: 'Mid' },
+  { min: 60, max: 70,  label: 'Built Diff' },
+  { min: 70, max: 80,  label: 'S Rank' },
+  { min: 80, max: 90,  label: 'WTF' },
+  { min: 90, max: 100, label: 'Max Aura' },
+];
+
+function getObsTier(score) {
+  for (let i = OBS_TIERS.length - 1; i >= 0; i--) {
+    if (score >= OBS_TIERS[i].min) return OBS_TIERS[i];
+  }
+  return OBS_TIERS[0];
+}
+
+function getObsBadgeStyle(score) {
+  if (score >= 90) return 'background: rgba(168, 64, 64, 0.15); color: #a84040;';
+  if (score >= 80) return 'background: rgba(185, 80, 69, 0.12); color: #b85045;';
+  if (score >= 70) return 'background: rgba(201, 112, 64, 0.12); color: #c97040;';
+  if (score >= 60) return 'background: rgba(181, 181, 54, 0.12); color: #8a8a28;';
+  if (score >= 50) return 'background: rgba(143, 166, 62, 0.10); color: #6b8f4a;';
+  if (score >= 40) return 'background: rgba(90, 140, 90, 0.10); color: #5a8a5a;';
+  if (score >= 30) return 'background: rgba(90, 122, 90, 0.10); color: #5a7a5a;';
+  return 'background: rgba(80, 100, 80, 0.10); color: #4a6a4a;';
+}
+
+function renderOverallBuildScore(setup) {
+  const container = $('#obs-content');
+  if (!container) return;
+  const { racquet, stringConfig } = setup;
+  const stats = predictSetup(racquet, stringConfig);
+  const score = computeCompositeScore(stats);
+  const tier = getObsTier(score);
+  const pct = Math.min(Math.max(score / 100, 0), 1) * 100;
+
+  // Zone divider lines on the bar
+  const zoneLines = OBS_TIERS.slice(1).map(t => 
+    `<div class="obs-zone-line" style="left: ${t.min}%"></div>`
+  ).join('');
+
+  // Full rank ladder: every tier label positioned at its zone center
+  // Alternate rows (top/bottom) for adjacent labels to prevent overlap
+  const ladderLabels = OBS_TIERS.map((t, i) => {
+    const centerPct = (t.min + t.max) / 2;
+    const isActive = score >= t.min && (score < t.max || (t.max === 100 && score >= t.min));
+    const row = i % 2 === 0 ? 'obs-ladder-row-top' : 'obs-ladder-row-bot';
+    return `<span class="obs-ladder-label ${row} ${isActive ? 'obs-ladder-active' : ''}" style="left: ${centerPct}%" data-tier="${t.label}">${t.label}</span>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="obs-top-row">
+      <div class="obs-score-group">
+        <span class="obs-score-value">${score.toFixed(1)}</span>
+        <span class="obs-score-label">Composite</span>
+      </div>
+      <span class="obs-rank-badge" style="${getObsBadgeStyle(score)}">${tier.label}</span>
+    </div>
+    <div class="obs-bar-wrapper">
+      <div class="obs-bar-track">
+        <div class="obs-marker" style="left: ${pct}%"></div>
+      </div>
+      <div class="obs-bar-zones">${zoneLines}</div>
+      <div class="obs-ladder">${ladderLabels}</div>
+    </div>
+    <p class="obs-subtitle">Live composite score · rank ladder</p>
+  `;
 }
 
 // ---- What To Try Next — 3-bucket contextual recommendations ----

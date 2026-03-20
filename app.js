@@ -173,6 +173,510 @@ const RACQUETS = [
     frameProfile: "Braided construction, thin constant beam",
     identity: "Classic Heavy Blade",
     notes: "97sq in + thin beam + 62 RA = maximum feel and control. Heavy static weight but low swingweight due to very head-light balance. For advanced full swingers."
+  },
+  {
+    id: "babolat-pure-aero-98-2026",
+    name: "Babolat Pure Aero 98 2026",
+    year: 2026,
+    headSize: 98,
+    length: 27,
+    strungWeight: 323,
+    balance: 32.49,
+    balancePts: "6 pts HL",
+    swingweight: 322,
+    stiffness: 66,
+    beamWidth: [21, 23, 22],
+    pattern: "16x20",
+    powerLevel: "Low-Medium",
+    strokeStyle: "Full",
+    swingSpeed: "Fast",
+    tensionRange: [46, 55],
+    frameProfile: "Aero-shaped variable beam with NF2 flax fiber dampening",
+    identity: "Precision Spin Blade",
+    notes: "Smallest head and tightest pattern (16x20) in the 2026 Aero family. Thinnest beam (21mm cap) for control. NF2 natural flax fiber tech absorbs harsh vibrations. 66 RA is moderate stiffness. For advanced players wanting spin + precision."
+  },
+  {
+    id: "babolat-pure-aero-100-2026",
+    name: "Babolat Pure Aero 100 2026",
+    year: 2026,
+    headSize: 100,
+    length: 27,
+    strungWeight: 318,
+    balance: 32.99,
+    balancePts: "4 pts HL",
+    swingweight: 320,
+    stiffness: 66,
+    beamWidth: [23, 26, 23],
+    pattern: "16x19",
+    powerLevel: "Low-Medium",
+    strokeStyle: "Medium-Full",
+    swingSpeed: "Medium-Fast",
+    tensionRange: [46, 55],
+    frameProfile: "Updated aero beam (6% more aerodynamic) with NF2 flax fiber",
+    identity: "Spin Cannon v2",
+    notes: "2026 update to the classic Aero 100. Redesigned beam is 6% more aerodynamic for faster swing speed. NF2 natural flax fiber dampens vibration. TW topspin score 9.3. Same spin DNA, better comfort than predecessor."
+  },
+  {
+    id: "babolat-pure-aero-team-2026",
+    name: "Babolat Pure Aero Team 2026",
+    year: 2026,
+    headSize: 100,
+    length: 27,
+    strungWeight: 301,
+    balance: 33.02,
+    balancePts: "4 pts HL",
+    swingweight: 306,
+    stiffness: 66,
+    beamWidth: [23, 26, 23],
+    pattern: "16x19",
+    powerLevel: "Medium",
+    strokeStyle: "Medium",
+    swingSpeed: "Medium",
+    tensionRange: [46, 55],
+    frameProfile: "Lighter aero beam with NF2 flax fiber dampening",
+    identity: "Spin Cannon Lite",
+    notes: "Lightweight version of the Pure Aero 100 2026 at 285g unstrung (~301g strung). Same beam shape and 16x19 pattern. Lower swingweight (306) makes it more maneuverable. Ideal for developing players or those wanting spin without the weight."
+  },
+  {
+    id: "head-speed-mp-2026",
+    name: "Head Speed MP 2026",
+    year: 2026,
+    headSize: 100,
+    length: 27,
+    strungWeight: 318,
+    balance: 33.02,
+    balancePts: "4 pts HL",
+    swingweight: 329,
+    stiffness: 60,
+    beamWidth: [23, 23, 23],
+    pattern: "16x19",
+    powerLevel: "Medium",
+    strokeStyle: "Medium-Full",
+    swingSpeed: "Medium-Fast",
+    tensionRange: [48, 57],
+    frameProfile: "Constant box beam with Hy-Bor (boron+carbon) + Auxetic 2",
+    identity: "Precision All-Rounder",
+    notes: "2026 Speed MP carries the Hy-Bor + Auxetic 2 material from the Legend edition. 60 RA is notably soft for a 100 sq in frame. High swingweight (329) provides excellent stability. Balanced all-court platform."
+  },
+  {
+    id: "head-speed-pro-2026",
+    name: "Head Speed Pro 2026",
+    year: 2026,
+    headSize: 100,
+    length: 27,
+    strungWeight: 326,
+    balance: 31.98,
+    balancePts: "7 pts HL",
+    swingweight: 328,
+    stiffness: 61,
+    beamWidth: [23, 23, 23],
+    pattern: "18x20",
+    powerLevel: "Low-Medium",
+    strokeStyle: "Full",
+    swingSpeed: "Fast",
+    tensionRange: [48, 57],
+    frameProfile: "Constant box beam, dense pattern, Hy-Bor + Auxetic 2",
+    identity: "Surgeon's Scalpel",
+    notes: "Dense 18x20 pattern for flatter hitters seeking maximum control. Heavy at 326g strung but head-light (7 pts HL). 61 RA offers good flex and feel. Hy-Bor material enhances stability. For advanced full swingers."
+  },
+  {
+    id: "head-speed-mp-l-2026",
+    name: "Head Speed MP L 2026",
+    year: 2026,
+    headSize: 100,
+    length: 27,
+    strungWeight: 295,
+    balance: 33.48,
+    balancePts: "3 pts HL",
+    swingweight: 316,
+    stiffness: 61,
+    beamWidth: [23, 23, 23],
+    pattern: "16x19",
+    powerLevel: "Medium",
+    strokeStyle: "Medium",
+    swingSpeed: "Medium",
+    tensionRange: [48, 57],
+    frameProfile: "Lightweight constant box beam with Hy-Bor + Auxetic 2",
+    identity: "Agile All-Rounder",
+    notes: "Lightweight Speed variant at 295g strung. Slightly head-heavy shift (3 pts HL) compensates for low mass. Same 61 RA flex and Auxetic 2 feel. Good option for players wanting Speed DNA without the weight."
+  },
+  {
+    id: "yonex-muse-98-2026",
+    name: "Yonex Muse 98 2026",
+    year: 2026,
+    headSize: 98,
+    length: 27,
+    strungWeight: 323,
+    balance: 32.49,
+    balancePts: "6 pts HL",
+    swingweight: 322,
+    stiffness: 62,
+    beamWidth: [24, 24, 18],
+    pattern: "16x18",
+    powerLevel: "Low-Medium",
+    strokeStyle: "Full",
+    swingSpeed: "Fast",
+    tensionRange: [45, 60],
+    frameProfile: "Isometric head with Energy Flow Shaft (18mm throat) + Uniform Impact Grommets",
+    identity: "Flow State Blade",
+    notes: "New 2026 Yonex line replacing the VCORE concept. Radical 18mm throat (Energy Flow Shaft) tapers dramatically for flex and feel. Open 16x18 pattern is unusual for a 98 sq in head — exceptional spin for a control frame. Servo Filter dampens vibration."
+  },
+  {
+    id: "yonex-muse-100-2026",
+    name: "Yonex Muse 100 2026",
+    year: 2026,
+    headSize: 100,
+    length: 27,
+    strungWeight: 312,
+    balance: 33.0,
+    balancePts: "3 pts HL",
+    swingweight: 312,
+    stiffness: 57,
+    beamWidth: [24.5, 24.5, 18],
+    pattern: "16x18",
+    powerLevel: "Medium",
+    strokeStyle: "Medium-Full",
+    swingSpeed: "Medium-Fast",
+    tensionRange: [45, 60],
+    frameProfile: "Isometric head with Energy Flow Shaft (18mm throat) + Servo Filter",
+    identity: "Comfort Flow",
+    notes: "Extremely flexible at 57 RA — one of the softest 100 sq in frames on tour. Energy Flow Shaft (18mm throat) delivers unique feel. Open 16x18 pattern boosts spin. Lower swingweight (312) for easy maneuverability. Comfort-first design."
+  },
+  {
+    id: "yonex-vcore-100-2023",
+    name: "Yonex VCORE 100 2023",
+    year: 2023,
+    headSize: 100,
+    length: 27,
+    strungWeight: 320,
+    balance: 33.0,
+    balancePts: "4 pts HL",
+    swingweight: 322,
+    stiffness: 65,
+    beamWidth: [25.3, 25.3, 22],
+    pattern: "16x19",
+    powerLevel: "Medium",
+    strokeStyle: "Medium-Full",
+    swingSpeed: "Medium-Fast",
+    tensionRange: [45, 60],
+    frameProfile: "Isometric head with SIF grommets for string snapback, widened hoop at 10/2",
+    identity: "Launch Pad",
+    notes: "Widest beam in this group (25.3mm constant). SIF grommets maximize string snapback for spin. Wider hoop at 10 and 2 o'clock raises launch angle. 65 RA is moderate-stiff. Good power + spin blend."
+  },
+  {
+    id: "head-gravity-pro-2025",
+    name: "Head Gravity Pro 2025",
+    year: 2025,
+    headSize: 100,
+    length: 27,
+    strungWeight: 332,
+    balance: 31.98,
+    balancePts: "7 pts HL",
+    swingweight: 329,
+    stiffness: 59,
+    beamWidth: [20, 20, 20],
+    pattern: "18x20",
+    powerLevel: "Low",
+    strokeStyle: "Full",
+    swingSpeed: "Fast",
+    tensionRange: [48, 57],
+    frameProfile: "Teardrop head shape, thin constant beam, Auxetic 2",
+    identity: "The Heavy Scalpel",
+    notes: "Heaviest frame in this group at 332g strung. Thinnest beam in the Gravity family (20mm constant). Dense 18x20 pattern + 59 RA flex = maximum control and feel. Teardrop head shape shifts mass to 12 o'clock. For advanced baseliners."
+  },
+  {
+    id: "head-gravity-tour-2025",
+    name: "Head Gravity Tour 2025",
+    year: 2025,
+    headSize: 98,
+    length: 27,
+    strungWeight: 323,
+    balance: 32.99,
+    balancePts: "4 pts HL",
+    swingweight: 328,
+    stiffness: 59,
+    beamWidth: [22, 22, 22],
+    pattern: "16x19",
+    powerLevel: "Low-Medium",
+    strokeStyle: "Medium-Full",
+    swingSpeed: "Medium-Fast",
+    tensionRange: [48, 57],
+    frameProfile: "Teardrop head shape, constant beam, Auxetic 2",
+    identity: "Control Artist",
+    notes: "2025 redesign with 98 sq in head (was 100) and 16x19 pattern (was 18x20). More spin-friendly than previous Gravity Tour. Teardrop head shifts sweetspot higher. 59 RA flex provides excellent feel. High swingweight (328) for stability."
+  },
+  {
+    id: "head-gravity-mp-2025",
+    name: "Head Gravity MP 2025",
+    year: 2025,
+    headSize: 100,
+    length: 27,
+    strungWeight: 312,
+    balance: 33.48,
+    balancePts: "3 pts HL",
+    swingweight: 323,
+    stiffness: 57,
+    beamWidth: [22, 22, 22],
+    pattern: "16x20",
+    powerLevel: "Low-Medium",
+    strokeStyle: "Medium-Full",
+    swingSpeed: "Medium-Fast",
+    tensionRange: [48, 57],
+    frameProfile: "Teardrop head shape, constant beam, Half Cap grommet system",
+    identity: "Flex Control",
+    notes: "Lowest stiffness in this group at 57 RA — maximum flex and comfort. Half Cap grommet system enhances string movement. 16x20 pattern adds control over a standard 16x19. Lighter weight (312g) with slight head-heavy lean (3 pts HL) for easy handling."
+  },
+  {
+    id: "wilson-shift-99-2025",
+    name: "Wilson Shift 99",
+    year: 2025,
+    headSize: 99,
+    length: 27,
+    strungWeight: 318,
+    balance: 32.39,
+    balancePts: "6 pts HL",
+    swingweight: 317,
+    stiffness: 67,
+    beamWidth: [23.5, 23.5, 23.5],
+    pattern: "16x20",
+    powerLevel: "Low-Medium",
+    strokeStyle: "Medium-Full",
+    swingSpeed: "Medium-Fast",
+    tensionRange: [48, 58],
+    frameProfile: "Constant beam, low vertical flex, Shift construction",
+    identity: "Spin Architect",
+    notes: "Modern spin-focused frame with unique low vertical flex and high lateral stiffness. 16x20 dense pattern balances spin access with control. Constant 23.5mm beam provides uniform flex. 67 RA moderately stiff. 318g strung with 6 pts HL for head-light maneuvering."
+  },
+  {
+    id: "wilson-shift-99l-2025",
+    name: "Wilson Shift 99 L",
+    year: 2025,
+    headSize: 99,
+    length: 27,
+    strungWeight: 301,
+    balance: 32.64,
+    balancePts: "5 pts HL",
+    swingweight: 311,
+    stiffness: 68,
+    beamWidth: [23.5, 23.5, 23.5],
+    pattern: "16x20",
+    powerLevel: "Low-Medium",
+    strokeStyle: "Medium-Full",
+    swingSpeed: "Medium-Fast",
+    tensionRange: [48, 58],
+    frameProfile: "Constant beam, low vertical flex, Shift Lite construction",
+    identity: "Accessible Spin",
+    notes: "Lighter Shift variant at 301g strung for intermediate players. Same low vertical flex design as Shift 99. Slightly higher stiffness (68 RA) compensates for lighter weight. 5 pts HL balance. Same 16x20 pattern for spin-friendly control."
+  },
+  {
+    id: "wilson-rf01-pro-2025",
+    name: "Wilson RF01 Pro",
+    year: 2025,
+    headSize: 98,
+    length: 27,
+    strungWeight: 337,
+    balance: 32.39,
+    balancePts: "6 pts HL",
+    swingweight: 331,
+    stiffness: 67,
+    beamWidth: [23.2, 23, 22],
+    pattern: "16x19",
+    powerLevel: "Low",
+    strokeStyle: "Full",
+    swingSpeed: "Fast",
+    tensionRange: [50, 60],
+    frameProfile: "Tapering beam, Carbon Braid FORTYFIVE, leather grip",
+    identity: "Precision Hammer",
+    notes: "Federer collaboration. 337g strung — one of the heaviest modern frames. Carbon Braid FORTYFIVE construction for precision and stability. Leather grip adds mass at handle. Tapering beam from 23.2mm to 22mm. High swingweight (331) requires advanced technique. 67 RA moderately stiff."
+  },
+  {
+    id: "wilson-rf01-2025",
+    name: "Wilson RF01",
+    year: 2025,
+    headSize: 98,
+    length: 27,
+    strungWeight: 318,
+    balance: 32.64,
+    balancePts: "5 pts HL",
+    swingweight: 319,
+    stiffness: 64,
+    beamWidth: [23.2, 23, 22],
+    pattern: "16x19",
+    powerLevel: "Low-Medium",
+    strokeStyle: "Medium-Full",
+    swingSpeed: "Medium-Fast",
+    tensionRange: [50, 60],
+    frameProfile: "Tapering beam, foam interior dampening, synthetic grip",
+    identity: "Flex Precision",
+    notes: "Lighter, softer RF01 variant at 318g strung. Foam interior adds vibration dampening and comfort. Lower stiffness (64 RA) provides more flex and arm-friendliness. Same tapering beam profile as RF01 Pro. 16x19 for spin access. More accessible than the Pro version."
+  },
+  {
+    id: "babolat-pure-strike-97-2025",
+    name: "Babolat Pure Strike 97",
+    year: 2025,
+    headSize: 97,
+    length: 27,
+    strungWeight: 332,
+    balance: 31.98,
+    balancePts: "7 pts HL",
+    swingweight: 322,
+    stiffness: 63,
+    beamWidth: [21, 22, 21],
+    pattern: "16x20",
+    powerLevel: "Low",
+    strokeStyle: "Full",
+    swingSpeed: "Fast",
+    tensionRange: [48, 57],
+    frameProfile: "Thin constant beam, NF2-Tech, leather grip",
+    identity: "Surgical Control",
+    notes: "Thinnest beam in the Pure Strike line at 21/22/21mm. NF2-Tech for enhanced feel. Leather grip adds weight at handle — 7 pts HL is extremely head-light. 332g strung for stability. 63 RA flex for comfort and feel. 16x20 dense pattern maximizes control. 97 sq in head demands precision."
+  },
+  {
+    id: "babolat-pure-strike-98-16x19-2025",
+    name: "Babolat Pure Strike 98 16x19",
+    year: 2025,
+    headSize: 98,
+    length: 27,
+    strungWeight: 323,
+    balance: 33.02,
+    balancePts: "4 pts HL",
+    swingweight: 330,
+    stiffness: 64,
+    beamWidth: [21, 23, 21],
+    pattern: "16x19",
+    powerLevel: "Low-Medium",
+    strokeStyle: "Full",
+    swingSpeed: "Fast",
+    tensionRange: [48, 57],
+    frameProfile: "Variable beam, FSI Control tech, C-Fly construction",
+    identity: "Attack Control",
+    notes: "FSI Control technology optimizes string interaction. 16x19 open pattern provides more spin access than 18x20 sibling. Variable beam (21/23/21mm) adds slight power boost at throat. 330 swingweight for plow-through. 64 RA provides moderate flex. 4 pts HL balance."
+  },
+  {
+    id: "babolat-pure-strike-98-18x20-2025",
+    name: "Babolat Pure Strike 98 18x20",
+    year: 2025,
+    headSize: 98,
+    length: 27,
+    strungWeight: 323,
+    balance: 33.02,
+    balancePts: "4 pts HL",
+    swingweight: 332,
+    stiffness: 63,
+    beamWidth: [21, 23, 21],
+    pattern: "18x20",
+    powerLevel: "Low",
+    strokeStyle: "Full",
+    swingSpeed: "Fast",
+    tensionRange: [48, 57],
+    frameProfile: "Variable beam, dense pattern, FSI Control tech",
+    identity: "Flat Control",
+    notes: "Dense 18x20 pattern for maximum control and flat ball-striking. Same frame as 16x19 sibling but 2 more cross strings reduce string movement. Slightly higher swingweight (332) due to extra string. 63 RA — slightly softer flex than the 16x19. Ideal for serve-and-volley and flat hitters."
+  },
+  {
+    id: "babolat-pure-strike-100-16x19-2025",
+    name: "Babolat Pure Strike 100 16x19",
+    year: 2025,
+    headSize: 100,
+    length: 27,
+    strungWeight: 318,
+    balance: 32.99,
+    balancePts: "4 pts HL",
+    swingweight: 324,
+    stiffness: 63,
+    beamWidth: [21, 23, 21],
+    pattern: "16x19",
+    powerLevel: "Low-Medium",
+    strokeStyle: "Medium-Full",
+    swingSpeed: "Medium-Fast",
+    tensionRange: [48, 57],
+    frameProfile: "Variable beam, largest Pure Strike head, C-Fly construction",
+    identity: "Forgiving Control",
+    notes: "Most forgiving frame in the Pure Strike line with 100 sq in head. Larger sweetspot compensates for off-center hits. 318g strung — lightest Strike for easier handling. Same 21/23/21mm beam profile. 63 RA for comfortable flex. 16x19 adds spin access. Best entry point to the Strike line."
+  },
+  {
+    id: "solinco-whiteout-v2-290-2025",
+    name: "Solinco Whiteout v2 290",
+    year: 2025,
+    headSize: 98,
+    length: 27,
+    strungWeight: 303,
+    balance: 33.48,
+    balancePts: "3 pts HL",
+    swingweight: 315,
+    stiffness: 65,
+    beamWidth: [21.7, 21.7, 21.7],
+    pattern: "16x19",
+    powerLevel: "Low-Medium",
+    strokeStyle: "Medium-Full",
+    swingSpeed: "Medium-Fast",
+    tensionRange: [45, 55],
+    frameProfile: "Constant box beam, Arch-2 construction, 40T Carbon",
+    identity: "Light Control",
+    notes: "Light control frame at 303g strung. Arch-2 construction enhances torsional stability. 40T high-modulus carbon for crisp feel. Constant 21.7mm box beam for consistent flex. 3 pts HL balance makes it slightly more head-heavy than the 305. 65 RA moderate stiffness. Accessible for intermediate players seeking precision."
+  },
+  {
+    id: "solinco-whiteout-v2-305-2025",
+    name: "Solinco Whiteout v2 305",
+    year: 2025,
+    headSize: 98,
+    length: 27,
+    strungWeight: 323,
+    balance: 33.02,
+    balancePts: "4 pts HL",
+    swingweight: 328,
+    stiffness: 65,
+    beamWidth: [21.7, 21.7, 21.7],
+    pattern: "16x19",
+    powerLevel: "Low",
+    strokeStyle: "Full",
+    swingSpeed: "Fast",
+    tensionRange: [45, 55],
+    frameProfile: "Constant box beam, Arch-2 construction, 40T Carbon",
+    identity: "Classic Control",
+    notes: "Classic control frame with 323g strung weight. Constant 21.7mm box beam for uniform flex and clean feel. 40T high-modulus carbon construction for precision. 328 swingweight for stability and plow-through. 65 RA moderate stiffness with good comfort. The heavier sibling of the 290 — built for advanced baseliners."
+  },
+  {
+    id: "solinco-blackout-v2-300-2025",
+    name: "Solinco Blackout v2 300",
+    year: 2025,
+    headSize: 100,
+    length: 27,
+    strungWeight: 320,
+    balance: 32.39,
+    balancePts: "6 pts HL",
+    swingweight: 317,
+    stiffness: 66,
+    beamWidth: [23.5, 26, 23],
+    pattern: "16x19",
+    powerLevel: "Low-Medium",
+    strokeStyle: "Medium-Full",
+    swingSpeed: "Medium-Fast",
+    tensionRange: [45, 55],
+    frameProfile: "Variable beam, Power Flex Zone, Foam Tech Core",
+    identity: "Power Tweener",
+    notes: "Versatile all-court frame with variable beam (23.5/26/23mm) for power boost. Power Flex Zone enhances energy return. Foam Tech Core for vibration dampening and comfort. 100 sq in head for forgiveness. 320g strung with 6 pts HL for head-light feel. 66 RA moderate stiffness. Bridge between power and control."
+  },
+  {
+    id: "solinco-blackout-v2-285-2025",
+    name: "Solinco Blackout v2 285",
+    year: 2025,
+    headSize: 100,
+    length: 27,
+    strungWeight: 301,
+    balance: 33.99,
+    balancePts: "1 pt HL",
+    swingweight: 314,
+    stiffness: 67,
+    beamWidth: [23.5, 26, 23],
+    pattern: "16x19",
+    powerLevel: "Medium",
+    strokeStyle: "Medium",
+    swingSpeed: "Medium",
+    tensionRange: [45, 55],
+    frameProfile: "Variable beam, Power Flex Zone, Foam Tech Core",
+    identity: "Easy Power",
+    notes: "Lightweight Blackout at 301g strung for juniors and recreational players. Nearly even balance (1 pt HL) shifts mass toward the head for extra free power. Same variable beam profile as the 300. Higher stiffness (67 RA) compensates for lighter weight. Most powerful frame in the Solinco lineup. Foam Tech Core for comfort."
   }
 ];
 
@@ -375,6 +879,272 @@ const STRINGS = [
     twScore: { power: 52, spin: 82, comfort: 70, control: 84, feel: 82, playabilityDuration: 78, durability: 80 },
     identity: "Comfort Control",
     notes: "Good blend of comfort and control. Moderate stiffness and tension loss. A safe all-arounder poly."
+  },
+  {
+    id: "toroline-o-toro-17",
+    name: "Toroline O-Toro",
+    gauge: "17 (1.23mm)",
+    gaugeNum: 1.23,
+    material: "Polyester",
+    shape: "Hexagonal",
+    stiffness: 165.7,
+    tensionLoss: 44.4,
+    spinPotential: 9.4,
+    twScore: { power: 60, spin: 95, comfort: 75, control: 78, feel: 75, playabilityDuration: 72, durability: 78 },
+    identity: "Spin Launcher",
+    notes: "TWU spin potential 9.4 — top tier. 104% more spin than RPM Blast in lab testing. Very soft at 166 lb/in. High tension loss (44%) means it opens up fast. Hexagonal shape with exceptional snapback. Best-selling Toroline string."
+  },
+  {
+    id: "toroline-o-toro-spin-17",
+    name: "Toroline O-Toro Spin",
+    gauge: "17 (1.23mm)",
+    gaugeNum: 1.23,
+    material: "Polyester",
+    shape: "Textured Hexagonal",
+    stiffness: 173.2,
+    tensionLoss: 38.3,
+    spinPotential: 8.2,
+    twScore: { power: 55, spin: 90, comfort: 72, control: 82, feel: 73, playabilityDuration: 74, durability: 80 },
+    identity: "Textured Spin Machine",
+    notes: "Textured version of O-Toro with slightly higher stiffness (173 vs 166). Better tension maintenance (38% vs 44%). Slightly less peak spin but more controlled response. Good middle ground between O-Toro and O-Toro Tour."
+  },
+  {
+    id: "toroline-o-toro-tour-17",
+    name: "Toroline O-Toro Tour",
+    gauge: "17 (1.23mm)",
+    gaugeNum: 1.23,
+    material: "Polyester",
+    shape: "Hexagonal",
+    stiffness: 216.6,
+    tensionLoss: 25.0,
+    spinPotential: 7.7,
+    twScore: { power: 48, spin: 85, comfort: 65, control: 90, feel: 80, playabilityDuration: 85, durability: 88 },
+    identity: "Tour Control Hex",
+    notes: "~15% stiffer than O-Toro, comparable to RPM Blast and 4G. TWU tension loss only 25% — excellent. Higher stiffness (217) gives more control and stability at high swing speeds. Best for advanced players who want control-first with spin access."
+  },
+  {
+    id: "toroline-o-toro-snap-16l",
+    name: "Toroline O-Toro Snap",
+    gauge: "16L (1.25mm)",
+    gaugeNum: 1.25,
+    material: "Polyester",
+    shape: "Round (ultra-slick)",
+    stiffness: 170,
+    tensionLoss: 40,
+    spinPotential: 8.5,
+    twScore: { power: 58, spin: 88, comfort: 73, control: 80, feel: 76, playabilityDuration: 75, durability: 80 },
+    identity: "Snapback Specialist",
+    notes: "Same formula as O-Toro in an ultra-slick 1.25mm round shape. Maximum snapback for dynamic string movement. Lower launch angle than hex O-Toro. Works well as fullbed or hybrid mains. Released mid-2025."
+  },
+  {
+    id: "toroline-caviar-16l",
+    name: "Toroline Caviar",
+    gauge: "16L (1.24mm)",
+    gaugeNum: 1.24,
+    material: "Polyester",
+    shape: "Hexagonal",
+    stiffness: 185,
+    tensionLoss: 30,
+    spinPotential: 7.5,
+    twScore: { power: 55, spin: 85, comfort: 72, control: 85, feel: 80, playabilityDuration: 88, durability: 86 },
+    identity: "Precision Hex",
+    notes: "Six-sided hex profile for precision. More lively and flexible than typical polys. Outstanding tension maintenance and durability. Near-perfect balance of power and control — slightly softer and more powerful than O-Toro Tour. Available in 16L, 17, and 18 gauges."
+  },
+  {
+    id: "toroline-wasabi-17",
+    name: "Toroline Wasabi",
+    gauge: "17 (1.23mm)",
+    gaugeNum: 1.23,
+    material: "Polyester",
+    shape: "Square (4 ultra-sharp edges)",
+    stiffness: 210,
+    tensionLoss: 35,
+    spinPotential: 8.0,
+    twScore: { power: 52, spin: 88, comfort: 68, control: 85, feel: 75, playabilityDuration: 75, durability: 82 },
+    identity: "Sharp Bite",
+    notes: "Four ultra-sharp edges grip the ball aggressively before snapping back. Firmer and more control-oriented than most Toroline strings. Low-friction surface promotes snapback. Good balance of spin, power, and control. Average tension maintenance."
+  },
+  {
+    id: "toroline-toro-toro-17",
+    name: "Toroline Toro Toro / Super Toro",
+    gauge: "17 (1.23mm)",
+    gaugeNum: 1.23,
+    material: "Polyester",
+    shape: "Hexagonal",
+    stiffness: 195,
+    tensionLoss: 32,
+    spinPotential: 7.8,
+    twScore: { power: 52, spin: 85, comfort: 70, control: 86, feel: 78, playabilityDuration: 82, durability: 84 },
+    identity: "Precision Allrounder",
+    notes: "Super slick six-sided co-poly for surgical precision. Softer flex for enhanced pocketing and feel. Predictable response. Toro Toro (pink) and Super Toro (dark blue) are the same string in different colors. Medium stiffness. Also available in 16L (1.27mm)."
+  },
+  {
+    id: "toroline-snapper-17",
+    name: "Toroline Snapper",
+    gauge: "17 (1.23mm)",
+    gaugeNum: 1.23,
+    material: "Polyester",
+    shape: "Octagonal (extra slick)",
+    stiffness: 185,
+    tensionLoss: 30,
+    spinPotential: 8.0,
+    twScore: { power: 58, spin: 86, comfort: 74, control: 82, feel: 80, playabilityDuration: 82, durability: 80 },
+    identity: "Slick Spin Cannon",
+    notes: "Octagonal shape with extra-slick coating for maximum snapback. Soft and plush — doesn't need a dampener. More power and pocketing than Wasabi. Consistent string bed throughout life. Named for snapback action, not power snap. Lavender color."
+  },
+  {
+    id: "toroline-truffle-x-17",
+    name: "Toroline Truffle X",
+    gauge: "17 (1.30mm)",
+    gaugeNum: 1.30,
+    material: "Co-Polyester (elastic)",
+    shape: "Round",
+    stiffness: 55,
+    tensionLoss: 10,
+    spinPotential: 5.5,
+    twScore: { power: 88, spin: 60, comfort: 95, control: 60, feel: 90, playabilityDuration: 92, durability: 50 },
+    identity: "Elastic Comfort",
+    notes: "Insanely low static stiffness (0.20 kg/mm) — softer than natural gut. Elastic nature stretches under tension. Explosive pocketing and pop. Best as hybrid cross or full bed at gut-like tensions (~55 lbs + 5% prestretch recommended). Excellent tension maintenance. Low durability."
+  },
+  {
+    id: "toroline-ether-17",
+    name: "Toroline Ether",
+    gauge: "17 (1.20mm)",
+    gaugeNum: 1.20,
+    material: "Polyester",
+    shape: "Square",
+    stiffness: 200,
+    tensionLoss: 30,
+    spinPotential: 8.5,
+    twScore: { power: 55, spin: 90, comfort: 65, control: 84, feel: 82, playabilityDuration: 68, durability: 65 },
+    identity: "Thin Spin Blade",
+    notes: "Toroline's thinnest string (1.20mm) with a square profile. Maximum spin access with great feel. Firm stiffness level. Low durability due to thin gauge — will notch quickly under heavy hitting. Best for non-breakers or hybrid setups."
+  },
+  {
+    id: "toroline-absolute-17",
+    name: "Toroline Absolute",
+    gauge: "17 (1.20mm)",
+    gaugeNum: 1.20,
+    material: "Polyester",
+    shape: "Hexagonal",
+    stiffness: 190,
+    tensionLoss: 30,
+    spinPotential: 7.8,
+    twScore: { power: 60, spin: 85, comfort: 70, control: 82, feel: 78, playabilityDuration: 72, durability: 68 },
+    identity: "Plush Power Hex",
+    notes: "Thin 1.20mm hexagonal co-poly for a plush yet crispy feel. Generates ample spin and free power. Softer than Ether at the same gauge. Good for players wanting spin access with a lively, comfortable response."
+  },
+  {
+    id: "toroline-enso-17",
+    name: "Toroline enso",
+    gauge: "17 (1.23mm)",
+    gaugeNum: 1.23,
+    material: "Polyester",
+    shape: "Round",
+    stiffness: 180,
+    tensionLoss: 28,
+    spinPotential: 7.0,
+    twScore: { power: 55, spin: 80, comfort: 75, control: 85, feel: 82, playabilityDuration: 85, durability: 85 },
+    identity: "Balanced Feel",
+    notes: "Flexible co-poly with good control without deadness. Good spin without harshness. Excellent tension maintenance (~28% loss). Round shape keeps response predictable. Pairs well with O-Toro as a hybrid cross. One of Toroline's most balanced offerings."
+  },
+  {
+    id: "grapplesnake-tour-sniper-17",
+    name: "Grapplesnake Tour Sniper",
+    gauge: "17 (1.25mm)",
+    gaugeNum: 1.25,
+    material: "Polyester",
+    shape: "Pentagonal",
+    stiffness: 206,
+    tensionLoss: 22,
+    spinPotential: 7.0,
+    twScore: { power: 45, spin: 82, comfort: 65, control: 92, feel: 85, playabilityDuration: 90, durability: 90 },
+    identity: "Precision Sniper",
+    notes: "Pentagonal shape with pre-stretched construction to minimize initial tension loss. TWU stiffness 206. Similar feel to ALU Power Soft but with vastly superior tension maintenance (~22% est.). Low power, elite control. Extremely consistent and durable. For advanced players."
+  },
+  {
+    id: "grapplesnake-tour-m8-17",
+    name: "Grapplesnake Tour M8",
+    gauge: "17 (1.25mm)",
+    gaugeNum: 1.25,
+    material: "Polyester",
+    shape: "Octagonal",
+    stiffness: 210.3,
+    tensionLoss: 34.3,
+    spinPotential: 8.2,
+    twScore: { power: 48, spin: 88, comfort: 68, control: 88, feel: 82, playabilityDuration: 85, durability: 88 },
+    identity: "Goldilocks Control",
+    notes: "Eight-sided co-poly with slick surface for snapback. TWU spin potential 8.2 — excellent. Stiffness 210 sits between Alpha (soft) and Tour Sniper (firm). Great tension maintenance (34% loss). 'Goldilocks' balanced feel. One of TW's highest-rated polys of 2025."
+  },
+  {
+    id: "restring-slap-17",
+    name: "ReString Slap",
+    gauge: "17 (1.23mm)",
+    gaugeNum: 1.23,
+    material: "Polyester",
+    shape: "Hexagonal",
+    stiffness: 188,
+    tensionLoss: 20,
+    spinPotential: 8.5,
+    twScore: { power: 58, spin: 90, comfort: 70, control: 82, feel: 78, playabilityDuration: 88, durability: 82 },
+    identity: "Spin Slapper",
+    notes: "Built on the foundation of ReString Zero with a six-sided geometric profile. Exceptional grip and spin potential. Carries Zero's explosive snapback technology for consistent low-friction string movement. Good tension maintenance (~20% est.). Also available in 16g (1.28mm)."
+  },
+  {
+    id: "yonex-poly-tour-pro-17",
+    name: "Yonex Poly Tour Pro",
+    gauge: "17 (1.20mm)",
+    gaugeNum: 1.20,
+    material: "Polyester",
+    shape: "Round",
+    stiffness: 189,
+    tensionLoss: 40,
+    spinPotential: 6.0,
+    twScore: { power: 55, spin: 75, comfort: 75, control: 80, feel: 88, playabilityDuration: 60, durability: 70 },
+    identity: "Plush Feel",
+    notes: "Soft round poly (189 lb/in) with excellent feel and comfort. Famously mushy — great pocketing. High tension loss (40%) means it goes dead relatively fast. Low spin potential in lab but good real-world snapback. Casper Ruud's string. Best at higher tensions."
+  },
+  {
+    id: "yonex-poly-tour-rev-16l",
+    name: "Yonex Poly Tour Rev",
+    gauge: "16L (1.25mm)",
+    gaugeNum: 1.25,
+    material: "Polyester",
+    shape: "Octagonal (silicone oil infused)",
+    stiffness: 193.2,
+    tensionLoss: 34.4,
+    spinPotential: 7.2,
+    twScore: { power: 55, spin: 85, comfort: 68, control: 82, feel: 80, playabilityDuration: 72, durability: 78 },
+    identity: "Silicone Spinner",
+    notes: "Silicone oil-infused octagonal poly. TWU spin potential 7.2, stiffness 193. Good snapback from silicone coating but coating wears off over time. Slicker feel than most shaped polys. Moderate tension loss (34%). Purple color."
+  },
+  {
+    id: "yonex-poly-tour-spin-16l",
+    name: "Yonex Poly Tour Spin",
+    gauge: "16L (1.25mm)",
+    gaugeNum: 1.25,
+    material: "Polyester",
+    shape: "Octagonal",
+    stiffness: 214,
+    tensionLoss: 30,
+    spinPotential: 7.0,
+    twScore: { power: 48, spin: 82, comfort: 62, control: 88, feel: 75, playabilityDuration: 78, durability: 85 },
+    identity: "Firm Spin Control",
+    notes: "Stiffer Yonex poly (214 lb/in) for control-oriented players. Octagonal profile bites the ball well. Better tension maintenance than Poly Tour Pro. One of Yonex's firmer offerings alongside Spin G. Good for players who want control with spin access."
+  },
+  {
+    id: "yonex-poly-tour-fire-16l",
+    name: "Yonex Poly Tour Fire",
+    gauge: "16L (1.25mm)",
+    gaugeNum: 1.25,
+    material: "Polyester",
+    shape: "Round (silicone oil infused)",
+    stiffness: 194.9,
+    tensionLoss: 35.0,
+    spinPotential: 5.8,
+    twScore: { power: 60, spin: 78, comfort: 68, control: 80, feel: 82, playabilityDuration: 75, durability: 80 },
+    identity: "Lively Stealth",
+    notes: "TWU stiffness 195, spin 5.8. Round poly with silicone oil infusion for snapback. Lively and powerful response — more pop than most polys. Stiffer than Poly Tour Pro but softer than Poly Tour Spin. Great on serves. Good tension maintenance. Also available in 1.20mm and 1.30mm."
   }
 ];
 
@@ -553,35 +1323,34 @@ function predictSetup(racquet, stringConfig) {
 // ============================================
 
 function generateIdentity(stats, racquet, stringConfig) {
-  const archetypes = [];
+  // Score each archetype — pick the one with the strongest signal
+  const candidates = [
+    { name: 'Precision Topspin Blade', score: (stats.spin >= 80 ? 20 : 0) + (stats.control >= 85 ? 20 : 0) + (stats.power < 55 ? 10 : 0), req: stats.spin >= 78 && stats.control >= 82 && stats.power < 60 },
+    { name: 'Surgical Topspin Machine', score: (stats.spin - 70) * 2 + (stats.control - 65) * 1.5, req: stats.spin >= 75 && stats.control >= 65 && stats.control < 82 },
+    { name: 'Topspin Howitzer', score: (stats.spin - 70) * 3 + (stats.power - 60) * 2, req: stats.spin >= 78 && stats.power >= 65 && stats.spin >= stats.power },
+    { name: 'Power Spin Hybrid', score: (stats.power - 60) * 3 + (stats.spin - 70) * 2, req: stats.spin >= 75 && stats.power >= 70 && stats.power > stats.spin },
+    { name: 'Spin Dominator', score: (stats.spin - 65) * 2.5, req: stats.spin >= 75 && stats.power < 65 && stats.control < 82 },
+    { name: 'Power Brawler', score: (stats.power - 65) * 3 + (100 - stats.control) * 0.5, req: stats.power >= 75 && stats.control <= 65 },
+    { name: 'Power Hybrid', score: (stats.power - 55) * 1.5 + (stats.spin - 50) * 0.5, req: stats.power >= 65 && stats.power < 80 && stats.spin < 78 && stats.control > 55 },
+    { name: 'Precision Instrument', score: (stats.control - 75) * 3 + (stats.feel - 60) * 1.5, req: stats.control >= 82 && stats.spin < 78 },
+    { name: 'Control Platform', score: (stats.control - 65) * 2, req: stats.control >= 70 && stats.control < 82 && stats.spin < 75 },
+    { name: 'Comfort Cannon', score: (stats.comfort - 65) * 2 + (stats.power - 55) * 1.5, req: stats.comfort >= 72 && stats.power >= 65 },
+    { name: 'Touch Artist', score: (stats.feel - 70) * 2.5 + (stats.comfort - 60), req: stats.feel >= 75 && stats.control >= 70 && stats.power < 65 },
+    { name: 'Wall of Stability', score: (stats.stability - 65) * 3 + (stats.control - 60), req: stats.stability >= 70 && stats.control >= 70 },
+    { name: 'Forgiving Weapon', score: (stats.forgiveness - 60) * 2 + (stats.power - 55) * 1.5, req: stats.forgiveness >= 68 && stats.power >= 60 },
+    { name: 'Endurance Build', score: (stats.playability - 80) * 3 + (stats.durability - 75) * 2, req: stats.playability >= 88 && stats.durability >= 80 },
+    { name: 'Marathon Setup', score: (stats.durability - 80) * 2.5 + (stats.playability - 75) * 2, req: stats.durability >= 85 && stats.playability >= 82 },
+  ];
 
-  // Determine dominant traits
-  if (stats.spin >= 75 && stats.control >= 70) archetypes.push('Surgical Topspin Machine');
-  else if (stats.spin >= 70) archetypes.push('Spin Dominator');
-
-  if (stats.power >= 70 && stats.control <= 60) archetypes.push('Power Brawler');
-  else if (stats.power >= 65) archetypes.push('Power Hybrid');
-
-  if (stats.control >= 80) archetypes.push('Precision Instrument');
-  else if (stats.control >= 70) archetypes.push('Control Platform');
-
-  if (stats.comfort >= 75 && stats.power >= 60) archetypes.push('Comfort Cannon');
-  if (stats.feel >= 80 && stats.control >= 70) archetypes.push('Touch Artist');
-
-  if (stats.stability >= 75 && stats.control >= 65) archetypes.push('Wall of Stability');
-  if (stats.forgiveness >= 65 && stats.power >= 60) archetypes.push('Forgiving Weapon');
-
-  if (stats.playability >= 85) archetypes.push('Endurance Build');
-  if (stats.durability >= 85 && stats.playability >= 80) archetypes.push('Marathon Setup');
-
-  // Default
-  if (archetypes.length === 0) archetypes.push('Balanced Setup');
-
-  const archetype = archetypes[0];
+  const valid = candidates.filter(c => c.req).sort((a, b) => b.score - a.score);
+  const archetype = valid.length > 0 ? valid[0].name : 'Balanced Setup';
 
   // Description
   const descriptions = {
-    'Surgical Topspin Machine': `High spin potential meets pinpoint control. Excels at constructing points with heavy topspin from the baseline, allowing you to hit with margin and still redirect at will.`,
+    'Precision Topspin Blade': `Elite spin combined with surgical control and low power assist — you generate all the pace, the setup generates all the placement. A scalpel for topspin artists who shape every ball.`,
+    'Surgical Topspin Machine': `High spin potential meets solid control. Excels at constructing points with heavy topspin from the baseline, allowing you to hit with margin and still redirect at will.`,
+    'Topspin Howitzer': `Massive topspin wrapped in a power platform. The ball launches with heavy rotation AND depth — opponents get pushed behind the baseline by a ball that kicks up and keeps coming.`,
+    'Power Spin Hybrid': `Power-forward with spin enhancement. The gut mains provide natural power and feel while the frame and pattern add topspin capability. A dual-threat that hits deep with dip — opponents feel both the pace and the kick.`,
     'Spin Dominator': `Spin-first setup that generates heavy ball rotation. The string bed grips the ball aggressively, creating a high-bouncing, dipping trajectory that pushes opponents behind the baseline.`,
     'Power Brawler': `Maximum power with enough raw muscle to overpower opponents. Best for players who want to dictate with pace and don't need surgical precision on every shot.`,
     'Power Hybrid': `Balanced power delivery with enough control to keep balls in play. Good for intermediate to advanced players transitioning to more aggressive play.`,
@@ -762,16 +1531,255 @@ let comparisonRadarChart = null;
 let comparisonSlots = []; // array of { racquet, stringConfig, stats, identity }
 let isComparisonMode = false;
 
+// ============================================
+// DYNAMIC PRESET SYSTEM
+// ============================================
+
+const DEFAULT_PRESETS = [
+  {
+    id: 'confidential-sync-pa100',
+    name: 'Confidential/Sync on PA100',
+    racquetId: 'babolat-pure-aero-100-2023',
+    isHybrid: true,
+    mainsId: 'solinco-confidential-16',
+    crossesId: 'restring-sync',
+    mainsTension: 55,
+    crossesTension: 53,
+    stringId: null,
+    tension: null
+  },
+  {
+    id: 'gut-rpm-pa100',
+    name: 'Gut/RPM on PA100',
+    racquetId: 'babolat-pure-aero-100-2023',
+    isHybrid: true,
+    mainsId: 'babolat-vs-touch-16',
+    crossesId: 'babolat-rpm-blast-17',
+    mainsTension: 55,
+    crossesTension: 53,
+    stringId: null,
+    tension: null
+  },
+  {
+    id: 'confidential-speed-legend',
+    name: 'Confidential Full on Speed Legend',
+    racquetId: 'head-speed-mp-legend-2025',
+    isHybrid: false,
+    mainsId: null,
+    crossesId: null,
+    mainsTension: null,
+    crossesTension: null,
+    stringId: 'solinco-confidential-16',
+    tension: 55
+  }
+];
+
+let userPresets = [...DEFAULT_PRESETS];
+
+function getPresetDetail(preset) {
+  const racquet = RACQUETS.find(r => r.id === preset.racquetId);
+  const rName = racquet ? racquet.name : 'Unknown';
+  if (preset.isHybrid) {
+    const mains = STRINGS.find(s => s.id === preset.mainsId);
+    const crosses = STRINGS.find(s => s.id === preset.crossesId);
+    const mName = mains ? mains.name : '?';
+    const xName = crosses ? crosses.name : '?';
+    return `${mName} M:${preset.mainsTension} / ${xName} X:${preset.crossesTension} on ${rName}`;
+  } else {
+    const str = STRINGS.find(s => s.id === preset.stringId);
+    const sName = str ? str.name : '?';
+    return `${sName} ${preset.tension} lbs on ${rName}`;
+  }
+}
+
+function renderHomePresets() {
+  const container = $('#preset-list');
+  if (!container) return;
+  container.innerHTML = '';
+
+  userPresets.forEach((preset, idx) => {
+    const div = document.createElement('div');
+    div.className = 'preset-item';
+    div.innerHTML = `
+      <button class="preset-btn" data-preset-idx="${idx}">
+        <span class="preset-name">${preset.name}</span>
+        <span class="preset-detail">${getPresetDetail(preset)}</span>
+      </button>
+      <button class="preset-delete" data-preset-idx="${idx}" title="Remove preset">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    `;
+    container.appendChild(div);
+  });
+
+  // Attach events
+  container.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.presetIdx);
+      loadPresetFromData(userPresets[idx]);
+    });
+  });
+  container.querySelectorAll('.preset-delete').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.presetIdx);
+      userPresets.splice(idx, 1);
+      renderHomePresets();
+      renderComparisonPresets();
+    });
+  });
+}
+
+function saveCurrentAsPreset() {
+  const setup = getCurrentSetup();
+  if (!setup) return;
+
+  const { racquet, stringConfig } = setup;
+  let presetName = '';
+
+  if (stringConfig.isHybrid) {
+    presetName = `${stringConfig.mains.name}/${stringConfig.crosses.name} on ${racquet.name}`;
+  } else {
+    presetName = `${stringConfig.string.name} on ${racquet.name}`;
+  }
+
+  const preset = {
+    id: 'user-' + Date.now(),
+    name: presetName,
+    racquetId: racquet.id,
+    isHybrid: stringConfig.isHybrid,
+    mainsId: stringConfig.isHybrid ? stringConfig.mains.id : null,
+    crossesId: stringConfig.isHybrid ? stringConfig.crosses.id : null,
+    mainsTension: stringConfig.isHybrid ? stringConfig.mainsTension : null,
+    crossesTension: stringConfig.isHybrid ? stringConfig.crossesTension : null,
+    stringId: stringConfig.isHybrid ? null : stringConfig.string.id,
+    tension: stringConfig.isHybrid ? null : stringConfig.tension
+  };
+
+  userPresets.push(preset);
+  renderHomePresets();
+  renderComparisonPresets();
+
+  // Flash save button
+  const btn = $('#btn-save-preset');
+  if (btn) {
+    btn.classList.add('saved');
+    btn.textContent = '✓ Saved';
+    setTimeout(() => {
+      btn.classList.remove('saved');
+      btn.textContent = '+ Save Current Setup';
+    }, 1200);
+  }
+}
+
+function loadPresetFromData(preset) {
+  if (!preset) return;
+  const racquet = RACQUETS.find(r => r.id === preset.racquetId);
+  if (!racquet) return;
+
+  $('#select-racquet').value = preset.racquetId;
+  showFrameSpecs(racquet);
+
+  if (preset.isHybrid) {
+    setHybridMode(true);
+    $('#select-string-mains').value = preset.mainsId;
+    populateGaugeDropdown($('#select-gauge-mains'), preset.mainsId);
+    $('#input-tension-mains').value = preset.mainsTension;
+    $('#select-string-crosses').value = preset.crossesId;
+    populateGaugeDropdown($('#select-gauge-crosses'), preset.crossesId);
+    $('#input-tension-crosses').value = preset.crossesTension;
+  } else {
+    setHybridMode(false);
+    $('#select-string-full').value = preset.stringId;
+    populateGaugeDropdown($('#select-gauge-full'), preset.stringId);
+    $('#input-tension-full').value = preset.tension;
+  }
+
+  renderDashboard();
+}
+
+function loadPresetIntoSlot(presetIdx, slotIdx) {
+  const preset = userPresets[presetIdx];
+  if (!preset) return;
+  const slot = comparisonSlots[slotIdx];
+  if (!slot) return;
+
+  slot.racquetId = preset.racquetId;
+  slot.isHybrid = preset.isHybrid;
+
+  if (preset.isHybrid) {
+    slot.mainsId = preset.mainsId;
+    slot.crossesId = preset.crossesId;
+    slot.mainsTension = preset.mainsTension;
+    slot.crossesTension = preset.crossesTension;
+    slot.stringId = '';
+    slot.tension = 55;
+  } else {
+    slot.stringId = preset.stringId;
+    slot.tension = preset.tension;
+    slot.mainsId = '';
+    slot.crossesId = '';
+    slot.mainsTension = 55;
+    slot.crossesTension = 53;
+  }
+
+  recalcSlot(slotIdx);
+}
+
+function renderComparisonPresets() {
+  const container = $('#comparison-presets');
+  if (!container) return;
+
+  if (userPresets.length === 0) {
+    container.innerHTML = '<div class="comp-presets-empty">No presets saved</div>';
+    return;
+  }
+
+  let html = '';
+  userPresets.forEach((preset, pIdx) => {
+    html += `<button class="comp-preset-btn" data-preset-idx="${pIdx}" title="${getPresetDetail(preset)}">
+      <span class="comp-preset-name">${preset.name}</span>
+    </button>`;
+  });
+  container.innerHTML = html;
+
+  // Attach events — clicking a preset loads it into the next empty slot (or first slot)
+  container.querySelectorAll('.comp-preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const pIdx = parseInt(btn.dataset.presetIdx);
+      // Find first empty slot, or add a new slot
+      let targetSlot = comparisonSlots.findIndex(s => !s.racquetId);
+      if (targetSlot === -1) {
+        if (comparisonSlots.length < 3) {
+          addComparisonSlot();
+          targetSlot = comparisonSlots.length - 1;
+        } else {
+          targetSlot = comparisonSlots.length - 1; // overwrite last
+        }
+      }
+      loadPresetIntoSlot(pIdx, targetSlot);
+
+      // Flash feedback
+      btn.classList.add('loaded');
+      setTimeout(() => btn.classList.remove('loaded'), 600);
+    });
+  });
+}
+
 const STAT_KEYS = ['spin', 'power', 'control', 'launch', 'feel', 'comfort', 'stability', 'forgiveness', 'durability', 'playability'];
 const STAT_LABELS = ['Spin', 'Power', 'Control', 'Launch', 'Feel', 'Comfort', 'Stability', 'Forgiveness', 'Durability', 'Playability'];
 const STAT_LABELS_FULL = ['Spin', 'Power', 'Control', 'Launch', 'Feel', 'Comfort', 'Stability', 'Forgiveness', 'Durability', 'Playability Duration'];
 const STAT_CSS_CLASSES = ['spin', 'power', 'control', 'launch', 'feel', 'comfort', 'stability', 'forgiveness', 'durability', 'playability'];
 
-const SLOT_COLORS = [
-  { border: 'var(--cyan)', bg: 'rgba(0, 212, 255, 0.6)', bgFaint: 'rgba(0, 212, 255, 0.1)', label: 'A', cssClass: 'a' },
-  { border: 'var(--green)', bg: 'rgba(0, 255, 136, 0.6)', bgFaint: 'rgba(0, 255, 136, 0.1)', label: 'B', cssClass: 'b' },
-  { border: 'var(--amber)', bg: 'rgba(255, 187, 0, 0.6)', bgFaint: 'rgba(255, 187, 0, 0.1)', label: 'C', cssClass: 'c' }
-];
+function getSlotColors() {
+  const isDark = document.documentElement.dataset.theme === 'dark';
+  return [
+    { border: '#C7F63A', bg: 'rgba(199, 246, 58, 0.20)', bgFaint: 'rgba(199, 246, 58, 0.08)', label: 'A', cssClass: 'a', borderDash: [] },
+    { border: '#7CCBFF', bg: 'rgba(124, 203, 255, 0.18)', bgFaint: 'rgba(124, 203, 255, 0.08)', label: 'B', cssClass: 'b', borderDash: [6, 3] },
+    { border: '#FF9A57', bg: 'rgba(255, 154, 87, 0.18)', bgFaint: 'rgba(255, 154, 87, 0.08)', label: 'C', cssClass: 'c', borderDash: [2, 3] }
+  ];
+}
+let SLOT_COLORS = getSlotColors();
 
 // ============================================
 // POPULATE DROPDOWNS
@@ -782,7 +1790,7 @@ function populateRacquetDropdown(selectEl) {
   RACQUETS.forEach(r => {
     const opt = document.createElement('option');
     opt.value = r.id;
-    opt.textContent = `${r.name} (${r.year})`;
+    opt.textContent = r.name;
     selectEl.appendChild(opt);
   });
 }
@@ -1011,13 +2019,20 @@ function renderRadarChart(stats) {
   const data = STAT_KEYS.map(k => stats[k]);
 
   const isDark = document.documentElement.dataset.theme === 'dark';
-  const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
-  const labelColor = isDark ? '#9ba3b5' : '#555e70';
+  const gridColor = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)';
+  const angleColor = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)';
+  const labelColor = isDark ? 'rgba(255,255,255,0.38)' : 'rgba(0,0,0,0.36)';
+  const accentColor = '#C7F63A';
+  const fillColor = isDark ? 'rgba(199, 246, 58, 0.10)' : 'rgba(199, 246, 58, 0.12)';
 
   if (currentRadarChart) {
     currentRadarChart.data.datasets[0].data = data;
+    currentRadarChart.data.datasets[0].borderColor = accentColor;
+    currentRadarChart.data.datasets[0].backgroundColor = fillColor;
+    currentRadarChart.data.datasets[0].pointBackgroundColor = accentColor;
+    currentRadarChart.data.datasets[0].pointBorderColor = 'transparent';
     currentRadarChart.options.scales.r.grid.color = gridColor;
-    currentRadarChart.options.scales.r.angleLines.color = gridColor;
+    currentRadarChart.options.scales.r.angleLines.color = angleColor;
     currentRadarChart.options.scales.r.pointLabels.color = labelColor;
     currentRadarChart.update('active');
     return;
@@ -1029,13 +2044,13 @@ function renderRadarChart(stats) {
       labels: STAT_LABELS_FULL,
       datasets: [{
         data,
-        backgroundColor: 'rgba(0, 212, 255, 0.1)',
-        borderColor: '#00d4ff',
-        borderWidth: 2,
-        pointBackgroundColor: '#00d4ff',
-        pointBorderColor: '#00d4ff',
-        pointRadius: 3,
-        pointHoverRadius: 5
+        backgroundColor: fillColor,
+        borderColor: accentColor,
+        borderWidth: 1.5,
+        pointBackgroundColor: accentColor,
+        pointBorderColor: 'transparent',
+        pointRadius: 2.5,
+        pointHoverRadius: 4
       }]
     },
     options: {
@@ -1054,14 +2069,16 @@ function renderRadarChart(stats) {
           },
           grid: {
             color: gridColor,
-            circular: true
+            circular: false,
+            lineWidth: 0.5
           },
           angleLines: {
-            color: gridColor
+            color: angleColor,
+            lineWidth: 0.5
           },
           pointLabels: {
             font: {
-              family: "'JetBrains Mono', monospace",
+              family: "'General Sans', sans-serif",
               size: 9,
               weight: 500
             },
@@ -1129,6 +2146,7 @@ function toggleComparisonMode() {
   if (isComparisonMode) {
     $('#single-view').classList.add('hidden');
     $('#comparison-view').classList.remove('hidden');
+    renderComparisonPresets();
 
     if (comparisonSlots.length === 0) {
       // Auto-add first slot with current setup
@@ -1185,16 +2203,8 @@ function renderComparisonSlots() {
     div.className = `comparison-slot slot-color-${color.cssClass}`;
     div.dataset.slotIndex = index;
 
-    div.innerHTML = `
-      <div class="slot-header">
-        <span class="slot-label slot-label-${color.cssClass}">SETUP ${color.label}</span>
-        <button class="slot-remove" onclick="removeComparisonSlot(${index})" title="Remove">✕</button>
-      </div>
-      <div class="slot-config">
-        <select class="select-input slot-racquet" data-slot="${index}">
-          <option value="">Select Racquet...</option>
-          ${RACQUETS.map(r => `<option value="${r.id}" ${slot.racquetId === r.id ? 'selected' : ''}>${r.name} (${r.year})</option>`).join('')}
-        </select>
+    const fullbedHTML = `
+      <div class="slot-fullbed-config ${slot.isHybrid ? 'hidden' : ''}" data-slot="${index}">
         <select class="select-input slot-string" data-slot="${index}">
           <option value="">Select String...</option>
           ${STRINGS.map(s => `<option value="${s.id}" ${slot.stringId === s.id ? 'selected' : ''}>${s.name} ${s.gauge}</option>`).join('')}
@@ -1205,9 +2215,54 @@ function renderComparisonSlots() {
             <input type="number" class="text-input slot-tension" data-slot="${index}" value="${slot.tension}" min="30" max="70">
           </div>
           <div style="display:flex;align-items:flex-end;">
-            ${slot.stats ? `<div class="slot-identity" style="color: ${color.border}">${slot.identity?.archetype || '—'}</div>` : ''}
+            ${slot.stats && !slot.isHybrid ? `<div class="slot-identity">${slot.identity?.archetype || '—'}</div>` : ''}
           </div>
         </div>
+      </div>`;
+
+    const hybridHTML = `
+      <div class="slot-hybrid-config ${slot.isHybrid ? '' : 'hidden'}" data-slot="${index}">
+        <div class="slot-hybrid-section">
+          <label class="field-label accent-cyan">Mains</label>
+          <select class="select-input slot-mains" data-slot="${index}">
+            <option value="">Select Main String...</option>
+            ${STRINGS.map(s => `<option value="${s.id}" ${slot.mainsId === s.id ? 'selected' : ''}>${s.name} ${s.gauge}</option>`).join('')}
+          </select>
+          <div>
+            <label class="field-label">Tension</label>
+            <input type="number" class="text-input slot-mains-tension" data-slot="${index}" value="${slot.mainsTension}" min="30" max="70">
+          </div>
+        </div>
+        <div class="slot-hybrid-section">
+          <label class="field-label accent-green">Crosses</label>
+          <select class="select-input slot-crosses" data-slot="${index}">
+            <option value="">Select Cross String...</option>
+            ${STRINGS.map(s => `<option value="${s.id}" ${slot.crossesId === s.id ? 'selected' : ''}>${s.name} ${s.gauge}</option>`).join('')}
+          </select>
+          <div>
+            <label class="field-label">Tension</label>
+            <input type="number" class="text-input slot-crosses-tension" data-slot="${index}" value="${slot.crossesTension}" min="30" max="70">
+          </div>
+        </div>
+        ${slot.stats && slot.isHybrid ? `<div class="slot-identity" style="text-align:center; padding-top:4px;">${slot.identity?.archetype || '—'}</div>` : ''}
+      </div>`;
+
+    div.innerHTML = `
+      <div class="slot-header">
+        <span class="slot-label slot-label-${color.cssClass}">SETUP ${color.label}</span>
+        <button class="slot-remove" onclick="removeComparisonSlot(${index})" title="Remove">✕</button>
+      </div>
+      <div class="slot-config">
+        <select class="select-input slot-racquet" data-slot="${index}">
+          <option value="">Select Racquet...</option>
+          ${RACQUETS.map(r => `<option value="${r.id}" ${slot.racquetId === r.id ? 'selected' : ''}>${r.name}</option>`).join('')}
+        </select>
+        <div class="slot-toggle-group">
+          <button class="slot-toggle-btn ${slot.isHybrid ? '' : 'active'}" data-slot="${index}" data-mode="full">Full Bed</button>
+          <button class="slot-toggle-btn ${slot.isHybrid ? 'active' : ''}" data-slot="${index}" data-mode="hybrid">Hybrid</button>
+        </div>
+        ${fullbedHTML}
+        ${hybridHTML}
       </div>
       ${slot.stats ? renderSlotStats(slot.stats, index) : '<div style="padding:8px;text-align:center;color:var(--text-muted);font-size:0.8rem;">Configure to see stats</div>'}
     `;
@@ -1223,6 +2278,8 @@ function renderComparisonSlots() {
       recalcSlot(idx);
     });
   });
+
+  // Full bed string + tension
   container.querySelectorAll('.slot-string').forEach(sel => {
     sel.addEventListener('change', (e) => {
       const idx = parseInt(e.target.dataset.slot);
@@ -1237,19 +2294,59 @@ function renderComparisonSlots() {
       recalcSlot(idx);
     });
   });
+
+  // Hybrid mains + crosses
+  container.querySelectorAll('.slot-mains').forEach(sel => {
+    sel.addEventListener('change', (e) => {
+      const idx = parseInt(e.target.dataset.slot);
+      comparisonSlots[idx].mainsId = e.target.value;
+      recalcSlot(idx);
+    });
+  });
+  container.querySelectorAll('.slot-crosses').forEach(sel => {
+    sel.addEventListener('change', (e) => {
+      const idx = parseInt(e.target.dataset.slot);
+      comparisonSlots[idx].crossesId = e.target.value;
+      recalcSlot(idx);
+    });
+  });
+  container.querySelectorAll('.slot-mains-tension').forEach(inp => {
+    inp.addEventListener('input', (e) => {
+      const idx = parseInt(e.target.dataset.slot);
+      comparisonSlots[idx].mainsTension = parseInt(e.target.value) || 55;
+      recalcSlot(idx);
+    });
+  });
+  container.querySelectorAll('.slot-crosses-tension').forEach(inp => {
+    inp.addEventListener('input', (e) => {
+      const idx = parseInt(e.target.dataset.slot);
+      comparisonSlots[idx].crossesTension = parseInt(e.target.value) || 53;
+      recalcSlot(idx);
+    });
+  });
+
+  // Full Bed / Hybrid toggle
+  container.querySelectorAll('.slot-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const idx = parseInt(e.target.dataset.slot);
+      const mode = e.target.dataset.mode;
+      const slot = comparisonSlots[idx];
+      slot.isHybrid = (mode === 'hybrid');
+      recalcSlot(idx);
+    });
+  });
 }
 
 function renderSlotStats(stats, slotIndex) {
-  const color = SLOT_COLORS[slotIndex];
   return `
     <div class="slot-stats">
       ${STAT_KEYS.map((key, i) => `
         <div class="slot-stat">
           <span class="slot-stat-label">${STAT_LABELS[i]}</span>
           <div class="slot-stat-bar">
-            <div class="slot-stat-fill" style="width:${stats[key]}%; background:${color.border}; box-shadow: 0 0 6px ${color.bgFaint};"></div>
+            <div class="slot-stat-fill" style="width:${stats[key]}%;"></div>
           </div>
-          <span class="slot-stat-value" style="color:${color.border}">${stats[key]}</span>
+          <span class="slot-stat-value">${stats[key]}</span>
         </div>
       `).join('')}
     </div>
@@ -1259,14 +2356,33 @@ function renderSlotStats(stats, slotIndex) {
 function recalcSlot(index) {
   const slot = comparisonSlots[index];
   const racquet = RACQUETS.find(r => r.id === slot.racquetId);
-  const stringData = STRINGS.find(s => s.id === slot.stringId);
 
-  if (racquet && stringData) {
-    const stringConfig = {
-      isHybrid: false,
-      string: stringData,
-      tension: slot.tension
-    };
+  let stringConfig = null;
+
+  if (slot.isHybrid) {
+    const mainsData = STRINGS.find(s => s.id === slot.mainsId);
+    const crossesData = STRINGS.find(s => s.id === slot.crossesId);
+    if (racquet && mainsData && crossesData) {
+      stringConfig = {
+        isHybrid: true,
+        mains: mainsData,
+        crosses: crossesData,
+        mainsTension: slot.mainsTension,
+        crossesTension: slot.crossesTension
+      };
+    }
+  } else {
+    const stringData = STRINGS.find(s => s.id === slot.stringId);
+    if (racquet && stringData) {
+      stringConfig = {
+        isHybrid: false,
+        string: stringData,
+        tension: slot.tension
+      };
+    }
+  }
+
+  if (racquet && stringConfig) {
     slot.stats = predictSetup(racquet, stringConfig);
     slot.identity = generateIdentity(slot.stats, racquet, stringConfig);
   } else {
@@ -1282,31 +2398,40 @@ function recalcSlot(index) {
 function updateComparisonRadar() {
   const ctx = document.getElementById('comparison-radar-chart').getContext('2d');
   const datasets = [];
+  const colors = getSlotColors();
+
+  const pointStyles = ['circle', 'rectRot', 'triangle'];
 
   comparisonSlots.forEach((slot, i) => {
     if (!slot.stats) return;
-    const color = SLOT_COLORS[i];
+    const color = colors[i];
     datasets.push({
       label: `Setup ${color.label}`,
       data: STAT_KEYS.map(k => slot.stats[k]),
       backgroundColor: color.bgFaint,
       borderColor: color.border,
-      borderWidth: 2,
+      borderWidth: 1.8,
+      borderDash: color.borderDash,
       pointBackgroundColor: color.border,
+      pointBorderColor: 'transparent',
+      pointStyle: pointStyles[i] || 'circle',
       pointRadius: 3,
       pointHoverRadius: 5
     });
   });
 
   const isDark = document.documentElement.dataset.theme === 'dark';
-  const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
-  const labelColor = isDark ? '#9ba3b5' : '#555e70';
+  const gridColor = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)';
+  const angleColor = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)';
+  const labelColor = isDark ? 'rgba(255,255,255,0.38)' : 'rgba(0,0,0,0.36)';
+  const legendColor = isDark ? 'rgba(255,255,255,0.50)' : 'rgba(0,0,0,0.48)';
 
   if (comparisonRadarChart) {
     comparisonRadarChart.data.datasets = datasets;
     comparisonRadarChart.options.scales.r.grid.color = gridColor;
-    comparisonRadarChart.options.scales.r.angleLines.color = gridColor;
+    comparisonRadarChart.options.scales.r.angleLines.color = angleColor;
     comparisonRadarChart.options.scales.r.pointLabels.color = labelColor;
+    comparisonRadarChart.options.plugins.legend.labels.color = legendColor;
     comparisonRadarChart.update('active');
     return;
   }
@@ -1324,10 +2449,9 @@ function updateComparisonRadar() {
         legend: {
           display: true,
           labels: {
-            font: { family: "'JetBrains Mono', monospace", size: 11 },
-            color: labelColor,
+            font: { family: "'General Sans', sans-serif", size: 11, weight: 500 },
+            color: legendColor,
             usePointStyle: true,
-            pointStyle: 'circle',
             padding: 16
           }
         }
@@ -1337,10 +2461,10 @@ function updateComparisonRadar() {
           beginAtZero: true,
           max: 100,
           ticks: { stepSize: 25, display: false },
-          grid: { color: gridColor, circular: true },
-          angleLines: { color: gridColor },
+          grid: { color: gridColor, circular: false, lineWidth: 0.5 },
+          angleLines: { color: angleColor, lineWidth: 0.5 },
           pointLabels: {
-            font: { family: "'JetBrains Mono', monospace", size: 10, weight: 500 },
+            font: { family: "'General Sans', sans-serif", size: 10, weight: 500 },
             color: labelColor
           }
         }
@@ -1384,47 +2508,8 @@ function renderComparisonDeltas() {
 }
 
 // ============================================
-// PRESETS
+// PRESETS (dynamic system — see renderHomePresets / renderComparisonPresets)
 // ============================================
-
-function loadPreset(presetId) {
-  switch (presetId) {
-    case 'confidential-sync-pa100':
-      $('#select-racquet').value = 'babolat-pure-aero-100-2023';
-      showFrameSpecs(RACQUETS.find(r => r.id === 'babolat-pure-aero-100-2023'));
-      setHybridMode(true);
-      $('#select-string-mains').value = 'solinco-confidential-16';
-      populateGaugeDropdown($('#select-gauge-mains'), 'solinco-confidential-16');
-      $('#input-tension-mains').value = 55;
-      $('#select-string-crosses').value = 'restring-sync';
-      populateGaugeDropdown($('#select-gauge-crosses'), 'restring-sync');
-      $('#input-tension-crosses').value = 53;
-      break;
-
-    case 'gut-rpm-pa100':
-      $('#select-racquet').value = 'babolat-pure-aero-100-2023';
-      showFrameSpecs(RACQUETS.find(r => r.id === 'babolat-pure-aero-100-2023'));
-      setHybridMode(true);
-      $('#select-string-mains').value = 'babolat-vs-touch-16';
-      populateGaugeDropdown($('#select-gauge-mains'), 'babolat-vs-touch-16');
-      $('#input-tension-mains').value = 55;
-      $('#select-string-crosses').value = 'babolat-rpm-blast-17';
-      populateGaugeDropdown($('#select-gauge-crosses'), 'babolat-rpm-blast-17');
-      $('#input-tension-crosses').value = 53;
-      break;
-
-    case 'confidential-speed-legend':
-      $('#select-racquet').value = 'head-speed-mp-legend-2025';
-      showFrameSpecs(RACQUETS.find(r => r.id === 'head-speed-mp-legend-2025'));
-      setHybridMode(false);
-      $('#select-string-full').value = 'solinco-confidential-16';
-      populateGaugeDropdown($('#select-gauge-full'), 'solinco-confidential-16');
-      $('#input-tension-full').value = 55;
-      break;
-  }
-
-  renderDashboard();
-}
 
 function setHybridMode(isHybrid) {
   if (isHybrid) {
@@ -1449,6 +2534,9 @@ function toggleTheme() {
   const current = html.dataset.theme;
   html.dataset.theme = current === 'dark' ? 'light' : 'dark';
 
+  // Refresh theme-dependent colors
+  SLOT_COLORS = getSlotColors();
+
   // Update charts
   if (currentRadarChart) {
     const setup = getCurrentSetup();
@@ -1459,6 +2547,8 @@ function toggleTheme() {
   }
   if (comparisonRadarChart) {
     updateComparisonRadar();
+    // Re-render comparison slots with updated colors
+    renderComparisonSlots();
   }
 }
 
@@ -1509,10 +2599,10 @@ function init() {
     renderDashboard();
   });
 
-  // Presets
-  $$('.preset-btn').forEach(btn => {
-    btn.addEventListener('click', () => loadPreset(btn.dataset.preset));
-  });
+  // Presets (dynamic)
+  renderHomePresets();
+  renderComparisonPresets();
+  $('#btn-save-preset').addEventListener('click', saveCurrentAsPreset);
 
   // Comparison
   $('#btn-toggle-comparison').addEventListener('click', toggleComparisonMode);

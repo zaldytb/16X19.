@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
 <!--
    ______                            __
@@ -21,10 +21,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tennis Loadout Lab — Frame × String × Tension Prediction Engine</title>
-<meta name="description" content="Tennis racquet and string setup prediction engine styled like a gaming weapon loadout dashboard.">
+<meta name="description" content="Premium tennis racquet and string prediction engine. Frame × String × Tension analysis.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link rel="stylesheet" href="style.css">
 </head>
@@ -158,22 +158,16 @@
 
         <!-- Presets -->
         <div class="panel-section">
-          <h2 class="panel-title">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 4h10M3 8h10M3 12h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            Quick Presets
-          </h2>
-          <button class="preset-btn" data-preset="confidential-sync-pa100">
-            <span class="preset-name">Confidential/Sync on PA100</span>
-            <span class="preset-detail">Solinco Conf. M:55 / ReString Sync X:53</span>
-          </button>
-          <button class="preset-btn" data-preset="gut-rpm-pa100">
-            <span class="preset-name">Gut/RPM on PA100</span>
-            <span class="preset-detail">VS Touch M:55 / RPM Blast X:53</span>
-          </button>
-          <button class="preset-btn" data-preset="confidential-speed-legend">
-            <span class="preset-name">Confidential Full on Speed Legend</span>
-            <span class="preset-detail">Solinco Conf. 55/53 on Speed MP Legend</span>
-          </button>
+          <div class="preset-header">
+            <h2 class="panel-title">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 4h10M3 8h10M3 12h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              Quick Presets
+            </h2>
+          </div>
+          <button class="btn-save-preset" id="btn-save-preset">+ Save Current Setup</button>
+          <div class="preset-list" id="preset-list">
+            <!-- Dynamically rendered by renderHomePresets() -->
+          </div>
         </div>
       </aside>
 
@@ -257,6 +251,12 @@
         <div class="comparison-actions">
           <button class="btn-add-slot" id="btn-add-slot">+ Add Slot</button>
           <button class="btn-exit-comparison" id="btn-exit-comparison">Exit Comparison</button>
+        </div>
+      </div>
+      <div class="comparison-presets-bar">
+        <span class="comp-presets-label">QUICK LOAD</span>
+        <div class="comparison-presets" id="comparison-presets">
+          <!-- Dynamically rendered by renderComparisonPresets() -->
         </div>
       </div>
       <div class="comparison-slots" id="comparison-slots"></div>

@@ -77,6 +77,10 @@
               <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="1" y="2.5" width="5" height="10" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="2.5" width="5" height="10" rx="1" stroke="currentColor" stroke-width="1.3"/><line x1="7.5" y1="5" x2="7.5" y2="10" stroke="currentColor" stroke-width="1.3" stroke-dasharray="1.5 1.5"/></svg>
               <span>Compare</span>
             </button>
+            <button class="mode-btn" data-mode="howitworks" id="btn-mode-howitworks">
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M5.8 5.8a1.7 1.7 0 0 1 3.3.5c0 1.1-1.6 1.5-1.6 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7.5" cy="10.8" r="0.6" fill="currentColor"/></svg>
+              <span>How It Works</span>
+            </button>
           </div>
           <button class="btn-theme" id="btn-theme" title="Toggle Light/Dark Mode">
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="1.5"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.93 4.93l1.41 1.41M13.66 13.66l1.41 1.41M4.93 15.07l1.41-1.41M13.66 6.34l1.41-1.41" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
@@ -378,6 +382,256 @@
           </div>
         </div>
       </section>
+
+      <!-- ═══════════════ HOW IT WORKS ═══════════════ -->
+      <section id="mode-howitworks" class="mode-section hidden">
+        <div class="hiw-page">
+
+          <!-- HERO INTRO -->
+          <div class="hiw-hero">
+            <div class="hiw-hero-badge">SYSTEM ARCHITECTURE</div>
+            <h1 class="hiw-hero-title">How the Loadout Lab<br>Actually Works</h1>
+            <p class="hiw-hero-subtitle">
+              A four-layer prediction engine that turns frame geometry, string material science, and tension physics into a single build score — explained honestly, with all the trade-offs visible.
+            </p>
+            <div class="hiw-hero-scroll-hint">
+              <span>Scroll to explore</span>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M3 8l4 4 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+
+          <!-- SECTION 1: POSITIONING -->
+          <div class="hiw-section">
+            <div class="hiw-section-num">01</div>
+            <h2 class="hiw-section-title">What This Actually Is</h2>
+            <div class="hiw-section-body">
+              <p>
+                The Loadout Lab is a <strong>parametric prediction engine</strong> for tennis equipment behavior. It doesn't hit balls. It doesn't measure your swing. It takes the published physical properties of frames and strings — stiffness indices, beam widths, density coefficients, string gauge, composition — and runs them through a multi-layer scoring pipeline to estimate how a given setup would <em>feel and perform</em> under tension.
+              </p>
+              <p>
+                Think of it as an extremely opinionated spreadsheet that went to design school. The math is real. The coefficients are tuned against known equipment behavior. But every model is a simplification, and this one is transparent about where it simplifies.
+              </p>
+              <div class="hiw-callout">
+                <div class="hiw-callout-icon">◆</div>
+                <p>This is not a racquet recommendation engine. It's a build-exploration tool — designed for players who already know what they like and want to understand <em>why</em> certain combinations produce certain feels.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION 2: THE MODELING CHAIN -->
+          <div class="hiw-section">
+            <div class="hiw-section-num">02</div>
+            <h2 class="hiw-section-title">The Four-Layer Pipeline</h2>
+            <div class="hiw-section-body">
+              <p>
+                Every build score flows through four distinct layers. Each layer transforms raw properties into progressively higher-level predictions. Nothing is skipped; nothing is averaged away.
+              </p>
+
+              <div class="hiw-pipeline">
+                <div class="hiw-pipeline-layer">
+                  <div class="hiw-pipeline-badge">L1</div>
+                  <div class="hiw-pipeline-content">
+                    <h3>Frame Foundation</h3>
+                    <p>Raw frame geometry — head size, beam width, weight, balance, stiffness index, swing weight — normalized into base capability scores. This is pure physics: how much energy the frame stores, how stable it is at contact, how much it flexes on impact. No string interaction yet.</p>
+                  </div>
+                </div>
+                <div class="hiw-pipeline-connector">
+                  <svg width="2" height="32" viewBox="0 0 2 32"><line x1="1" y1="0" x2="1" y2="32" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.3"/></svg>
+                </div>
+                <div class="hiw-pipeline-layer">
+                  <div class="hiw-pipeline-badge">L2</div>
+                  <div class="hiw-pipeline-content">
+                    <h3>String Character</h3>
+                    <p>Material composition scoring — poly, gut, multi, synthetic, hybrid. Each string type has a two-layer sub-model: base character (spin potential, power coefficient, comfort index, durability, tension stability) plus a modifier layer that captures the specific product's deviation from its category baseline. A Luxilon ALU Power doesn't score like a generic co-poly.</p>
+                  </div>
+                </div>
+                <div class="hiw-pipeline-connector">
+                  <svg width="2" height="32" viewBox="0 0 2 32"><line x1="1" y1="0" x2="1" y2="32" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.3"/></svg>
+                </div>
+                <div class="hiw-pipeline-layer">
+                  <div class="hiw-pipeline-badge">L3</div>
+                  <div class="hiw-pipeline-content">
+                    <h3>Tension Response Modeling</h3>
+                    <p>Where tension enters the pipeline. This layer models how each stat responds to tension changes — not linearly, but through response curves tuned per-string-category. Lower tension doesn't just "add power" uniformly; it changes the energy transfer profile, the dwell time, the snapback window, the comfort floor, all at different rates depending on the string-frame interaction. This is the layer that makes the Tune slider meaningful.</p>
+                  </div>
+                </div>
+                <div class="hiw-pipeline-connector">
+                  <svg width="2" height="32" viewBox="0 0 2 32"><line x1="1" y1="0" x2="1" y2="32" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.3"/></svg>
+                </div>
+                <div class="hiw-pipeline-layer">
+                  <div class="hiw-pipeline-badge">L4</div>
+                  <div class="hiw-pipeline-content">
+                    <h3>Composite Scoring &amp; OBS</h3>
+                    <p>All ten stats collapse into the <strong>Overall Build Score</strong> — a weighted composite that represents the build's total predicted performance envelope. The weights aren't equal: power and spin carry more than durability, because that's how racquet performance actually maps to on-court impact. The OBS feeds the rank ladder from "Delete This" to "Max Aura."</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="hiw-callout">
+                <div class="hiw-callout-icon">⚡</div>
+                <p>Hybrid stringing adds a branching step between L2 and L3 — mains and crosses are scored independently with their own string profiles, then blended with a weighted merge that favors mains for spin/power and crosses for comfort/feel. The blending isn't 50/50. It's physics-informed.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION 3: THE TEN STATS -->
+          <div class="hiw-section">
+            <div class="hiw-section-num">03</div>
+            <h2 class="hiw-section-title">What the Numbers Mean</h2>
+            <div class="hiw-section-body">
+              <p>
+                Ten stats. Each scored 0–100. Each derived from actual physical properties, not vibes. Here's what each one tracks and where its inputs come from.
+              </p>
+
+              <div class="hiw-stats-grid">
+                <div class="hiw-stat-card">
+                  <div class="hiw-stat-name">Power</div>
+                  <div class="hiw-stat-desc">Energy return at contact. Driven by frame stiffness, beam width, head size, and string power coefficient. Higher tension compresses this; lower tension unlocks it. The stat everyone chases.</div>
+                </div>
+                <div class="hiw-stat-card">
+                  <div class="hiw-stat-name">Spin</div>
+                  <div class="hiw-stat-desc">Snapback potential and string-ball bite. String texture, gauge, and pattern density are the primary drivers. Frame head size contributes via the angular velocity window. Poly dominates here for a reason.</div>
+                </div>
+                <div class="hiw-stat-card">
+                  <div class="hiw-stat-name">Control</div>
+                  <div class="hiw-stat-desc">Precision and predictability on directional shots. Inversely related to power at the frame level — stiffer, smaller-headed frames score higher. String tension stability and frame torsional rigidity feed this. The surgeon's stat.</div>
+                </div>
+                <div class="hiw-stat-card">
+                  <div class="hiw-stat-name">Feel</div>
+                  <div class="hiw-stat-desc">Tactile feedback quality and information transfer to the hand. Frame flex index, string elasticity, and dampening characteristics. Natural gut maxes this out. Dead poly minimizes it. Not the same as comfort.</div>
+                </div>
+                <div class="hiw-stat-card">
+                  <div class="hiw-stat-name">Comfort</div>
+                  <div class="hiw-stat-desc">Shock absorption and arm-friendliness. String softness, frame flex, and weight distribution. Distinct from feel — you can have high comfort with low feel (soft multi in a flexy frame) or high feel with low comfort (gut at 60 lbs in a stiff stick).</div>
+                </div>
+                <div class="hiw-stat-card">
+                  <div class="hiw-stat-name">Durability</div>
+                  <div class="hiw-stat-desc">String longevity and tension maintenance over time. Co-poly scores well on raw survival, gut scores poorly. But "durability" also factors tension stability — how long the string plays like it did when freshly strung.</div>
+                </div>
+                <div class="hiw-stat-card">
+                  <div class="hiw-stat-name">Touch</div>
+                  <div class="hiw-stat-desc">Drop shot and net-game finesse. Dwell time at low swing speeds, string elasticity at low deformation, frame head lightness. The artisan stat — high touch builds reward soft hands. Basically: can you land a drop shot on a coin?</div>
+                </div>
+                <div class="hiw-stat-card">
+                  <div class="hiw-stat-name">Stability</div>
+                  <div class="hiw-stat-desc">Twisting resistance on off-center hits. Swing weight, frame mass, and beam profile. Heavier, wider-beamed frames dominate. This is the "forgiveness" stat rebranded honestly — it's about physics, not marketing.</div>
+                </div>
+                <div class="hiw-stat-card">
+                  <div class="hiw-stat-name">Playability</div>
+                  <div class="hiw-stat-desc">How well the string maintains its performance character over hitting sessions. Not the same as durability — a string can survive forever but play dead after 5 hours. Measures the delta between fresh-strung behavior and post-session behavior.</div>
+                </div>
+                <div class="hiw-stat-card">
+                  <div class="hiw-stat-name">Tension Stability</div>
+                  <div class="hiw-stat-desc">How well the string holds its reference tension over time. Natural gut is king here — it stretches to its happy place and stays. Poly is the opposite — dramatic initial drop, then a slow creep. This stat affects every other stat indirectly because tension drift changes the entire build profile.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION 4: COMPOSITE SCORE & OBS -->
+          <div class="hiw-section">
+            <div class="hiw-section-num">04</div>
+            <h2 class="hiw-section-title">The Overall Build Score</h2>
+            <div class="hiw-section-body">
+              <p>
+                The OBS is a <strong>weighted composite</strong> of all ten stats, collapsed into a single number on a 0–100 scale. It's not a simple average — the weights reflect how much each stat contributes to real on-court performance impact.
+              </p>
+              <p>
+                Power and spin carry more weight than durability. Control carries more than stability. Feel carries more than playability. These weights aren't arbitrary — they're calibrated against the known performance hierarchies of equipment setups that the tennis community broadly agrees on.
+              </p>
+              <div class="hiw-rank-preview">
+                <h3>The Rank Ladder</h3>
+                <p>The OBS maps to a ten-tier rank ladder. Yes, the names are intentionally brainrot. No, we're not changing them.</p>
+                <div class="hiw-rank-tiers">
+                  <div class="hiw-rank-tier"><span class="hiw-rank-score">0–10</span><span class="hiw-rank-label">Delete This</span></div>
+                  <div class="hiw-rank-tier"><span class="hiw-rank-score">11–20</span><span class="hiw-rank-label">NPC Energy</span></div>
+                  <div class="hiw-rank-tier"><span class="hiw-rank-score">21–35</span><span class="hiw-rank-label">Mid</span></div>
+                  <div class="hiw-rank-tier"><span class="hiw-rank-score">36–45</span><span class="hiw-rank-label">Lowkey Decent</span></div>
+                  <div class="hiw-rank-tier"><span class="hiw-rank-score">46–55</span><span class="hiw-rank-label">Certified Playable</span></div>
+                  <div class="hiw-rank-tier"><span class="hiw-rank-score">56–65</span><span class="hiw-rank-label">That's Tuff</span></div>
+                  <div class="hiw-rank-tier"><span class="hiw-rank-score">66–75</span><span class="hiw-rank-label">Goated Setup</span></div>
+                  <div class="hiw-rank-tier"><span class="hiw-rank-score">76–85</span><span class="hiw-rank-label">Absolutely Dialed</span></div>
+                  <div class="hiw-rank-tier"><span class="hiw-rank-score">86–95</span><span class="hiw-rank-label">No Cap Elite</span></div>
+                  <div class="hiw-rank-tier"><span class="hiw-rank-score">96–100</span><span class="hiw-rank-label">Max Aura</span></div>
+                </div>
+              </div>
+              <p>
+                A build doesn't need to be "Max Aura" to be good for you. The rank ladder measures <em>total predicted performance ceiling</em>, not personal fit. A 55-scoring build with exactly the stats you want might outperform a 78-scoring build that's optimized for a playstyle that isn't yours.
+              </p>
+            </div>
+          </div>
+
+          <!-- SECTION 5: TUNE MODE -->
+          <div class="hiw-section">
+            <div class="hiw-section-num">05</div>
+            <h2 class="hiw-section-title">What Tune Mode Does</h2>
+            <div class="hiw-section-body">
+              <p>
+                Tune mode exposes <strong>Layer 3</strong> of the pipeline — the tension response model — as an interactive slider. When you drag tension from 40 to 70 lbs, you're not adjusting a linear multiplier. You're watching all ten stats respond through their individual response curves simultaneously.
+              </p>
+              <p>
+                This is the core insight the tool was built around: tension doesn't just change "power" or "control" in isolation. It reshapes the <em>entire stat profile</em>. A two-pound tension drop might increase power by 3 points, spin by 1.5, decrease control by 2, and barely touch feel. Tune mode lets you see all of that at once, in real time, on a single chart.
+              </p>
+              <div class="hiw-callout">
+                <div class="hiw-callout-icon">🎯</div>
+                <p>Tune mode shares the same setup state as the Home page. When you switch to Tune, it carries your current frame + string + tension selection. There's no second configurator — it's one source of truth, one build, explored from a different angle.</p>
+              </div>
+              <p>
+                The "What To Try Next" recommendations in Tune mode are contextual — they analyze your current build's stat balance and suggest tension adjustments, string swaps, or frame changes that would address specific gaps. They're not generic tips; they're computed from your active setup.
+              </p>
+            </div>
+          </div>
+
+          <!-- SECTION 6: WHAT THIS IS NOT -->
+          <div class="hiw-section">
+            <div class="hiw-section-num">06</div>
+            <h2 class="hiw-section-title">What This Tool Is Not</h2>
+            <div class="hiw-section-body">
+              <div class="hiw-not-grid">
+                <div class="hiw-not-card">
+                  <h3>Not a swing analyzer</h3>
+                  <p>This tool knows nothing about your swing speed, technique, or physical attributes. It models equipment behavior in isolation. A 4.0 player and a touring pro would get the same scores for the same setup — because the equipment <em>is</em> the same. How you use it is your business.</p>
+                </div>
+                <div class="hiw-not-card">
+                  <h3>Not a purchase recommendation</h3>
+                  <p>The Loadout Lab doesn't tell you what to buy. It tells you what a given combination would theoretically produce. Whether that's worth your money, compatible with your game, or available at your local shop — that's outside the model's scope.</p>
+                </div>
+                <div class="hiw-not-card">
+                  <h3>Not empirically validated</h3>
+                  <p>The coefficients are tuned against known equipment behavior and community consensus, not lab-measured ball trajectories. This is a modeling tool, not a physics simulator. The predictions are directionally accurate — they track reality — but they're not measurements. Treat the numbers as a structured framework for thinking about equipment trade-offs, not as ground truth.</p>
+                </div>
+                <div class="hiw-not-card">
+                  <h3>Not a replacement for hitting</h3>
+                  <p>No model replaces the feel of actually hitting with a setup. This tool helps you narrow the search space, understand why certain combos work, and explore trade-offs before you commit money and stringing time. But the court is the final test.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION 7: WHY IT'S USEFUL -->
+          <div class="hiw-section">
+            <div class="hiw-section-num">07</div>
+            <h2 class="hiw-section-title">Why It's Still Useful</h2>
+            <div class="hiw-section-body">
+              <p>
+                Because equipment decisions are expensive, time-consuming, and weirdly emotional. You can spend $250 on a frame, $30 on strings, $25 on labor, and walk away disappointed because the setup didn't feel like you expected — and you won't know <em>why</em>.
+              </p>
+              <p>
+                The Loadout Lab gives you a structured language for understanding equipment trade-offs. It doesn't replace experience, but it accelerates it. Instead of blindly testing 15 string/tension combos, you can model the differences, understand the mechanisms, and narrow your experiments to 3-4 setups worth actually hitting with.
+              </p>
+              <p>
+                It's also just fun to nerd out on. If you've ever spent 45 minutes on a Tennis Warehouse forum thread debating whether Solinco Confidential at 52 plays meaningfully different from RPM Blast at 54, this tool was built for you. Now you can see the predicted differences side by side, on a radar chart, with actual numbers.
+              </p>
+              <div class="hiw-callout hiw-callout-final">
+                <div class="hiw-callout-icon">◆</div>
+                <p>Built by a left-handed one-hander who spends too much time thinking about string tension. The brainrot rank names are intentional. The math is serious. The vibes are immaculate. Welcome to the lab.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
     </div>
   </main>
 

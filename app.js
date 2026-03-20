@@ -1888,7 +1888,7 @@ let isComparisonMode = false;
 // PERSISTENT SHELL — MODE SYSTEM
 // ============================================
 let currentMode = 'overview';
-const scrollPositions = { overview: 0, tune: 0, compare: 0 };
+const scrollPositions = { overview: 0, tune: 0, compare: 0, howitworks: 0 };
 let _compareInitialized = false;
 let _tuneInitialized = false;
 
@@ -1943,6 +1943,7 @@ function switchMode(mode) {
       updateComparisonRadar();
     }
   }
+  // howitworks mode needs no special init — it's static content
 }
 
 // ============================================
@@ -2593,7 +2594,7 @@ function renderRadarChart(stats) {
   const isDark = document.documentElement.dataset.theme === 'dark';
   const gridColor = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)';
   const angleColor = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)';
-  const labelColor = isDark ? 'rgba(255,255,255,0.38)' : 'rgba(0,0,0,0.36)';
+  const labelColor = isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.44)';
   const accentColor = '#C7F63A';
   const fillColor = isDark ? 'rgba(199, 246, 58, 0.10)' : 'rgba(199, 246, 58, 0.12)';
 
@@ -2651,10 +2652,11 @@ function renderRadarChart(stats) {
           pointLabels: {
             font: {
               family: "'General Sans', sans-serif",
-              size: 9,
+              size: 10,
               weight: 500
             },
-            color: labelColor
+            color: labelColor,
+            padding: 4
           }
         }
       },
@@ -4460,6 +4462,7 @@ function init() {
   document.getElementById('mode-overview')?.classList.remove('hidden');
   document.getElementById('mode-tune')?.classList.add('hidden');
   document.getElementById('mode-compare')?.classList.add('hidden');
+  document.getElementById('mode-howitworks')?.classList.add('hidden');
 }
 
 /* ============================================

@@ -57,6 +57,9 @@
   --font-body: 'General Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
 
+  /* Layout */
+  --header-h: 85px;
+
   /* Spacing */
   --space-1: 4px;
   --space-2: 8px;
@@ -185,25 +188,32 @@ body {
 }
 
 /* ============================================
-   HEADER
+   HEADER — spans full shell width, column-aligned
    ============================================ */
 
 .site-header {
+  grid-column: 1 / -1;
   position: sticky;
   top: 0;
   z-index: 100;
   background: var(--bg-base);
   border-bottom: 1px solid var(--border-subtle);
+  display: grid;
+  grid-template-columns: 360px minmax(0, 1fr);
 }
 
-.header-content {
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: var(--space-4) var(--space-8);
+.header-dock-region {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
+  padding: var(--space-4) var(--space-6);
+  border-right: 1px solid var(--border-subtle);
+}
+
+.header-workspace-region {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: var(--space-4) var(--space-8);
 }
 
 .logo-group {
@@ -240,8 +250,22 @@ body {
   font-weight: 500;
 }
 
+@media (max-width: 1024px) {
+  .site-header {
+    grid-template-columns: 1fr;
+  }
+  .header-dock-region {
+    border-right: none;
+    padding: var(--space-3) var(--space-5);
+    justify-content: space-between;
+  }
+  .header-workspace-region {
+    display: none;
+  }
+}
+
 @media (max-width: 600px) {
-  .header-content {
+  .header-dock-region {
     padding: var(--space-3) var(--space-4);
   }
   .site-title {
@@ -258,15 +282,12 @@ body {
   .logo-group {
     gap: var(--space-2);
   }
-  /* Mode switcher: icon-only on mobile */
+  /* Compact mode-switcher on small mobile: icon-only */
   .mode-btn span {
     display: none;
   }
   .mode-btn {
     padding: 6px 10px;
-  }
-  .mode-switcher {
-    gap: 1px;
   }
 }
 
@@ -336,16 +357,16 @@ body {
 
 .app-shell {
   display: grid;
-  grid-template-columns: 360px 1fr;
+  grid-template-columns: 360px minmax(0, 1fr);
   gap: 0;
-  max-width: 100%;
-  min-height: calc(100vh - 60px);
+  width: 100%;
+  min-height: calc(100vh - var(--header-h));
 }
 
 .build-dock {
   position: sticky;
-  top: 60px;
-  height: calc(100vh - 60px);
+  top: var(--header-h);
+  height: calc(100vh - var(--header-h));
   overflow-y: auto;
   overflow-x: hidden;
   padding: var(--space-6) var(--space-6) var(--space-10);
@@ -370,9 +391,8 @@ body {
 .workspace {
   padding: var(--space-6) var(--space-8) var(--space-16);
   min-width: 0;
-  max-width: 1080px;
   overflow-y: auto;
-  height: calc(100vh - 60px);
+  height: calc(100vh - var(--header-h));
 }
 
 .workspace-mode {
@@ -424,7 +444,6 @@ body {
   flex-direction: column;
   gap: var(--space-5);
   min-width: 0;
-  overflow: hidden;
 }
 
 .panel-section {
@@ -436,7 +455,6 @@ body {
   flex-direction: column;
   gap: var(--space-5);
   min-width: 0;
-  overflow: hidden;
 }
 
 @media (max-width: 600px) {
@@ -524,7 +542,7 @@ body {
 
 @media (max-width: 480px) {
   .row-2col {
-    grid-template-columns: 1fr 80px;
+    grid-template-columns: 1fr 1fr;
     gap: var(--space-2);
   }
 }
@@ -569,9 +587,9 @@ body {
 
 .frame-specs {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 2px var(--space-4);
-  padding: var(--space-4);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px var(--space-3);
+  padding: var(--space-3) var(--space-4);
   background: var(--bg-input);
   border-radius: var(--radius-sm);
 }
@@ -586,9 +604,11 @@ body {
 .frame-spec-item {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: baseline;
   font-size: 0.78rem;
-  padding: 4px 0;
+  padding: 3px 0;
+  gap: var(--space-2);
+  min-width: 0;
 }
 
 .frame-spec-label {
@@ -601,6 +621,8 @@ body {
   font-size: 0.75rem;
   font-weight: 500;
   color: var(--text-primary);
+  text-align: right;
+  white-space: nowrap;
 }
 
 /* Presets */
@@ -898,40 +920,233 @@ body {
 }
 
 /* ============================================
-   DATA FOUNDATION
+   OVERVIEW 4-CARD GRID
    ============================================ */
 
-.foundation-grid {
+.overview-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+@media (max-width: 1200px) {
+  .overview-cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .overview-cards-grid {
+    grid-template-columns: 1fr;
+  }
+  /* Mobile order: Identity, Rating, Snapshot, Foundation */
+  .oc-identity  { order: 1; }
+  .oc-rating    { order: 2; }
+  .oc-snapshot  { order: 3; }
+  .oc-foundation { order: 4; }
+}
+
+.overview-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.oc-eyebrow {
+  font-family: var(--font-body);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: var(--space-3);
+}
+
+/* Card 1 — Setup Identity */
+.oc-identity {
+  background: var(--bg-deep);
+  border-color: transparent;
+}
+
+.oc-identity .oc-eyebrow {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.oc-identity-title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--lime);
+  line-height: 1.15;
+  margin-bottom: var(--space-2);
+}
+
+.oc-identity-desc {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.5;
+  flex: 1;
+}
+
+[data-theme="dark"] .oc-identity {
+  background: var(--bg-elevated);
+}
+
+[data-theme="dark"] .oc-identity .oc-eyebrow {
+  color: var(--text-faint);
+}
+
+[data-theme="dark"] .oc-identity-desc {
+  color: var(--text-muted);
+}
+
+.oc-identity-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: 4px;
+  margin-top: var(--space-3);
 }
 
-.foundation-item {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: 4px 10px;
-  border-radius: var(--radius-full);
-  font-size: 0.72rem;
+.oc-identity-tag {
+  font-size: 0.6rem;
   font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(199, 246, 58, 0.12);
+  color: var(--lime);
 }
 
-.foundation-item.measured {
-  background: var(--green-tag-dim);
-  color: var(--green-tag);
+/* Card 2 — Overall Build Rating */
+.oc-rating {
+  align-items: center;
+  text-align: center;
 }
 
-.foundation-item.modeled {
-  background: var(--blue-tag-dim);
-  color: var(--blue-tag);
+.oc-rating .oc-eyebrow {
+  align-self: flex-start;
 }
 
-.foundation-item.estimated {
-  background: var(--amber-tag-dim);
-  color: var(--amber-tag);
+.oc-rating-ring {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin: var(--space-2) auto var(--space-3);
 }
 
+.oc-rating-ring svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.oc-rating-ring .ring-bg {
+  fill: none;
+  stroke: var(--bg-elevated);
+  stroke-width: 6;
+}
+
+.oc-rating-ring .ring-fill {
+  fill: none;
+  stroke: var(--lime);
+  stroke-width: 6;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.6s var(--ease-out);
+}
+
+.oc-rating-score {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.oc-rating-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  margin-bottom: var(--space-2);
+}
+
+.oc-rating-desc {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* Card 3 — Data Foundation */
+.oc-foundation-group {
+  margin-bottom: var(--space-3);
+}
+
+.oc-foundation-group:last-child {
+  margin-bottom: 0;
+}
+
+.oc-foundation-group-title {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.oc-foundation-group-values {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.oc-foundation-group-values .oc-sep {
+  color: var(--text-faint);
+  margin: 0 2px;
+}
+
+/* Card 4 — Fit Snapshot */
+.oc-snapshot-section {
+  margin-bottom: var(--space-3);
+}
+
+.oc-snapshot-section:last-child {
+  margin-bottom: 0;
+}
+
+.oc-snapshot-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.oc-snapshot-label.best-for  { color: var(--green-tag); }
+.oc-snapshot-label.watch-out { color: var(--orange); }
+.oc-snapshot-label.sweet-spot { color: var(--lime-text); }
+
+[data-theme="dark"] .oc-snapshot-label.sweet-spot { color: var(--lime); }
+
+.oc-snapshot-value {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+/* Retain tag styles for other uses */
 .tag {
   display: inline-flex;
   padding: 2px 8px;
@@ -944,43 +1159,6 @@ body {
 .tag-measured { background: var(--green-tag-dim); color: var(--green-tag); }
 .tag-modeled { background: var(--blue-tag-dim); color: var(--blue-tag); }
 .tag-estimated { background: var(--amber-tag-dim); color: var(--amber-tag); }
-
-/* ============================================
-   IDENTITY CARD
-   ============================================ */
-
-.identity-card {
-  text-align: center;
-  padding: var(--space-10) var(--space-8);
-  background: var(--bg-deep);
-  border-color: transparent;
-}
-
-[data-theme="dark"] .identity-card {
-  background: var(--bg-card);
-}
-
-.identity-archetype {
-  font-family: var(--font-display);
-  font-size: 2.4rem;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  color: var(--lime);
-  margin-bottom: var(--space-4);
-  line-height: 1.1;
-}
-
-.identity-description {
-  font-size: 1rem;
-  color: rgba(255, 255, 255, 0.6);
-  max-width: 560px;
-  margin: 0 auto;
-  line-height: 1.6;
-}
-
-[data-theme="dark"] .identity-description {
-  color: var(--text-muted);
-}
 
 /* ============================================
    STAT BARS
@@ -1450,8 +1628,6 @@ body {
 }
 
 .footer-content {
-  max-width: 1440px;
-  margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: flex-end;

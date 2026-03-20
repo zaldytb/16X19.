@@ -1496,37 +1496,7 @@ function generateWarnings(racquet, stringConfig, stats) {
 // DATA FOUNDATION
 // ============================================
 
-function getDataFoundation(racquet, stringConfig) {
-  const items = [];
-
-  // Frame data — all measured
-  items.push({ label: 'Frame Weight', type: 'measured' });
-  items.push({ label: 'Swingweight', type: 'measured' });
-  items.push({ label: 'Stiffness (RA)', type: 'measured' });
-  items.push({ label: 'Beam Width', type: 'measured' });
-  items.push({ label: 'String Pattern', type: 'measured' });
-  items.push({ label: 'Balance', type: 'measured' });
-
-  // String data — measured from TWU
-  items.push({ label: 'String Stiffness', type: 'measured' });
-  items.push({ label: 'Tension Loss %', type: 'measured' });
-  items.push({ label: 'Spin Potential', type: 'measured' });
-  items.push({ label: 'TWU Scores', type: 'measured' });
-
-  // Modeled outputs
-  items.push({ label: 'Power Rating', type: 'modeled' });
-  items.push({ label: 'Spin Rating', type: 'modeled' });
-  items.push({ label: 'Control Rating', type: 'modeled' });
-  items.push({ label: 'Launch Angle', type: 'modeled' });
-  items.push({ label: 'Feel Rating', type: 'modeled' });
-  items.push({ label: 'Comfort Rating', type: 'modeled' });
-
-  // Estimated
-  items.push({ label: 'Setup Identity', type: 'estimated' });
-  items.push({ label: 'Fit Profile', type: 'estimated' });
-
-  return items;
-}
+// getDataFoundation removed — replaced by renderOCFoundation in 4-card grid
 
 // ============================================
 // SETUP BADGE TEXT
@@ -2008,18 +1978,13 @@ function renderDashboard() {
   const identity = generateIdentity(stats, racquet, stringConfig);
   const fitProfile = generateFitProfile(stats, racquet, stringConfig);
   const warnings = generateWarnings(racquet, stringConfig, stats);
-  const foundation = getDataFoundation(racquet, stringConfig);
   const badge = getSetupBadge(racquet, stringConfig);
 
   // Summary
   renderSummary(racquet, stringConfig, badge);
 
-  // Data Foundation
-  renderFoundation(foundation);
-
-  // Identity
-  $('#identity-archetype').textContent = identity.archetype.toUpperCase();
-  $('#identity-description').textContent = identity.description;
+  // 4-Card Overview Grid
+  renderOverviewCards(racquet, stringConfig, stats, identity, fitProfile);
 
   // Stats
   renderStatBars(stats);
@@ -2085,13 +2050,130 @@ function renderSummary(racquet, stringConfig, badge) {
   `;
 }
 
-function renderFoundation(items) {
-  const grid = $('#foundation-grid');
-  grid.innerHTML = items.map(item => `
-    <span class="foundation-item ${item.type}">
-      <span>${item.label}</span>
-    </span>
-  `).join('');
+// ============================================
+// OVERVIEW 4-CARD GRID
+// ============================================
+
+function computeCompositeScore(stats) {
+  // Same formula as Tune page's Recommended Builds ranking
+  return stats.control * 0.30 + stats.comfort * 0.25 + stats.spin * 0.20 + stats.power * 0.15 + stats.playability * 0.10;
+}
+
+function getRatingDescriptor(score, identity) {
+  const archLower = identity.archetype.toLowerCase();
+  if (score >= 85) return `Elite ${archLower} configuration`;
+  if (score >= 75) return `Strong ${archLower} configuration`;
+  if (score >= 65) return `Solid ${archLower} configuration`;
+  if (score >= 55) return `Moderate ${archLower} configuration`;
+  return `Developing ${archLower} configuration`;
+}
+
+function renderOverviewCards(racquet, stringConfig, stats, identity, fitProfile) {
+  renderOCIdentity(identity);
+  renderOCRating(stats, identity);
+  renderOCFoundation(racquet, stringConfig, stats);
+  renderOCSnapshot(fitProfile);
+}
+
+function renderOCIdentity(identity) {
+  const el = $('#oc-identity');
+  // Truncate description to ~2 lines (approx 120 chars)
+  const desc = identity.description.length > 130
+    ? identity.description.substring(0, 127) + '...'
+    : identity.description;
+
+  el.innerHTML = `
+    <div class="oc-eyebrow">Setup Identity</div>
+    <div class="oc-identity-title">${identity.archetype.toUpperCase()}</div>
+    <div class="oc-identity-desc">${desc}</div>
+  `;
+}
+
+function renderOCRating(stats, identity) {
+  const el = $('#oc-rating');
+  const score = computeCompositeScore(stats);
+  const pct = Math.min(score / 100, 1);
+  // SVG ring: radius 42, circumference = 2*PI*42 ≈ 263.89
+  const circumference = 2 * Math.PI * 42;
+  const dashOffset = circumference * (1 - pct);
+  const descriptor = getRatingDescriptor(score, identity);
+
+  el.innerHTML = `
+    <div class="oc-eyebrow">Overall Build Rating</div>
+    <div class="oc-rating-ring">
+      <svg viewBox="0 0 100 100">
+        <circle class="ring-bg" cx="50" cy="50" r="42" />
+        <circle class="ring-fill" cx="50" cy="50" r="42"
+          stroke-dasharray="${circumference.toFixed(1)}"
+          stroke-dashoffset="${dashOffset.toFixed(1)}" />
+      </svg>
+      <div class="oc-rating-score">${score.toFixed(1)}</div>
+    </div>
+    <div class="oc-rating-label">Composite Build Score</div>
+    <div class="oc-rating-desc">${descriptor}</div>
+  `;
+}
+
+function renderOCFoundation(racquet, stringConfig, stats) {
+  const el = $('#oc-foundation');
+  const sep = '<span class="oc-sep">·</span>';
+
+  // Get string data
+  let strStiff, strTensionLoss, strSpinPot;
+  if (stringConfig.isHybrid) {
+    // Average mains/crosses for hybrid
+    const m = stringConfig.mains, x = stringConfig.crosses;
+    strStiff = Math.round((m.stiffness + x.stiffness) / 2);
+    strTensionLoss = ((m.tensionLoss + x.tensionLoss) / 2).toFixed(0);
+    strSpinPot = ((m.spinPotential + x.spinPotential) / 2).toFixed(1);
+  } else {
+    const s = stringConfig.string;
+    strStiff = Math.round(s.stiffness);
+    strTensionLoss = s.tensionLoss.toFixed(0);
+    strSpinPot = s.spinPotential.toFixed(1);
+  }
+
+  el.innerHTML = `
+    <div class="oc-eyebrow">Data Foundation</div>
+    <div class="oc-foundation-group">
+      <div class="oc-foundation-group-title">Frame</div>
+      <div class="oc-foundation-group-values">${racquet.strungWeight}g ${sep} SW ${racquet.swingweight} ${sep} ${racquet.stiffness} RA ${sep} ${racquet.pattern}</div>
+    </div>
+    <div class="oc-foundation-group">
+      <div class="oc-foundation-group-title">String</div>
+      <div class="oc-foundation-group-values">Stiffness ${strStiff} ${sep} T-Loss ${strTensionLoss}% ${sep} Spin ${strSpinPot}</div>
+    </div>
+    <div class="oc-foundation-group">
+      <div class="oc-foundation-group-title">Model</div>
+      <div class="oc-foundation-group-values">Power ${stats.power} ${sep} Control ${stats.control} ${sep} Comfort ${stats.comfort}</div>
+    </div>
+  `;
+}
+
+function renderOCSnapshot(fitProfile) {
+  const el = $('#oc-snapshot');
+  // Take first 2 items from bestFor and first from watchOut
+  const bestForText = fitProfile.bestFor.slice(0, 2).join(', ');
+  const watchOutText = fitProfile.watchOut[0] || 'No major concerns';
+  // Extract sweet spot from tensionRec
+  const sweetSpotMatch = fitProfile.tensionRec.match(/sweet spot: ([^)]+)/);
+  const sweetSpot = sweetSpotMatch ? sweetSpotMatch[1] : fitProfile.tensionRec;
+
+  el.innerHTML = `
+    <div class="oc-eyebrow">Fit Snapshot</div>
+    <div class="oc-snapshot-section">
+      <div class="oc-snapshot-label best-for">Best For</div>
+      <div class="oc-snapshot-value">${bestForText}</div>
+    </div>
+    <div class="oc-snapshot-section">
+      <div class="oc-snapshot-label watch-out">Watch Out</div>
+      <div class="oc-snapshot-value">${watchOutText}</div>
+    </div>
+    <div class="oc-snapshot-section">
+      <div class="oc-snapshot-label sweet-spot">Sweet Spot</div>
+      <div class="oc-snapshot-value">${sweetSpot}</div>
+    </div>
+  `;
 }
 
 function renderStatBars(stats) {
@@ -3630,4 +3712,37 @@ function init() {
   document.getElementById('mode-compare')?.classList.add('hidden');
 }
 
-document.addEventListener('DOMContentLoaded', init);
+/* ============================================
+   RESPONSIVE HEADER — move mode-switcher on ≤1024px
+   ============================================ */
+function handleResponsiveHeader() {
+  const switcher = document.getElementById('mode-switcher');
+  const dockRegion = document.querySelector('.header-dock-region');
+  const workspaceRegion = document.querySelector('.header-workspace-region');
+  if (!switcher || !dockRegion || !workspaceRegion) return;
+
+  const mql = window.matchMedia('(max-width: 1024px)');
+
+  function onBreakpoint(e) {
+    if (e.matches) {
+      // Mobile/tablet: move switcher into dock-region
+      if (!dockRegion.contains(switcher)) {
+        dockRegion.appendChild(switcher);
+      }
+    } else {
+      // Desktop: move switcher back into workspace-region .header-actions
+      const actions = workspaceRegion.querySelector('.header-actions');
+      if (actions && !actions.contains(switcher)) {
+        actions.insertBefore(switcher, actions.querySelector('#btn-theme'));
+      }
+    }
+  }
+
+  mql.addEventListener('change', onBreakpoint);
+  onBreakpoint(mql); // run on load
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  init();
+  handleResponsiveHeader();
+});

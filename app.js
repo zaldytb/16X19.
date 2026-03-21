@@ -2753,20 +2753,7 @@ const STRINGS = [
     identity: "Control Lockdown",
     notes: "Stiff poly (222 lb/in) with excellent tension maintenance (22% loss — top tier). Four grippy edges for spin. Needs 3-4 hrs break-in. Rewards full swings with pinpoint accuracy."
   },
-  {
-    id: "solinco-confidential-17",
-    name: "Solinco Confidential",
-    gauge: "17 (1.25mm)",
-    gaugeNum: 1.25,
-    material: "Polyester",
-    shape: "Square/4-pointed edges",
-    stiffness: 205,
-    tensionLoss: 24,
-    spinPotential: 7.0,
-    twScore: { power: 48, spin: 92, comfort: 66, control: 90, feel: 85, playabilityDuration: 82, durability: 84 },
-    identity: "Control Lockdown (Lite)",
-    notes: "Thinner gauge: ~8% softer, marginally more spin access, slightly less durability. Better pocketing and comfort than 16g. Good for non-string-breakers who want more feel."
-  },
+
   {
     id: "solinco-hyper-g-16",
     name: "Solinco Hyper-G",
@@ -2781,20 +2768,7 @@ const STRINGS = [
     identity: "Spin Shredder",
     notes: "Iconic green poly. Pentagon shape bites the ball aggressively. Slightly softer than Confidential with a bit more power. Good all-around aggressive poly."
   },
-  {
-    id: "solinco-hyper-g-16l",
-    name: "Solinco Hyper-G",
-    gauge: "16L (1.25mm)",
-    gaugeNum: 1.25,
-    material: "Polyester",
-    shape: "Pentagon/5-sided",
-    stiffness: 218.3,
-    tensionLoss: 24.7,
-    spinPotential: 6.1,
-    twScore: { power: 52, spin: 88, comfort: 65, control: 86, feel: 82, playabilityDuration: 76, durability: 82 },
-    identity: "Spin Shredder (Lite)",
-    notes: "16L version maintains stiffness but lower spin potential in TWU testing. Better tension maintenance than 16g counterpart."
-  },
+
   {
     id: "solinco-tour-bite-16",
     name: "Solinco Tour Bite",
@@ -2823,20 +2797,7 @@ const STRINGS = [
     identity: "The Pro Standard",
     notes: "Nadal's string. Very stiff (234 lb/in). Moderate tension loss. TWU spin potential is low (4.6) but real-world spin comes from snap-back of the octagonal shape. Good power for a poly."
   },
-  {
-    id: "babolat-rpm-blast-16",
-    name: "Babolat RPM Blast",
-    gauge: "16 (1.30mm)",
-    gaugeNum: 1.30,
-    material: "Polyester",
-    shape: "Octagonal",
-    stiffness: 233,
-    tensionLoss: 45.9,
-    spinPotential: 4.5,
-    twScore: { power: 50, spin: 80, comfort: 55, control: 88, feel: 78, playabilityDuration: 68, durability: 88 },
-    identity: "The Pro Standard (Tank)",
-    notes: "16g version: similar stiffness but significantly more tension loss (46%). More durable but loses playability faster. Good for string breakers."
-  },
+
   {
     id: "babolat-vs-touch-16",
     name: "Babolat VS Touch",
@@ -3305,20 +3266,7 @@ const STRINGS = [
     identity: "Soft Lockdown",
     notes: "2026 Prizm Project Electric Soft Pink version of Confidential. More forgiving, livelier, and more arm-friendly than original Confidential. Softer stiffness (~195 vs 222 lb/in est.) with maintained control and spin characteristics. Good tension maintenance inherited from the Confidential line. For players who want Confidential's control DNA with better comfort."
   },
-  {
-    id: "solinco-tour-bite-17",
-    name: "Solinco Tour Bite",
-    gauge: "17 (1.20mm)",
-    gaugeNum: 1.20,
-    material: "Polyester",
-    shape: "Pentagon/5-sided",
-    stiffness: 181,
-    tensionLoss: 35,
-    spinPotential: 6.7,
-    twScore: { power: 42, spin: 86, comfort: 56, control: 92, feel: 80, playabilityDuration: 68, durability: 78 },
-    identity: "Thin Iron Maiden",
-    notes: "17g (1.20mm) version of Tour Bite — softer than 16g (181 vs 203 lb/in). Less tension loss than 16g counterpart. Thinner gauge gives better ball pocketing and feel at the cost of durability. Shaped edges provide excellent bite and spin. Maximum control poly for players who don't break strings quickly."
-  },
+
 
   // ===== TECHNIFIBRE =====
   {
@@ -3581,6 +3529,97 @@ function getMinBeam(beamWidth) {
 
 function isVariableBeam(beamWidth) {
   return Math.max(...beamWidth) - Math.min(...beamWidth) > 2;
+}
+
+// ============================================
+// GAUGE SYSTEM
+// ============================================
+// Available gauge options by material type.
+// Each string's base data is measured at its refGauge (from the `gauge` field).
+// When a different gauge is selected, applyGaugeModifier creates a virtual
+// string object with adjusted properties.
+
+const GAUGE_OPTIONS = {
+  // Polyester / Co-Polyester: wide range available
+  'Polyester':             [1.15, 1.20, 1.25, 1.30, 1.35],
+  'Co-Polyester (elastic)':[1.15, 1.20, 1.25, 1.30, 1.35],
+  // Natural Gut: typically 15L-17
+  'Natural Gut':           [1.25, 1.30, 1.35, 1.40],
+  // Multifilament / Synthetic: 15L-17 common
+  'Multifilament':         [1.25, 1.30, 1.35],
+  'Synthetic Gut':         [1.25, 1.30, 1.35],
+};
+
+const GAUGE_LABELS = {
+  1.15: '18 (1.15mm)',
+  1.20: '17 (1.20mm)',
+  1.25: '16L (1.25mm)',
+  1.30: '16 (1.30mm)',
+  1.35: '15L (1.35mm)',
+  1.40: '15L (1.40mm)',
+};
+
+// Returns a modified copy of stringData with gauge-adjusted properties.
+// The base string data is the "reference" measurement (at its own gaugeNum).
+// Moving to a different gauge shifts stiffness, spin, durability, etc.
+function applyGaugeModifier(stringData, selectedGauge) {
+  if (!selectedGauge || selectedGauge === stringData.gaugeNum) {
+    return stringData; // No change needed — using reference gauge
+  }
+
+  const refGauge = stringData.gaugeNum;  // e.g. 1.30
+  const delta = selectedGauge - refGauge; // negative = thinner, positive = thicker
+  // Steps of 0.05mm (each step = one standard gauge jump)
+  const steps = delta / 0.05;
+
+  // --- Stiffness: ~6% change per 0.05mm step ---
+  // Thinner → softer, thicker → stiffer
+  const stiffMult = 1 + steps * 0.06;
+  const newStiffness = stringData.stiffness * stiffMult;
+
+  // --- Tension loss: thicker strings lose tension slightly faster (more material creep) ---
+  const newTensionLoss = stringData.tensionLoss * (1 + steps * 0.04);
+
+  // --- Spin potential: thinner gauge slightly more spin (more bite, easier snapback) ---
+  const newSpinPot = stringData.spinPotential - steps * 0.15;
+
+  // --- twScore adjustments ---
+  // Per gauge step: power ±2, comfort ±1.5, feel ±2, control ∓1.5, durability ∓3, spin ±1
+  const tw = { ...stringData.twScore };
+  tw.power = Math.max(30, Math.min(98, tw.power - steps * 2));        // thinner = more power
+  tw.comfort = Math.max(30, Math.min(98, tw.comfort - steps * 1.5));  // thinner = more comfort
+  tw.feel = Math.max(30, Math.min(98, tw.feel - steps * 2));          // thinner = better feel
+  tw.control = Math.max(30, Math.min(98, tw.control + steps * 1.5));  // thinner = less control
+  tw.durability = Math.max(20, Math.min(98, tw.durability + steps * 3)); // thinner = less durable
+  tw.spin = Math.max(30, Math.min(98, tw.spin - steps * 1));          // thinner = more spin
+  tw.playabilityDuration = Math.max(30, Math.min(98, tw.playabilityDuration - steps * 0.5)); // minor effect
+
+  // Return a new object with all original properties + gauge adjustments
+  return {
+    ...stringData,
+    gaugeNum: selectedGauge,
+    gauge: GAUGE_LABELS[selectedGauge] || `${selectedGauge.toFixed(2)}mm`,
+    stiffness: Math.max(80, newStiffness),
+    tensionLoss: Math.max(5, Math.min(60, newTensionLoss)),
+    spinPotential: Math.max(3, Math.min(10, newSpinPot)),
+    twScore: tw,
+    _gaugeModified: true,
+    _refGauge: refGauge
+  };
+}
+
+// Get available gauge options for a string.
+// Always includes the string's reference gauge (the gauge it was measured at)
+// plus the standard gauge grid for its material.
+function getGaugeOptions(stringData) {
+  const standard = GAUGE_OPTIONS[stringData.material] || [1.25, 1.30];
+  const ref = stringData.gaugeNum;
+  // If ref gauge isn't in the standard list, add it and sort
+  if (!standard.some(g => Math.abs(g - ref) < 0.005)) {
+    const combined = [...standard, ref].sort((a, b) => a - b);
+    return combined;
+  }
+  return standard;
 }
 
 // ============================================
@@ -5144,15 +5183,15 @@ function loadPresetFromData(preset) {
   if (preset.isHybrid) {
     setHybridMode(true);
     ssInstances['select-string-mains']?.setValue(preset.mainsId);
-    populateGaugeDropdown(document.getElementById('gauge-display-mains'), preset.mainsId);
+    populateGaugeDropdown(document.getElementById('gauge-select-mains'), preset.mainsId);
     $('#input-tension-mains').value = preset.mainsTension;
     ssInstances['select-string-crosses']?.setValue(preset.crossesId);
-    populateGaugeDropdown(document.getElementById('gauge-display-crosses'), preset.crossesId);
+    populateGaugeDropdown(document.getElementById('gauge-select-crosses'), preset.crossesId);
     $('#input-tension-crosses').value = preset.crossesTension;
   } else {
     setHybridMode(false);
     ssInstances['select-string-full']?.setValue(preset.stringId);
-    populateGaugeDropdown(document.getElementById('gauge-display-full'), preset.stringId);
+    populateGaugeDropdown(document.getElementById('gauge-select-full'), preset.stringId);
     // Full Bed with split tensions — support both legacy (single tension) and new (mainsTension/crossesTension)
     const mt = preset.mainsTension ?? preset.tension ?? 55;
     const xt = preset.crossesTension ?? preset.tension ?? 53;
@@ -5361,7 +5400,7 @@ function createSearchableSelect(container, {
       return r ? r.name : '';
     } else {
       const s = STRINGS.find(x => x.id === val);
-      return s ? `${s.name} ${s.gauge}` : '';
+      return s ? s.name : '';  // gauge is now a separate selector
     }
   }
 
@@ -5399,10 +5438,10 @@ function createSearchableSelect(container, {
         secondaryText = `${item.year || ''}`;
         badgeHTML = wtBadge;
       } else {
-        searchText = `${item.name} ${item.gauge} ${item.material || ''} ${item.gaugeNum || ''}`.toLowerCase();
+        searchText = `${item.name} ${item.gauge} ${item.material || ''} ${item.gaugeNum || ''} ${item.shape || ''}`.toLowerCase();
         groupKey = item.name.split(' ')[0];
         primaryText = item.name;
-        secondaryText = item.gauge;
+        secondaryText = `${item.shape || item.material || ''}`;
         badgeHTML = getStringMaterialBadge(item.material);
       }
 
@@ -5611,12 +5650,51 @@ function populateStringDropdown(targetEl, initialValue) {
 
 function populateGaugeDropdown(el, stringId) {
   if (!el) return;
+
+  // Handle both old div-based and new select-based gauge elements
+  const isSelect = el.tagName === 'SELECT';
+
   if (!stringId) {
-    el.textContent = '—';
+    if (isSelect) {
+      el.innerHTML = '<option value="">—</option>';
+      el.disabled = true;
+    } else {
+      el.textContent = '—';
+    }
     return;
   }
+
   const s = STRINGS.find(x => x.id === stringId);
-  el.textContent = s ? s.gauge : '—';
+  if (!s) {
+    if (isSelect) {
+      el.innerHTML = '<option value="">—</option>';
+      el.disabled = true;
+    } else {
+      el.textContent = '—';
+    }
+    return;
+  }
+
+  if (isSelect) {
+    const options = getGaugeOptions(s);
+    const refGauge = s.gaugeNum;
+    el.innerHTML = options.map(g => {
+      const isRef = Math.abs(g - refGauge) < 0.005;
+      let label = GAUGE_LABELS[g];
+      if (!label) {
+        // Build label for non-standard gauges
+        const gNum = g >= 1.30 ? '16' : g >= 1.25 ? '16L' : g >= 1.20 ? '17' : '18';
+        label = `${gNum} (${g.toFixed(2)}mm)`;
+      }
+      const tag = isRef ? ' •' : '';
+      return `<option value="${g}" ${isRef ? 'selected' : ''}>${label}${tag}</option>`;
+    }).join('');
+    el.disabled = false;
+    // Fire change handler to rebuild on gauge change
+    el.onchange = () => renderDashboard();
+  } else {
+    el.textContent = s.gauge;
+  }
 }
 
 // ============================================
@@ -5658,12 +5736,25 @@ function getCurrentSetup() {
     const crossesId = ssInstances['select-string-crosses']?.getValue() || '';
     if (!mainsId || !crossesId) return null;
 
+    // Read gauge selections
+    const mainsGaugeEl = document.getElementById('gauge-select-mains');
+    const crossesGaugeEl = document.getElementById('gauge-select-crosses');
+    const mainsGauge = mainsGaugeEl && mainsGaugeEl.value ? parseFloat(mainsGaugeEl.value) : null;
+    const crossesGauge = crossesGaugeEl && crossesGaugeEl.value ? parseFloat(crossesGaugeEl.value) : null;
+
+    // Apply gauge modifiers to string data
+    let mainsData = STRINGS.find(s => s.id === mainsId);
+    let crossesData = STRINGS.find(s => s.id === crossesId);
+    if (mainsData && mainsGauge) mainsData = applyGaugeModifier(mainsData, mainsGauge);
+    if (crossesData && crossesGauge) crossesData = applyGaugeModifier(crossesData, crossesGauge);
+
     return {
       racquet,
       stringConfig: {
         isHybrid: true,
-        mains: STRINGS.find(s => s.id === mainsId),
-        crosses: STRINGS.find(s => s.id === crossesId),
+        mains: mainsData,
+        crosses: crossesData,
+        mainsId, crossesId,
         mainsTension: parseInt($('#input-tension-mains').value) || 55,
         crossesTension: parseInt($('#input-tension-crosses').value) || 53
       }
@@ -5672,11 +5763,19 @@ function getCurrentSetup() {
     const stringId = ssInstances['select-string-full']?.getValue() || '';
     if (!stringId) return null;
 
+    // Read gauge selection
+    const gaugeEl = document.getElementById('gauge-select-full');
+    const selectedGauge = gaugeEl && gaugeEl.value ? parseFloat(gaugeEl.value) : null;
+
+    // Apply gauge modifier to string data
+    let stringData = STRINGS.find(s => s.id === stringId);
+    if (stringData && selectedGauge) stringData = applyGaugeModifier(stringData, selectedGauge);
+
     return {
       racquet,
       stringConfig: {
         isHybrid: false,
-        string: STRINGS.find(s => s.id === stringId),
+        string: stringData,
         mainsTension: parseInt($('#input-tension-full-mains').value) || 55,
         crossesTension: parseInt($('#input-tension-full-crosses').value) || 53
       }
@@ -8212,15 +8311,15 @@ function openTuneForSlot(slotIndex) {
   if (slot.isHybrid) {
     setHybridMode(true);
     ssInstances['select-string-mains']?.setValue(slot.mainsId);
-    populateGaugeDropdown(document.getElementById('gauge-display-mains'), slot.mainsId);
+    populateGaugeDropdown(document.getElementById('gauge-select-mains'), slot.mainsId);
     $('#input-tension-mains').value = slot.mainsTension;
     ssInstances['select-string-crosses']?.setValue(slot.crossesId);
-    populateGaugeDropdown(document.getElementById('gauge-display-crosses'), slot.crossesId);
+    populateGaugeDropdown(document.getElementById('gauge-select-crosses'), slot.crossesId);
     $('#input-tension-crosses').value = slot.crossesTension;
   } else {
     setHybridMode(false);
     ssInstances['select-string-full']?.setValue(slot.stringId);
-    populateGaugeDropdown(document.getElementById('gauge-display-full'), slot.stringId);
+    populateGaugeDropdown(document.getElementById('gauge-select-full'), slot.stringId);
     $('#input-tension-full-mains').value = slot.mainsTension;
     $('#input-tension-full-crosses').value = slot.crossesTension;
   }

@@ -113,10 +113,12 @@
           <!-- Full Bed -->
           <div id="full-bed-config" class="string-config">
             <label class="field-label">String</label>
-            <div id="select-string-full" data-gauge-target="gauge-display-full"></div>
+            <div id="select-string-full" data-gauge-target="gauge-select-full"></div>
             <div class="fullbed-gauge-row">
               <label class="field-label">Gauge</label>
-              <div id="gauge-display-full" class="gauge-display">—</div>
+              <select id="gauge-select-full" class="gauge-select" disabled>
+                <option value="">—</option>
+              </select>
             </div>
             <div class="row-2col fullbed-tension-row">
               <div>
@@ -134,11 +136,13 @@
           <div id="hybrid-config" class="string-config hidden">
             <div class="hybrid-section">
               <label class="field-label accent-cyan">Mains</label>
-              <div id="select-string-mains" data-placeholder="Select Main String..." data-gauge-target="gauge-display-mains"></div>
+              <div id="select-string-mains" data-placeholder="Select Main String..." data-gauge-target="gauge-select-mains"></div>
               <div class="row-2col">
                 <div>
                   <label class="field-label">Gauge</label>
-                  <div id="gauge-display-mains" class="gauge-display">—</div>
+                  <select id="gauge-select-mains" class="gauge-select" disabled>
+                    <option value="">—</option>
+                  </select>
                 </div>
                 <div>
                   <label class="field-label">Tension (lbs)</label>
@@ -148,11 +152,13 @@
             </div>
             <div class="hybrid-section">
               <label class="field-label accent-green">Crosses</label>
-              <div id="select-string-crosses" data-placeholder="Select Cross String..." data-gauge-target="gauge-display-crosses"></div>
+              <div id="select-string-crosses" data-placeholder="Select Cross String..." data-gauge-target="gauge-select-crosses"></div>
               <div class="row-2col">
                 <div>
                   <label class="field-label">Gauge</label>
-                  <div id="gauge-display-crosses" class="gauge-display">—</div>
+                  <select id="gauge-select-crosses" class="gauge-select" disabled>
+                    <option value="">—</option>
+                  </select>
                 </div>
                 <div>
                   <label class="field-label">Tension (lbs)</label>

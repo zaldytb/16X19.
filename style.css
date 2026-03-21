@@ -4137,8 +4137,9 @@ body {
   overflow: visible;
 }
 
-/* Gauge display (read-only, auto-populated from string selection) */
-.gauge-display {
+/* Gauge select (interactive dropdown, populated from string selection) */
+.gauge-select {
+  width: 100%;
   padding: 11px var(--space-4);
   background: var(--bg-input);
   border: 1px solid var(--border-subtle);
@@ -4147,5 +4148,18 @@ body {
   font-family: var(--font-mono);
   font-size: 0.85rem;
   font-weight: 500;
-  opacity: 0.7;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+.gauge-select:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.gauge-select:not(:disabled):hover {
+  border-color: var(--lime);
 }

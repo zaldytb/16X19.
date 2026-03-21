@@ -9194,20 +9194,139 @@ function init() {
   // Theme
   $('#btn-theme').addEventListener('click', toggleTheme);
 
-  // Set initial mode — hide overview, show compendium as landing page
-  document.getElementById('mode-overview')?.classList.add('hidden');
+  // Set initial mode — hide all non-default sections
   document.getElementById('mode-tune')?.classList.add('hidden');
   document.getElementById('mode-compare')?.classList.add('hidden');
+  document.getElementById('mode-optimize')?.classList.add('hidden');
+  document.getElementById('mode-compendium')?.classList.add('hidden');
   document.getElementById('mode-howitworks')?.classList.add('hidden');
+  // Overview stays visible as the default landing page
 
   // Load saved loadouts from storage
   savedLoadouts = _loadSavedLoadouts();
 
-  // Default to Racket Bible as landing page
-  switchMode('compendium');
+  // Render the dashboard (shows search landing if no setup)
+  renderDashboard();
 
   // Initialize dock panel
   renderDockPanel();
+
+  // Initialize landing search
+  _initLandingSearch();
+}
+
+// ============================================
+// LANDING SEARCH
+// ============================================
+
+function _initLandingSearch() {
+  var searchEl = document.getElementById('landing-search');
+  var dropdownEl = document.getElementById('landing-search-dropdown');
+  if (!searchEl || !dropdownEl) return;
+
+  var selectedIdx = -1;
+
+  function renderResults(query) {
+    if (!query || query.length < 1) {
+      dropdownEl.classList.add('hidden');
+      selectedIdx = -1;
+      return;
+    }
+    var q = query.toLowerCase();
+    var matches = RACQUETS.filter(function(r) {
+      return r.name.toLowerCase().indexOf(q) >= 0 ||
+             (r.identity && r.identity.toLowerCase().indexOf(q) >= 0) ||
+             r.id.toLowerCase().indexOf(q) >= 0;
+    }).slice(0, 10);
+
+    if (matches.length === 0) {
+      dropdownEl.innerHTML = '<div class="landing-dd-empty">No frames found</div>';
+      dropdownEl.classList.remove('hidden');
+      selectedIdx = -1;
+      return;
+    }
+
+    selectedIdx = -1;
+    dropdownEl.innerHTML = matches.map(function(r, i) {
+      return '<div class="landing-dd-item" data-id="' + r.id + '" data-idx="' + i + '">' +
+        '<span class="landing-dd-name">' + r.name + '</span>' +
+        '<span class="landing-dd-meta">' + r.year + ' \u00b7 ' + (r.identity || '') + '</span>' +
+      '</div>';
+    }).join('');
+    dropdownEl.classList.remove('hidden');
+
+    dropdownEl.querySelectorAll('.landing-dd-item').forEach(function(el) {
+      el.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        _landingSelectFrame(el.dataset.id);
+      });
+    });
+  }
+
+  function highlightItem(idx) {
+    var items = dropdownEl.querySelectorAll('.landing-dd-item');
+    items.forEach(function(el, i) {
+      el.classList.toggle('landing-dd-active', i === idx);
+    });
+    if (items[idx]) items[idx].scrollIntoView({ block: 'nearest' });
+  }
+
+  searchEl.addEventListener('input', function() {
+    renderResults(searchEl.value);
+  });
+
+  searchEl.addEventListener('focus', function() {
+    if (searchEl.value.length > 0) renderResults(searchEl.value);
+  });
+
+  searchEl.addEventListener('blur', function() {
+    setTimeout(function() { dropdownEl.classList.add('hidden'); }, 150);
+  });
+
+  searchEl.addEventListener('keydown', function(e) {
+    var items = dropdownEl.querySelectorAll('.landing-dd-item');
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      selectedIdx = Math.min(selectedIdx + 1, items.length - 1);
+      highlightItem(selectedIdx);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      selectedIdx = Math.max(selectedIdx - 1, 0);
+      highlightItem(selectedIdx);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (selectedIdx >= 0 && items[selectedIdx]) {
+        _landingSelectFrame(items[selectedIdx].dataset.id);
+      } else if (items.length > 0) {
+        _landingSelectFrame(items[0].dataset.id);
+      }
+    } else if (e.key === 'Escape') {
+      dropdownEl.classList.add('hidden');
+      searchEl.blur();
+    }
+  });
+}
+
+function _landingSelectFrame(racquetId) {
+  // Switch to Racket Bible and select the frame
+  if (!_compendiumInitialized) {
+    initCompendium();
+    _compendiumInitialized = true;
+  }
+  _compSelectFrame(racquetId);
+  switchMode('compendium');
+
+  // Also scroll the roster to highlight
+  setTimeout(function() {
+    var item = document.querySelector('.comp-frame-item[data-id="' + racquetId + '"]');
+    if (item) item.scrollIntoView({ block: 'center' });
+  }, 100);
+
+  // Clear the search
+  var searchEl = document.getElementById('landing-search');
+  if (searchEl) searchEl.value = '';
+  var dropdown = document.getElementById('landing-search-dropdown');
+  if (dropdown) dropdown.classList.add('hidden');
 }
 
 /* ============================================

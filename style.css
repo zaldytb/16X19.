@@ -4241,8 +4241,14 @@ body {
    GAUGE EXPLORER (Tune Mode)
    ============================================ */
 
+.tune-row-gauge {
+  display: block;
+}
+
 .gauge-explore-content {
   padding-top: var(--space-2);
+  width: 100%;
+  overflow-x: auto;
 }
 
 .gauge-explore-section-label {

@@ -8120,15 +8120,24 @@ function renderWhatToTryNext(setup, allCandidates) {
   const currentStats = predictSetup(racquet, stringConfig);
   const classification = classifySetup(currentStats);
 
-  // Identify the current string to exclude from candidates
-  let currentStringId = null;
-  if (!stringConfig.isHybrid && stringConfig.string) {
-    currentStringId = stringConfig.string.id;
+  // Build a key to identify the current build for exclusion
+  let currentBuildKey = null;
+  if (stringConfig.isHybrid) {
+    const mId = stringConfig.mains?.id || stringConfig.mainsId || '';
+    const xId = stringConfig.crosses?.id || stringConfig.crossesId || '';
+    currentBuildKey = `hybrid:${mId}/${xId}`;
+  } else if (stringConfig.string) {
+    currentBuildKey = `full:${stringConfig.string.id}`;
   }
 
-  // Filter out the current string and compute deltas for each candidate
+  function getCandidateKey(c) {
+    if (c.type === 'hybrid') return `hybrid:${c.mainsId}/${c.crossesId}`;
+    return `full:${c.stringId || (c.string && c.string.id) || ''}`;
+  }
+
+  // Filter out the current build and compute deltas for each candidate
   const scored = allCandidates
-    .filter(c => c.string.id !== currentStringId)
+    .filter(c => getCandidateKey(c) !== currentBuildKey)
     .map(c => {
       const deltas = computeDeltas(currentStats, c.stats);
       return {
@@ -8156,7 +8165,7 @@ function renderWhatToTryNext(setup, allCandidates) {
     if (sim < 6) c.moreScore -= DISTINCTNESS_PENALTY;
   }
   scored.sort((a, b) => b.moreScore - a.moreScore);
-  const more = scored.find(c => c.string.id !== closest.string.id) || scored[0];
+  const more = scored.find(c => getCandidateKey(c) !== getCandidateKey(closest)) || scored[0];
 
   // Step 3: Pick Corrective Move — penalize candidates similar to both previous picks
   for (const c of scored) {
@@ -8166,7 +8175,7 @@ function renderWhatToTryNext(setup, allCandidates) {
     if (simMore < 6) c.correctiveScore -= DISTINCTNESS_PENALTY;
   }
   scored.sort((a, b) => b.correctiveScore - a.correctiveScore);
-  const corrective = scored.find(c => c.string.id !== closest.string.id && c.string.id !== more.string.id) || scored[0];
+  const corrective = scored.find(c => getCandidateKey(c) !== getCandidateKey(closest) && getCandidateKey(c) !== getCandidateKey(more)) || scored[0];
 
   const buckets = [
     { key: 'closest', title: 'Closest Better Version', pick: closest,
@@ -8195,8 +8204,11 @@ function renderWhatToTryNext(setup, allCandidates) {
           <span class="wttn-bucket-label">${title}</span>
         </div>
         <div>
-          <div class="wttn-build-name">${pick.string.name} <span class="wttn-gauge">${pick.string.gauge}</span></div>
-          <span class="wttn-build-tension">${pick.tension} lbs</span>
+          <div class="wttn-build-name">${pick.label || (pick.string && pick.string.name) || 'Unknown'} ${pick.gauge ? `<span class="wttn-gauge">${pick.gauge}</span>` : (pick.string ? `<span class="wttn-gauge">${pick.string.gauge}</span>` : '')}</div>
+          <div class="wttn-build-meta">
+            ${pick.type === 'hybrid' ? '<span class="recs-type-badge recs-type-hybrid">HYBRID</span>' : '<span class="recs-type-badge recs-type-full">FULL BED</span>'}
+            <span class="wttn-build-tension">${pick.type === 'hybrid' ? `M:${pick.tension} / X:${pick.tension - 2} lbs` : `${pick.tension} lbs`}</span>
+          </div>
         </div>
         <p class="wttn-why">${why}</p>
         <div class="wttn-deltas">
@@ -9025,10 +9037,10 @@ function renderOptimizerResults(candidates, sortBy, currentOBS) {
       <td class="opt-td opt-td-num">${c.stats.durability?.toFixed(0) || '—'}</td>
       <td class="opt-td opt-td-num">${c.stats.playability?.toFixed(0) || '—'}</td>
       <td class="opt-td opt-td-actions">
-        <button class="opt-act-btn" title="View in Overview" onclick="optActionView(${idx})">&#128065;</button>
-        <button class="opt-act-btn" title="Open in Tune" onclick="optActionTune(${idx})">&#9881;</button>
-        <button class="opt-act-btn" title="Add to Compare" onclick="optActionCompare(${idx})">&#9878;</button>
-        <button class="opt-act-btn" title="Save as Preset" onclick="optActionSave(${idx})">&#128190;</button>
+        <button class="opt-act-btn" title="View in Overview" onclick="optActionView(${idx})"><svg width="13" height="13" viewBox="0 0 15 15" fill="none"><rect x="1" y="1" width="5.5" height="5.5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="8.5" y="1" width="5.5" height="5.5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="1" y="8.5" width="12.5" height="5.5" rx="1" stroke="currentColor" stroke-width="1.3"/></svg></button>
+        <button class="opt-act-btn" title="Open in Tune" onclick="optActionTune(${idx})"><svg width="13" height="13" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="5.5" stroke="currentColor" stroke-width="1.3"/><line x1="7.5" y1="1.5" x2="7.5" y2="4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="7.5" y1="11" x2="7.5" y2="13.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="1.5" y1="7.5" x2="4" y2="7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="11" y1="7.5" x2="13.5" y2="7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="7.5" cy="7.5" r="1.5" fill="currentColor"/></svg></button>
+        <button class="opt-act-btn" title="Add to Compare" onclick="optActionCompare(${idx})"><svg width="13" height="13" viewBox="0 0 15 15" fill="none"><rect x="1" y="2.5" width="5" height="10" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="2.5" width="5" height="10" rx="1" stroke="currentColor" stroke-width="1.3"/><line x1="7.5" y1="5" x2="7.5" y2="10" stroke="currentColor" stroke-width="1.3" stroke-dasharray="1.5 1.5"/></svg></button>
+        <button class="opt-act-btn" title="Save as Preset" onclick="optActionSave(${idx})"><svg width="13" height="13" viewBox="0 0 15 15" fill="none"><path d="M11.5 1H3.5A1.5 1.5 0 002 2.5v10A1.5 1.5 0 003.5 14h8a1.5 1.5 0 001.5-1.5v-10A1.5 1.5 0 0011.5 1z" stroke="currentColor" stroke-width="1.2"/><path d="M5 1v4h5V1" stroke="currentColor" stroke-width="1.2"/><path d="M5 10h5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></button>
       </td>
     </tr>`;
   });
@@ -9130,7 +9142,7 @@ function optActionSave(idx) {
     btn.textContent = '✓';
     btn.classList.add('opt-act-saved');
     setTimeout(() => {
-      btn.innerHTML = '&#128190;';
+      btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 15 15" fill="none"><path d="M11.5 1H3.5A1.5 1.5 0 002 2.5v10A1.5 1.5 0 003.5 14h8a1.5 1.5 0 001.5-1.5v-10A1.5 1.5 0 0011.5 1z" stroke="currentColor" stroke-width="1.2"/><path d="M5 1v4h5V1" stroke="currentColor" stroke-width="1.2"/><path d="M5 10h5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>';
       btn.classList.remove('opt-act-saved');
     }, 1200);
   }

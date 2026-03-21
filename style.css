@@ -4057,6 +4057,26 @@ body {
   color: var(--blue-tag);
 }
 
+.searchable-select .ss-opt-badge.badge-multi {
+  background: rgba(157, 120, 200, 0.15);
+  color: #8B6DB5;
+}
+
+.searchable-select .ss-opt-badge.badge-syngut {
+  background: rgba(100, 180, 160, 0.15);
+  color: #4A9A82;
+}
+
+[data-theme="dark"] .searchable-select .ss-opt-badge.badge-multi {
+  background: rgba(180, 150, 220, 0.2);
+  color: #C4A8E0;
+}
+
+[data-theme="dark"] .searchable-select .ss-opt-badge.badge-syngut {
+  background: rgba(100, 200, 170, 0.2);
+  color: #7ECAB0;
+}
+
 .searchable-select .ss-no-results {
   padding: 16px 12px;
   font-size: 0.78rem;

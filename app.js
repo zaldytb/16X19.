@@ -3607,22 +3607,22 @@ const FRAME_META = {
     aeroBonus: 0, comfortTech: 1, spinTech: 0, genBonus: 0
   },
   'head-speed-mp-legend-2025': {
-    aeroBonus: 0, comfortTech: 2, spinTech: 0, genBonus: 1
+    aeroBonus: 0, comfortTech: 2, spinTech: 0, genBonus: 1.5  // Hy-Bor throat: stability+feel without harshness
   },
   'head-speed-pro-legend-2025': {
-    aeroBonus: 0, comfortTech: 1.5, spinTech: 0, genBonus: 1
+    aeroBonus: 0, comfortTech: 1.5, spinTech: 0, genBonus: 1.5  // Hy-Bor: crisper impact, more help off-center
   },
   'head-speed-pro-2024': {
     aeroBonus: 0, comfortTech: 1, spinTech: 0, genBonus: 0
   },
   'head-speed-mp-2026': {
-    aeroBonus: 0, comfortTech: 2, spinTech: 0, genBonus: 1.5
+    aeroBonus: 0, comfortTech: 2.5, spinTech: 0, genBonus: 2  // Hy-Bor+Auxetic2: breaks power/control/feel tradeoff
   },
   'head-speed-pro-2026': {
-    aeroBonus: 0, comfortTech: 1.5, spinTech: 0, genBonus: 1.5
+    aeroBonus: 0, comfortTech: 2, spinTech: 0, genBonus: 2  // Hy-Bor: solid connected response, boxier shaft flex
   },
   'head-speed-mp-l-2026': {
-    aeroBonus: 0, comfortTech: 1.5, spinTech: 0, genBonus: 1
+    aeroBonus: 0, comfortTech: 2, spinTech: 0, genBonus: 1.5  // Hy-Bor lite: benefits scale with frame mass
   },
   // Head Gravity family
   'head-gravity-pro-2025': {
@@ -3642,20 +3642,22 @@ const FRAME_META = {
   'babolat-pure-drive-2024': {
     aeroBonus: 0, comfortTech: 0.5, spinTech: 0, genBonus: 0
   },
-  // Yonex EZONE
+  // Yonex EZONE — VDM + 2G-NAMD SPEED: damping raises comfort ceiling on powerful beam
   'yonex-ezone-100-2024': {
-    aeroBonus: 0, comfortTech: 1.5, spinTech: 0, genBonus: 0
+    aeroBonus: 0, comfortTech: 2, spinTech: 0, genBonus: 0.5  // VDM: notable damping on stiffer beam
   },
   // Wilson Pro Staff
   'wilson-pro-staff-97-v14': {
     aeroBonus: 0, comfortTech: 0.5, spinTech: 0, genBonus: 0
   },
-  // Yonex Muse
+  // Yonex Muse — Minolon: organic fiber mesh co-cured with graphite
+  // +5-6% vibration damping while keeping layup lively
+  // Breaks power/comfort + stiffness/feel tradeoffs = peak anomaly
   'yonex-muse-98-2026': {
-    aeroBonus: 0, comfortTech: 2, spinTech: 1, genBonus: 1.5
+    aeroBonus: 0, comfortTech: 2.5, spinTech: 1, genBonus: 2  // Minolon: breaks power/comfort+stiffness/feel
   },
   'yonex-muse-100-2026': {
-    aeroBonus: 0, comfortTech: 2.5, spinTech: 1, genBonus: 1.5
+    aeroBonus: 0, comfortTech: 3, spinTech: 1, genBonus: 2  // Minolon + wider tip: most complete anomaly in DB
   },
   // Yonex VCORE
   'yonex-vcore-100-2023': {
@@ -3677,7 +3679,7 @@ const FRAME_META = {
   },
   // Babolat Pure Strike
   'babolat-pure-strike-97-2025': {
-    aeroBonus: 0, comfortTech: 1, spinTech: 0, genBonus: 0.5
+    aeroBonus: 0, comfortTech: 1.5, spinTech: 0, genBonus: 1  // NF2-Tech: filters vibration on thin beam
   },
   'babolat-pure-strike-98-16x19-2025': {
     aeroBonus: 0, comfortTech: 0.5, spinTech: 0, genBonus: 0.5
@@ -3705,28 +3707,28 @@ const FRAME_META = {
 
   // Head additional lines
   'head-speed-tour-2026': {
-    aeroBonus: 0, comfortTech: 1.5, spinTech: 0, genBonus: 1.5
+    aeroBonus: 0, comfortTech: 2, spinTech: 0, genBonus: 2  // Hy-Bor: same anomaly tech as MP/Pro 2026
   },
   'head-speed-elite-2026': {
-    aeroBonus: 0, comfortTech: 1, spinTech: 0, genBonus: 1
+    aeroBonus: 0, comfortTech: 1.5, spinTech: 0, genBonus: 1  // Hy-Bor: lighter frame gets less stability benefit
   },
   'head-speed-team-2026': {
-    aeroBonus: 0, comfortTech: 1, spinTech: 0, genBonus: 0.5
+    aeroBonus: 0, comfortTech: 1.5, spinTech: 0, genBonus: 1  // Hy-Bor: damping benefit still present
   },
   'head-speed-mp-ul-2026': {
-    aeroBonus: 0, comfortTech: 1, spinTech: 0, genBonus: 0.5
+    aeroBonus: 0, comfortTech: 1.5, spinTech: 0, genBonus: 0.5  // Hy-Bor: minimal mass limits benefit
   },
   'head-boom-pro-2026': {
-    aeroBonus: 0, comfortTech: 1.5, spinTech: 0, genBonus: 1.5
+    aeroBonus: 0, comfortTech: 2, spinTech: 0, genBonus: 2  // Hy-Bor+Morph: aero head+boxier shaft anomaly
   },
   'head-boom-mp-2026': {
-    aeroBonus: 0, comfortTech: 1.5, spinTech: 0, genBonus: 1.5
+    aeroBonus: 0, comfortTech: 2, spinTech: 0, genBonus: 2  // Hy-Bor+Morph: flexible+arm-friendly yet solid
   },
   'head-boom-mp-l-2026': {
-    aeroBonus: 0, comfortTech: 1.5, spinTech: 0, genBonus: 1
+    aeroBonus: 0, comfortTech: 2, spinTech: 0, genBonus: 1.5  // Hy-Bor: lighter frame, proportional benefit
   },
   'head-boom-mp-ul-2026': {
-    aeroBonus: 0, comfortTech: 1, spinTech: 0, genBonus: 0.5
+    aeroBonus: 0, comfortTech: 1, spinTech: 0, genBonus: 0.5  // Auxetic 2 only, no Hy-Bor at this weight
   },
   'head-boom-team-2026': {
     aeroBonus: 0, comfortTech: 1, spinTech: 0.5, genBonus: 0.5
@@ -3806,7 +3808,7 @@ const FRAME_META = {
     aeroBonus: 0, comfortTech: 0.5, spinTech: 0, genBonus: 0
   },
   'babolat-pure-strike-team-2025': {
-    aeroBonus: 0, comfortTech: 1, spinTech: 0, genBonus: 0.5
+    aeroBonus: 0, comfortTech: 1.5, spinTech: 0, genBonus: 1  // NF2-Tech: same dampening benefit
   },
   'tecnifibre-tfight-iso-305': {
     aeroBonus: 0, comfortTech: 0.5, spinTech: 0, genBonus: 0
@@ -3844,7 +3846,7 @@ const FRAME_META = {
 
   // Yonex + Wilson additional
   'yonex-ezone-98-2024': {
-    aeroBonus: 0, comfortTech: 1.5, spinTech: 0, genBonus: 0
+    aeroBonus: 0, comfortTech: 2, spinTech: 0, genBonus: 0.5  // VDM + 2G-NAMD: damping on precision platform
   },
   'yonex-ezone-98l-2024': {
     aeroBonus: 0, comfortTech: 1.5, spinTech: 0, genBonus: 0
@@ -3853,31 +3855,31 @@ const FRAME_META = {
     aeroBonus: 0, comfortTech: 1.5, spinTech: 0, genBonus: 0
   },
   'yonex-vcore-95-2026': {
-    aeroBonus: 0, comfortTech: 1.5, spinTech: 0.5, genBonus: 1.5
+    aeroBonus: 0, comfortTech: 2, spinTech: 0.5, genBonus: 1.5  // Servo Filter + FlexForce: damping on thin beam
   },
   'yonex-vcore-98-2026': {
-    aeroBonus: 0, comfortTech: 1.5, spinTech: 1, genBonus: 1.5
+    aeroBonus: 0, comfortTech: 2, spinTech: 1, genBonus: 1.5  // Servo Filter + SIF: spin+comfort anomaly
   },
   'yonex-vcore-98l-2026': {
     aeroBonus: 0, comfortTech: 1.5, spinTech: 0.5, genBonus: 1
   },
   'yonex-vcore-100-2026': {
-    aeroBonus: 0, comfortTech: 1.5, spinTech: 1, genBonus: 1.5
+    aeroBonus: 0, comfortTech: 2, spinTech: 1, genBonus: 1.5  // Servo Filter + SIF + aero beam: full anomaly
   },
   'yonex-vcore-100l-2026': {
     aeroBonus: 0, comfortTech: 1.5, spinTech: 0.5, genBonus: 1
   },
   'yonex-percept-97-2023': {
-    aeroBonus: 0, comfortTech: 1.5, spinTech: 0, genBonus: 0.5
+    aeroBonus: 0, comfortTech: 2, spinTech: 0, genBonus: 1  // Servo Filter + FlexForce: feel-first with damping
   },
   'yonex-percept-97h-2023': {
-    aeroBonus: 0, comfortTech: 1, spinTech: 0, genBonus: 0.5
+    aeroBonus: 0, comfortTech: 1.5, spinTech: 0, genBonus: 1  // Servo Filter: heavy frame magnifies damping
   },
   'yonex-percept-100-2023': {
-    aeroBonus: 0, comfortTech: 1.5, spinTech: 0, genBonus: 0.5
+    aeroBonus: 0, comfortTech: 2, spinTech: 0, genBonus: 1  // Servo Filter: comfort+control anomaly
   },
   'yonex-percept-100d-2023': {
-    aeroBonus: 0, comfortTech: 1.5, spinTech: 0, genBonus: 0.5
+    aeroBonus: 0, comfortTech: 2, spinTech: 0, genBonus: 1  // Servo Filter: dense pattern benefits from dwell
   },
   'yonex-percept-104-2023': {
     aeroBonus: 0, comfortTech: 1, spinTech: 0, genBonus: 0

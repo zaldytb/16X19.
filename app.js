@@ -4278,22 +4278,63 @@ function calcStringFrameMod(stringData) {
   };
 }
 
-function calcTensionModifier(tension, tensionRange) {
+function calcTensionModifier(mainsTension, crossesTension, tensionRange) {
+  const avgTension = (mainsTension + crossesTension) / 2;
   const mid = (tensionRange[0] + tensionRange[1]) / 2;
-  const diff = tension - mid;
+  const diff = avgTension - mid;
   // Every 2 lbs above midpoint: +2 control, -2 power
   const factor = diff / 2;
 
+  // --- Mains/Crosses differential effects ---
+  // Positive = mains tighter than crosses (standard practice)
+  // Negative = crosses tighter than mains (unusual, generally bad)
+  const differential = mainsTension - crossesTension;
+  const absDiff = Math.abs(differential);
+
+  // Optimal differential: mains 2-3 lbs higher than crosses
+  // This maximizes snapback while maintaining control
+  // Source: ReString, TWU, pro stringing consensus
+  let diffSpinBonus = 0;
+  let diffControlPenalty = 0;
+  let diffComfortPenalty = 0;
+  let diffDurabilityPenalty = 0;
+  let diffFeelPenalty = 0;
+
+  if (differential >= 1 && differential <= 4) {
+    // Sweet spot: mains 1-4 lbs tighter — slight spin boost, no penalty
+    diffSpinBonus = Math.min(differential, 3) * 0.8; // up to +2.4 spin
+  } else if (differential > 4 && differential <= 6) {
+    // Acceptable but diminishing returns
+    diffSpinBonus = 1.0;
+    diffControlPenalty = -(differential - 4) * 0.5; // mild control loss
+  } else if (differential > 6) {
+    // Excessive: inconsistent string bed, uneven wear, frame stress
+    diffSpinBonus = 0;
+    diffControlPenalty = -(differential - 4) * 1.2;
+    diffComfortPenalty = -(differential - 6) * 0.8;
+    diffDurabilityPenalty = -(differential - 6) * 1.5;
+    diffFeelPenalty = -(differential - 6) * 1.0;
+  }
+
+  if (differential < -1) {
+    // Crosses tighter than mains — unusual, reduces snapback, feels dead
+    diffSpinBonus = differential * 0.6; // negative = spin loss
+    diffControlPenalty = Math.abs(differential) > 3 ? -(absDiff - 3) * 0.8 : 0;
+    diffFeelPenalty = differential * 0.5; // negative feel
+    diffComfortPenalty = Math.abs(differential) > 4 ? -(absDiff - 4) * 0.6 : 0;
+  }
+
   return {
     powerMod: -factor * 2,
-    controlMod: factor * 2,
+    controlMod: factor * 2 + diffControlPenalty,
     launchMod: -factor * 1.5,
-    comfortMod: -factor * 1.5,
-    spinMod: -Math.abs(factor) * 0.4,
-    // Higher tension → crisper ball feedback → more feel (mild)
-    feelMod: factor * 1.0,
-    // Higher tension → faster tension loss → slightly shorter playability window
-    playabilityMod: -Math.abs(factor) * 0.6
+    comfortMod: -factor * 1.5 + diffComfortPenalty,
+    spinMod: -Math.abs(factor) * 0.4 + diffSpinBonus,
+    feelMod: factor * 1.0 + diffFeelPenalty,
+    playabilityMod: -Math.abs(factor) * 0.6,
+    durabilityMod: diffDurabilityPenalty,
+    // Expose differential for OBS penalty
+    _differential: differential
   };
 }
 
@@ -4347,7 +4388,7 @@ function predictSetup(racquet, stringConfig) {
     avgTension = (stringConfig.mainsTension + stringConfig.crossesTension) / 2;
   }
 
-  const tensionMod = calcTensionModifier(avgTension, racquet.tensionRange);
+  const tensionMod = calcTensionModifier(stringConfig.mainsTension, stringConfig.crossesTension, racquet.tensionRange);
 
   // --- Blend: frame base (primary) + string mod + tension mod ---
   // Frame-driven stats: frame is ~70% weight, string profile ~20%, mods ~10%
@@ -4363,8 +4404,8 @@ function predictSetup(racquet, stringConfig) {
     comfort: clamp(frameBase.comfort * FW + stringProfile.comfort * SW + stringMod.comfortMod + tensionMod.comfortMod),
     stability:   clamp(frameBase.stability),
     forgiveness: clamp(frameBase.forgiveness),
-    // String-only stats: from string profile, with tension influence
-    durability:  clamp(stringProfile.durability),
+    // String-only stats: from string profile, with tension + differential influence
+    durability:  clamp(stringProfile.durability + (tensionMod.durabilityMod || 0)),
     playability: clamp(stringProfile.playability + tensionMod.playabilityMod)
   };
 
@@ -5436,7 +5477,8 @@ function renderSummary(racquet, stringConfig, badge) {
 function buildTensionContext(stringConfig, racquet) {
   if (!stringConfig || !racquet) return null;
   const avgTension = (stringConfig.mainsTension + stringConfig.crossesTension) / 2;
-  return { avgTension, tensionRange: racquet.tensionRange };
+  const differential = stringConfig.mainsTension - stringConfig.crossesTension;
+  return { avgTension, tensionRange: racquet.tensionRange, differential };
 }
 
 function computeCompositeScore(stats, tensionContext) {
@@ -5491,6 +5533,27 @@ function computeCompositeScore(stats, tensionContext) {
       // Slightly above range — mild penalty
       const excess = avgTension - high;
       scaled -= excess * 1.2;
+    }
+
+    // --- Mains/Crosses differential penalty ---
+    // Optimal: mains 0-4 lbs higher than crosses
+    // Penalty: >6 lbs differential in either direction
+    if (tensionContext.differential !== undefined) {
+      const diff = tensionContext.differential;
+      const absDiff = Math.abs(diff);
+      
+      if (absDiff > 6 && absDiff <= 10) {
+        // Significant mismatch: inconsistent response, frame stress
+        scaled -= (absDiff - 6) * 3;
+      } else if (absDiff > 10) {
+        // Extreme mismatch: unplayable, frame damage risk
+        scaled -= 12 + (absDiff - 10) * 5;
+      }
+      
+      // Extra penalty if crosses are way tighter than mains (unusual/bad)
+      if (diff < -4) {
+        scaled -= (Math.abs(diff) - 4) * 2;
+      }
     }
   }
 
@@ -6750,7 +6813,9 @@ function calculateOptimalWindow(setup) {
   // Score each tension using the full 10-stat composite + tension sanity penalty
   const scored = data.map(d => {
     const s = d.stats;
-    const tCtx = { avgTension: d.tension, tensionRange: racquet.tensionRange };
+    // d.tension is the explored value; compute differential from the sweep's modifiedConfig
+    // In linked mode both move together; in mains/crosses mode only one moves
+    const tCtx = { avgTension: d.tension, tensionRange: racquet.tensionRange, differential: 0 };
     const score = computeCompositeScore(s, tCtx);
     return { tension: d.tension, score, stats: s };
   });

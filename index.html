@@ -151,6 +151,36 @@
           </div>
         </div>
 
+        <!-- Quick Add Loadout -->
+        <div class="dock-quick-add" id="dock-quick-add">
+          <button class="dock-qa-trigger" id="dock-qa-trigger" onclick="toggleQuickAdd()">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="7" y1="2" x2="7" y2="12"/><line x1="2" y1="7" x2="12" y2="7"/></svg>
+            Quick Add Loadout
+          </button>
+          <div class="dock-qa-form hidden" id="dock-qa-form">
+            <div class="dock-qa-field">
+              <label class="dock-qa-label">Frame</label>
+              <select class="dock-qa-select" id="dock-qa-frame">
+                <option value="">Choose frame...</option>
+              </select>
+            </div>
+            <div class="dock-qa-field">
+              <label class="dock-qa-label">String</label>
+              <select class="dock-qa-select" id="dock-qa-string">
+                <option value="">Choose string...</option>
+              </select>
+            </div>
+            <div class="dock-qa-field">
+              <label class="dock-qa-label">Tension</label>
+              <input type="number" class="dock-qa-input" id="dock-qa-tension" value="53" min="30" max="70">
+            </div>
+            <div class="dock-qa-btns">
+              <button class="dock-qa-btn dock-qa-btn-primary" onclick="quickAddActivate()">Set Active</button>
+              <button class="dock-qa-btn" onclick="quickAddSave()">Save to Loadouts</button>
+            </div>
+          </div>
+        </div>
+
         <!-- Editable Setup (collapsed by default, expands on demand) -->
         <details class="dock-editor-details" id="dock-editor-section">
           <summary class="dock-editor-summary">

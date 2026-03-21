@@ -6844,6 +6844,7 @@ function renderComparisonSlots() {
     div.innerHTML = `
       <div class="slot-header">
         <span class="slot-label slot-label-${color.cssClass}">SETUP ${color.label}</span>
+        ${_getCompareSlotTag(slot)}
         <button class="slot-remove" onclick="removeComparisonSlot(${index})" title="Remove">✕</button>
       </div>
       <div class="slot-config">
@@ -6952,6 +6953,9 @@ function renderComparisonSlots() {
       recalcSlot(idx);
     });
   });
+
+  // Render compare suggestions from saved loadouts
+  _renderCompareSuggestions();
 }
 
 function renderSlotStats(stats, slotIndex) {
@@ -7605,6 +7609,7 @@ function initTuneMode(setup) {
     tuneState.baselineTension = getHybridBaselineTension(stringConfig, tuneState.hybridDimension);
   }
   tuneState.exploredTension = tuneState.baselineTension;
+  tuneState.originalTension = tuneState.baselineTension;
 
   // Configure slider range from racquet
   const sliderMin = Math.max(racquet.tensionRange[0] - 5, 30);
@@ -7637,6 +7642,7 @@ function initTuneMode(setup) {
   renderBestValueMove();
   renderOverallBuildScore(setup);
   renderRecommendedBuilds(setup);
+  renderOriginalTensionMarker();
 }
 
 function runTensionSweep(setup) {
@@ -7893,7 +7899,7 @@ function renderGaugeExplorer(setup) {
 
   let html = '';
 
-  sections.forEach(section => {
+  sections.forEach((section, _secIdx) => {
     const baseStr = section.string;
     const baseRefGauge = baseStr._gaugeModified ? baseStr._refGauge : baseStr.gaugeNum;
     // Use the original unmodified string for gauge exploration
@@ -7933,11 +7939,11 @@ function renderGaugeExplorer(setup) {
       const shortLabel = r.gauge >= 1.30 ? '16' : r.gauge >= 1.25 ? '16L' : r.gauge >= 1.20 ? '17' : '18';
       const mmLabel = `${r.gauge.toFixed(2)}`;
       const currentCls = r.isCurrent ? ' gauge-current' : '';
-      html += `<span class="gauge-explore-col-header${currentCls}">
+      html += `<button class="gauge-explore-col-header${currentCls}" onclick="_applyGaugeSelection(${r.gauge},${_secIdx})" title="${r.isCurrent ? 'Current gauge' : 'Click to apply this gauge'}">
         <span class="gauge-col-short">${shortLabel}</span>
         <span class="gauge-col-mm">${mmLabel}</span>
-        ${r.isCurrent ? '<span class="gauge-col-tag">current</span>' : ''}
-      </span>`;
+        ${r.isCurrent ? '<span class="gauge-col-tag">current</span>' : '<span class="gauge-col-tag gauge-col-apply">apply</span>'}
+      </button>`;
     });
     html += `</div>`;
 
@@ -8617,6 +8623,7 @@ function renderWhatToTryNext(setup, allCandidates) {
           <span class="wttn-net-label">Net</span>
           <span class="wttn-net-phrase">${netDir}</span>
         </div>
+        <button class="wttn-apply-btn" onclick="_applyWttnBuild(this)" data-string-id="${pick.stringId || (pick.string ? pick.string.id : '')}" data-tension="${pick.tension}" data-type="${pick.type}" data-mains-id="${pick.mainsId || ''}" data-crosses-id="${pick.crossesId || ''}">Apply to Loadout</button>
       </div>
     `;
   }).join('');
@@ -8775,6 +8782,7 @@ function renderRecommendedBuilds(setup) {
           <span class="recs-composite-value">${c.score.toFixed(1)}</span>
           <span class="recs-composite-delta ${deltaCls}">${isCurrent ? 'YOU' : deltaStr}</span>
         </div>
+        <button class="recs-apply-btn" onclick="_applyRecBuild('${racquet.id}','${c.stringId || (c.string ? c.string.id : '')}',${c.tension},'${c.type}','${c.mainsId || ''}','${c.crossesId || ''}')">Apply</button>
       </div>
     `;
   }
@@ -8866,6 +8874,50 @@ function onTuneSliderInput(e) {
 
   // Update chart annotation
   if (sweepChart) sweepChart.update('none');
+
+  // Sync dock tension inputs with slider
+  const setup = getCurrentSetup();
+  if (setup) {
+    const dim = tuneState.hybridDimension || 'linked';
+    if (setup.stringConfig.isHybrid) {
+      if (dim === 'linked') {
+        const diff = parseInt($('#input-tension-mains').value) - parseInt($('#input-tension-crosses').value);
+        $('#input-tension-mains').value = val;
+        $('#input-tension-crosses').value = val - diff;
+      } else if (dim === 'mains') {
+        $('#input-tension-mains').value = val;
+      } else {
+        $('#input-tension-crosses').value = val;
+      }
+    } else {
+      if (dim === 'linked') {
+        const diff = parseInt($('#input-tension-full-mains').value) - parseInt($('#input-tension-full-crosses').value);
+        $('#input-tension-full-mains').value = val;
+        $('#input-tension-full-crosses').value = val - diff;
+      } else if (dim === 'mains') {
+        $('#input-tension-full-mains').value = val;
+      } else {
+        $('#input-tension-full-crosses').value = val;
+      }
+    }
+
+    // Update active loadout OBS in real-time
+    if (activeLoadout) {
+      const updatedSetup = getCurrentSetup();
+      if (updatedSetup) {
+        const stats = predictSetup(updatedSetup.racquet, updatedSetup.stringConfig);
+        if (stats) {
+          const tCtx = buildTensionContext(updatedSetup.stringConfig, updatedSetup.racquet);
+          const obs = computeCompositeScore(stats, tCtx);
+          activeLoadout.stats = stats;
+          activeLoadout.obs = +obs.toFixed(1);
+          activeLoadout.mainsTension = updatedSetup.stringConfig.mainsTension;
+          activeLoadout.crossesTension = updatedSetup.stringConfig.crossesTension;
+          renderDockPanel();
+        }
+      }
+    }
+  }
 }
 
 function renderTuneHybridToggle(stringConfig) {
@@ -10504,6 +10556,253 @@ function _fmbSaveBuild(racquetId, stringId, tension, btn) {
 // Legacy alias
 function _fmbSelectBuild(racquetId, stringId, tension) {
   _fmbActivateBuild(racquetId, stringId, tension);
+}
+
+// ============================================
+// FEATURE: Quick-Add Loadout
+// ============================================
+
+function toggleQuickAdd() {
+  var form = document.getElementById('dock-qa-form');
+  if (!form) return;
+  form.classList.toggle('hidden');
+
+  if (!form.dataset.populated) {
+    var frameSelect = document.getElementById('dock-qa-frame');
+    var stringSelect = document.getElementById('dock-qa-string');
+
+    RACQUETS.forEach(function(r) {
+      var opt = document.createElement('option');
+      opt.value = r.id;
+      opt.textContent = r.name;
+      frameSelect.appendChild(opt);
+    });
+
+    STRINGS.forEach(function(s) {
+      var opt = document.createElement('option');
+      opt.value = s.id;
+      opt.textContent = s.name + ' (' + s.gauge + ')';
+      stringSelect.appendChild(opt);
+    });
+
+    form.dataset.populated = '1';
+  }
+}
+
+function quickAddActivate() {
+  var frameId = document.getElementById('dock-qa-frame').value;
+  var stringId = document.getElementById('dock-qa-string').value;
+  var tension = parseInt(document.getElementById('dock-qa-tension').value) || 53;
+  if (!frameId || !stringId) return;
+
+  var lo = createLoadout(frameId, stringId, tension, { source: 'manual' });
+  if (lo) {
+    activateLoadout(lo);
+    document.getElementById('dock-qa-form').classList.add('hidden');
+    if (currentMode === 'overview') renderDashboard();
+  }
+}
+
+function quickAddSave() {
+  var frameId = document.getElementById('dock-qa-frame').value;
+  var stringId = document.getElementById('dock-qa-string').value;
+  var tension = parseInt(document.getElementById('dock-qa-tension').value) || 53;
+  if (!frameId || !stringId) return;
+
+  var lo = createLoadout(frameId, stringId, tension, { source: 'manual' });
+  if (lo) {
+    saveLoadout(lo);
+    document.getElementById('dock-qa-form').classList.add('hidden');
+  }
+}
+
+// ============================================
+// FEATURE: Apply-to-Loadout for WTTN + Rec Builds
+// ============================================
+
+function _applyWttnBuild(btn) {
+  var setup = getCurrentSetup();
+  if (!setup) return;
+
+  var stringId = btn.dataset.stringId;
+  var tension = parseInt(btn.dataset.tension);
+
+  var lo = createLoadout(setup.racquet.id, stringId, tension, { source: 'manual' });
+  if (lo) {
+    activateLoadout(lo);
+    var newSetup = getCurrentSetup();
+    if (newSetup && currentMode === 'tune') initTuneMode(newSetup);
+  }
+
+  btn.textContent = 'Applied \u2713';
+  btn.disabled = true;
+  setTimeout(function() { btn.textContent = 'Apply to Loadout'; btn.disabled = false; }, 1500);
+}
+
+function _applyRecBuild(racquetId, stringId, tension, type, mainsId, crossesId) {
+  var opts = { source: 'manual' };
+  if (type === 'hybrid' && mainsId && crossesId) {
+    opts.isHybrid = true;
+    opts.mainsId = mainsId;
+    opts.crossesId = crossesId;
+    opts.crossesTension = tension - 2;
+  }
+  var lo = createLoadout(racquetId, type === 'hybrid' ? mainsId : stringId, tension, opts);
+  if (lo) {
+    activateLoadout(lo);
+    var newSetup = getCurrentSetup();
+    if (newSetup && currentMode === 'tune') initTuneMode(newSetup);
+  }
+}
+
+// ============================================
+// FEATURE: Original Tension Marker
+// ============================================
+
+function renderOriginalTensionMarker() {
+  var slider = document.getElementById('tune-slider');
+  if (!slider) return;
+  var container = slider.parentElement;
+
+  var old = container.querySelector('.tune-original-marker');
+  if (old) old.remove();
+
+  if (!tuneState.originalTension) return;
+
+  var min = parseInt(slider.min);
+  var max = parseInt(slider.max);
+  var pct = ((tuneState.originalTension - min) / (max - min)) * 100;
+
+  var marker = document.createElement('div');
+  marker.className = 'tune-original-marker';
+  marker.style.left = 'calc(' + pct + '% - 1px)';
+  marker.title = 'Original: ' + tuneState.originalTension + ' lbs';
+  marker.innerHTML = '<span class="tune-original-label">Start: ' + tuneState.originalTension + '</span>';
+  container.style.position = 'relative';
+  container.appendChild(marker);
+}
+
+// ============================================
+// FEATURE: Gauge Selection Apply
+// ============================================
+
+function _applyGaugeSelection(gauge, sectionIdx) {
+  var setup = getCurrentSetup();
+  if (!setup) return;
+
+  var stringConfig = setup.stringConfig;
+
+  if (stringConfig.isHybrid) {
+    var gaugeSelectId = sectionIdx === 0 ? 'gauge-select-mains' : 'gauge-select-crosses';
+    var gaugeEl = document.getElementById(gaugeSelectId);
+    if (gaugeEl) {
+      for (var i = 0; i < gaugeEl.options.length; i++) {
+        if (Math.abs(parseFloat(gaugeEl.options[i].value) - gauge) < 0.005) {
+          gaugeEl.value = gaugeEl.options[i].value;
+          break;
+        }
+      }
+    }
+  } else {
+    var gEl = document.getElementById('gauge-select-full');
+    if (gEl) {
+      for (var j = 0; j < gEl.options.length; j++) {
+        if (Math.abs(parseFloat(gEl.options[j].value) - gauge) < 0.005) {
+          gEl.value = gEl.options[j].value;
+          break;
+        }
+      }
+    }
+  }
+
+  renderDashboard();
+
+  var newSetup = getCurrentSetup();
+  if (newSetup && currentMode === 'tune') {
+    initTuneMode(newSetup);
+  }
+}
+
+// ============================================
+// FEATURE: Compare Preset Suggestions
+// ============================================
+
+function _renderCompareSuggestions() {
+  var container = document.getElementById('compare-suggestions');
+  if (!container) {
+    var slotsContainer = document.getElementById('comparison-slots');
+    if (!slotsContainer) return;
+    container = document.createElement('div');
+    container.id = 'compare-suggestions';
+    container.className = 'compare-suggestions';
+    slotsContainer.parentElement.insertBefore(container, slotsContainer.nextSibling);
+  }
+
+  var suggestions = [];
+  var slotKeys = comparisonSlots.map(function(s) { return s.racquetId + '-' + s.stringId; });
+
+  savedLoadouts.forEach(function(lo) {
+    var key = lo.frameId + '-' + lo.stringId;
+    if (slotKeys.indexOf(key) === -1) {
+      suggestions.push({
+        label: lo.name,
+        obs: lo.obs,
+        frameId: lo.frameId,
+        stringId: lo.stringId,
+        tension: lo.mainsTension,
+        source: lo.source || 'saved'
+      });
+    }
+  });
+
+  if (suggestions.length === 0 && savedLoadouts.length === 0) {
+    container.innerHTML = '<div class="compare-sug-empty">Save loadouts from Compendium or Quiz to see quick-add suggestions here</div>';
+    return;
+  }
+
+  if (suggestions.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+
+  container.innerHTML =
+    '<div class="compare-sug-header">Quick Add from My Loadouts</div>' +
+    '<div class="compare-sug-list">' +
+    suggestions.slice(0, 6).map(function(s) {
+      return '<button class="compare-sug-chip" onclick="_addSuggestionToCompare(\'' + s.frameId + '\',\'' + s.stringId + '\',' + s.tension + ')">' +
+        '<span class="compare-sug-obs">' + (s.obs ? s.obs.toFixed(1) : '\u2014') + '</span>' +
+        '<span class="compare-sug-name">' + s.label + '</span>' +
+        '<span class="compare-sug-source">' + s.source + '</span>' +
+      '</button>';
+    }).join('') +
+    '</div>';
+}
+
+function _addSuggestionToCompare(frameId, stringId, tension) {
+  _compActionCompare(frameId, stringId, tension);
+}
+
+// ============================================
+// FEATURE: Compare Slot Loadout Tags
+// ============================================
+
+function _getCompareSlotTag(slot) {
+  if (activeLoadout && slot.racquetId === activeLoadout.frameId &&
+      slot.stringId === activeLoadout.stringId &&
+      slot.mainsTension === activeLoadout.mainsTension) {
+    return '<span class="slot-tag slot-tag-active">Current Loadout</span>';
+  }
+
+  var match = savedLoadouts.find(function(lo) {
+    return lo.frameId === slot.racquetId &&
+      lo.stringId === slot.stringId &&
+      lo.mainsTension === slot.mainsTension;
+  });
+  if (match) {
+    return '<span class="slot-tag slot-tag-saved">Saved</span>';
+  }
+
+  return '';
 }
 
 document.addEventListener('DOMContentLoaded', () => {

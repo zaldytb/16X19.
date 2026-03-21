@@ -6151,3 +6151,273 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================================
+   QUICK ADD LOADOUT
+   ============================================ */
+.dock-quick-add {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.dock-qa-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 12px;
+  font-family: var(--font-body, 'General Sans', sans-serif);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--lime-text);
+  background: var(--lime-dim);
+  border: 1px dashed var(--lime-text);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  justify-content: center;
+}
+.dock-qa-trigger:hover {
+  background: rgba(199, 246, 58, 0.15);
+}
+.dock-qa-form {
+  margin-top: 10px;
+}
+.dock-qa-form.hidden { display: none; }
+.dock-qa-field {
+  margin-bottom: 8px;
+}
+.dock-qa-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 3px;
+}
+.dock-qa-select, .dock-qa-input {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-family: var(--font-body, 'General Sans', sans-serif);
+  color: var(--text-primary);
+  background: var(--bg-input, var(--bg-base));
+  border: 1px solid var(--border-medium);
+  border-radius: 6px;
+  appearance: auto;
+  box-sizing: border-box;
+}
+.dock-qa-btns {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+.dock-qa-btn {
+  flex: 1;
+  padding: 7px 0;
+  font-family: var(--font-body, 'General Sans', sans-serif);
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+}
+.dock-qa-btn:hover {
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+.dock-qa-btn-primary {
+  background: var(--lime-text);
+  color: var(--bg-base, #0E0E0E);
+  border-color: var(--lime-text);
+}
+.dock-qa-btn-primary:hover {
+  opacity: 0.85;
+}
+
+/* ============================================
+   WTTN / REC BUILDS APPLY BUTTON
+   ============================================ */
+.wttn-apply-btn {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 6px 0;
+  font-family: var(--font-body, 'General Sans', sans-serif);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.wttn-apply-btn:hover {
+  background: var(--lime-dim);
+  color: var(--lime-text);
+  border-color: var(--lime-text);
+}
+.wttn-apply-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.recs-apply-btn {
+  padding: 4px 10px;
+  font-family: var(--font-body, 'General Sans', sans-serif);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.recs-apply-btn:hover {
+  background: var(--lime-dim);
+  color: var(--lime-text);
+  border-color: var(--lime-text);
+}
+
+/* ============================================
+   ORIGINAL TENSION MARKER
+   ============================================ */
+.tune-original-marker {
+  position: absolute;
+  bottom: -2px;
+  width: 2px;
+  height: 14px;
+  background: var(--text-muted);
+  opacity: 0.6;
+  z-index: 2;
+  pointer-events: none;
+}
+.tune-original-label {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+  background: var(--bg-card);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+/* ============================================
+   GAUGE EXPLORER CLICKABLE HEADERS
+   ============================================ */
+button.gauge-explore-col-header {
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  transition: all 0.15s;
+  padding: 4px 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: inherit;
+  color: inherit;
+}
+button.gauge-explore-col-header:hover:not(.gauge-current) {
+  background: var(--lime-dim);
+  border-radius: 4px;
+}
+.gauge-col-apply {
+  display: none;
+  font-size: 8px;
+  color: var(--lime-text);
+}
+button.gauge-explore-col-header:hover .gauge-col-apply {
+  display: inline;
+}
+
+/* ============================================
+   COMPARE SUGGESTIONS
+   ============================================ */
+.compare-suggestions {
+  padding: 12px 0;
+}
+.compare-sug-header {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.compare-sug-empty {
+  font-size: 12px;
+  color: var(--text-faint);
+  text-align: center;
+  padding: 8px;
+}
+.compare-sug-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.compare-sug-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  font-family: var(--font-body, 'General Sans', sans-serif);
+  font-size: 11px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--text-primary);
+}
+.compare-sug-chip:hover {
+  border-color: var(--lime-text);
+  background: var(--lime-dim);
+}
+.compare-sug-obs {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--lime-text);
+}
+.compare-sug-name {
+  font-weight: 600;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.compare-sug-source {
+  font-size: 9px;
+  color: var(--text-faint);
+  text-transform: uppercase;
+}
+
+/* ============================================
+   COMPARE SLOT TAGS
+   ============================================ */
+.slot-tag {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-left: 6px;
+}
+.slot-tag-active {
+  background: var(--lime-dim);
+  color: var(--lime-text);
+}
+.slot-tag-saved {
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+}

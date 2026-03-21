@@ -5432,7 +5432,14 @@ function renderSummary(racquet, stringConfig, badge) {
 // OVERVIEW 4-CARD GRID
 // ============================================
 
-function computeCompositeScore(stats) {
+// Build tension context for OBS sanity penalty
+function buildTensionContext(stringConfig, racquet) {
+  if (!stringConfig || !racquet) return null;
+  const avgTension = (stringConfig.mainsTension + stringConfig.crossesTension) / 2;
+  return { avgTension, tensionRange: racquet.tensionRange };
+}
+
+function computeCompositeScore(stats, tensionContext) {
   // Full 10-stat weighted composite — every modeled stat contributes.
   // Core performance: control, spin, power, comfort — 58%
   // Feel & playability: feel, playability — 18%
@@ -5452,7 +5459,41 @@ function computeCompositeScore(stats) {
   // because individual stats are already compressed to ~45–85.
   // Map to a wider 0–100 display scale so the OBS rank ladder is meaningful.
   // Anchor: 58 → 30 (poor), 63 → 60 (mid), 67 → 85 (elite)
-  const scaled = 30 + (raw - 58) * (55 / 9); // ~6.11 display pts per raw pt
+  let scaled = 30 + (raw - 58) * (55 / 9); // ~6.11 display pts per raw pt
+
+  // --- Tension sanity penalty ---
+  // If tension is absurdly outside the playable range, the setup is garbage.
+  // Penalty scales with how far outside the range the tension is.
+  if (tensionContext) {
+    const { avgTension, tensionRange } = tensionContext;
+    const low = tensionRange[0];
+    const high = tensionRange[1];
+    const margin = 8; // lbs of grace outside range before penalty kicks in
+    
+    if (avgTension < low - margin) {
+      // Way too loose — unplayable
+      const deficit = (low - margin) - avgTension;
+      // Exponential penalty: 10 lbs under = -30, 20 under = -60, 30+ = floor
+      const penalty = Math.min(deficit * 3, 90);
+      scaled -= penalty;
+    } else if (avgTension < low) {
+      // Slightly below range — mild penalty
+      const deficit = low - avgTension;
+      scaled -= deficit * 1.5;
+    }
+    
+    if (avgTension > high + margin) {
+      // Way too tight — harsh, boardy, arm-destroying
+      const excess = avgTension - (high + margin);
+      const penalty = Math.min(excess * 2.5, 80);
+      scaled -= penalty;
+    } else if (avgTension > high) {
+      // Slightly above range — mild penalty
+      const excess = avgTension - high;
+      scaled -= excess * 1.2;
+    }
+  }
+
   return Math.max(0, Math.min(100, scaled));
 }
 
@@ -5467,7 +5508,7 @@ function getRatingDescriptor(score, identity) {
 
 function renderOverviewCards(racquet, stringConfig, stats, identity, fitProfile) {
   renderOCIdentity(identity);
-  renderOCRating(stats, identity);
+  renderOCRating(stats, identity, buildTensionContext(stringConfig, racquet));
   renderOCFoundation(racquet, stringConfig, stats);
   renderOCSnapshot(fitProfile);
 }
@@ -5486,9 +5527,9 @@ function renderOCIdentity(identity) {
   `;
 }
 
-function renderOCRating(stats, identity) {
+function renderOCRating(stats, identity, tensionCtx) {
   const el = $('#oc-rating');
-  const score = computeCompositeScore(stats);
+  const score = computeCompositeScore(stats, tensionCtx);
   const pct = Math.min(score / 100, 1);
   // SVG ring: radius 42, circumference = 2*PI*42 ≈ 263.89
   const circumference = 2 * Math.PI * 42;
@@ -6209,7 +6250,8 @@ function renderCompareSummaries() {
     }
     const color = SLOT_COLORS[index];
     const racquet = RACQUETS.find(r => r.id === slot.racquetId);
-    const obsScore = computeCompositeScore(slot.stats).toFixed(1);
+    const slotTensionCtx = racquet ? { avgTension: (slot.mainsTension + slot.crossesTension) / 2, tensionRange: racquet.tensionRange } : null;
+    const obsScore = computeCompositeScore(slot.stats, slotTensionCtx).toFixed(1);
     const pct = Math.min(100, Math.max(0, obsScore));
     const circumference = 2 * Math.PI * 26;
     const dashOffset = circumference * (1 - pct / 100);
@@ -6705,10 +6747,11 @@ function calculateOptimalWindow(setup) {
   const data = tuneState.sweepData;
   if (!data || data.length === 0) return;
 
-  // Score each tension using the full 10-stat composite
+  // Score each tension using the full 10-stat composite + tension sanity penalty
   const scored = data.map(d => {
     const s = d.stats;
-    const score = computeCompositeScore(s);
+    const tCtx = { avgTension: d.tension, tensionRange: racquet.tensionRange };
+    const score = computeCompositeScore(s, tCtx);
     return { tension: d.tension, score, stats: s };
   });
 
@@ -7146,7 +7189,7 @@ function renderOverallBuildScore(setup) {
   if (!container) return;
   const { racquet, stringConfig } = setup;
   const stats = predictSetup(racquet, stringConfig);
-  const score = computeCompositeScore(stats);
+  const score = computeCompositeScore(stats, buildTensionContext(stringConfig, racquet));
   const tier = getObsTier(score);
   const pct = Math.min(Math.max(score / 100, 0), 1) * 100;
 
@@ -7495,7 +7538,8 @@ function renderRecommendedBuilds(setup) {
       const cfg = { isHybrid: false, string: s, mainsTension: t, crossesTension: t };
       const stats = predictSetup(racquet, cfg);
       if (!stats) continue;
-      const score = computeCompositeScore(stats);
+      const tCtx = { avgTension: t, tensionRange: racquet.tensionRange };
+      const score = computeCompositeScore(stats, tCtx);
       if (score > bestScore) {
         bestScore = score;
         bestTension = t;

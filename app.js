@@ -5556,6 +5556,61 @@ function buildTensionContext(stringConfig, racquet) {
   return { avgTension, tensionRange: racquet.tensionRange, differential, patternCrosses: patCrosses };
 }
 
+// --- Novelty/Anomaly Bonus System ---
+// Rewards frames that achieve a rare combination of high performance stats.
+// A frame that's unusually high in power+spin+control for its head size band
+// gets a ceiling boost — but only if the rare pattern is genuinely high-performing.
+//
+// This protects frames like PA 98 2026 (high spin+control in a 98, rare for that class)
+// from being crushed by forgiveness weighting, while not boosting merely "weird" frames.
+function computeNoveltyBonus(stats) {
+  const pwr = stats.power;
+  const spn = stats.spin;
+  const ctl = stats.control;
+  const triad = (pwr + spn + ctl) / 3;
+
+  // Determine if any two of the three performance dimensions are notably high
+  const highCount = [pwr >= 55, spn >= 68, ctl >= 70].filter(Boolean).length;
+  
+  // Performance anomaly: at least 2 of 3 dimensions are elevated
+  // AND the triad average is well above the database mean (~64)
+  if (highCount >= 2 && triad >= 64) {
+    // Dual-excellence: frame excels in two+ core areas simultaneously
+    // This is the signature of a "rare but coherent" build
+    
+    // How far above the mean triad (64) is this frame?
+    const triadExcess = Math.max(0, triad - 64);
+    
+    // Bonus scales with triad excess, capped at 5 display points
+    // triad 66 → +1.2, triad 68 → +2.4, triad 70 → +3.6, triad 72+ → 5.0
+    let bonus = Math.min(triadExcess * 0.6, 5);
+    
+    // Extra bump if ALL THREE are elevated (extremely rare)
+    if (highCount === 3) {
+      bonus = Math.min(bonus * 1.4, 6);
+    }
+    
+    // Diminish bonus for frames with very high forgiveness
+    // (those are "on-meta" — forgiving spin frames don't need novelty lift)
+    if (stats.forgiveness >= 65) {
+      bonus *= 0.5;
+    } else if (stats.forgiveness >= 60) {
+      bonus *= 0.75;
+    }
+    
+    return bonus;
+  }
+
+  // Comfort anomaly: exceptional comfort (>= 62) paired with high control (>= 70)
+  // Rewards frames like Clash, Gravity that sacrifice power for comfort+control
+  if (stats.comfort >= 62 && ctl >= 70 && stats.feel >= 65) {
+    const comfortExcess = Math.max(0, stats.comfort - 60);
+    return Math.min(comfortExcess * 0.4, 3);
+  }
+
+  return 0;
+}
+
 function computeCompositeScore(stats, tensionContext) {
   // Full 10-stat weighted composite — every modeled stat contributes.
   // Core performance: control, spin, power, comfort — 58%
@@ -5577,6 +5632,9 @@ function computeCompositeScore(stats, tensionContext) {
   // Map to a wider 0–100 display scale so the OBS rank ladder is meaningful.
   // Anchor: 58 → 30 (poor), 63 → 60 (mid), 67 → 85 (elite)
   let scaled = 30 + (raw - 58) * (55 / 9); // ~6.11 display pts per raw pt
+
+  // --- Novelty bonus for rare high-performing combos ---
+  scaled += computeNoveltyBonus(stats);
 
   // --- Tension sanity penalty ---
   // If tension is absurdly outside the playable range, the setup is garbage.

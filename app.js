@@ -9712,7 +9712,7 @@ function renderOptimizerResults(candidates, sortBy, currentOBS) {
         <button class="opt-act-btn" title="View in Overview" onclick="optActionView(${idx})"><svg width="13" height="13" viewBox="0 0 15 15" fill="none"><rect x="1" y="1" width="5.5" height="5.5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="8.5" y="1" width="5.5" height="5.5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="1" y="8.5" width="12.5" height="5.5" rx="1" stroke="currentColor" stroke-width="1.3"/></svg></button>
         <button class="opt-act-btn" title="Open in Tune" onclick="optActionTune(${idx})"><svg width="13" height="13" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="5.5" stroke="currentColor" stroke-width="1.3"/><line x1="7.5" y1="1.5" x2="7.5" y2="4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="7.5" y1="11" x2="7.5" y2="13.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="1.5" y1="7.5" x2="4" y2="7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="11" y1="7.5" x2="13.5" y2="7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="7.5" cy="7.5" r="1.5" fill="currentColor"/></svg></button>
         <button class="opt-act-btn" title="Add to Compare" onclick="optActionCompare(${idx})"><svg width="13" height="13" viewBox="0 0 15 15" fill="none"><rect x="1" y="2.5" width="5" height="10" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="2.5" width="5" height="10" rx="1" stroke="currentColor" stroke-width="1.3"/><line x1="7.5" y1="5" x2="7.5" y2="10" stroke="currentColor" stroke-width="1.3" stroke-dasharray="1.5 1.5"/></svg></button>
-        <button class="opt-act-btn" title="Save as Preset" onclick="optActionSave(${idx})"><svg width="13" height="13" viewBox="0 0 15 15" fill="none"><path d="M11.5 1H3.5A1.5 1.5 0 002 2.5v10A1.5 1.5 0 003.5 14h8a1.5 1.5 0 001.5-1.5v-10A1.5 1.5 0 0011.5 1z" stroke="currentColor" stroke-width="1.2"/><path d="M5 1v4h5V1" stroke="currentColor" stroke-width="1.2"/><path d="M5 10h5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></button>
+        <button class="opt-act-btn" title="Add to Loadouts" onclick="optActionSave(${idx})"><svg width="13" height="13" viewBox="0 0 15 15" fill="none"><path d="M11.5 1H3.5A1.5 1.5 0 002 2.5v10A1.5 1.5 0 003.5 14h8a1.5 1.5 0 001.5-1.5v-10A1.5 1.5 0 0011.5 1z" stroke="currentColor" stroke-width="1.2"/><path d="M5 1v4h5V1" stroke="currentColor" stroke-width="1.2"/><path d="M5 10h5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></button>
       </td>
     </tr>`;
   });
@@ -9803,10 +9803,19 @@ function optActionSave(idx) {
   const c = _optLastCandidates[idx];
   if (!c) return;
   const preset = _optBuildPresetData(c);
-  userPresets.push(preset);
-  savePresetsToStorage();
-  renderHomePresets();
-  renderComparisonPresets();
+  
+  // Create a proper loadout and save it
+  var opts = { source: 'manual' };
+  if (preset.isHybrid) {
+    opts.isHybrid = true;
+    opts.mainsId = preset.mainsId;
+    opts.crossesId = preset.crossesId;
+    opts.crossesTension = preset.crossesTension;
+  }
+  var lo = createLoadout(preset.racquetId, preset.isHybrid ? preset.mainsId : preset.stringId, preset.mainsTension, opts);
+  if (lo) {
+    saveLoadout(lo);
+  }
 
   // Flash the save button in the row
   const btn = document.querySelector(`tr[data-opt-idx="${idx}"] .opt-act-btn:last-child`);

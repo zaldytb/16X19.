@@ -4986,10 +4986,11 @@ let isComparisonMode = false;
 // PERSISTENT SHELL — MODE SYSTEM
 // ============================================
 let currentMode = 'overview';
-const scrollPositions = { overview: 0, tune: 0, compare: 0, optimize: 0, howitworks: 0 };
+const scrollPositions = { overview: 0, tune: 0, compare: 0, optimize: 0, compendium: 0, howitworks: 0 };
 let _compareInitialized = false;
 let _tuneInitialized = false;
 let _optimizeInitialized = false;
+let _compendiumInitialized = false;
 
 function switchMode(mode) {
   if (mode === currentMode) return;
@@ -5051,6 +5052,11 @@ function switchMode(mode) {
     if (!_optimizeInitialized) {
       initOptimize();
       _optimizeInitialized = true;
+    }
+  } else if (mode === 'compendium') {
+    if (!_compendiumInitialized) {
+      initCompendium();
+      _compendiumInitialized = true;
     }
   }
   // howitworks mode needs no special init — it's static content
@@ -9690,6 +9696,341 @@ function _fmbSearchDirection(direction) {
   requestAnimationFrame(() => {
     document.getElementById('opt-run-btn').click();
   });
+}
+
+// ============================================
+// COMPENDIUM — Frame-Centric Exploration
+// ============================================
+
+const _compendiumBuildCache = {};
+let _compSelectedRacquetId = null;
+let _compSortKey = 'score';
+
+function initCompendium() {
+  // Populate brand filter
+  const brandSel = document.getElementById('comp-filter-brand');
+  const brands = [...new Set(RACQUETS.map(r => _extractBrand(r.name)))].sort();
+  brands.forEach(b => {
+    const o = document.createElement('option');
+    o.value = b;
+    o.textContent = b;
+    brandSel.appendChild(o);
+  });
+
+  // Populate frame list
+  _compRenderRoster();
+
+  // Wire search + filter events
+  document.getElementById('comp-search').addEventListener('input', _compRenderRoster);
+  document.getElementById('comp-filter-brand').addEventListener('change', _compRenderRoster);
+  document.getElementById('comp-filter-pattern').addEventListener('change', _compRenderRoster);
+  document.getElementById('comp-filter-stiffness').addEventListener('change', _compRenderRoster);
+  document.getElementById('comp-filter-headsize').addEventListener('change', _compRenderRoster);
+
+  // Auto-select first frame
+  if (RACQUETS.length > 0) {
+    _compSelectFrame(RACQUETS[0].id);
+  }
+}
+
+function _extractBrand(name) {
+  // Extract brand from racquet name (first word, or "Wilson" for "Wilson Pro Staff", etc.)
+  const brandMap = {
+    'Babolat': 'Babolat', 'Head': 'Head', 'Wilson': 'Wilson',
+    'Yonex': 'Yonex', 'Tecnifibre': 'Tecnifibre', 'Prince': 'Prince',
+    'Dunlop': 'Dunlop', 'Volkl': 'Volkl'
+  };
+  for (const [key, brand] of Object.entries(brandMap)) {
+    if (name.startsWith(key)) return brand;
+  }
+  return name.split(' ')[0];
+}
+
+function _compGetFilteredRacquets() {
+  const search = (document.getElementById('comp-search').value || '').toLowerCase();
+  const brand = document.getElementById('comp-filter-brand').value;
+  const pattern = document.getElementById('comp-filter-pattern').value;
+  const stiffness = document.getElementById('comp-filter-stiffness').value;
+  const headsize = document.getElementById('comp-filter-headsize').value;
+
+  return RACQUETS.filter(r => {
+    if (search && !r.name.toLowerCase().includes(search)) return false;
+    if (brand && !r.name.startsWith(brand)) return false;
+    if (pattern && r.pattern !== pattern) return false;
+    if (stiffness === 'soft' && r.stiffness > 59) return false;
+    if (stiffness === 'medium' && (r.stiffness < 60 || r.stiffness > 65)) return false;
+    if (stiffness === 'stiff' && r.stiffness < 66) return false;
+    if (headsize === '102' && r.headSize < 102) return false;
+    if (headsize && headsize !== '102' && r.headSize !== parseInt(headsize)) return false;
+    return true;
+  });
+}
+
+function _compRenderRoster() {
+  const list = document.getElementById('comp-frame-list');
+  const racquets = _compGetFilteredRacquets();
+
+  list.innerHTML = racquets.map(r => {
+    const brand = _extractBrand(r.name);
+    const isActive = r.id === _compSelectedRacquetId;
+    return `<button class="comp-frame-item${isActive ? ' active' : ''}" data-id="${r.id}" onclick="_compSelectFrame('${r.id}')">
+      <span class="comp-frame-name">${r.name}</span>
+      <span class="comp-frame-meta">${r.year} &middot; ${r.identity || r.pattern}</span>
+    </button>`;
+  }).join('');
+}
+
+function _compSelectFrame(racquetId) {
+  _compSelectedRacquetId = racquetId;
+  const racquet = RACQUETS.find(r => r.id === racquetId);
+  if (!racquet) return;
+
+  // Highlight in roster
+  document.querySelectorAll('.comp-frame-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.id === racquetId);
+  });
+
+  // Render main panel
+  _compRenderMain(racquet);
+}
+
+function _compRenderMain(racquet) {
+  const main = document.getElementById('comp-main');
+  const frameBase = calcFrameBase(racquet);
+  const beamStr = Array.isArray(racquet.beamWidth) ? racquet.beamWidth.join('/') + 'mm' : racquet.beamWidth + 'mm';
+
+  // Generate or cache top builds
+  if (!_compendiumBuildCache[racquet.id]) {
+    _compendiumBuildCache[racquet.id] = _compGenerateTopBuilds(racquet, 6);
+  }
+  const builds = _compendiumBuildCache[racquet.id];
+
+  // Sort builds by current key
+  const sorted = [...builds].sort((a, b) => {
+    if (_compSortKey === 'score') return b.score - a.score;
+    return (b.stats[_compSortKey] || 0) - (a.stats[_compSortKey] || 0);
+  });
+
+  // Frame stat bars (skip durability and playability — always 50 for frame-only)
+  const frameStatKeys = ['spin', 'power', 'control', 'launch', 'feel', 'comfort', 'stability', 'forgiveness', 'maneuverability'];
+  const frameStatLabels = { spin: 'Spin', power: 'Power', control: 'Control', launch: 'Launch', feel: 'Feel', comfort: 'Comfort', stability: 'Stability', forgiveness: 'Forgiveness', maneuverability: 'Maneuverability' };
+
+  const barsHtml = frameStatKeys.map(k => {
+    const val = frameBase[k] != null ? Math.round(frameBase[k]) : 50;
+    const pct = Math.max(0, Math.min(100, val));
+    return `<div class="comp-stat-row">
+      <span class="comp-stat-label">${frameStatLabels[k]}</span>
+      <div class="comp-stat-track"><div class="comp-stat-fill" style="width:${pct}%;opacity:${0.4 + pct * 0.006}"></div></div>
+      <span class="comp-stat-val">${val}</span>
+    </div>`;
+  }).join('');
+
+  // Sort tabs
+  const sortOptions = [
+    { key: 'score', label: 'OBS' },
+    { key: 'spin', label: 'Spin' },
+    { key: 'control', label: 'Control' },
+    { key: 'power', label: 'Power' },
+    { key: 'comfort', label: 'Comfort' },
+    { key: 'durability', label: 'Durability' }
+  ];
+  const sortTabsHtml = sortOptions.map(s =>
+    `<button class="comp-sort-tab${_compSortKey === s.key ? ' active' : ''}" onclick="_compSetSort('${s.key}')">${s.label}</button>`
+  ).join('');
+
+  // Build cards
+  const cardsHtml = sorted.map((b, i) => _compRenderBuildCard(b, i, racquet)).join('');
+
+  main.innerHTML = `
+    <div class="comp-identity">
+      <h2 class="comp-id-name">${racquet.name}</h2>
+      <div class="comp-id-meta">${racquet.year} &middot; <span class="comp-id-identity">${racquet.identity || ''}</span></div>
+      <div class="comp-specs-grid">
+        <div class="comp-spec"><span class="comp-spec-label">Weight</span><span class="comp-spec-val">${racquet.strungWeight}g</span></div>
+        <div class="comp-spec"><span class="comp-spec-label">Swingweight</span><span class="comp-spec-val">${racquet.swingweight}</span></div>
+        <div class="comp-spec"><span class="comp-spec-label">Stiffness</span><span class="comp-spec-val">${racquet.stiffness} RA</span></div>
+        <div class="comp-spec"><span class="comp-spec-label">Pattern</span><span class="comp-spec-val">${racquet.pattern}</span></div>
+        <div class="comp-spec"><span class="comp-spec-label">Balance</span><span class="comp-spec-val">${racquet.balancePts}</span></div>
+        <div class="comp-spec"><span class="comp-spec-label">Beam</span><span class="comp-spec-val">${beamStr}</span></div>
+        <div class="comp-spec"><span class="comp-spec-label">Head Size</span><span class="comp-spec-val">${racquet.headSize} sq in</span></div>
+        <div class="comp-spec"><span class="comp-spec-label">Tension Range</span><span class="comp-spec-val">${racquet.tensionRange[0]}&ndash;${racquet.tensionRange[1]} lbs</span></div>
+      </div>
+      ${racquet.notes ? `<p class="comp-id-notes">${racquet.notes}</p>` : ''}
+    </div>
+
+    <div class="comp-section">
+      <h3 class="comp-section-title">BASE FRAME PROFILE</h3>
+      <p class="comp-section-sub">Frame-only characteristics before string influence</p>
+      <div class="comp-stat-bars">${barsHtml}</div>
+    </div>
+
+    <div class="comp-section">
+      <div class="comp-builds-header">
+        <h3 class="comp-section-title">TOP BUILDS</h3>
+        <div class="comp-sort-tabs">${sortTabsHtml}</div>
+      </div>
+      <div class="comp-build-grid">${cardsHtml}</div>
+    </div>
+  `;
+}
+
+function _compGenerateTopBuilds(racquet, count) {
+  const builds = [];
+  const midT = Math.round((racquet.tensionRange[0] + racquet.tensionRange[1]) / 2);
+
+  // Full bed candidates — try 3 tensions per string
+  STRINGS.forEach(s => {
+    [racquet.tensionRange[0], midT, racquet.tensionRange[1]].forEach(t => {
+      const cfg = { isHybrid: false, string: s, mainsTension: t, crossesTension: t };
+      const stats = predictSetup(racquet, cfg);
+      if (!stats) return;
+      const tCtx = buildTensionContext(cfg, racquet);
+      const score = computeCompositeScore(stats, tCtx);
+      builds.push({ type: 'full', string: s, tension: t, crossesTension: t, stats, score, cfg });
+    });
+  });
+
+  // Sort by OBS, deduplicate by string (keep best tension)
+  builds.sort((a, b) => b.score - a.score);
+  const seen = new Map();
+  const unique = [];
+  for (const b of builds) {
+    const key = b.string.id;
+    if (!seen.has(key)) {
+      seen.set(key, true);
+      unique.push(b);
+    }
+    if (unique.length >= count * 3) break;
+  }
+
+  return _compPickDiverseBuilds(unique, count);
+}
+
+function _compPickDiverseBuilds(builds, count) {
+  builds.forEach(b => {
+    const s = b.stats;
+    if (s.spin >= 72 && s.spin >= s.control && s.spin >= s.power) b.archetype = 'Spin Focus';
+    else if (s.control >= 72 && s.control >= s.spin) b.archetype = 'Control Focus';
+    else if (s.power >= 65 && s.power >= s.control) b.archetype = 'Power Focus';
+    else if (s.comfort >= 68) b.archetype = 'Comfort Build';
+    else if (s.feel >= 70) b.archetype = 'Feel Build';
+    else if (s.durability >= 75) b.archetype = 'Durability Build';
+    else b.archetype = 'Balanced';
+  });
+
+  const result = [];
+  const archetypesSeen = new Set();
+  for (const b of builds) {
+    if (!archetypesSeen.has(b.archetype) && result.length < count) {
+      archetypesSeen.add(b.archetype);
+      result.push(b);
+    }
+  }
+  for (const b of builds) {
+    if (result.length >= count) break;
+    if (!result.includes(b)) result.push(b);
+  }
+  return result.slice(0, count);
+}
+
+const _compArchetypeColors = {
+  'Spin Focus': 'var(--lime)',
+  'Control Focus': 'var(--blue-tag)',
+  'Power Focus': 'var(--orange)',
+  'Comfort Build': 'var(--green-tag)',
+  'Feel Build': 'var(--purple)',
+  'Durability Build': 'var(--amber-tag)',
+  'Balanced': 'var(--text-muted)'
+};
+
+function _compRenderBuildCard(build, index, racquet) {
+  const s = build.stats;
+  const obsStyle = getObsBadgeStyle(build.score);
+  const borderColor = _compArchetypeColors[build.archetype] || 'var(--text-muted)';
+
+  return `<div class="comp-build-card" style="border-left-color:${borderColor}">
+    <div class="comp-card-top">
+      <span class="comp-card-archetype">${build.archetype}</span>
+      <span class="comp-card-obs" style="${obsStyle}">${build.score.toFixed(1)}</span>
+    </div>
+    <div class="comp-card-string">${build.string.name}</div>
+    <div class="comp-card-meta">Full Bed &middot; ${build.tension} lbs</div>
+    <div class="comp-card-stats">
+      <span>SPN <b>${Math.round(s.spin)}</b></span>
+      <span>PWR <b>${Math.round(s.power)}</b></span>
+      <span>CTL <b>${Math.round(s.control)}</b></span>
+      <span>CMF <b>${Math.round(s.comfort)}</b></span>
+      <span>FEL <b>${Math.round(s.feel)}</b></span>
+      <span>DUR <b>${Math.round(s.durability)}</b></span>
+    </div>
+    <div class="comp-card-actions">
+      <button class="comp-card-btn" onclick="_compActionCompare('${racquet.id}','${build.string.id}',${build.tension})">Compare</button>
+      <button class="comp-card-btn" onclick="_compActionTune('${racquet.id}','${build.string.id}',${build.tension})">Tune</button>
+      <button class="comp-card-btn comp-card-btn-primary" onclick="_compActionSetActive('${racquet.id}','${build.string.id}',${build.tension})">Set Active</button>
+    </div>
+  </div>`;
+}
+
+function _compSetSort(key) {
+  _compSortKey = key;
+  const racquet = RACQUETS.find(r => r.id === _compSelectedRacquetId);
+  if (racquet) _compRenderMain(racquet);
+}
+
+// --- Build card action handlers ---
+
+function _compBuildPreset(racquetId, stringId, tension) {
+  return {
+    id: 'comp-' + Date.now(),
+    name: '',
+    racquetId: racquetId,
+    isHybrid: false,
+    mainsId: null,
+    crossesId: null,
+    mainsTension: tension,
+    crossesTension: tension,
+    stringId: stringId
+  };
+}
+
+function _compActionSetActive(racquetId, stringId, tension) {
+  const preset = _compBuildPreset(racquetId, stringId, tension);
+  loadPresetFromData(preset);
+  switchMode('overview');
+}
+
+function _compActionTune(racquetId, stringId, tension) {
+  const preset = _compBuildPreset(racquetId, stringId, tension);
+  loadPresetFromData(preset);
+  switchMode('tune');
+}
+
+function _compActionCompare(racquetId, stringId, tension) {
+  if (comparisonSlots.length >= 3) {
+    comparisonSlots.pop();
+  }
+  const slotData = {
+    id: Date.now(),
+    racquetId: racquetId,
+    stringId: stringId,
+    isHybrid: false,
+    mainsId: '',
+    crossesId: '',
+    mainsTension: tension,
+    crossesTension: tension,
+    stats: null,
+    identity: null
+  };
+  // Compute stats without rendering (avoid DOM not ready)
+  const racquet = RACQUETS.find(r => r.id === racquetId);
+  const stringData = STRINGS.find(s => s.id === stringId);
+  if (racquet && stringData) {
+    const cfg = { isHybrid: false, string: stringData, mainsTension: tension, crossesTension: tension };
+    slotData.stats = predictSetup(racquet, cfg);
+    slotData.identity = generateIdentity(slotData.stats, racquet, cfg);
+  }
+  comparisonSlots.push(slotData);
+  switchMode('compare');
 }
 
 document.addEventListener('DOMContentLoaded', () => {

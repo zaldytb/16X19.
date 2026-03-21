@@ -4229,7 +4229,7 @@ function calcBaseStringProfile(stringData) {
 
   // --- Feel: twScore primary, stiffness + material secondary ---
   let feel = compressScore(tw.feel);
-  if (stringData.material === 'Natural Gut') feel += 5; // gut has unmatched feel
+  if (stringData.material === 'Natural Gut') feel += 3; // gut has unmatched feel, but capped to avoid runaway
   feel += stiffNorm * 4 - 1; // soft: up to +3, stiff: down to -1
   // Shaped strings have slightly less clean ball feedback than round
   const isRound = stringData.shape && stringData.shape.toLowerCase().includes('round');
@@ -4261,8 +4261,10 @@ function calcBaseStringProfile(stringData) {
     else control -= excess;
   }
 
-  // --- Final clamp: nothing below 25, nothing above 92 for base string ---
-  const capLow = 25, capHigh = 92;
+  // --- Final clamp: nothing below 25, nothing above 86 for base string ---
+  // 86 cap prevents any single string from pushing a stat dimension
+  // too far from the mean — even gut shouldn't produce a 89+ feel base.
+  const capLow = 25, capHigh = 86;
   const profile = {
     power: Math.round(Math.max(capLow, Math.min(capHigh, power))),
     spin: Math.round(Math.max(capLow, Math.min(capHigh, spin))),
@@ -4292,17 +4294,17 @@ function calcStringFrameMod(stringData) {
   const stiffNorm = Math.max(0, Math.min(1, lerp(stiff, 115, 234, 1, 0)));
   const spinPot = stringData.spinPotential;
 
-  // Layer 2 mods are intentionally smaller than Layer 1 adjustments.
-  // Stiffness already shapes the string profile (L1); these mods capture
-  // how that stiffness interacts with the frame (e.g., dampening, flex coupling).
-  // Scaled to ~60% of original magnitudes to reduce stiffness double-counting.
+  // Layer 2 mods: how string stiffness interacts with the frame.
+  // Stiffness already shapes the string profile (L1); these capture the
+  // frame-coupling effect only. Kept intentionally small to avoid
+  // double-counting stiffness through two additive paths.
   return {
-    powerMod: stiffNorm * 5 - 2,        // soft: up to +3, stiff: -2
-    spinMod: (spinPot - 6.0) * 2,        // centered at 6.0, ±2 per point (was 3)
-    controlMod: (1 - stiffNorm) * 4 - 1.5, // stiff: up to +2.5, soft: -1.5
-    comfortMod: stiffNorm * 4.5 - 1.5,   // soft: up to +3, stiff: -1.5
-    feelMod: stringData.material === 'Natural Gut' ? 5 : (stiffNorm * 3 - 1),
-    launchMod: stiffNorm * 2 - 0.5       // soft strings add slight launch
+    powerMod: stiffNorm * 3 - 1,          // soft: up to +2, stiff: -1
+    spinMod: (spinPot - 6.0) * 1.5,       // centered at 6.0, ±1.5 per point
+    controlMod: (1 - stiffNorm) * 3 - 1,  // stiff: up to +2, soft: -1
+    comfortMod: stiffNorm * 3 - 1,        // soft: up to +2, stiff: -1
+    feelMod: stiffNorm * 2.5 - 0.5,       // soft: up to +2, stiff: -0.5 (gut bonus is in L1 profile only)
+    launchMod: stiffNorm * 1.5 - 0.4      // soft strings add slight launch
   };
 }
 
@@ -4493,9 +4495,10 @@ function predictSetup(racquet, stringConfig) {
   const tensionMod = calcTensionModifier(stringConfig.mainsTension, stringConfig.crossesTension, racquet.tensionRange, racquet.pattern);
 
   // --- Blend: frame base (primary) + string mod + tension mod ---
-  // Frame-driven stats: frame is ~70% weight, string profile ~20%, mods ~10%
-  const FW = 0.65; // frame weight
-  const SW = 0.35; // string profile weight
+  // Frame-driven stats: frame is dominant, string profile secondary.
+  // A string change should move individual stats by ~5-8 points, not 11-16.
+  const FW = 0.72; // frame weight — frame determines the character
+  const SW = 0.28; // string profile weight — string modulates, doesn't redefine
 
   const stats = {
     spin:    clamp(frameBase.spin * FW + stringProfile.spin * SW + stringMod.spinMod + tensionMod.spinMod),
@@ -5665,11 +5668,14 @@ function computeCompositeScore(stats, tensionContext) {
             + stats.playability * 0.06
             + stats.launch * 0.04
             + stats.durability * 0.04;
-  // Rescale: the raw weighted average clusters in a narrow band (~60–65)
-  // because individual stats are already compressed to ~45–85.
-  // Map to a wider 0–100 display scale so the OBS rank ladder is meaningful.
-  // 11-stat anchor: 60 → 30 (poor), 62 → 52 (mid), 64 → 74 (elite)
-  let scaled = 25 + (raw - 59.5) * 11; // ~11 display pts per raw pt
+  // Rescale: the raw weighted average clusters in a narrow band (~59–67)
+  // across all frame×string combos. Map to 0–100 display scale.
+  // Slope 8.5 calibrated so:
+  //   - gut-vs-poly delta ≈ +15 (was +30 at slope 11)
+  //   - poly mean lands in mid-40s to low-50s
+  //   - gut on premium frames reaches WTF/Max Aura appropriately
+  // Anchor: raw 59 → ~30, raw 62 → ~55, raw 65 → ~80
+  let scaled = 22 + (raw - 58) * 8.5;
 
   // --- Novelty bonus for rare high-performing combos ---
   scaled += computeNoveltyBonus(stats);

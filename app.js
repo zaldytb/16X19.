@@ -4943,9 +4943,10 @@ let isComparisonMode = false;
 // PERSISTENT SHELL — MODE SYSTEM
 // ============================================
 let currentMode = 'overview';
-const scrollPositions = { overview: 0, tune: 0, compare: 0, howitworks: 0 };
+const scrollPositions = { overview: 0, tune: 0, compare: 0, optimize: 0, howitworks: 0 };
 let _compareInitialized = false;
 let _tuneInitialized = false;
+let _optimizeInitialized = false;
 
 function switchMode(mode) {
   if (mode === currentMode) return;
@@ -5003,6 +5004,11 @@ function switchMode(mode) {
     // Wire close-editors button
     const closeBtn = document.getElementById('compare-editors-close');
     if (closeBtn) closeBtn.onclick = closeCompareEditors;
+  } else if (mode === 'optimize') {
+    if (!_optimizeInitialized) {
+      initOptimize();
+      _optimizeInitialized = true;
+    }
   }
   // howitworks mode needs no special init — it's static content
 }
@@ -8709,6 +8715,425 @@ function handleResponsiveHeader() {
 
   mql.addEventListener('change', onBreakpoint);
   onBreakpoint(mql); // run on load
+}
+
+// ============================================
+// OPTIMIZE MODE — Build Optimizer / Workbench
+// ============================================
+
+function initOptimize() {
+  // Populate frame dropdown
+  const frameSel = document.getElementById('opt-frame-select');
+  RACQUETS.forEach(r => {
+    const opt = document.createElement('option');
+    opt.value = r.id;
+    opt.textContent = r.name;
+    frameSel.appendChild(opt);
+  });
+
+  // Set default to current frame if one is active
+  const currentSetup = getCurrentSetup();
+  if (currentSetup) {
+    frameSel.value = currentSetup.racquet.id;
+  }
+
+  // Wire run button
+  document.getElementById('opt-run-btn').addEventListener('click', runOptimizer);
+
+  // Wire setup type toggles
+  document.querySelectorAll('.opt-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.opt-toggle').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+
+  // Wire upgrade mode checkbox
+  document.getElementById('opt-upgrade-mode').addEventListener('change', (e) => {
+    document.getElementById('opt-upgrade-fields').classList.toggle('hidden', !e.target.checked);
+  });
+
+  // Wire sort change to re-sort existing results
+  document.getElementById('opt-sort').addEventListener('change', () => {
+    if (_optLastCandidates && _optLastCandidates.length > 0) {
+      const sortBy = document.getElementById('opt-sort').value;
+      _optLastCandidates.sort((a, b) => {
+        if (sortBy === 'obs') return b.score - a.score;
+        return (b.stats[sortBy] || 0) - (a.stats[sortBy] || 0);
+      });
+      renderOptimizerResults(_optLastCandidates, sortBy, _optLastCurrentOBS);
+    }
+  });
+}
+
+let _optLastCandidates = null;
+let _optLastCurrentOBS = 0;
+
+function runOptimizer() {
+  const resultsEl = document.getElementById('opt-results');
+  const countEl = document.getElementById('opt-results-count');
+
+  // Show loading
+  resultsEl.innerHTML = '<div class="opt-loading">Computing builds…</div>';
+
+  // Use requestAnimationFrame to allow the loading indicator to paint
+  requestAnimationFrame(() => { setTimeout(() => { _runOptimizerCore(resultsEl, countEl); }, 16); });
+}
+
+function _runOptimizerCore(resultsEl, countEl) {
+  // Read filters
+  const frameSelVal = document.getElementById('opt-frame-select').value;
+  const setupType = document.querySelector('.opt-toggle.active')?.dataset.value || 'both';
+  const sortBy = document.getElementById('opt-sort').value;
+  const tensionMin = parseInt(document.getElementById('opt-tension-min').value) || 40;
+  const tensionMax = parseInt(document.getElementById('opt-tension-max').value) || 65;
+  const upgradeMode = document.getElementById('opt-upgrade-mode').checked;
+
+  // Stat minimums
+  const mins = {
+    spin: parseInt(document.getElementById('opt-min-spin').value) || 0,
+    control: parseInt(document.getElementById('opt-min-control').value) || 0,
+    power: parseInt(document.getElementById('opt-min-power').value) || 0,
+    comfort: parseInt(document.getElementById('opt-min-comfort').value) || 0,
+    feel: parseInt(document.getElementById('opt-min-feel').value) || 0,
+    durability: parseInt(document.getElementById('opt-min-durability').value) || 0,
+    playability: parseInt(document.getElementById('opt-min-playability').value) || 0
+  };
+
+  // Upgrade constraints
+  const upgradeOBS = parseFloat(document.getElementById('opt-upgrade-obs').value) || 0;
+  const upgradeCtlLoss = parseFloat(document.getElementById('opt-upgrade-ctl-loss').value) || 5;
+  const upgradeDurLoss = parseFloat(document.getElementById('opt-upgrade-dur-loss').value) || 10;
+
+  // Get selected frame
+  let racquet;
+  if (frameSelVal === 'current') {
+    const setup = getCurrentSetup();
+    racquet = setup ? setup.racquet : RACQUETS[0];
+  } else {
+    racquet = RACQUETS.find(r => r.id === frameSelVal) || RACQUETS[0];
+  }
+
+  // Compute current build OBS for deltas
+  let currentOBS = 0;
+  let currentStats = null;
+  const currentSetup = getCurrentSetup();
+  if (currentSetup) {
+    currentStats = predictSetup(currentSetup.racquet, currentSetup.stringConfig);
+    if (currentStats) {
+      const tCtx = buildTensionContext(currentSetup.stringConfig, currentSetup.racquet);
+      currentOBS = computeCompositeScore(currentStats, tCtx);
+    }
+  }
+
+  const midTension = Math.round((racquet.tensionRange[0] + racquet.tensionRange[1]) / 2);
+  const sweepMin = Math.max(tensionMin, 30);
+  const sweepMax = Math.min(tensionMax, 75);
+
+  // Helper: find optimal tension for a config within range
+  function findOptimalTension(buildConfig) {
+    let bestScore = -1, bestTension = midTension, bestStats = null;
+    for (let t = sweepMin; t <= sweepMax; t += 1) {
+      const cfg = { ...buildConfig };
+      cfg.mainsTension = t;
+      cfg.crossesTension = t - (buildConfig.isHybrid ? 2 : 0);
+      const stats = predictSetup(racquet, cfg);
+      if (!stats) continue;
+      const tCtx = buildTensionContext(cfg, racquet);
+      const score = computeCompositeScore(stats, tCtx);
+      if (score > bestScore) {
+        bestScore = score;
+        bestTension = t;
+        bestStats = stats;
+      }
+    }
+    return { score: bestScore, tension: bestTension, stats: bestStats };
+  }
+
+  let candidates = [];
+
+  // --- FULL BED candidates ---
+  if (setupType === 'full' || setupType === 'both') {
+    STRINGS.forEach(s => {
+      const result = findOptimalTension({ isHybrid: false, string: s });
+      if (result.stats) {
+        candidates.push({
+          type: 'full',
+          label: s.name,
+          gauge: s.gauge,
+          tension: result.tension,
+          crossesTension: result.tension,
+          score: result.score,
+          stats: result.stats,
+          stringData: s,
+          racquet: racquet
+        });
+      }
+    });
+  }
+
+  // --- HYBRID candidates (same smart pairing as renderRecommendedBuilds) ---
+  if (setupType === 'hybrid' || setupType === 'both') {
+    // Build full-bed scores for ranking mains
+    const fullScores = [];
+    if (setupType === 'both') {
+      // Already computed above, reuse
+    } else {
+      STRINGS.forEach(s => {
+        const result = findOptimalTension({ isHybrid: false, string: s });
+        if (result.stats) fullScores.push({ stringId: s.id, score: result.score });
+      });
+    }
+
+    // Select promising mains: top 12 full-bed + any gut/multi
+    const tempFullForRanking = [];
+    STRINGS.forEach(s => {
+      const result = findOptimalTension({ isHybrid: false, string: s });
+      if (result.stats) tempFullForRanking.push({ stringId: s.id, score: result.score });
+    });
+    tempFullForRanking.sort((a, b) => b.score - a.score);
+    const topMainsIds = new Set(tempFullForRanking.slice(0, 12).map(c => c.stringId));
+    STRINGS.forEach(s => {
+      if (s.material === 'Natural Gut' || s.material === 'Multifilament') topMainsIds.add(s.id);
+    });
+
+    // Select cross candidates: round/slick polys + elastic co-polys
+    const crossCandidates = STRINGS.filter(s => {
+      const shape = (s.shape || '').toLowerCase();
+      const isRoundSlick = shape.includes('round') || shape.includes('slick') || shape.includes('coated');
+      const isElastic = s.material === 'Co-Polyester (elastic)';
+      const isSoftPoly = s.material === 'Polyester' && s.stiffness < 200;
+      return isRoundSlick || isElastic || isSoftPoly;
+    });
+
+    topMainsIds.forEach(mainsId => {
+      const mains = STRINGS.find(s => s.id === mainsId);
+      if (!mains) return;
+      crossCandidates.forEach(cross => {
+        if (cross.id === mains.id) return;
+        const result = findOptimalTension({ isHybrid: true, mains, crosses: cross });
+        if (result.stats && result.score > 0) {
+          candidates.push({
+            type: 'hybrid',
+            label: `${mains.name} / ${cross.name}`,
+            gauge: '',
+            tension: result.tension,
+            crossesTension: result.tension - 2,
+            score: result.score,
+            stats: result.stats,
+            mainsData: mains,
+            crossesData: cross,
+            racquet: racquet
+          });
+        }
+      });
+    });
+  }
+
+  // --- Filter by stat minimums ---
+  candidates = candidates.filter(c => {
+    return c.stats.spin >= mins.spin &&
+           c.stats.control >= mins.control &&
+           c.stats.power >= mins.power &&
+           c.stats.comfort >= mins.comfort &&
+           c.stats.feel >= mins.feel &&
+           c.stats.durability >= mins.durability &&
+           c.stats.playability >= mins.playability;
+  });
+
+  // --- Upgrade mode filtering ---
+  if (upgradeMode && currentStats) {
+    candidates = candidates.filter(c => {
+      if (c.score < currentOBS + upgradeOBS) return false;
+      if (currentStats.control - c.stats.control > upgradeCtlLoss) return false;
+      if (currentStats.durability - c.stats.durability > upgradeDurLoss) return false;
+      return true;
+    });
+  }
+
+  // --- Sort ---
+  candidates.sort((a, b) => {
+    if (sortBy === 'obs') return b.score - a.score;
+    return (b.stats[sortBy] || 0) - (a.stats[sortBy] || 0);
+  });
+
+  // Store for re-sorting
+  _optLastCandidates = candidates;
+  _optLastCurrentOBS = currentOBS;
+
+  countEl.textContent = `${candidates.length} result${candidates.length !== 1 ? 's' : ''}`;
+  renderOptimizerResults(candidates, sortBy, currentOBS);
+}
+
+function renderOptimizerResults(candidates, sortBy, currentOBS) {
+  const resultsEl = document.getElementById('opt-results');
+
+  if (candidates.length === 0) {
+    resultsEl.innerHTML = `
+      <div class="opt-empty">
+        <p class="opt-empty-title">No builds match your filters</p>
+        <p class="opt-empty-sub">Try relaxing the stat minimums or expanding the tension range.</p>
+      </div>`;
+    return;
+  }
+
+  // Column highlight class
+  const sortColClass = sortBy === 'obs' ? 'obs' : sortBy;
+
+  const top = candidates.slice(0, 200); // Cap at 200 rows for perf
+
+  let html = `<div class="opt-table-wrap"><table class="opt-table">
+    <thead><tr>
+      <th class="opt-th opt-th-rank">#</th>
+      <th class="opt-th opt-th-type">Type</th>
+      <th class="opt-th opt-th-string">String(s)</th>
+      <th class="opt-th opt-th-gauge">Ga.</th>
+      <th class="opt-th opt-th-tension">Tension</th>
+      <th class="opt-th opt-th-num${sortColClass === 'obs' ? ' opt-th-active' : ''}">OBS</th>
+      <th class="opt-th opt-th-num opt-th-delta">&Delta;</th>
+      <th class="opt-th opt-th-num${sortColClass === 'spin' ? ' opt-th-active' : ''}">Spn</th>
+      <th class="opt-th opt-th-num${sortColClass === 'power' ? ' opt-th-active' : ''}">Pwr</th>
+      <th class="opt-th opt-th-num${sortColClass === 'control' ? ' opt-th-active' : ''}">Ctl</th>
+      <th class="opt-th opt-th-num${sortColClass === 'comfort' ? ' opt-th-active' : ''}">Cmf</th>
+      <th class="opt-th opt-th-num${sortColClass === 'feel' ? ' opt-th-active' : ''}">Fel</th>
+      <th class="opt-th opt-th-num${sortColClass === 'durability' ? ' opt-th-active' : ''}">Dur</th>
+      <th class="opt-th opt-th-num${sortColClass === 'playability' ? ' opt-th-active' : ''}">Ply</th>
+      <th class="opt-th opt-th-actions">Actions</th>
+    </tr></thead><tbody>`;
+
+  top.forEach((c, i) => {
+    const delta = c.score - currentOBS;
+    const deltaStr = delta > 0 ? `+${delta.toFixed(1)}` : delta.toFixed(1);
+    const deltaCls = delta > 0.5 ? 'opt-delta-pos' : delta < -0.5 ? 'opt-delta-neg' : 'opt-delta-neutral';
+    const tensionLabel = c.type === 'hybrid' ? `${c.tension}/${c.crossesTension}` : `${c.tension}`;
+    const typeTag = c.type === 'hybrid' ? '<span class="opt-tag-hybrid">H</span>' : '<span class="opt-tag-full">F</span>';
+    const idx = i; // for action data attribute
+
+    html += `<tr class="opt-row" data-opt-idx="${idx}">
+      <td class="opt-td opt-td-rank">${i + 1}</td>
+      <td class="opt-td opt-td-type">${typeTag}</td>
+      <td class="opt-td opt-td-string">${c.label}</td>
+      <td class="opt-td opt-td-gauge">${c.gauge || '—'}</td>
+      <td class="opt-td opt-td-tension">${tensionLabel}</td>
+      <td class="opt-td opt-td-num opt-td-obs">${c.score.toFixed(1)}</td>
+      <td class="opt-td opt-td-num ${deltaCls}">${deltaStr}</td>
+      <td class="opt-td opt-td-num">${c.stats.spin?.toFixed(0) || '—'}</td>
+      <td class="opt-td opt-td-num">${c.stats.power?.toFixed(0) || '—'}</td>
+      <td class="opt-td opt-td-num">${c.stats.control?.toFixed(0) || '—'}</td>
+      <td class="opt-td opt-td-num">${c.stats.comfort?.toFixed(0) || '—'}</td>
+      <td class="opt-td opt-td-num">${c.stats.feel?.toFixed(0) || '—'}</td>
+      <td class="opt-td opt-td-num">${c.stats.durability?.toFixed(0) || '—'}</td>
+      <td class="opt-td opt-td-num">${c.stats.playability?.toFixed(0) || '—'}</td>
+      <td class="opt-td opt-td-actions">
+        <button class="opt-act-btn" title="View in Overview" onclick="optActionView(${idx})">&#128065;</button>
+        <button class="opt-act-btn" title="Open in Tune" onclick="optActionTune(${idx})">&#9881;</button>
+        <button class="opt-act-btn" title="Add to Compare" onclick="optActionCompare(${idx})">&#9878;</button>
+        <button class="opt-act-btn" title="Save as Preset" onclick="optActionSave(${idx})">&#128190;</button>
+      </td>
+    </tr>`;
+  });
+
+  html += '</tbody></table></div>';
+  resultsEl.innerHTML = html;
+}
+
+// --- Row action handlers ---
+
+function _optBuildPresetData(candidate) {
+  const c = candidate;
+  if (c.type === 'hybrid') {
+    return {
+      id: 'opt-' + Date.now(),
+      name: c.label + ' on ' + c.racquet.name,
+      racquetId: c.racquet.id,
+      isHybrid: true,
+      mainsId: c.mainsData.id,
+      crossesId: c.crossesData.id,
+      mainsTension: c.tension,
+      crossesTension: c.crossesTension,
+      stringId: null
+    };
+  } else {
+    return {
+      id: 'opt-' + Date.now(),
+      name: c.label + ' on ' + c.racquet.name,
+      racquetId: c.racquet.id,
+      isHybrid: false,
+      mainsId: null,
+      crossesId: null,
+      mainsTension: c.tension,
+      crossesTension: c.tension,
+      stringId: c.stringData.id
+    };
+  }
+}
+
+function optActionView(idx) {
+  const c = _optLastCandidates[idx];
+  if (!c) return;
+  const preset = _optBuildPresetData(c);
+  loadPresetFromData(preset);
+  switchMode('overview');
+}
+
+function optActionTune(idx) {
+  const c = _optLastCandidates[idx];
+  if (!c) return;
+  const preset = _optBuildPresetData(c);
+  loadPresetFromData(preset);
+  switchMode('tune');
+}
+
+function optActionCompare(idx) {
+  const c = _optLastCandidates[idx];
+  if (!c) return;
+  const preset = _optBuildPresetData(c);
+
+  // Build a comparison slot from this candidate
+  if (comparisonSlots.length >= 3) {
+    comparisonSlots.pop(); // remove last to make room
+  }
+  const slotData = {
+    id: Date.now(),
+    racquetId: preset.racquetId,
+    stringId: preset.stringId || '',
+    isHybrid: preset.isHybrid,
+    mainsId: preset.mainsId || '',
+    crossesId: preset.crossesId || '',
+    mainsTension: preset.mainsTension,
+    crossesTension: preset.crossesTension,
+    stats: null,
+    identity: null
+  };
+  comparisonSlots.push(slotData);
+  recalcSlot(comparisonSlots.length - 1);
+  switchMode('compare');
+  renderComparisonSlots();
+  renderCompareSummaries();
+  renderCompareVerdict();
+  renderCompareMatrix();
+  updateComparisonRadar();
+}
+
+function optActionSave(idx) {
+  const c = _optLastCandidates[idx];
+  if (!c) return;
+  const preset = _optBuildPresetData(c);
+  userPresets.push(preset);
+  savePresetsToStorage();
+  renderHomePresets();
+  renderComparisonPresets();
+
+  // Flash the save button in the row
+  const btn = document.querySelector(`tr[data-opt-idx="${idx}"] .opt-act-btn:last-child`);
+  if (btn) {
+    btn.textContent = '✓';
+    btn.classList.add('opt-act-saved');
+    setTimeout(() => {
+      btn.innerHTML = '&#128190;';
+      btn.classList.remove('opt-act-saved');
+    }, 1200);
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {

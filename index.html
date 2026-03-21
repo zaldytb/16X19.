@@ -77,6 +77,10 @@
               <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="1" y="2.5" width="5" height="10" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="2.5" width="5" height="10" rx="1" stroke="currentColor" stroke-width="1.3"/><line x1="7.5" y1="5" x2="7.5" y2="10" stroke="currentColor" stroke-width="1.3" stroke-dasharray="1.5 1.5"/></svg>
               <span>Compare</span>
             </button>
+            <button class="mode-btn" data-mode="optimize" id="btn-mode-optimize">
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2 11.5l3.5-3.5 2 2L11 5.5M11 5.5H8M11 5.5v3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Optimize</span>
+            </button>
             <button class="mode-btn" data-mode="howitworks" id="btn-mode-howitworks">
               <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M5.8 5.8a1.7 1.7 0 0 1 3.3.5c0 1.1-1.6 1.5-1.6 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7.5" cy="10.8" r="0.6" fill="currentColor"/></svg>
               <span>How It Works</span>
@@ -427,6 +431,102 @@
             <div class="comparison-slots" id="comparison-slots"></div>
           </div>
 
+        </div>
+      </section>
+
+      <!-- ═══════════════ OPTIMIZE ═══════════════ -->
+      <section class="workspace-mode hidden" id="mode-optimize" data-mode="optimize">
+        <div class="opt-layout">
+          <!-- Filter panel (left) -->
+          <aside class="opt-filters" id="opt-filters">
+            <div class="opt-filter-header">
+              <h3 class="opt-filter-title">OPTIMIZER</h3>
+              <button class="opt-run-btn" id="opt-run-btn">Search</button>
+            </div>
+
+            <!-- Frame selection -->
+            <div class="opt-filter-section">
+              <label class="opt-label">Frame</label>
+              <select id="opt-frame-select" class="opt-select">
+                <option value="current">Current Frame</option>
+              </select>
+            </div>
+
+            <!-- Setup type -->
+            <div class="opt-filter-section">
+              <label class="opt-label">Setup Type</label>
+              <div class="opt-toggle-group">
+                <button class="opt-toggle active" data-value="both" id="opt-type-both">Both</button>
+                <button class="opt-toggle" data-value="full" id="opt-type-full">Full Bed</button>
+                <button class="opt-toggle" data-value="hybrid" id="opt-type-hybrid">Hybrid</button>
+              </div>
+            </div>
+
+            <!-- Sort by -->
+            <div class="opt-filter-section">
+              <label class="opt-label">Sort By</label>
+              <select id="opt-sort" class="opt-select">
+                <option value="obs" selected>OBS (Overall)</option>
+                <option value="spin">Spin</option>
+                <option value="control">Control</option>
+                <option value="power">Power</option>
+                <option value="comfort">Comfort</option>
+                <option value="feel">Feel</option>
+                <option value="durability">Durability</option>
+                <option value="playability">Playability</option>
+                <option value="maneuverability">Maneuverability</option>
+                <option value="stability">Stability</option>
+              </select>
+            </div>
+
+            <!-- Stat minimums -->
+            <div class="opt-filter-section">
+              <label class="opt-label">Stat Minimums</label>
+              <div class="opt-min-grid">
+                <div class="opt-min-row"><span>Spin</span><input type="number" id="opt-min-spin" class="opt-min-input" min="0" max="100" value="0" placeholder="0"></div>
+                <div class="opt-min-row"><span>Control</span><input type="number" id="opt-min-control" class="opt-min-input" min="0" max="100" value="0" placeholder="0"></div>
+                <div class="opt-min-row"><span>Power</span><input type="number" id="opt-min-power" class="opt-min-input" min="0" max="100" value="0" placeholder="0"></div>
+                <div class="opt-min-row"><span>Comfort</span><input type="number" id="opt-min-comfort" class="opt-min-input" min="0" max="100" value="0" placeholder="0"></div>
+                <div class="opt-min-row"><span>Feel</span><input type="number" id="opt-min-feel" class="opt-min-input" min="0" max="100" value="0" placeholder="0"></div>
+                <div class="opt-min-row"><span>Durability</span><input type="number" id="opt-min-durability" class="opt-min-input" min="0" max="100" value="0" placeholder="0"></div>
+                <div class="opt-min-row"><span>Playability</span><input type="number" id="opt-min-playability" class="opt-min-input" min="0" max="100" value="0" placeholder="0"></div>
+              </div>
+            </div>
+
+            <!-- Tension range -->
+            <div class="opt-filter-section">
+              <label class="opt-label">Tension Range</label>
+              <div class="opt-tension-range">
+                <input type="number" id="opt-tension-min" class="opt-min-input" min="30" max="75" value="40" placeholder="Min">
+                <span class="opt-range-sep">&ndash;</span>
+                <input type="number" id="opt-tension-max" class="opt-min-input" min="30" max="75" value="65" placeholder="Max">
+              </div>
+            </div>
+
+            <!-- Upgrade mode -->
+            <div class="opt-filter-section">
+              <label class="opt-label">Upgrade Mode</label>
+              <label class="opt-checkbox-label">
+                <input type="checkbox" id="opt-upgrade-mode"> Compare vs current build
+              </label>
+              <div class="opt-upgrade-fields hidden" id="opt-upgrade-fields">
+                <div class="opt-min-row"><span>OBS &ge; current +</span><input type="number" id="opt-upgrade-obs" class="opt-min-input" value="0" placeholder="0"></div>
+                <div class="opt-min-row"><span>Max control loss</span><input type="number" id="opt-upgrade-ctl-loss" class="opt-min-input" value="5" placeholder="5"></div>
+                <div class="opt-min-row"><span>Max durability loss</span><input type="number" id="opt-upgrade-dur-loss" class="opt-min-input" value="10" placeholder="10"></div>
+              </div>
+            </div>
+
+            <!-- Results count -->
+            <div class="opt-results-count" id="opt-results-count">0 results</div>
+          </aside>
+
+          <!-- Results table (main) -->
+          <div class="opt-results" id="opt-results">
+            <div class="opt-empty">
+              <p class="opt-empty-title">Configure filters and hit Search</p>
+              <p class="opt-empty-sub">The optimizer will generate and rank builds using the full prediction engine.</p>
+            </div>
+          </div>
         </div>
       </section>
 

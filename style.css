@@ -1196,14 +1196,14 @@ body {
 
 .stat-row {
   display: grid;
-  grid-template-columns: 110px 1fr 40px;
+  grid-template-columns: 130px 1fr 40px;
   align-items: center;
   gap: var(--space-4);
 }
 
 @media (max-width: 600px) {
   .stat-row {
-    grid-template-columns: 90px 1fr 36px;
+    grid-template-columns: 110px 1fr 36px;
     gap: var(--space-2);
   }
 }
@@ -1273,6 +1273,9 @@ body {
 .stat-forgiveness .stat-bar-fill { background: var(--text-primary); }
 .stat-forgiveness .stat-value { color: var(--text-primary); }
 
+.stat-maneuverability .stat-bar-fill { background: var(--text-primary); }
+.stat-maneuverability .stat-value { color: var(--text-primary); }
+
 .stat-durability .stat-bar-fill { background: var(--text-primary); }
 .stat-durability .stat-value { color: var(--text-primary); }
 
@@ -1288,6 +1291,7 @@ body {
 .stat-comfort .stat-label,
 .stat-stability .stat-label,
 .stat-forgiveness .stat-label,
+.stat-maneuverability .stat-label,
 .stat-durability .stat-label,
 .stat-playability .stat-label {
   color: var(--text-muted);

@@ -4102,6 +4102,25 @@ function calcFrameBase(racquet) {
   feel += densityNorm * 4 - 2;
   feel += meta.comfortTech > 1.5 ? -1 : meta.comfortTech * 0.5;
 
+  // ===== MANEUVERABILITY =====
+  // Inverse of swingweight: lower SW = more maneuverable, easier to accelerate
+  // More head-light balance = whippier feel, faster racquet-head speed generation
+  // Lower weight helps maneuverability but less than SW/balance
+  // This creates a natural tradeoff axis: maneuverability ↔ stability/plow
+  let maneuverability = 50;
+  maneuverability += (1 - swNorm) * 22 - 6;     // SW: biggest factor — low SW = high score
+  maneuverability += hlNorm * 10 - 3;            // HL balance: whippier = more maneuverable
+  maneuverability += (1 - wtNorm) * 8 - 2;       // Lower static weight helps
+  maneuverability += (1 - hsNorm) * 4 - 1;       // Smaller heads slightly more maneuverable
+  // Interaction: very HL + low SW amplifies maneuverability
+  if (hlNorm > 0.5 && swNorm < 0.4) {
+    maneuverability += (hlNorm - 0.5) * (0.4 - swNorm) * 12;
+  }
+  // Very high SW crushes maneuverability regardless of other factors
+  if (swNorm > 0.75) {
+    maneuverability -= (swNorm - 0.75) * 16;
+  }
+
   // ===== TRADEOFF ENFORCEMENT =====
   if (power + control > 145) {
     const excess = (power + control - 145) * 0.4;
@@ -4112,6 +4131,12 @@ function calcFrameBase(racquet) {
     const excess = (power + comfort - 140) * 0.3;
     if (raNorm > 0.5) comfort -= excess;
     else power -= excess;
+  }
+  // Maneuverability ↔ Stability: naturally opposed, soft enforce ceiling
+  if (maneuverability + stability > 140) {
+    const excess = (maneuverability + stability - 140) * 0.3;
+    if (maneuverability > stability) maneuverability -= excess;
+    else stability -= excess;
   }
 
   // ===== SCORE COMPRESSION =====
@@ -4131,6 +4156,7 @@ function calcFrameBase(racquet) {
     stability: clamp(compress(stability)),
     forgiveness: clamp(compress(forgiveness, 0.92)),  // wider spread for narrower natural range
     feel: clamp(compress(feel)),
+    maneuverability: clamp(compress(maneuverability)),
     durability: 50,
     playability: 50,
     _frameDebug: {
@@ -4478,6 +4504,7 @@ function predictSetup(racquet, stringConfig) {
     comfort: clamp(frameBase.comfort * FW + stringProfile.comfort * SW + stringMod.comfortMod + tensionMod.comfortMod),
     stability:   clamp(frameBase.stability),
     forgiveness: clamp(frameBase.forgiveness),
+    maneuverability: clamp(frameBase.maneuverability),
     // String-only stats: from string profile, with tension + differential influence
     durability:  clamp(stringProfile.durability + (tensionMod.durabilityMod || 0)),
     playability: clamp(stringProfile.playability + tensionMod.playabilityMod)
@@ -4509,6 +4536,8 @@ function generateIdentity(stats, racquet, stringConfig) {
     { name: 'Touch Artist', score: (stats.feel - 70) * 2.5 + (stats.comfort - 60), req: stats.feel >= 75 && stats.control >= 70 && stats.power < 65 },
     { name: 'Wall of Stability', score: (stats.stability - 65) * 3 + (stats.control - 60), req: stats.stability >= 70 && stats.control >= 70 },
     { name: 'Forgiving Weapon', score: (stats.forgiveness - 60) * 2 + (stats.power - 55) * 1.5, req: stats.forgiveness >= 68 && stats.power >= 60 },
+    { name: 'Whip Master', score: (stats.maneuverability - 65) * 2.5 + (stats.spin - 60) * 1.5, req: stats.maneuverability >= 72 && stats.spin >= 68 },
+    { name: 'Speed Demon', score: (stats.maneuverability - 70) * 3 + (stats.power - 55) * 1, req: stats.maneuverability >= 75 && stats.power >= 55 && stats.stability < 60 },
     { name: 'Endurance Build', score: (stats.playability - 80) * 3 + (stats.durability - 75) * 2, req: stats.playability >= 88 && stats.durability >= 80 },
     { name: 'Marathon Setup', score: (stats.durability - 80) * 2.5 + (stats.playability - 75) * 2, req: stats.durability >= 85 && stats.playability >= 82 },
   ];
@@ -4531,6 +4560,8 @@ function generateIdentity(stats, racquet, stringConfig) {
     'Touch Artist': `Maximum feel and connection to the ball. Ideal for net players and all-courters who rely on touch, placement, and variety over raw power.`,
     'Wall of Stability': `Immovable on contact. High stability means the frame doesn't twist on off-center hits, giving you confidence even when you're not hitting the sweet spot.`,
     'Forgiving Weapon': `Large effective sweet spot with decent power. Mis-hits still go in, and centered hits carry real authority. Good for developing power hitters.`,
+    'Whip Master': `Exceptional racquet-head speed potential meets high spin capability. The light, maneuverable frame lets you generate steep swing paths and aggressive topspin without fighting the racquet. Rewards athletic, wristy players who shape the ball with racquet acceleration rather than mass.`,
+    'Speed Demon': `Lightning-fast swing speed from an ultra-maneuverable platform. The frame practically disappears in the hand, letting you rip through contact zones with minimal effort. Trade-off: less stability on off-center hits, but the speed makes up for it with aggressive shot-making.`,
     'Endurance Build': `Exceptional playability duration. This setup maintains its performance characteristics far longer than average, meaning fewer restrings and more consistent play.`,
     'Marathon Setup': `Built to last. Both durability and playability are elite — the string bed stays lively for weeks and resists breakage. Ideal for frequent players.`,
     'Balanced Setup': `Well-rounded profile with no glaring weaknesses. A versatile setup that adapts to different game styles and court conditions.`
@@ -4556,6 +4587,7 @@ function generateFitProfile(stats, racquet, stringConfig) {
   if (stats.comfort >= 70) bestFor.push('Players with arm sensitivity');
   if (stats.stability >= 70) bestFor.push('Aggressive returners and blockers');
   if (stats.feel >= 75) bestFor.push('Net players and volleyers');
+  if (stats.maneuverability >= 70) bestFor.push('Quick-swing players and net rushers');
   if (stats.forgiveness >= 65) bestFor.push('Developing players building consistency');
   if (stats.playability >= 80) bestFor.push('Frequent players (3+ times/week)');
 
@@ -4566,6 +4598,7 @@ function generateFitProfile(stats, racquet, stringConfig) {
   if (stats.control <= 50) watchOut.push('Players who need help keeping the ball in');
   if (stats.spin <= 50) watchOut.push('Heavy topspin players — limited spin access');
   if (stats.forgiveness <= 45) watchOut.push('Beginners — small effective sweet spot');
+  if (stats.maneuverability <= 45) watchOut.push('Compact swingers — frame may feel sluggish');
   if (stats.durability <= 55) watchOut.push('String breakers — low durability');
   if (stats.playability <= 55) watchOut.push('Infrequent restringers — goes dead fast');
 
@@ -4999,10 +5032,10 @@ function renderComparisonPresets() {
   });
 }
 
-const STAT_KEYS = ['spin', 'power', 'control', 'launch', 'feel', 'comfort', 'stability', 'forgiveness', 'durability', 'playability'];
-const STAT_LABELS = ['Spin', 'Power', 'Control', 'Launch', 'Feel', 'Comfort', 'Stability', 'Forgiveness', 'Durability', 'Playability'];
-const STAT_LABELS_FULL = ['Spin', 'Power', 'Control', 'Launch', 'Feel', 'Comfort', 'Stability', 'Forgiveness', 'Durability', 'Playability Duration'];
-const STAT_CSS_CLASSES = ['spin', 'power', 'control', 'launch', 'feel', 'comfort', 'stability', 'forgiveness', 'durability', 'playability'];
+const STAT_KEYS = ['spin', 'power', 'control', 'launch', 'feel', 'comfort', 'stability', 'forgiveness', 'maneuverability', 'durability', 'playability'];
+const STAT_LABELS = ['Spin', 'Power', 'Control', 'Launch', 'Feel', 'Comfort', 'Stability', 'Forgiveness', 'Maneuverability', 'Durability', 'Playability'];
+const STAT_LABELS_FULL = ['Spin', 'Power', 'Control', 'Launch', 'Feel', 'Comfort', 'Stability', 'Forgiveness', 'Maneuverability', 'Durability', 'Playability Duration'];
+const STAT_CSS_CLASSES = ['spin', 'power', 'control', 'launch', 'feel', 'comfort', 'stability', 'forgiveness', 'maneuverability', 'durability', 'playability'];
 
 function getSlotColors() {
   const isDark = document.documentElement.dataset.theme === 'dark';
@@ -5612,26 +5645,29 @@ function computeNoveltyBonus(stats) {
 }
 
 function computeCompositeScore(stats, tensionContext) {
-  // Full 10-stat weighted composite — every modeled stat contributes.
-  // Core performance: control, spin, power, comfort — 58%
-  // Feel & playability: feel, playability — 18%
-  // Frame qualities: stability, forgiveness — 16%
-  // Trajectory & longevity: launch, durability — 8%
-  const raw = stats.control * 0.18
-            + stats.spin * 0.14
-            + stats.comfort * 0.14
-            + stats.power * 0.12
-            + stats.feel * 0.12
-            + stats.stability * 0.08
-            + stats.forgiveness * 0.08
+  // Full 11-stat weighted composite — every modeled stat contributes.
+  // Core performance: control, spin, power, comfort — 52%
+  // Feel & playability: feel, playability — 16%
+  // Frame dynamics: stability, forgiveness, maneuverability — 22%
+  // Trajectory & longevity: launch, durability — 8% (unchanged)
+  // Maneuverability shares weight previously held by stability/forgiveness
+  // — reflects how swing dynamics shape the entire stringbed interaction
+  const raw = stats.control * 0.16
+            + stats.spin * 0.13
+            + stats.comfort * 0.13
+            + stats.power * 0.11
+            + stats.feel * 0.10
+            + stats.maneuverability * 0.09
+            + stats.stability * 0.07
+            + stats.forgiveness * 0.07
             + stats.playability * 0.06
             + stats.launch * 0.04
             + stats.durability * 0.04;
-  // Rescale: the raw weighted average clusters in a narrow band (~59–68)
+  // Rescale: the raw weighted average clusters in a narrow band (~60–65)
   // because individual stats are already compressed to ~45–85.
   // Map to a wider 0–100 display scale so the OBS rank ladder is meaningful.
-  // Anchor: 58 → 30 (poor), 63 → 60 (mid), 67 → 85 (elite)
-  let scaled = 30 + (raw - 58) * (55 / 9); // ~6.11 display pts per raw pt
+  // 11-stat anchor: 60 → 30 (poor), 62 → 52 (mid), 64 → 74 (elite)
+  let scaled = 25 + (raw - 59.5) * 11; // ~11 display pts per raw pt
 
   // --- Novelty bonus for rare high-performing combos ---
   scaled += computeNoveltyBonus(stats);
@@ -6669,6 +6705,7 @@ function renderCompareMatrix() {
   const groups = [
     { title: 'PERFORMANCE', keys: ['spin', 'power', 'control', 'launch'] },
     { title: 'FEEL & COMFORT', keys: ['comfort', 'feel', 'stability', 'forgiveness'] },
+    { title: 'FRAME DYNAMICS', keys: ['maneuverability'] },
     { title: 'LONGEVITY', keys: ['durability', 'playability'] }
   ];
 

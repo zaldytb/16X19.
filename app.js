@@ -8995,7 +8995,9 @@ function _runOptimizerCore(resultsEl, countEl) {
     comfort: parseInt(document.getElementById('opt-min-comfort').value) || 0,
     feel: parseInt(document.getElementById('opt-min-feel').value) || 0,
     durability: parseInt(document.getElementById('opt-min-durability').value) || 0,
-    playability: parseInt(document.getElementById('opt-min-playability').value) || 0
+    playability: parseInt(document.getElementById('opt-min-playability').value) || 0,
+    stability: parseInt(document.getElementById('opt-min-stability').value) || 0,
+    maneuverability: parseInt(document.getElementById('opt-min-maneuverability').value) || 0
   };
 
   // Upgrade constraints
@@ -9136,7 +9138,9 @@ function _runOptimizerCore(resultsEl, countEl) {
            c.stats.comfort >= mins.comfort &&
            c.stats.feel >= mins.feel &&
            c.stats.durability >= mins.durability &&
-           c.stats.playability >= mins.playability;
+           c.stats.playability >= mins.playability &&
+           c.stats.stability >= mins.stability &&
+           c.stats.maneuverability >= mins.maneuverability;
   });
 
   // --- Upgrade mode filtering ---
@@ -9332,6 +9336,360 @@ function optActionSave(idx) {
       btn.classList.remove('opt-act-saved');
     }, 1200);
   }
+}
+
+// ============================================
+// FIND MY BUILD — Guided Playstyle Wizard
+// ============================================
+
+let _fmbStep = 1;
+const _fmbAnswers = { swing: null, ball: null, court: null, painPoints: [], priorities: [] };
+
+function openFindMyBuild() {
+  _fmbStep = 1;
+  _fmbAnswers.swing = null;
+  _fmbAnswers.ball = null;
+  _fmbAnswers.court = null;
+  _fmbAnswers.painPoints = [];
+  _fmbAnswers.priorities = [];
+
+  // Reset all option selections
+  document.querySelectorAll('.fmb-option').forEach(b => {
+    b.classList.remove('selected');
+    const badge = b.querySelector('.fmb-priority-badge');
+    if (badge) badge.remove();
+  });
+
+  const wizard = document.getElementById('find-my-build');
+  wizard.classList.remove('hidden');
+
+  // Hide empty state content but keep wizard visible
+  document.getElementById('empty-state').style.display = 'none';
+
+  _fmbShowStep(1);
+}
+
+function closeFindMyBuild() {
+  document.getElementById('find-my-build').classList.add('hidden');
+  document.getElementById('empty-state').style.display = '';
+}
+
+function _fmbShowStep(step) {
+  _fmbStep = step;
+  const totalSteps = 5;
+
+  // Update progress bar
+  const pct = step === 'result' ? 100 : (step / totalSteps) * 100;
+  document.getElementById('fmb-progress-fill').style.width = pct + '%';
+
+  // Show/hide steps
+  document.querySelectorAll('.fmb-step').forEach(el => {
+    const s = el.dataset.step;
+    el.classList.toggle('hidden', s !== String(step));
+  });
+
+  // Update nav buttons
+  const backBtn = document.getElementById('fmb-back');
+  const nextBtn = document.getElementById('fmb-next');
+
+  if (step === 'result') {
+    backBtn.style.display = '';
+    nextBtn.style.display = 'none';
+  } else {
+    backBtn.style.display = step === 1 ? 'none' : '';
+    nextBtn.style.display = '';
+    nextBtn.textContent = step === 5 ? 'See Results' : 'Next';
+    _fmbUpdateNextState();
+  }
+}
+
+function _fmbUpdateNextState() {
+  const nextBtn = document.getElementById('fmb-next');
+  let canProceed = false;
+
+  if (_fmbStep === 1) canProceed = _fmbAnswers.swing !== null;
+  else if (_fmbStep === 2) canProceed = _fmbAnswers.ball !== null;
+  else if (_fmbStep === 3) canProceed = _fmbAnswers.court !== null;
+  else if (_fmbStep === 4) canProceed = _fmbAnswers.painPoints.length > 0;
+  else if (_fmbStep === 5) canProceed = _fmbAnswers.priorities.length === 3;
+
+  nextBtn.disabled = !canProceed;
+}
+
+function fmbBack() {
+  if (_fmbStep === 'result') {
+    _fmbShowStep(5);
+  } else if (_fmbStep > 1) {
+    _fmbShowStep(_fmbStep - 1);
+  }
+}
+
+function fmbNext() {
+  if (_fmbStep < 5) {
+    _fmbShowStep(_fmbStep + 1);
+  } else if (_fmbStep === 5) {
+    // Generate profile and show results
+    const profile = _fmbGenerateProfile(_fmbAnswers);
+    _fmbShowResults(profile);
+    _fmbShowStep('result');
+  }
+}
+
+// Wire option click handlers (delegated)
+document.addEventListener('click', (e) => {
+  const option = e.target.closest('.fmb-option');
+  if (!option) return;
+
+  const container = option.closest('.fmb-options');
+  if (!container) return;
+
+  const key = container.dataset.key;
+  const value = option.dataset.value;
+  const isMulti = container.classList.contains('fmb-options-multi');
+  const maxSel = parseInt(container.dataset.max) || 99;
+  const isPriority = container.classList.contains('fmb-options-priority');
+
+  if (isMulti) {
+    if (isPriority) {
+      // Priority: ordered selection with numbered badges
+      const arr = _fmbAnswers[key];
+      const idx = arr.indexOf(value);
+      if (idx >= 0) {
+        // Deselect: remove and renumber
+        arr.splice(idx, 1);
+        option.classList.remove('selected');
+        const badge = option.querySelector('.fmb-priority-badge');
+        if (badge) badge.remove();
+        // Renumber remaining
+        container.querySelectorAll('.fmb-option.selected').forEach(btn => {
+          const bv = btn.dataset.value;
+          const bi = arr.indexOf(bv);
+          const bg = btn.querySelector('.fmb-priority-badge');
+          if (bg) bg.textContent = bi + 1;
+        });
+      } else if (arr.length < maxSel) {
+        arr.push(value);
+        option.classList.add('selected');
+        const badge = document.createElement('span');
+        badge.className = 'fmb-priority-badge';
+        badge.textContent = arr.length;
+        option.appendChild(badge);
+      }
+      _fmbAnswers[key] = arr;
+    } else {
+      // Standard multi-select (pain points)
+      const arr = _fmbAnswers[key];
+      const idx = arr.indexOf(value);
+      if (idx >= 0) {
+        arr.splice(idx, 1);
+        option.classList.remove('selected');
+      } else if (arr.length < maxSel) {
+        arr.push(value);
+        option.classList.add('selected');
+      }
+      _fmbAnswers[key] = arr;
+    }
+  } else {
+    // Single select
+    container.querySelectorAll('.fmb-option').forEach(b => b.classList.remove('selected'));
+    option.classList.add('selected');
+    _fmbAnswers[key] = value;
+  }
+
+  _fmbUpdateNextState();
+});
+
+function _fmbGenerateProfile(answers) {
+  const profile = {
+    statPriorities: {},
+    minThresholds: {},
+    setupPreference: 'both',
+    sortBy: 'obs',
+    notes: []
+  };
+
+  // Q1: Swing style
+  if (answers.swing === 'compact') {
+    profile.minThresholds.maneuverability = 60;
+    profile.notes.push('Compact swing \u2192 prioritizing maneuverable setups');
+  } else if (answers.swing === 'heavy') {
+    profile.minThresholds.stability = 58;
+    profile.notes.push('Heavy swing \u2192 prioritizing stable, high-plow setups');
+  }
+
+  // Q2: Ball shape
+  if (answers.ball === 'flat') {
+    profile.statPriorities.control = 3;
+    profile.statPriorities.power = 2;
+    profile.minThresholds.control = 62;
+  } else if (answers.ball === 'heavy') {
+    profile.statPriorities.spin = 3;
+    profile.minThresholds.spin = 65;
+  } else {
+    profile.statPriorities.spin = 2;
+  }
+
+  // Q3: Court identity
+  if (answers.court === 'baseliner') {
+    profile.statPriorities.durability = (profile.statPriorities.durability || 0) + 1;
+    profile.statPriorities.playability = (profile.statPriorities.playability || 0) + 1;
+  } else if (answers.court === 'touch') {
+    profile.statPriorities.feel = 3;
+    profile.minThresholds.feel = 62;
+  } else if (answers.court === 'firststrike') {
+    profile.statPriorities.power = (profile.statPriorities.power || 0) + 1;
+    profile.statPriorities.control = (profile.statPriorities.control || 0) + 1;
+  }
+
+  // Q4: Pain points
+  answers.painPoints.forEach(p => {
+    if (p === 'arm') { profile.minThresholds.comfort = 60; profile.notes.push('Arm sensitivity \u2192 comfort floor 60'); }
+    if (p === 'breaks') { profile.minThresholds.durability = 65; profile.notes.push('String breaker \u2192 durability floor 65'); }
+    if (p === 'long') { profile.minThresholds.control = 62; profile.notes.push('Ball goes long \u2192 control floor 62'); }
+    if (p === 'pace') { profile.statPriorities.power = 3; }
+    if (p === 'spin') { profile.statPriorities.spin = 3; }
+    if (p === 'dead') { profile.minThresholds.feel = 60; profile.minThresholds.playability = 65; }
+  });
+
+  // Q5: Priorities
+  answers.priorities.forEach((stat, i) => {
+    profile.statPriorities[stat] = Math.max(profile.statPriorities[stat] || 0, 3 - i);
+  });
+
+  // Determine sort key
+  const topStat = Object.entries(profile.statPriorities).sort((a, b) => b[1] - a[1])[0];
+  if (topStat && topStat[0] !== 'obs') profile.sortBy = topStat[0];
+
+  return profile;
+}
+
+function _fmbShowResults(profile) {
+  const summaryEl = document.getElementById('fmb-summary');
+  const directionsEl = document.getElementById('fmb-directions');
+
+  // Build playstyle summary sentence
+  const swingLabels = { compact: 'compact-swing', smooth: 'balanced-swing', heavy: 'heavy-swing' };
+  const ballLabels = { flat: 'flat-hitting', moderate: 'moderate-spin', heavy: 'heavy-topspin' };
+  const courtLabels = { baseliner: 'baseliner', allcourt: 'all-court', firststrike: 'first-strike', touch: 'touch player' };
+
+  const identity = `${courtLabels[_fmbAnswers.court] || 'all-court'} with a ${swingLabels[_fmbAnswers.swing] || 'balanced'}, ${ballLabels[_fmbAnswers.ball] || 'moderate-spin'} game`;
+
+  // Top priorities display
+  const prioLabels = _fmbAnswers.priorities.map(p => p.charAt(0).toUpperCase() + p.slice(1));
+
+  // Thresholds display
+  const threshLines = Object.entries(profile.minThresholds)
+    .map(([k, v]) => `<span class="fmb-thresh-tag">${k.charAt(0).toUpperCase() + k.slice(1)} \u2265 ${v}</span>`)
+    .join('');
+
+  summaryEl.innerHTML = `
+    <div class="fmb-profile-card">
+      <div class="fmb-profile-label">YOUR PROFILE</div>
+      <h3 class="fmb-profile-identity">${identity.charAt(0).toUpperCase() + identity.slice(1)}</h3>
+      <div class="fmb-profile-priorities">
+        <span class="fmb-prio-label">Optimizing for:</span>
+        ${prioLabels.map((p, i) => `<span class="fmb-prio-tag">${i + 1}. ${p}</span>`).join('')}
+      </div>
+      ${threshLines ? `<div class="fmb-profile-thresholds">${threshLines}</div>` : ''}
+      ${profile.notes.length ? `<div class="fmb-profile-notes">${profile.notes.map(n => `<div class="fmb-note">${n}</div>`).join('')}</div>` : ''}
+    </div>
+  `;
+
+  // Build 3 direction cards
+  directionsEl.innerHTML = `
+    <div class="fmb-dir-grid">
+      <div class="fmb-dir-card fmb-dir-closest">
+        <div class="fmb-dir-badge">CLOSEST MATCH</div>
+        <h4 class="fmb-dir-title">Best Overall Fit</h4>
+        <p class="fmb-dir-desc">Highest-scoring builds that meet all your thresholds. Balanced and reliable.</p>
+        <button class="fmb-dir-btn" onclick="_fmbSearchDirection('closest')">Search</button>
+      </div>
+      <div class="fmb-dir-card fmb-dir-safer">
+        <div class="fmb-dir-badge">SAFER OPTION</div>
+        <h4 class="fmb-dir-title">Comfort &amp; Durability</h4>
+        <p class="fmb-dir-desc">Relaxed thresholds with boosted comfort and durability floors. For reliability.</p>
+        <button class="fmb-dir-btn" onclick="_fmbSearchDirection('safer')">Search</button>
+      </div>
+      <div class="fmb-dir-card fmb-dir-ceiling">
+        <div class="fmb-dir-badge">HIGHER CEILING</div>
+        <h4 class="fmb-dir-title">Peak Performance</h4>
+        <p class="fmb-dir-desc">Removes comfort/durability floors, sorts by your #1 priority. Maximum upside.</p>
+        <button class="fmb-dir-btn" onclick="_fmbSearchDirection('ceiling')">Search</button>
+      </div>
+    </div>
+  `;
+}
+
+let _fmbLastProfile = null;
+
+function _fmbSearchDirection(direction) {
+  const profile = _fmbGenerateProfile(_fmbAnswers);
+  _fmbLastProfile = profile;
+
+  // Ensure optimize mode is initialized
+  if (!_optimizeInitialized) {
+    initOptimize();
+    _optimizeInitialized = true;
+  }
+
+  // Build filter values based on direction
+  const mins = { spin: 0, control: 0, power: 0, comfort: 0, feel: 0, durability: 0, playability: 0, stability: 0, maneuverability: 0 };
+  let sortBy = profile.sortBy;
+
+  if (direction === 'closest') {
+    // Strict thresholds, sort by OBS
+    Object.entries(profile.minThresholds).forEach(([k, v]) => {
+      if (mins.hasOwnProperty(k)) mins[k] = v;
+    });
+    sortBy = 'obs';
+  } else if (direction === 'safer') {
+    // Relax thresholds by 5, boost comfort/durability
+    Object.entries(profile.minThresholds).forEach(([k, v]) => {
+      if (mins.hasOwnProperty(k)) mins[k] = Math.max(0, v - 5);
+    });
+    mins.comfort = Math.max(mins.comfort, 55);
+    mins.durability = Math.max(mins.durability, 55);
+    sortBy = 'obs';
+  } else if (direction === 'ceiling') {
+    // Remove comfort/durability floors, sort by #1 priority
+    Object.entries(profile.minThresholds).forEach(([k, v]) => {
+      if (k === 'comfort' || k === 'durability') return;
+      if (mins.hasOwnProperty(k)) mins[k] = v;
+    });
+    sortBy = _fmbAnswers.priorities[0] || profile.sortBy;
+  }
+
+  // Set optimizer filter values
+  const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+
+  setVal('opt-min-spin', mins.spin);
+  setVal('opt-min-control', mins.control);
+  setVal('opt-min-power', mins.power);
+  setVal('opt-min-comfort', mins.comfort);
+  setVal('opt-min-feel', mins.feel);
+  setVal('opt-min-durability', mins.durability);
+  setVal('opt-min-playability', mins.playability);
+  setVal('opt-min-stability', mins.stability);
+  setVal('opt-min-maneuverability', mins.maneuverability);
+  setVal('opt-sort', sortBy);
+
+  // Set setup type
+  const typeBtn = document.querySelector(`.opt-toggle[data-value="${profile.setupPreference}"]`);
+  if (typeBtn) {
+    document.querySelectorAll('.opt-toggle').forEach(b => b.classList.remove('active'));
+    typeBtn.classList.add('active');
+  }
+
+  // Close wizard
+  closeFindMyBuild();
+
+  // Switch to optimize mode and trigger search
+  switchMode('optimize');
+
+  // Small delay so DOM is ready, then trigger search
+  requestAnimationFrame(() => {
+    document.getElementById('opt-run-btn').click();
+  });
 }
 
 document.addEventListener('DOMContentLoaded', () => {

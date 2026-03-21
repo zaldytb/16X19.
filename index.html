@@ -201,6 +201,159 @@
           </div>
           <h3>Select a frame and string to begin</h3>
           <p>Or load a preset to see the prediction engine in action</p>
+          <button class="fmb-cta" id="fmb-cta" onclick="openFindMyBuild()">
+            <span class="fmb-cta-icon"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5"/><circle cx="11" cy="11" r="3" stroke="currentColor" stroke-width="1.5"/><circle cx="11" cy="11" r="1" fill="currentColor"/><line x1="11" y1="1" x2="11" y2="4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="11" y1="18" x2="11" y2="21" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="1" y1="11" x2="4" y2="11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="18" y1="11" x2="21" y2="11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></span>
+            <span class="fmb-cta-text">Find My Build</span>
+            <span class="fmb-cta-sub">Answer 5 questions, get personalized build recommendations</span>
+          </button>
+        </div>
+
+        <!-- Find My Build Wizard -->
+        <div id="find-my-build" class="fmb-wizard hidden">
+          <div class="fmb-progress"><div class="fmb-progress-fill" id="fmb-progress-fill" style="width:20%"></div></div>
+
+          <div class="fmb-header">
+            <button class="fmb-close" id="fmb-close" onclick="closeFindMyBuild()" title="Close">&times;</button>
+          </div>
+
+          <!-- Step 1: Swing Style -->
+          <div class="fmb-step" data-step="1" id="fmb-step-1">
+            <h3 class="fmb-question">How would you describe your swing?</h3>
+            <div class="fmb-options" data-key="swing">
+              <button class="fmb-option" data-value="compact">
+                <span class="fmb-option-title">Compact &amp; Quick</span>
+                <span class="fmb-option-desc">Short take-back, fast hands, values maneuverability</span>
+              </button>
+              <button class="fmb-option" data-value="smooth">
+                <span class="fmb-option-title">Full &amp; Smooth</span>
+                <span class="fmb-option-desc">Medium swing, balanced tempo, all-around strokes</span>
+              </button>
+              <button class="fmb-option" data-value="heavy">
+                <span class="fmb-option-title">Long &amp; Heavy</span>
+                <span class="fmb-option-desc">Big take-back, heavy ball, wants stability and plow-through</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 2: Ball Shape -->
+          <div class="fmb-step hidden" data-step="2" id="fmb-step-2">
+            <h3 class="fmb-question">What does your ball look like?</h3>
+            <div class="fmb-options" data-key="ball">
+              <button class="fmb-option" data-value="flat">
+                <span class="fmb-option-title">Flat / Drive</span>
+                <span class="fmb-option-desc">Low spin, emphasizes control and raw power</span>
+              </button>
+              <button class="fmb-option" data-value="moderate">
+                <span class="fmb-option-title">Moderate Topspin</span>
+                <span class="fmb-option-desc">Balanced spin, all-court versatility</span>
+              </button>
+              <button class="fmb-option" data-value="heavy">
+                <span class="fmb-option-title">Heavy Topspin</span>
+                <span class="fmb-option-desc">High spin, shaped shots, big kick serve</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 3: Court Identity -->
+          <div class="fmb-step hidden" data-step="3" id="fmb-step-3">
+            <h3 class="fmb-question">What's your court identity?</h3>
+            <div class="fmb-options" data-key="court">
+              <button class="fmb-option" data-value="baseliner">
+                <span class="fmb-option-title">Baseliner</span>
+                <span class="fmb-option-desc">Stays back, rallies, grinds out consistency</span>
+              </button>
+              <button class="fmb-option" data-value="allcourt">
+                <span class="fmb-option-title">All-Court</span>
+                <span class="fmb-option-desc">Mixes baseline with net play, values variety</span>
+              </button>
+              <button class="fmb-option" data-value="firststrike">
+                <span class="fmb-option-title">First-Strike</span>
+                <span class="fmb-option-desc">Aggressive, takes ball early, ends points fast</span>
+              </button>
+              <button class="fmb-option" data-value="touch">
+                <span class="fmb-option-title">Touch Player</span>
+                <span class="fmb-option-desc">Net play, slice, drop shots &mdash; feel is everything</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 4: Pain Points (multi-select, up to 2) -->
+          <div class="fmb-step hidden" data-step="4" id="fmb-step-4">
+            <h3 class="fmb-question">Main pain points? <span class="fmb-hint">Pick up to 2</span></h3>
+            <div class="fmb-options fmb-options-multi" data-key="painPoints" data-max="2">
+              <button class="fmb-option" data-value="arm">
+                <span class="fmb-option-title">Arm / Elbow Discomfort</span>
+                <span class="fmb-option-desc">Need a comfortable, arm-friendly setup</span>
+              </button>
+              <button class="fmb-option" data-value="breaks">
+                <span class="fmb-option-title">Strings Break Too Fast</span>
+                <span class="fmb-option-desc">Need durability without sacrificing performance</span>
+              </button>
+              <button class="fmb-option" data-value="long">
+                <span class="fmb-option-title">Ball Flies Long</span>
+                <span class="fmb-option-desc">Need more control and a lower launch angle</span>
+              </button>
+              <button class="fmb-option" data-value="pace">
+                <span class="fmb-option-title">Not Enough Pace</span>
+                <span class="fmb-option-desc">Need more free power from the string bed</span>
+              </button>
+              <button class="fmb-option" data-value="spin">
+                <span class="fmb-option-title">Can't Generate Spin</span>
+                <span class="fmb-option-desc">Need more bite and ball rotation</span>
+              </button>
+              <button class="fmb-option" data-value="dead">
+                <span class="fmb-option-title">Racquet Feels Dead</span>
+                <span class="fmb-option-desc">Need better feel and playability</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 5: Priorities (multi-select, top 3) -->
+          <div class="fmb-step hidden" data-step="5" id="fmb-step-5">
+            <h3 class="fmb-question">Top 3 priorities? <span class="fmb-hint">Select in order of importance</span></h3>
+            <div class="fmb-options fmb-options-multi fmb-options-priority" data-key="priorities" data-max="3">
+              <button class="fmb-option" data-value="control">
+                <span class="fmb-option-title">Control</span>
+                <span class="fmb-option-desc">Placement accuracy, directional precision</span>
+              </button>
+              <button class="fmb-option" data-value="spin">
+                <span class="fmb-option-title">Spin</span>
+                <span class="fmb-option-desc">Ball rotation, kick, and shape</span>
+              </button>
+              <button class="fmb-option" data-value="power">
+                <span class="fmb-option-title">Power</span>
+                <span class="fmb-option-desc">Pace and depth from the string bed</span>
+              </button>
+              <button class="fmb-option" data-value="comfort">
+                <span class="fmb-option-title">Comfort</span>
+                <span class="fmb-option-desc">Arm-friendliness, vibration dampening</span>
+              </button>
+              <button class="fmb-option" data-value="feel">
+                <span class="fmb-option-title">Feel</span>
+                <span class="fmb-option-desc">Touch, feedback, connection to the ball</span>
+              </button>
+              <button class="fmb-option" data-value="durability">
+                <span class="fmb-option-title">Durability</span>
+                <span class="fmb-option-desc">String longevity and tension maintenance</span>
+              </button>
+              <button class="fmb-option" data-value="stability">
+                <span class="fmb-option-title">Stability</span>
+                <span class="fmb-option-desc">Frame stability, plow-through, twist resistance</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Result Bridge -->
+          <div class="fmb-step hidden" data-step="result" id="fmb-result">
+            <div class="fmb-summary" id="fmb-summary"></div>
+            <div class="fmb-directions" id="fmb-directions"></div>
+          </div>
+
+          <!-- Navigation -->
+          <div class="fmb-nav">
+            <button class="fmb-back" id="fmb-back" onclick="fmbBack()">Back</button>
+            <button class="fmb-next" id="fmb-next" onclick="fmbNext()">Next</button>
+          </div>
         </div>
 
         <div id="dashboard-content" class="dashboard-content hidden">
@@ -531,6 +684,8 @@
                 <div class="opt-min-row"><span>Feel</span><input type="number" id="opt-min-feel" class="opt-min-input" min="0" max="100" value="0" placeholder="0"></div>
                 <div class="opt-min-row"><span>Durability</span><input type="number" id="opt-min-durability" class="opt-min-input" min="0" max="100" value="0" placeholder="0"></div>
                 <div class="opt-min-row"><span>Playability</span><input type="number" id="opt-min-playability" class="opt-min-input" min="0" max="100" value="0" placeholder="0"></div>
+                <div class="opt-min-row"><span>Stability</span><input type="number" id="opt-min-stability" class="opt-min-input" min="0" max="100" value="0" placeholder="0"></div>
+                <div class="opt-min-row"><span>Maneuverability</span><input type="number" id="opt-min-maneuverability" class="opt-min-input" min="0" max="100" value="0" placeholder="0"></div>
               </div>
             </div>
 

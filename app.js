@@ -4992,6 +4992,47 @@ let _tuneInitialized = false;
 let _optimizeInitialized = false;
 let _compendiumInitialized = false;
 
+// === Unified Active Loadout ===
+let activeLoadout = null;
+
+function setActiveLoadout(loadoutData) {
+  activeLoadout = loadoutData;
+  hydrateDock(loadoutData);
+  renderDockState();
+}
+
+function hydrateDock(loadout) {
+  if (!loadout) return;
+  const racquet = RACQUETS.find(r => r.id === loadout.frameId);
+  if (!racquet) return;
+
+  ssInstances['select-racquet']?.setValue(loadout.frameId);
+  showFrameSpecs(racquet);
+
+  if (loadout.isHybrid) {
+    setHybridMode(true);
+    ssInstances['select-string-mains']?.setValue(loadout.mainsId);
+    populateGaugeDropdown(document.getElementById('gauge-select-mains'), loadout.mainsId);
+    $('#input-tension-mains').value = loadout.mainsTension;
+    ssInstances['select-string-crosses']?.setValue(loadout.crossesId);
+    populateGaugeDropdown(document.getElementById('gauge-select-crosses'), loadout.crossesId);
+    $('#input-tension-crosses').value = loadout.crossesTension;
+  } else {
+    setHybridMode(false);
+    ssInstances['select-string-full']?.setValue(loadout.stringId);
+    populateGaugeDropdown(document.getElementById('gauge-select-full'), loadout.stringId);
+    $('#input-tension-full-mains').value = loadout.mainsTension;
+    $('#input-tension-full-crosses').value = loadout.crossesTension;
+  }
+}
+
+function renderDockState() {
+  const dockEmpty = document.getElementById('dock-empty-state');
+  if (dockEmpty) {
+    dockEmpty.classList.toggle('hidden', activeLoadout !== null);
+  }
+}
+
 function switchMode(mode) {
   if (mode === currentMode) return;
 
@@ -5231,6 +5272,21 @@ function loadPresetFromData(preset) {
   if (!preset) return;
   const racquet = RACQUETS.find(r => r.id === preset.racquetId);
   if (!racquet) return;
+
+  // Update unified active loadout
+  activeLoadout = {
+    frameId: preset.racquetId,
+    stringId: preset.stringId || null,
+    isHybrid: preset.isHybrid || false,
+    mainsId: preset.mainsId || null,
+    crossesId: preset.crossesId || null,
+    mainsTension: preset.mainsTension || 55,
+    crossesTension: preset.crossesTension || 53,
+    stats: null,
+    obs: 0,
+    label: ''
+  };
+  renderDockState();
 
   ssInstances['select-racquet']?.setValue(preset.racquetId);
   showFrameSpecs(racquet);
@@ -8738,14 +8794,17 @@ function init() {
   // Theme
   $('#btn-theme').addEventListener('click', toggleTheme);
 
-  // Set initial mode
-  const overviewBtn = document.querySelector('.mode-btn[data-mode="overview"]');
-  if (overviewBtn) overviewBtn.classList.add('active');
-  // Show overview section, hide others
-  document.getElementById('mode-overview')?.classList.remove('hidden');
+  // Set initial mode — hide overview, show compendium as landing page
+  document.getElementById('mode-overview')?.classList.add('hidden');
   document.getElementById('mode-tune')?.classList.add('hidden');
   document.getElementById('mode-compare')?.classList.add('hidden');
   document.getElementById('mode-howitworks')?.classList.add('hidden');
+
+  // Default to Compendium as landing page
+  switchMode('compendium');
+
+  // Initialize dock empty state
+  renderDockState();
 }
 
 /* ============================================
@@ -9601,26 +9660,19 @@ function _fmbShowResults(profile) {
     </div>
   `;
 
-  // Build 3 direction cards
+  // === Frame-first results: find top 5 matching frames ===
+  const rankedFrames = _fmbRankFrames(profile);
+
   directionsEl.innerHTML = `
-    <div class="fmb-dir-grid">
-      <div class="fmb-dir-card fmb-dir-closest">
-        <div class="fmb-dir-badge">CLOSEST MATCH</div>
-        <h4 class="fmb-dir-title">Best Overall Fit</h4>
-        <p class="fmb-dir-desc">Highest-scoring builds that meet all your thresholds. Balanced and reliable.</p>
-        <button class="fmb-dir-btn" onclick="_fmbSearchDirection('closest')">Search</button>
+    <div class="fmb-frame-results">
+      <h4 class="fmb-frames-title">Recommended Frames</h4>
+      <p class="fmb-frames-sub">Based on your playstyle profile. Each frame shows its best builds.</p>
+      <div class="fmb-frame-list">
+        ${rankedFrames.map((fr, idx) => _fmbRenderFrameCard(fr, idx)).join('')}
       </div>
-      <div class="fmb-dir-card fmb-dir-safer">
-        <div class="fmb-dir-badge">SAFER OPTION</div>
-        <h4 class="fmb-dir-title">Comfort &amp; Durability</h4>
-        <p class="fmb-dir-desc">Relaxed thresholds with boosted comfort and durability floors. For reliability.</p>
-        <button class="fmb-dir-btn" onclick="_fmbSearchDirection('safer')">Search</button>
-      </div>
-      <div class="fmb-dir-card fmb-dir-ceiling">
-        <div class="fmb-dir-badge">HIGHER CEILING</div>
-        <h4 class="fmb-dir-title">Peak Performance</h4>
-        <p class="fmb-dir-desc">Removes comfort/durability floors, sorts by your #1 priority. Maximum upside.</p>
-        <button class="fmb-dir-btn" onclick="_fmbSearchDirection('ceiling')">Search</button>
+      <div class="fmb-also-try">
+        <p class="fmb-also-try-text">Want more options?</p>
+        <button class="fmb-dir-btn" onclick="_fmbSearchDirection('closest')">Search All Strings in Optimizer</button>
       </div>
     </div>
   `;
@@ -9994,14 +10046,55 @@ function _compBuildPreset(racquetId, stringId, tension) {
 }
 
 function _compActionSetActive(racquetId, stringId, tension) {
-  const preset = _compBuildPreset(racquetId, stringId, tension);
-  loadPresetFromData(preset);
+  const racquet = RACQUETS.find(r => r.id === racquetId);
+  const stringData = STRINGS.find(s => s.id === stringId);
+  if (!racquet || !stringData) return;
+
+  const cfg = { isHybrid: false, string: stringData, mainsTension: tension, crossesTension: tension };
+  const stats = predictSetup(racquet, cfg);
+  const tCtx = buildTensionContext(cfg, racquet);
+  const obs = stats ? computeCompositeScore(stats, tCtx) : 0;
+
+  setActiveLoadout({
+    frameId: racquetId,
+    stringId: stringId,
+    isHybrid: false,
+    mainsId: null,
+    crossesId: null,
+    mainsTension: tension,
+    crossesTension: tension,
+    stats: stats,
+    obs: obs,
+    label: stringData.name + ' on ' + racquet.name
+  });
+
   switchMode('overview');
+  renderDashboard();
 }
 
 function _compActionTune(racquetId, stringId, tension) {
-  const preset = _compBuildPreset(racquetId, stringId, tension);
-  loadPresetFromData(preset);
+  const racquet = RACQUETS.find(r => r.id === racquetId);
+  const stringData = STRINGS.find(s => s.id === stringId);
+  if (!racquet || !stringData) return;
+
+  const cfg = { isHybrid: false, string: stringData, mainsTension: tension, crossesTension: tension };
+  const stats = predictSetup(racquet, cfg);
+  const tCtx = buildTensionContext(cfg, racquet);
+  const obs = stats ? computeCompositeScore(stats, tCtx) : 0;
+
+  setActiveLoadout({
+    frameId: racquetId,
+    stringId: stringId,
+    isHybrid: false,
+    mainsId: null,
+    crossesId: null,
+    mainsTension: tension,
+    crossesTension: tension,
+    stats: stats,
+    obs: obs,
+    label: stringData.name + ' on ' + racquet.name
+  });
+
   switchMode('tune');
 }
 
@@ -10009,6 +10102,14 @@ function _compActionCompare(racquetId, stringId, tension) {
   if (comparisonSlots.length >= 3) {
     comparisonSlots.pop();
   }
+  const racquet = RACQUETS.find(r => r.id === racquetId);
+  const stringData = STRINGS.find(s => s.id === stringId);
+  if (!racquet || !stringData) return;
+
+  const cfg = { isHybrid: false, string: stringData, mainsTension: tension, crossesTension: tension };
+  const stats = predictSetup(racquet, cfg);
+  const identity = stats ? generateIdentity(stats, racquet, cfg) : null;
+
   const slotData = {
     id: Date.now(),
     racquetId: racquetId,
@@ -10018,19 +10119,96 @@ function _compActionCompare(racquetId, stringId, tension) {
     crossesId: '',
     mainsTension: tension,
     crossesTension: tension,
-    stats: null,
-    identity: null
+    stats: stats,
+    identity: identity
   };
-  // Compute stats without rendering (avoid DOM not ready)
-  const racquet = RACQUETS.find(r => r.id === racquetId);
-  const stringData = STRINGS.find(s => s.id === stringId);
-  if (racquet && stringData) {
-    const cfg = { isHybrid: false, string: stringData, mainsTension: tension, crossesTension: tension };
-    slotData.stats = predictSetup(racquet, cfg);
-    slotData.identity = generateIdentity(slotData.stats, racquet, cfg);
-  }
   comparisonSlots.push(slotData);
   switchMode('compare');
+}
+
+// ============================================
+// FMB — Frame-First Result Helpers
+// ============================================
+
+function _fmbRankFrames(profile) {
+  const scored = RACQUETS.map(r => {
+    const frameStats = calcFrameBase(r);
+    let score = 0;
+
+    // Check minimum thresholds against frame base stats
+    let meetsAll = true;
+    for (const [stat, min] of Object.entries(profile.minThresholds)) {
+      if (frameStats[stat] !== undefined && frameStats[stat] < min) {
+        meetsAll = false;
+        score -= (min - frameStats[stat]) * 2;
+      }
+    }
+    if (meetsAll) score += 20;
+
+    // Bonus for priority stats
+    for (const [stat, weight] of Object.entries(profile.statPriorities)) {
+      if (frameStats[stat] !== undefined) {
+        score += frameStats[stat] * weight * 0.3;
+      }
+    }
+
+    // Generate top 3 builds for this frame
+    const builds = _compGenerateTopBuilds(r, 3);
+
+    // Boost score by best build OBS
+    if (builds.length > 0) {
+      score += builds[0].score * 0.5;
+    }
+
+    return { racquet: r, frameStats, score, builds };
+  });
+
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, 5);
+}
+
+function _fmbRenderFrameCard(fr, idx) {
+  const r = fr.racquet;
+  const builds = fr.builds || [];
+
+  const archColors = {
+    'Spin Focus': 'var(--lime-text)',
+    'Control Focus': 'var(--blue-tag)',
+    'Power Focus': 'var(--orange)',
+    'Comfort Build': 'var(--green-tag)',
+    'Feel Build': 'var(--purple)',
+    'Durability Build': 'var(--text-muted)',
+    'Balanced': 'var(--text-secondary)'
+  };
+
+  const buildCards = builds.map(b => {
+    const borderColor = archColors[b.archetype] || archColors['Balanced'];
+    return `<div class="fmb-build-mini" style="border-left: 3px solid ${borderColor}">
+      <div class="fmb-build-mini-header">
+        <span class="fmb-build-mini-label">${b.archetype || 'Build'}</span>
+        <span class="fmb-build-mini-obs">${b.score.toFixed(1)}</span>
+      </div>
+      <div class="fmb-build-mini-string">${b.string.name}</div>
+      <div class="fmb-build-mini-tension">Full Bed &middot; ${b.tension} lbs</div>
+      <button class="fmb-build-select" onclick="_fmbSelectBuild('${r.id}','${b.string.id}',${b.tension})">Select This Build</button>
+    </div>`;
+  }).join('');
+
+  return `<div class="fmb-frame-card">
+    <div class="fmb-frame-card-header">
+      <div class="fmb-frame-rank">#${idx + 1}</div>
+      <div class="fmb-frame-info">
+        <div class="fmb-frame-name">${r.name}</div>
+        <div class="fmb-frame-meta">${r.year} &middot; ${r.identity || ''} &middot; ${r.stiffness} RA &middot; ${r.pattern}</div>
+      </div>
+    </div>
+    <div class="fmb-frame-builds">${buildCards}</div>
+  </div>`;
+}
+
+function _fmbSelectBuild(racquetId, stringId, tension) {
+  closeFindMyBuild();
+  _compActionSetActive(racquetId, stringId, tension);
 }
 
 document.addEventListener('DOMContentLoaded', () => {

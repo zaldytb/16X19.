@@ -2386,9 +2386,244 @@ const RACQUETS = [
     frameProfile: "Thin constant beam, Fortyfive, Crush Zone",
     identity: "Ultra Precision",
     notes: "Thinnest beam in the Ultra line (20.6mm constant). 62 RA soft flex — very different character from Ultra 100. 97 sq in for precision. 323g with 317 swingweight. 4 pts HL. A control frame wearing Ultra branding. For advanced players."
+  },
+
+  // ========== DIADEM ==========
+  {
+    id: "diadem-elevate-98-v3",
+    name: "Diadem Elevate 98 v3",
+    year: 2023,
+    headSize: 98,
+    length: 27,
+    strungWeight: 326,
+    balance: 33.0,
+    balancePts: "4 pts HL",
+    swingweight: 330,
+    stiffness: 61,
+    beamWidth: [21.5, 21.5, 21.5],
+    pattern: "16x20",
+    powerLevel: "Low",
+    strokeStyle: "Full",
+    swingSpeed: "Fast",
+    tensionRange: [45, 55],
+    frameProfile: "Thin constant beam with Kraibon elastomer, FS system, HMT carbon",
+    identity: "Precision Machine",
+    notes: "Diadem's flagship control frame. 21.5mm thin constant beam + 16x20 dense pattern. 61 RA very flexible for excellent feel. Kraibon elastomer dampens vibration. 326g with 330 swingweight — heavy and stable. HMT carbon for clean feedback. Competes with Blade 98 and TF40."
+  },
+  {
+    id: "diadem-elevate-98-v3-tour",
+    name: "Diadem Elevate 98 v3 Tour",
+    year: 2023,
+    headSize: 98,
+    length: 27,
+    strungWeight: 322,
+    balance: 32.0,
+    balancePts: "7 pts HL",
+    swingweight: 322,
+    stiffness: 64,
+    beamWidth: [21.5, 21.5, 21.5],
+    pattern: "16x20",
+    powerLevel: "Low",
+    strokeStyle: "Full",
+    swingSpeed: "Fast",
+    tensionRange: [45, 55],
+    frameProfile: "Player spec thin beam with Kraibon, FS system, HMT carbon",
+    identity: "Tour Precision",
+    notes: "Tour-weighted Elevate at 322g strung. Very head-light (7 pts HL) for maneuverability. 64 RA slightly stiffer than standard. Same 21.5mm thin beam and 16x20 pattern. For advanced players who want a lighter, more head-light control frame."
+  },
+  {
+    id: "diadem-elevate-98-v3-lite",
+    name: "Diadem Elevate 98 v3 Lite",
+    year: 2023,
+    headSize: 98,
+    length: 27,
+    strungWeight: 307,
+    balance: 33.5,
+    balancePts: "3 pts HL",
+    swingweight: 312,
+    stiffness: 64,
+    beamWidth: [21.5, 21.5, 21.5],
+    pattern: "16x20",
+    powerLevel: "Low-Medium",
+    strokeStyle: "Medium-Full",
+    swingSpeed: "Medium-Fast",
+    tensionRange: [45, 55],
+    frameProfile: "Lightweight thin beam with Kraibon, FS system",
+    identity: "Light Elevate",
+    notes: "Lighter Elevate at ~307g strung. Same 21.5mm thin beam and 16x20 pattern. 64 RA. 3 pts HL with ~312 swingweight. More accessible entry to Elevate precision for intermediate players."
+  },
+  {
+    id: "diadem-nova-100",
+    name: "Diadem Nova 100",
+    year: 2024,
+    headSize: 100,
+    length: 27,
+    strungWeight: 317,
+    balance: 32.0,
+    balancePts: "7 pts HL",
+    swingweight: 315,
+    stiffness: 69,
+    beamWidth: [23.5, 23.5, 23.5],
+    pattern: "16x19",
+    powerLevel: "Medium",
+    strokeStyle: "Medium-Full",
+    swingSpeed: "Medium-Fast",
+    tensionRange: [48, 57],
+    frameProfile: "Constant beam with FS2 system, Kraibon elastomer, HMT carbon",
+    identity: "Power Precision",
+    notes: "100 sq in Diadem power frame. 69 RA stiff for power assist. 23.5mm constant beam. Unusually head-light (7 pts HL) for a power frame — great maneuverability. FS2 Flex Stabilization for controlled flex. Kraibon for vibration dampening."
+  },
+  {
+    id: "diadem-nova-100-lite",
+    name: "Diadem Nova 100 Lite",
+    year: 2020,
+    headSize: 100,
+    length: 27,
+    strungWeight: 302,
+    balance: 32.5,
+    balancePts: "6 pts HL",
+    swingweight: 310,
+    stiffness: 69,
+    beamWidth: [23.5, 23.5, 23.5],
+    pattern: "16x19",
+    powerLevel: "Medium",
+    strokeStyle: "Medium",
+    swingSpeed: "Medium",
+    tensionRange: [48, 57],
+    frameProfile: "Lightweight constant beam with FS system, HMT carbon",
+    identity: "Light Nova",
+    notes: "Lighter Nova at ~302g strung. Same 23.5mm beam and 69 RA stiffness. 6 pts HL with 310 swingweight. FS system for flex stability. More accessible Nova for intermediate players."
+  },
+
+  // ========== VOLKL ==========
+  {
+    id: "volkl-v8-pro-2023",
+    name: "Volkl V8 Pro 2023",
+    year: 2023,
+    headSize: 100,
+    length: 27,
+    strungWeight: 318,
+    balance: 32.2,
+    balancePts: "6 pts HL",
+    swingweight: 316,
+    stiffness: 67,
+    beamWidth: [22, 24, 22],
+    pattern: "18x20",
+    powerLevel: "Low-Medium",
+    strokeStyle: "Full",
+    swingSpeed: "Fast",
+    tensionRange: [50, 60],
+    frameProfile: "Variable beam with V-Feel technology (VCell, REVA, VSENSOR)",
+    identity: "Dense Control",
+    notes: "Volkl's flagship player frame. Dense 18x20 pattern in a 100 sq in head — rare combo. Variable beam (22/24/22mm). V-Feel tech for comfort and feedback. 67 RA moderate stiffness. 6 pts HL for maneuverability. Good blend of control and forgiveness."
+  },
+  {
+    id: "volkl-vcell-8-300",
+    name: "Volkl V-Cell 8 300",
+    year: 2020,
+    headSize: 100,
+    length: 27,
+    strungWeight: 312,
+    balance: 33.0,
+    balancePts: "5 pts HL",
+    swingweight: 312,
+    stiffness: 67,
+    beamWidth: [22, 24, 22],
+    pattern: "16x18",
+    powerLevel: "Medium",
+    strokeStyle: "Medium-Full",
+    swingSpeed: "Medium-Fast",
+    tensionRange: [50, 60],
+    frameProfile: "Variable beam with V-Cell, REVA, VTEX",
+    identity: "Spin Power",
+    notes: "Open 16x18 pattern for maximum string movement and spin. Variable beam (22/24/22mm). 67 RA moderate stiffness. V-Cell construction for vibration dampening. 312g with 312 swingweight. 5 pts HL. Good power + spin blend."
+  },
+  {
+    id: "volkl-vcell-8-285",
+    name: "Volkl V-Cell 8 285",
+    year: 2019,
+    headSize: 100,
+    length: 27,
+    strungWeight: 300,
+    balance: 32.5,
+    balancePts: "4 pts HL",
+    swingweight: 303,
+    stiffness: 70,
+    beamWidth: [22, 24, 22],
+    pattern: "16x19",
+    powerLevel: "Medium",
+    strokeStyle: "Medium",
+    swingSpeed: "Medium",
+    tensionRange: [50, 60],
+    frameProfile: "Lightweight variable beam with V-Cell, REVA, Super Grommets",
+    identity: "Light Volkl Power",
+    notes: "Lighter Volkl at 300g strung. 70 RA stiffer for power at lower weight. Variable beam (22/24/22mm). 16x19 open pattern. Super Grommets for string movement. 4 pts HL with 303 swingweight. For intermediate players."
+  },
+
+  // ========== DUNLOP ==========
+  {
+    id: "dunlop-fx-500-2023",
+    name: "Dunlop FX 500 2023",
+    year: 2023,
+    headSize: 100,
+    length: 27,
+    strungWeight: 320,
+    balance: 33.0,
+    balancePts: "4 pts HL",
+    swingweight: 321,
+    stiffness: 69,
+    beamWidth: [23, 26, 23],
+    pattern: "16x19",
+    powerLevel: "Medium-High",
+    strokeStyle: "Medium",
+    swingSpeed: "Medium",
+    tensionRange: [45, 65],
+    frameProfile: "Variable beam with Sonic Core Infinergy, Power Boost Frame",
+    identity: "Sonic Power",
+    notes: "Dunlop's flagship power frame. Sonic Core Infinergy for energy return and dampening. Wide variable beam (23/26/23mm) for launch and power. 69 RA stiff. Power Boost Frame geometry. 320g with 321 swingweight. Competes with Pure Drive."
+  },
+  {
+    id: "dunlop-fx-500-ls-2023",
+    name: "Dunlop FX 500 LS 2023",
+    year: 2023,
+    headSize: 100,
+    length: 27,
+    strungWeight: 301,
+    balance: 33.48,
+    balancePts: "3 pts HL",
+    swingweight: 305,
+    stiffness: 67,
+    beamWidth: [23, 26, 23],
+    pattern: "16x19",
+    powerLevel: "Medium",
+    strokeStyle: "Medium",
+    swingSpeed: "Medium",
+    tensionRange: [45, 65],
+    frameProfile: "Lightweight variable beam with Sonic Core Infinergy",
+    identity: "Light Sonic",
+    notes: "Lighter FX 500 at 301g strung. Same variable beam (23/26/23mm). 67 RA slightly softer than full FX 500. 3 pts HL with 305 swingweight. Sonic Core Infinergy for comfort. For intermediate players wanting FX 500 power without full weight."
+  },
+  {
+    id: "dunlop-fx-500-lite-2023",
+    name: "Dunlop FX 500 Lite 2023",
+    year: 2023,
+    headSize: 100,
+    length: 27,
+    strungWeight: 283,
+    balance: 33.99,
+    balancePts: "1 pt HL",
+    swingweight: 301,
+    stiffness: 68,
+    beamWidth: [23, 26, 23],
+    pattern: "16x19",
+    powerLevel: "Medium-High",
+    strokeStyle: "Medium",
+    swingSpeed: "Medium",
+    tensionRange: [45, 65],
+    frameProfile: "Ultra-light variable beam with Sonic Core Infinergy, Power Boost+",
+    identity: "Light Power Boost",
+    notes: "Lightest FX 500 at 283g strung. 68 RA stiff for power at low weight. Nearly even balance (1 pt HL). Same wide variable beam. Power Boost+ Groove for extra energy return. For recreational and developing players wanting easy power."
   }
-
-
 ];
 
 // ============================================
@@ -3602,6 +3837,43 @@ const FRAME_META = {
     aeroBonus: 0, comfortTech: 0.5, spinTech: 0, genBonus: 0
   },
   'wilson-ultra-pro-97-v4': {
+    aeroBonus: 0, comfortTech: 0.5, spinTech: 0, genBonus: 0
+  },
+
+  // Diadem
+  'diadem-elevate-98-v3': {
+    aeroBonus: 0, comfortTech: 1.5, spinTech: 0, genBonus: 0.5
+  },
+  'diadem-elevate-98-v3-tour': {
+    aeroBonus: 0, comfortTech: 1.5, spinTech: 0, genBonus: 0.5
+  },
+  'diadem-elevate-98-v3-lite': {
+    aeroBonus: 0, comfortTech: 1, spinTech: 0, genBonus: 0
+  },
+  'diadem-nova-100': {
+    aeroBonus: 0, comfortTech: 1, spinTech: 0, genBonus: 0.5
+  },
+  'diadem-nova-100-lite': {
+    aeroBonus: 0, comfortTech: 1, spinTech: 0, genBonus: 0
+  },
+  // Volkl
+  'volkl-v8-pro-2023': {
+    aeroBonus: 0, comfortTech: 1, spinTech: 0, genBonus: 0
+  },
+  'volkl-vcell-8-300': {
+    aeroBonus: 0, comfortTech: 0.5, spinTech: 0.5, genBonus: 0
+  },
+  'volkl-vcell-8-285': {
+    aeroBonus: 0, comfortTech: 0.5, spinTech: 0, genBonus: 0
+  },
+  // Dunlop
+  'dunlop-fx-500-2023': {
+    aeroBonus: 0, comfortTech: 1, spinTech: 0, genBonus: 0.5
+  },
+  'dunlop-fx-500-ls-2023': {
+    aeroBonus: 0, comfortTech: 1, spinTech: 0, genBonus: 0
+  },
+  'dunlop-fx-500-lite-2023': {
     aeroBonus: 0, comfortTech: 0.5, spinTech: 0, genBonus: 0
   }
 };

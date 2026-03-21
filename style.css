@@ -5735,27 +5735,285 @@ body {
 }
 
 /* ============================================
-   DOCK EMPTY STATE
+   DOCK LOADOUT CARD
    ============================================ */
-.dock-empty-state {
-  padding: var(--space-4) var(--space-5);
-  text-align: center;
+.dock-lo-card {
+  padding: 16px 20px;
   border-bottom: 1px solid var(--border-subtle);
 }
-.dock-empty-state.hidden {
-  display: none;
+.dock-lo-empty {
+  text-align: center;
+  padding: 12px 0;
 }
-.dock-empty-msg {
+.dock-lo-empty.hidden { display: none; }
+.dock-lo-empty-icon {
+  margin-bottom: 8px;
+  color: var(--text-faint);
+}
+.dock-lo-empty-title {
   font-family: var(--font-display);
-  font-size: 0.82rem;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text-secondary);
-  margin: 0 0 var(--space-1);
+  margin: 0 0 4px;
 }
-.dock-empty-sub {
-  font-size: 0.72rem;
+.dock-lo-empty-sub {
+  font-size: 12px;
   color: var(--text-muted);
   margin: 0;
+}
+.dock-lo-active.hidden { display: none; }
+.dock-lo-header {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.dock-lo-obs-ring {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 3px solid var(--lime-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.dock-lo-obs-val {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--lime-text);
+}
+.dock-lo-info {
+  flex: 1;
+  min-width: 0;
+}
+.dock-lo-name {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dock-lo-identity {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--lime-text);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+}
+.dock-lo-details {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dock-lo-source {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-faint);
+  background: var(--bg-elevated);
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.dock-lo-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 10px;
+}
+.dock-lo-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 0;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.dock-lo-btn:hover {
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+/* ============================================
+   MY LOADOUTS
+   ============================================ */
+.dock-my-loadouts {
+  border-bottom: 1px solid var(--border-subtle);
+}
+.dock-myl-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px 8px;
+}
+.dock-myl-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-faint);
+  background: var(--bg-elevated);
+  padding: 1px 7px;
+  border-radius: 10px;
+}
+.dock-myl-list {
+  padding: 0 12px 12px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.dock-myl-empty {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-faint);
+  padding: 8px 0;
+}
+.dock-myl-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.dock-myl-item:hover {
+  background: var(--bg-elevated);
+}
+.dock-myl-active {
+  background: var(--lime-dim);
+  border-color: var(--lime-text);
+}
+.dock-myl-item-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+.dock-myl-obs {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--lime-text);
+  min-width: 32px;
+  text-align: center;
+}
+.dock-myl-item-info {
+  min-width: 0;
+}
+.dock-myl-item-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dock-myl-item-meta {
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dock-myl-item-actions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.dock-myl-btn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.dock-myl-btn:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+.dock-myl-btn-remove:hover {
+  color: var(--red, #EF5350);
+}
+
+/* ============================================
+   DOCK EDITOR DETAILS
+   ============================================ */
+.dock-editor-details {
+  border-bottom: 1px solid var(--border-subtle);
+}
+.dock-editor-summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.dock-editor-summary::-webkit-details-marker { display: none; }
+.dock-editor-summary::marker { display: none; content: ''; }
+.dock-editor-details[open] .dock-editor-summary {
+  color: var(--text-secondary);
+}
+.dock-editor-body {
+  padding: 0 0 8px;
+}
+
+/* FMB build buttons pair */
+.fmb-build-btns {
+  display: flex;
+  gap: 4px;
+}
+.fmb-build-save {
+  flex: 1;
+  padding: 5px 0;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.fmb-build-save:hover {
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+.fmb-build-save:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.fmb-build-btns .fmb-build-select {
+  flex: 1;
 }
 
 /* ============================================

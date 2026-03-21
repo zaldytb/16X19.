@@ -99,99 +99,144 @@
     <!-- Fixed Left Pane: Setup & Configuration (always visible) -->
     <aside class="build-dock" id="build-dock">
       <div class="builder-panel" id="builder-panel">
-        <div id="dock-empty-state" class="dock-empty-state">
-          <p class="dock-empty-msg">No loadout active</p>
-          <p class="dock-empty-sub">Browse frames in Compendium to start</p>
-        </div>
-        <div class="panel-section">
-          <h2 class="panel-title">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><line x1="8" y1="5" x2="8" y2="11" stroke="currentColor" stroke-width="1.5"/><line x1="5" y1="8" x2="11" y2="8" stroke="currentColor" stroke-width="1.5"/></svg>
-            Frame
-          </h2>
-          <div id="select-racquet"></div>
-          <div id="frame-specs" class="frame-specs hidden"></div>
-        </div>
-
-        <div class="panel-section">
-          <h2 class="panel-title">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><line x1="2" y1="8" x2="14" y2="8" stroke="currentColor" stroke-width="1.5"/><line x1="5" y1="4" x2="5" y2="12" stroke="currentColor" stroke-width="1.5"/><line x1="11" y1="4" x2="11" y2="12" stroke="currentColor" stroke-width="1.5"/></svg>
-            String Setup
-          </h2>
-          <div class="toggle-group">
-            <button class="toggle-btn active" data-mode="full" id="btn-full">Full Bed</button>
-            <button class="toggle-btn" data-mode="hybrid" id="btn-hybrid">Hybrid</button>
+        <!-- Active Loadout Card -->
+        <div id="dock-active-loadout" class="dock-lo-card">
+          <div id="dock-lo-empty" class="dock-lo-empty">
+            <div class="dock-lo-empty-icon">
+              <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="10" stroke="currentColor" stroke-width="1.5" opacity="0.3"/><path d="M10 10l8 8M18 10l-8 8" stroke="currentColor" stroke-width="1.5" opacity="0.2"/></svg>
+            </div>
+            <p class="dock-lo-empty-title">No loadout active</p>
+            <p class="dock-lo-empty-sub">Browse rackets in Compendium or take the quiz</p>
           </div>
-          
-          <!-- Full Bed -->
-          <div id="full-bed-config" class="string-config">
-            <label class="field-label">String</label>
-            <div id="select-string-full" data-gauge-target="gauge-select-full"></div>
-            <div class="fullbed-gauge-row">
-              <label class="field-label">Gauge</label>
-              <select id="gauge-select-full" class="gauge-select" disabled>
-                <option value="">—</option>
-              </select>
-            </div>
-            <div class="row-2col fullbed-tension-row">
-              <div>
-                <label class="field-label accent-cyan">Mains Tension</label>
-                <input type="number" id="input-tension-full-mains" class="text-input" min="30" max="70" value="55">
+          <div id="dock-lo-active" class="dock-lo-active hidden">
+            <div class="dock-lo-header">
+              <div class="dock-lo-obs-ring" id="dock-lo-obs-ring">
+                <span class="dock-lo-obs-val" id="dock-lo-obs-val">—</span>
               </div>
-              <div>
-                <label class="field-label accent-green">Crosses Tension</label>
-                <input type="number" id="input-tension-full-crosses" class="text-input" min="30" max="70" value="53">
+              <div class="dock-lo-info">
+                <div class="dock-lo-name" id="dock-lo-name">—</div>
+                <div class="dock-lo-identity" id="dock-lo-identity">—</div>
+                <div class="dock-lo-details" id="dock-lo-details">—</div>
+                <div class="dock-lo-source" id="dock-lo-source"></div>
               </div>
             </div>
-          </div>
-
-          <!-- Hybrid -->
-          <div id="hybrid-config" class="string-config hidden">
-            <div class="hybrid-section">
-              <label class="field-label accent-cyan">Mains</label>
-              <div id="select-string-mains" data-placeholder="Select Main String..." data-gauge-target="gauge-select-mains"></div>
-              <div class="row-2col">
-                <div>
-                  <label class="field-label">Gauge</label>
-                  <select id="gauge-select-mains" class="gauge-select" disabled>
-                    <option value="">—</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="field-label">Tension (lbs)</label>
-                  <input type="number" id="input-tension-mains" class="text-input" min="30" max="70" value="55">
-                </div>
-              </div>
-            </div>
-            <div class="hybrid-section">
-              <label class="field-label accent-green">Crosses</label>
-              <div id="select-string-crosses" data-placeholder="Select Cross String..." data-gauge-target="gauge-select-crosses"></div>
-              <div class="row-2col">
-                <div>
-                  <label class="field-label">Gauge</label>
-                  <select id="gauge-select-crosses" class="gauge-select" disabled>
-                    <option value="">—</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="field-label">Tension (lbs)</label>
-                  <input type="number" id="input-tension-crosses" class="text-input" min="30" max="70" value="53">
-                </div>
-              </div>
+            <div class="dock-lo-actions">
+              <button class="dock-lo-btn" onclick="saveActiveLoadout()" title="Save to My Loadouts">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 13H3a1 1 0 01-1-1V2a1 1 0 011-1h5.5L12 4.5V12a1 1 0 01-1 1z"/><polyline points="8.5 1 8.5 5 12 5"/></svg>
+                Save
+              </button>
+              <button class="dock-lo-btn" onclick="duplicateActiveLoadout()" title="Duplicate as new loadout">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4" width="8" height="8" rx="1"/><path d="M4 10H3a1 1 0 01-1-1V3a1 1 0 011-1h6a1 1 0 011 1v1"/></svg>
+                Duplicate
+              </button>
+              <button class="dock-lo-btn" onclick="resetActiveLoadout()" title="Clear active loadout">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="1 1 4 1 4 4"/><path d="M3.5 1.5A6 6 0 1 1 1.5 8"/></svg>
+                Reset
+              </button>
             </div>
           </div>
         </div>
 
-        <!-- Presets -->
-        <div class="panel-section">
-          <div class="preset-header">
+        <!-- My Loadouts Switcher -->
+        <div class="dock-my-loadouts" id="dock-my-loadouts">
+          <div class="dock-myl-header">
             <h2 class="panel-title">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 4h10M3 8h10M3 12h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-              Quick Presets
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              My Loadouts
             </h2>
+            <span class="dock-myl-count" id="dock-myl-count">0</span>
           </div>
-          <button class="btn-save-preset" id="btn-save-preset">+ Save Current Setup</button>
-          <div class="preset-list" id="preset-list"></div>
+          <div class="dock-myl-list" id="dock-myl-list">
+            <div class="dock-myl-empty">No saved loadouts yet</div>
+          </div>
         </div>
+
+        <!-- Editable Setup (collapsed by default, expands on demand) -->
+        <details class="dock-editor-details" id="dock-editor-section">
+          <summary class="dock-editor-summary">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10.5 1.5l2 2-7.5 7.5H3v-2L10.5 1.5z"/></svg>
+            Edit Setup
+          </summary>
+          <div class="dock-editor-body">
+            <div class="panel-section">
+              <h2 class="panel-title">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><line x1="8" y1="5" x2="8" y2="11" stroke="currentColor" stroke-width="1.5"/><line x1="5" y1="8" x2="11" y2="8" stroke="currentColor" stroke-width="1.5"/></svg>
+                Frame
+              </h2>
+              <div id="select-racquet"></div>
+              <div id="frame-specs" class="frame-specs hidden"></div>
+            </div>
+
+            <div class="panel-section">
+              <h2 class="panel-title">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><line x1="2" y1="8" x2="14" y2="8" stroke="currentColor" stroke-width="1.5"/><line x1="5" y1="4" x2="5" y2="12" stroke="currentColor" stroke-width="1.5"/><line x1="11" y1="4" x2="11" y2="12" stroke="currentColor" stroke-width="1.5"/></svg>
+                String Setup
+              </h2>
+              <div class="toggle-group">
+                <button class="toggle-btn active" data-mode="full" id="btn-full">Full Bed</button>
+                <button class="toggle-btn" data-mode="hybrid" id="btn-hybrid">Hybrid</button>
+              </div>
+
+              <!-- Full Bed -->
+              <div id="full-bed-config" class="string-config">
+                <label class="field-label">String</label>
+                <div id="select-string-full" data-gauge-target="gauge-select-full"></div>
+                <div class="fullbed-gauge-row">
+                  <label class="field-label">Gauge</label>
+                  <select id="gauge-select-full" class="gauge-select" disabled>
+                    <option value="">—</option>
+                  </select>
+                </div>
+                <div class="row-2col fullbed-tension-row">
+                  <div>
+                    <label class="field-label accent-cyan">Mains Tension</label>
+                    <input type="number" id="input-tension-full-mains" class="text-input" min="30" max="70" value="55">
+                  </div>
+                  <div>
+                    <label class="field-label accent-green">Crosses Tension</label>
+                    <input type="number" id="input-tension-full-crosses" class="text-input" min="30" max="70" value="53">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Hybrid -->
+              <div id="hybrid-config" class="string-config hidden">
+                <div class="hybrid-section">
+                  <label class="field-label accent-cyan">Mains</label>
+                  <div id="select-string-mains" data-placeholder="Select Main String..." data-gauge-target="gauge-select-mains"></div>
+                  <div class="row-2col">
+                    <div>
+                      <label class="field-label">Gauge</label>
+                      <select id="gauge-select-mains" class="gauge-select" disabled>
+                        <option value="">—</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="field-label">Tension (lbs)</label>
+                      <input type="number" id="input-tension-mains" class="text-input" min="30" max="70" value="55">
+                    </div>
+                  </div>
+                </div>
+                <div class="hybrid-section">
+                  <label class="field-label accent-green">Crosses</label>
+                  <div id="select-string-crosses" data-placeholder="Select Cross String..." data-gauge-target="gauge-select-crosses"></div>
+                  <div class="row-2col">
+                    <div>
+                      <label class="field-label">Gauge</label>
+                      <select id="gauge-select-crosses" class="gauge-select" disabled>
+                        <option value="">—</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="field-label">Tension (lbs)</label>
+                      <input type="number" id="input-tension-crosses" class="text-input" min="30" max="70" value="53">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
       </div>
     </aside>
 

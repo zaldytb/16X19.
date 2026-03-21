@@ -98,6 +98,14 @@
     </header>
     <!-- Fixed Left Pane: Setup & Configuration (always visible) -->
     <aside class="build-dock" id="build-dock">
+      <!-- Mobile collapsed bar -->
+      <div class="dock-mobile-bar" id="dock-mobile-bar" onclick="toggleMobileDock()">
+        <div class="dock-mob-summary" id="dock-mob-summary">
+          <span class="dock-mob-obs" id="dock-mob-obs"></span>
+          <span class="dock-mob-label" id="dock-mob-label">No active loadout</span>
+        </div>
+        <svg class="dock-mob-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="4 6 8 10 12 6"/></svg>
+      </div>
       <div class="builder-panel" id="builder-panel">
         <!-- Active Loadout Card -->
         <div id="dock-active-loadout" class="dock-lo-card">

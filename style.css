@@ -6702,3 +6702,78 @@ button.gauge-explore-col-header:hover .gauge-col-apply {
 .dock-lo-quiet .dock-lo-empty-sub {
   font-size: 11px;
 }
+
+/* ============================================
+   MOBILE COLLAPSIBLE DOCK
+   ============================================ */
+
+/* Hidden on desktop */
+.dock-mobile-bar {
+  display: none;
+}
+
+/* Mobile: collapsed dock */
+@media (max-width: 1024px) {
+  .dock-mobile-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--bg-base);
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  .dock-mob-summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .dock-mob-obs {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--lime-text);
+    min-width: 36px;
+    text-align: center;
+  }
+  .dock-mob-obs:empty {
+    display: none;
+  }
+  .dock-mob-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .dock-mob-chevron {
+    flex-shrink: 0;
+    color: var(--text-muted);
+    transition: transform 0.2s ease;
+  }
+  
+  /* Hide dock content by default on mobile */
+  .build-dock .builder-panel {
+    display: none;
+    border-top: 1px solid var(--border-subtle);
+  }
+  
+  /* Expanded state */
+  .build-dock.dock-expanded .builder-panel {
+    display: block;
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+  .build-dock.dock-expanded .dock-mob-chevron {
+    transform: rotate(180deg);
+  }
+  
+  /* Tighter padding when expanded */
+  .build-dock.dock-expanded {
+    border-bottom: 2px solid var(--lime-text);
+  }
+}

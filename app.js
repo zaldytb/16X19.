@@ -5166,6 +5166,27 @@ function renderDockPanel() {
   }
 
   renderMyLoadouts();
+  _syncMobileDockBar();
+}
+
+// === Mobile dock bar sync ===
+function _syncMobileDockBar() {
+  var obsEl = document.getElementById('dock-mob-obs');
+  var labelEl = document.getElementById('dock-mob-label');
+  if (!obsEl || !labelEl) return;
+  
+  if (activeLoadout) {
+    obsEl.textContent = activeLoadout.obs ? activeLoadout.obs.toFixed(1) : '';
+    labelEl.textContent = activeLoadout.name || 'Active loadout';
+  } else {
+    obsEl.textContent = '';
+    labelEl.textContent = 'No active loadout';
+  }
+}
+
+function toggleMobileDock() {
+  var dock = document.getElementById('build-dock');
+  if (dock) dock.classList.toggle('dock-expanded');
 }
 
 function renderMyLoadouts() {

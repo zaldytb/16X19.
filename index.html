@@ -44,15 +44,15 @@
             <line x1="24" y1="34" x2="24" y2="44" stroke="url(#grad-cyan)" stroke-width="1" opacity="0.6"/>
             <line x1="4" y1="24" x2="14" y2="24" stroke="url(#grad-cyan)" stroke-width="1" opacity="0.6"/>
             <line x1="34" y1="24" x2="44" y2="24" stroke="url(#grad-cyan)" stroke-width="1" opacity="0.6"/>
-            <circle cx="24" cy="24" r="2" fill="#00d4ff"/>
+            <circle cx="24" cy="24" r="2" fill="#0EA5E9"/>
             <defs>
               <linearGradient id="grad-cyan" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#00d4ff"/>
-                <stop offset="100%" stop-color="#00d4ff" stop-opacity="0.4"/>
+                <stop offset="0%" stop-color="#0EA5E9"/>
+                <stop offset="100%" stop-color="#0EA5E9" stop-opacity="0.4"/>
               </linearGradient>
               <linearGradient id="grad-green" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#00ff88"/>
-                <stop offset="100%" stop-color="#00ff88" stop-opacity="0.4"/>
+                <stop offset="0%" stop-color="#38BDF8"/>
+                <stop offset="100%" stop-color="#38BDF8" stop-opacity="0.3"/>
               </linearGradient>
             </defs>
           </svg>
@@ -64,11 +64,11 @@
       </div>
       <div class="header-workspace-region">
         <div class="header-actions">
+          <button class="mode-btn mode-btn-util" data-mode="compendium" id="btn-mode-compendium" title="Racket Bible">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="1" width="12" height="14" rx="1.5"/><line x1="5" y1="4" x2="11" y2="4"/><line x1="5" y1="7" x2="11" y2="7"/><line x1="5" y1="10" x2="9" y2="10"/></svg>
+            <span>Bible</span>
+          </button>
           <div class="mode-switcher" id="mode-switcher">
-            <button class="mode-btn" data-mode="compendium" id="btn-mode-compendium">
-              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="1" width="12" height="14" rx="1.5"/><line x1="5" y1="4" x2="11" y2="4"/><line x1="5" y1="7" x2="11" y2="7"/><line x1="5" y1="10" x2="9" y2="10"/></svg>
-              <span>Racket Bible</span>
-            </button>
             <button class="mode-btn active" data-mode="overview" id="btn-mode-overview">
               <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="1" y="1" width="5.5" height="5.5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="8.5" y="1" width="5.5" height="5.5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="1" y="8.5" width="12.5" height="5.5" rx="1" stroke="currentColor" stroke-width="1.3"/></svg>
               <span>Overview</span>
@@ -85,11 +85,10 @@
               <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2 11.5l3.5-3.5 2 2L11 5.5M11 5.5H8M11 5.5v3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
               <span>Optimize</span>
             </button>
-            <button class="mode-btn" data-mode="howitworks" id="btn-mode-howitworks">
-              <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M5.8 5.8a1.7 1.7 0 0 1 3.3.5c0 1.1-1.6 1.5-1.6 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7.5" cy="10.8" r="0.6" fill="currentColor"/></svg>
-              <span>How It Works</span>
-            </button>
           </div>
+          <button class="mode-btn mode-btn-util" data-mode="howitworks" id="btn-mode-howitworks" title="How It Works">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M5.8 5.8a1.7 1.7 0 0 1 3.3.5c0 1.1-1.6 1.5-1.6 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7.5" cy="10.8" r="0.6" fill="currentColor"/></svg>
+          </button>
           <button class="btn-theme" id="btn-theme" title="Toggle Light/Dark Mode">
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="1.5"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.93 4.93l1.41 1.41M13.66 13.66l1.41 1.41M4.93 15.07l1.41-1.41M13.66 6.34l1.41-1.41" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
           </button>
@@ -432,25 +431,13 @@
         </div>
 
         <div id="dashboard-content" class="dashboard-content hidden">
-          <div class="card summary-card" id="summary-card">
-            <div class="card-header">
-              <h3 class="card-title">SETUP SUMMARY</h3>
-              <div class="identity-badge" id="identity-badge"></div>
-            </div>
-            <div class="summary-grid" id="summary-grid"></div>
-          </div>
+          <!-- Hero Band -->
+          <div class="overview-hero" id="overview-hero"></div>
 
-          <!-- 4-Card Overview Grid -->
-          <div class="overview-cards-grid" id="overview-cards-grid">
-            <div class="overview-card oc-identity" id="oc-identity"></div>
-            <div class="overview-card oc-rating" id="oc-rating"></div>
-            <div class="overview-card oc-foundation" id="oc-foundation"></div>
-            <div class="overview-card oc-snapshot" id="oc-snapshot"></div>
-          </div>
-
+          <!-- Stat Profile -->
           <div class="card stats-card">
             <div class="card-header">
-              <h3 class="card-title">STAT PROFILE</h3>
+              <h3 class="card-title">Stat profile</h3>
             </div>
             <div class="stats-layout">
               <div class="stat-bars" id="stat-bars"></div>
@@ -460,18 +447,37 @@
             </div>
           </div>
 
+          <!-- Fit Profile -->
           <div class="card fit-card" id="fit-card">
             <div class="card-header">
-              <h3 class="card-title">FIT PROFILE</h3>
+              <h3 class="card-title">Fit profile</h3>
             </div>
             <div class="fit-grid" id="fit-grid"></div>
           </div>
 
+          <!-- Progressive Depth -->
+          <details class="overview-details" id="details-foundation">
+            <summary class="overview-details-summary">
+              <svg class="details-chevron" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Frame foundation
+            </summary>
+            <div class="overview-details-body" id="oc-foundation"></div>
+          </details>
+
+          <details class="overview-details" id="details-snapshot">
+            <summary class="overview-details-summary">
+              <svg class="details-chevron" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Build snapshot
+            </summary>
+            <div class="overview-details-body" id="oc-snapshot"></div>
+          </details>
+
+          <!-- Warnings -->
           <div class="card warnings-card hidden" id="warnings-card">
             <div class="card-header">
               <h3 class="card-title warning-title">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2L1 14h14L8 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><line x1="8" y1="6" x2="8" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="12" r="0.8" fill="currentColor"/></svg>
-                WARNINGS
+                Warnings
               </h3>
             </div>
             <div class="warnings-list" id="warnings-list"></div>
@@ -484,7 +490,7 @@
         <div class="tune-workspace">
           <div class="tune-workspace-header">
             <div class="tune-header-left">
-              <h2 class="tune-title">TENSION TUNING LAB</h2>
+              <h2 class="tune-title">Tension tuning</h2>
               <p class="tune-subtitle" id="tune-subtitle">— Select a setup to begin tuning</p>
             </div>
           </div>
@@ -496,27 +502,18 @@
 
           <!-- Active tune panels -->
           <div class="tune-panels hidden" id="tune-panels">
-            <div class="tune-row tune-row-top">
-              <div class="tune-card tune-card-optimal" id="tune-card-optimal">
+            <!-- Zone 1: OBS + Slider (always visible, side by side) -->
+            <div class="tune-zone tune-zone-1">
+              <div class="tune-card tune-card-obs" id="tune-card-obs">
                 <div class="tune-card-header">
-                  <h3 class="tune-card-title">OPTIMAL BUILD WINDOW</h3>
-                  <span class="tune-card-tag tag-modeled">MODELED</span>
+                  <h3 class="tune-card-title">Build score</h3>
                 </div>
+                <div class="obs-content" id="obs-content"></div>
                 <div class="optimal-content" id="optimal-content"></div>
               </div>
-              <div class="tune-card tune-card-delta" id="tune-card-delta">
-                <div class="tune-card-header">
-                  <h3 class="tune-card-title">DELTA VS BASELINE</h3>
-                  <span class="tune-card-tag tag-modeled">MODELED</span>
-                </div>
-                <div class="delta-content" id="delta-content"></div>
-              </div>
-            </div>
-
-            <div class="tune-row tune-row-slider">
               <div class="tune-card tune-card-slider" id="tune-card-slider">
                 <div class="tune-card-header">
-                  <h3 class="tune-card-title">TENSION EXPLORER</h3>
+                  <h3 class="tune-card-title">Tension explorer</h3>
                   <div class="tune-hybrid-toggle" id="tune-hybrid-toggle"></div>
                 </div>
                 <div class="slider-content" id="slider-content">
@@ -540,57 +537,52 @@
               </div>
             </div>
 
-            <div class="tune-row tune-row-gauge" id="tune-row-gauge">
-              <div class="tune-card tune-card-gauge" id="tune-card-gauge">
-                <div class="tune-card-header">
-                  <h3 class="tune-card-title">GAUGE EXPLORER</h3>
-                  <span class="tune-card-tag tag-modeled">MODELED</span>
-                </div>
-                <div class="gauge-explore-content" id="gauge-explore-content"></div>
-              </div>
-            </div>
-
-            <div class="tune-row tune-row-chart">
+            <!-- Zone 2: Chart + Delta/WTTN -->
+            <div class="tune-zone tune-zone-2">
               <div class="tune-card tune-card-chart" id="tune-card-chart">
                 <div class="tune-card-header">
-                  <h3 class="tune-card-title">RESPONSE ACROSS TENSION</h3>
-                  <span class="tune-card-tag tag-modeled">MODELED</span>
+                  <h3 class="tune-card-title">Response across tension</h3>
                 </div>
                 <div class="sweep-chart-container">
                   <canvas id="sweep-chart"></canvas>
                 </div>
               </div>
-            </div>
-
-            <div class="tune-row tune-row-obs">
-              <div class="tune-card tune-card-obs" id="tune-card-obs">
-                <div class="tune-card-header">
-                  <h3 class="tune-card-title">OVERALL BUILD SCORE</h3>
-                  <span class="tune-card-tag tag-modeled">MODELED</span>
+              <div class="tune-zone-2-row">
+                <div class="tune-card tune-card-delta" id="tune-card-delta">
+                  <div class="tune-card-header">
+                    <h3 class="tune-card-title">Delta vs baseline</h3>
+                  </div>
+                  <div class="delta-content" id="delta-content"></div>
                 </div>
-                <div class="obs-content" id="obs-content"></div>
+                <div class="tune-card tune-card-wttn" id="tune-card-wttn">
+                  <div class="tune-card-header">
+                    <h3 class="tune-card-title">What to try next</h3>
+                  </div>
+                  <div class="wttn-content" id="wttn-content"></div>
+                </div>
               </div>
             </div>
 
-            <div class="tune-row tune-row-wttn" id="tune-row-wttn">
-              <div class="tune-card tune-card-wttn" id="tune-card-wttn">
-                <div class="tune-card-header">
-                  <h3 class="tune-card-title">WHAT TO TRY NEXT</h3>
-                  <span class="tune-card-tag tag-modeled">MODELED</span>
-                </div>
-                <div class="wttn-content" id="wttn-content"></div>
-              </div>
-            </div>
-
-            <div class="tune-row tune-row-recs">
+            <!-- Zone 3: Collapsed depth -->
+            <details class="tune-details" id="tune-details-recs">
+              <summary class="tune-details-summary">
+                <svg class="details-chevron" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Recommended builds
+              </summary>
               <div class="tune-card tune-card-recs" id="tune-card-recs">
-                <div class="tune-card-header">
-                  <h3 class="tune-card-title">RECOMMENDED BUILDS</h3>
-                  <span class="tune-card-tag tag-modeled">MODELED</span>
-                </div>
                 <div class="recs-content" id="recs-content"></div>
               </div>
-            </div>
+            </details>
+
+            <details class="tune-details" id="tune-details-gauge">
+              <summary class="tune-details-summary">
+                <svg class="details-chevron" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Gauge explorer
+              </summary>
+              <div class="tune-card tune-card-gauge" id="tune-card-gauge">
+                <div class="gauge-explore-content" id="gauge-explore-content"></div>
+              </div>
+            </details>
 
             <div class="tune-row tune-row-explore hidden" id="tune-row-explore">
               <div class="tune-card tune-card-explore" id="tune-card-explore">
@@ -605,20 +597,17 @@
       <section class="workspace-mode hidden" id="mode-compare" data-mode="compare">
         <div class="compare-workspace">
 
-          <!-- TOP BAR: title + quick load + add slot -->
+          <!-- TOP BAR: title + add slot -->
           <div class="comparison-header">
-            <h2 class="comparison-title">COMPARE</h2>
-            <div class="comparison-header-right">
-              <div class="comparison-presets-bar">
-                <span class="comp-presets-label">QUICK LOAD</span>
-                <div class="comparison-presets" id="comparison-presets"></div>
-              </div>
-              <button class="btn-add-slot" id="btn-add-slot">+ Add Slot</button>
-            </div>
+            <h2 class="comparison-title">Compare</h2>
+            <button class="btn-add-slot" id="btn-add-slot">+ Add Slot</button>
           </div>
 
-          <!-- LAYER 1: Compact A/B Summary Cards -->
-          <div class="compare-summaries" id="compare-summaries"></div>
+          <!-- HERO: Summaries + Verdict in 3-col layout -->
+          <div class="compare-hero" id="compare-hero">
+            <div class="compare-summaries" id="compare-summaries"></div>
+            <div class="compare-verdict card" id="compare-verdict" style="display:none;"></div>
+          </div>
 
           <!-- Empty state when no setups configured -->
           <div class="compare-empty-state" id="compare-empty-state">
@@ -629,31 +618,42 @@
               </svg>
             </div>
             <p class="compare-empty-title">Configure two setups to compare</p>
-            <p class="compare-empty-sub">Load presets above or add slots to begin</p>
+            <p class="compare-empty-sub">Add slots above to begin</p>
           </div>
 
-          <!-- LAYER 2: Compare Verdict -->
-          <div class="compare-verdict card" id="compare-verdict" style="display:none;"></div>
-
-          <!-- LAYER 3: Grouped Comparison Matrix -->
+          <!-- Grouped Comparison Matrix -->
           <div class="compare-matrix card" id="compare-matrix" style="display:none;"></div>
 
-          <!-- LAYER 4: Radar Chart (supporting proof) -->
-          <div class="compare-proof card" id="compare-proof" style="display:none;">
-            <div class="card-header">
-              <h3 class="card-title">STAT OVERLAY</h3>
-            </div>
-            <div class="compare-proof-layout">
-              <div class="comparison-radar-container">
-                <canvas id="comparison-radar-chart"></canvas>
+          <!-- Collapsible: Radar Overlay -->
+          <details class="compare-details" id="compare-details-radar">
+            <summary class="compare-details-summary">
+              <svg class="details-chevron" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Stat overlay
+            </summary>
+            <div class="compare-proof" id="compare-proof" style="display:none;">
+              <div class="compare-proof-layout">
+                <div class="comparison-radar-container">
+                  <canvas id="comparison-radar-chart"></canvas>
+                </div>
               </div>
             </div>
-          </div>
+          </details>
 
-          <!-- LAYER 5: Expandable Edit Panels (hidden by default) -->
+          <!-- Collapsible: Quick Load -->
+          <details class="compare-details" id="compare-details-quickload">
+            <summary class="compare-details-summary">
+              <svg class="details-chevron" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Quick load
+            </summary>
+            <div class="comparison-presets-body">
+              <div class="comparison-presets" id="comparison-presets"></div>
+            </div>
+          </details>
+
+          <!-- Expandable Edit Panels (hidden by default) -->
           <div class="compare-editors" id="compare-editors" style="display:none;">
             <div class="compare-editors-header">
-              <h3 class="card-title">SETUP EDITORS</h3>
+              <h3 class="card-title">Setup editors</h3>
               <button class="compare-editors-close" id="compare-editors-close" onclick="closeCompareEditors()">✕ Close</button>
             </div>
             <div class="comparison-slots" id="comparison-slots"></div>
@@ -668,7 +668,7 @@
           <!-- Filter panel (left) -->
           <aside class="opt-filters" id="opt-filters">
             <div class="opt-filter-header">
-              <h3 class="opt-filter-title">OPTIMIZER</h3>
+              <h3 class="opt-filter-title">Optimizer</h3>
               <button class="opt-run-btn" id="opt-run-btn">Search</button>
             </div>
 
@@ -847,20 +847,11 @@
       </section>
 
       <!-- ═══════════════ HOW IT WORKS ═══════════════ -->
-      <section id="mode-howitworks" class="mode-section hidden">
+      <section id="mode-howitworks" class="workspace-mode hidden">
         <div class="hiw-page">
 
-          <!-- HERO INTRO -->
-          <div class="hiw-hero">
-            <div class="hiw-hero-badge">SYSTEM ARCHITECTURE</div>
-            <h1 class="hiw-hero-title">How the Loadout Lab<br>Actually Works</h1>
-            <p class="hiw-hero-subtitle">
-              A four-layer prediction engine that turns frame geometry, string material science, and tension physics into a single build score — explained honestly, with all the trade-offs visible.
-            </p>
-            <div class="hiw-hero-scroll-hint">
-              <span>Scroll to explore</span>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M3 8l4 4 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
+          <div class="hiw-header">
+            <h2 class="hiw-compact-title">How it works</h2>
           </div>
 
           <!-- SECTION 1: POSITIONING -->
@@ -1115,13 +1106,71 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="currentColor"/></svg>
           Buy me a coffee
         </a>
-        <a href="https://www.perplexity.ai/computer" target="_blank" rel="noopener noreferrer" class="footer-attribution">
-          Created with Perplexity Computer
-        </a>
       </div>
     </div>
   </footer>
 
   <script src="app.js"></script>
-</body>
+<script data-pplx-inline-edit>
+(function(){
+  if(window===window.top)return;
+  function inlineAll(orig,clone){
+    if(orig.nodeType!==1)return;
+    try{
+      var cs=getComputedStyle(orig);
+      var t='';
+      for(var i=0;i<cs.length;i++){t+=cs[i]+':'+cs.getPropertyValue(cs[i])+';';}
+      clone.style.cssText=t;
+    }catch(e){}
+    var oc=orig.children,cc=clone.children;
+    for(var j=0;j<oc.length&&j<cc.length;j++){inlineAll(oc[j],cc[j]);}
+  }
+  function stripExternal(clone){
+    var imgs=clone.querySelectorAll('img');
+    for(var i=0;i<imgs.length;i++){
+      var s=imgs[i].getAttribute('src');
+      if(s&&!s.startsWith('data:'))imgs[i].removeAttribute('src');
+    }
+    var all=clone.querySelectorAll('*');
+    for(var i=0;i<all.length;i++){
+      var st=all[i].style.cssText;
+      if(st&&st.indexOf('url(')>=0){
+        all[i].style.cssText=st.replace(/url\(["']?(?!data:)[^)"']*["']?\)/gi,'none');
+      }
+    }
+  }
+  window.addEventListener('message',function(e){
+    if(!e.data||e.data.type!=='INLINE_EDIT_CAPTURE_REQUEST')return;
+    var scrollX=window.scrollX||window.pageXOffset||0;
+    var scrollY=window.scrollY||window.pageYOffset||0;
+    var w=window.innerWidth,h=window.innerHeight;
+    try{
+      var clone=document.documentElement.cloneNode(true);
+      var rm=clone.querySelectorAll('script,link[rel="stylesheet"],style');
+      for(var i=0;i<rm.length;i++){rm[i].remove();}
+      inlineAll(document.documentElement,clone);
+      stripExternal(clone);
+      var html=new XMLSerializer().serializeToString(clone);
+      var svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'">'
+        +'<foreignObject width="100%" height="100%">'
+        +'<div xmlns="http://www.w3.org/1999/xhtml" style="width:'+w+'px;height:'+h+'px;overflow:hidden">'
+        +'<div style="transform:translate(-'+scrollX+'px,-'+scrollY+'px);transform-origin:top left">'
+        +html+'</div></div></foreignObject></svg>';
+      var svgUrl='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+      var img=new Image();
+      img.onload=function(){
+        var c=document.createElement('canvas');c.width=w;c.height=h;
+        c.getContext('2d').drawImage(img,0,0);
+        window.parent.postMessage({type:'INLINE_EDIT_SCREENSHOT_RESULT',dataUrl:c.toDataURL('image/png'),scrollX:scrollX,scrollY:scrollY},'*');
+      };
+      img.onerror=function(){
+        window.parent.postMessage({type:'INLINE_EDIT_SCREENSHOT_RESULT',dataUrl:null,scrollX:scrollX,scrollY:scrollY},'*');
+      };
+      img.src=svgUrl;
+    }catch(err){
+      window.parent.postMessage({type:'INLINE_EDIT_SCREENSHOT_RESULT',dataUrl:null,scrollX:scrollX,scrollY:scrollY},'*');
+    }
+  });
+})();
+</script></body>
 </html>

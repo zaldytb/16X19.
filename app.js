@@ -4846,9 +4846,23 @@ function generateIdentity(stats, racquet, stringConfig) {
     'Balanced Setup': `Well-rounded profile with no glaring weaknesses. A versatile setup that adapts to different game styles and court conditions.`
   };
 
+  // Generate descriptive tags from stats
+  const tags = [];
+  if (stats.spin >= 75) tags.push('High Spin');
+  if (stats.power >= 70) tags.push('Power');
+  if (stats.control >= 75) tags.push('Precision');
+  if (stats.comfort >= 72) tags.push('Arm-Friendly');
+  if (stats.feel >= 72) tags.push('Touch');
+  if (stats.stability >= 70) tags.push('Stable');
+  if (stats.maneuverability >= 72) tags.push('Fast Swing');
+  if (stats.durability >= 78) tags.push('Durable');
+  if (stats.playability >= 82) tags.push('Long-Lasting');
+  if (stats.forgiveness >= 70) tags.push('Forgiving');
+
   return {
     archetype,
-    description: descriptions[archetype] || descriptions['Balanced Setup']
+    description: descriptions[archetype] || descriptions['Balanced Setup'],
+    tags: tags.slice(0, 4)
   };
 }
 
@@ -4962,13 +4976,6 @@ function generateWarnings(racquet, stringConfig, stats) {
 // SETUP BADGE TEXT
 // ============================================
 
-function getSetupBadge(racquet, stringConfig) {
-  const racketId = racquet.identity;
-  const stringId = stringConfig.isHybrid
-    ? `${stringConfig.mains.identity} × ${stringConfig.crosses.identity}`
-    : stringConfig.string.identity;
-  return `${racketId} + ${stringId}`;
-}
 
 // ============================================
 // UI CONTROLLER
@@ -5014,14 +5021,25 @@ function _persistSavedLoadouts() {
 function createLoadout(frameId, stringId, tension, opts) {
   opts = opts || {};
   const racquet = RACQUETS.find(r => r.id === frameId);
-  const stringData = STRINGS.find(s => s.id === stringId);
-  if (!racquet || !stringData) return null;
+  const rawStringData = STRINGS.find(s => s.id === stringId);
+  if (!racquet || !rawStringData) return null;
+
+  // Apply gauge modifiers to string data before prediction
+  let stringData = rawStringData;
+  if (!opts.isHybrid && opts.gauge) {
+    stringData = applyGaugeModifier(rawStringData, opts.gauge);
+  }
+
+  let mainsData = opts.isHybrid ? STRINGS.find(s => s.id === opts.mainsId) : undefined;
+  let crossesData = opts.isHybrid ? STRINGS.find(s => s.id === opts.crossesId) : undefined;
+  if (mainsData && opts.mainsGauge) mainsData = applyGaugeModifier(mainsData, opts.mainsGauge);
+  if (crossesData && opts.crossesGauge) crossesData = applyGaugeModifier(crossesData, opts.crossesGauge);
 
   const cfg = {
     isHybrid: opts.isHybrid || false,
     string: opts.isHybrid ? undefined : stringData,
-    mains: opts.isHybrid ? STRINGS.find(s => s.id === opts.mainsId) : undefined,
-    crosses: opts.isHybrid ? STRINGS.find(s => s.id === opts.crossesId) : undefined,
+    mains: mainsData,
+    crosses: crossesData,
     mainsTension: tension,
     crossesTension: opts.crossesTension || tension
   };
@@ -5031,9 +5049,19 @@ function createLoadout(frameId, stringId, tension, opts) {
   const obs = stats ? computeCompositeScore(stats, tCtx) : 0;
   const identity = stats ? generateIdentity(stats, racquet, cfg) : null;
 
+  // Build name
+  let loName = opts.name;
+  if (!loName) {
+    if (opts.isHybrid && mainsData && crossesData) {
+      loName = mainsData.name + ' / ' + crossesData.name + ' on ' + racquet.name;
+    } else {
+      loName = rawStringData.name + ' on ' + racquet.name;
+    }
+  }
+
   return {
     id: opts.id || 'lo-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
-    name: opts.name || (stringData.name + ' on ' + racquet.name),
+    name: loName,
     frameId: frameId,
     stringId: opts.isHybrid ? null : stringId,
     isHybrid: opts.isHybrid || false,
@@ -5041,15 +5069,25 @@ function createLoadout(frameId, stringId, tension, opts) {
     crossesId: opts.crossesId || null,
     mainsTension: tension,
     crossesTension: opts.crossesTension || tension,
+    gauge: opts.gauge || null,
+    mainsGauge: opts.mainsGauge || null,
+    crossesGauge: opts.crossesGauge || null,
     stats: stats,
     obs: +obs.toFixed(1),
     identity: identity ? identity.name : '',
-    source: opts.source || 'manual'
+    source: opts.source || 'manual',
+    _dirty: false
   };
 }
 
 function activateLoadout(loadout) {
   if (!loadout) return;
+
+  // Fix A: Auto-save dirty loadout before overwriting (QA-007, QA-012)
+  if (activeLoadout && activeLoadout._dirty) {
+    saveActiveLoadout();
+  }
+
   activeLoadout = loadout;
   hydrateDock(loadout);
   renderDockPanel();
@@ -5059,15 +5097,29 @@ function activateLoadout(loadout) {
     const setup = getCurrentSetup();
     if (setup) initTuneMode(setup);
   }
+
+  // Fix C: Keep optimizer frame in sync (QA-009)
+  _syncOptimizeFrame(loadout);
+}
+
+function _syncOptimizeFrame(loadout) {
+  if (!_optimizeInitialized || !loadout) return;
+  var racquet = RACQUETS.find(function(r) { return r.id === loadout.frameId; });
+  var el = document.getElementById('opt-frame-search');
+  var val = document.getElementById('opt-frame-value');
+  if (el && racquet) el.value = racquet.name;
+  if (val && racquet) val.value = racquet.id;
 }
 
 function saveLoadout(loadout) {
   if (!loadout) return;
-  const existing = savedLoadouts.findIndex(l => l.id === loadout.id);
+  const copy = Object.assign({}, loadout);
+  delete copy._dirty; // runtime state, don't persist
+  const existing = savedLoadouts.findIndex(l => l.id === copy.id);
   if (existing >= 0) {
-    savedLoadouts[existing] = Object.assign({}, loadout);
+    savedLoadouts[existing] = copy;
   } else {
-    savedLoadouts.push(Object.assign({}, loadout));
+    savedLoadouts.push(copy);
   }
   _persistSavedLoadouts();
   renderDockPanel();
@@ -5081,7 +5133,11 @@ function removeLoadout(loadoutId) {
 
 function switchToLoadout(loadoutId) {
   const lo = savedLoadouts.find(l => l.id === loadoutId);
-  if (lo) activateLoadout(Object.assign({}, lo));
+  if (lo) {
+    const copy = Object.assign({}, lo);
+    copy._dirty = false; // fresh switch, no unsaved changes
+    activateLoadout(copy);
+  }
 }
 
 function hydrateDock(loadout) {
@@ -5096,17 +5152,134 @@ function hydrateDock(loadout) {
     setHybridMode(true);
     ssInstances['select-string-mains']?.setValue(loadout.mainsId);
     populateGaugeDropdown(document.getElementById('gauge-select-mains'), loadout.mainsId);
+    if (loadout.mainsGauge) {
+      const gm = document.getElementById('gauge-select-mains');
+      if (gm) gm.value = String(loadout.mainsGauge);
+    }
     $('#input-tension-mains').value = loadout.mainsTension;
     ssInstances['select-string-crosses']?.setValue(loadout.crossesId);
     populateGaugeDropdown(document.getElementById('gauge-select-crosses'), loadout.crossesId);
+    if (loadout.crossesGauge) {
+      const gx = document.getElementById('gauge-select-crosses');
+      if (gx) gx.value = String(loadout.crossesGauge);
+    }
     $('#input-tension-crosses').value = loadout.crossesTension;
   } else {
     setHybridMode(false);
     ssInstances['select-string-full']?.setValue(loadout.stringId);
     populateGaugeDropdown(document.getElementById('gauge-select-full'), loadout.stringId);
+    if (loadout.gauge) {
+      const gf = document.getElementById('gauge-select-full');
+      if (gf) gf.value = String(loadout.gauge);
+    }
     $('#input-tension-full-mains').value = loadout.mainsTension;
     $('#input-tension-full-crosses').value = loadout.crossesTension;
   }
+}
+
+// ============================================
+// PHASE 1: SINGLE SOURCE OF TRUTH
+// getSetupFromLoadout reads FROM the loadout object (not DOM)
+// commitEditorToLoadout writes FROM the dock editor INTO the loadout
+// Data flow is always: loadout → DOM (via hydrateDock), never DOM → loadout silently
+// ============================================
+
+function getSetupFromLoadout(loadout) {
+  if (!loadout) return null;
+  const racquet = RACQUETS.find(r => r.id === loadout.frameId);
+  if (!racquet) return null;
+
+  if (loadout.isHybrid) {
+    let mainsData = STRINGS.find(s => s.id === loadout.mainsId);
+    let crossesData = STRINGS.find(s => s.id === loadout.crossesId);
+    if (!mainsData || !crossesData) return null;
+    if (loadout.mainsGauge) mainsData = applyGaugeModifier(mainsData, loadout.mainsGauge);
+    if (loadout.crossesGauge) crossesData = applyGaugeModifier(crossesData, loadout.crossesGauge);
+    return {
+      racquet,
+      stringConfig: {
+        isHybrid: true,
+        mains: mainsData,
+        crosses: crossesData,
+        mainsId: loadout.mainsId,
+        crossesId: loadout.crossesId,
+        mainsTension: loadout.mainsTension,
+        crossesTension: loadout.crossesTension
+      }
+    };
+  } else {
+    let stringData = STRINGS.find(s => s.id === loadout.stringId);
+    if (!stringData) return null;
+    if (loadout.gauge) stringData = applyGaugeModifier(stringData, loadout.gauge);
+    return {
+      racquet,
+      stringConfig: {
+        isHybrid: false,
+        string: stringData,
+        mainsTension: loadout.mainsTension,
+        crossesTension: loadout.crossesTension
+      }
+    };
+  }
+}
+
+function commitEditorToLoadout() {
+  if (!activeLoadout) return;
+
+  const isHybrid = $('#btn-hybrid').classList.contains('active');
+  const racquetId = ssInstances['select-racquet']?.getValue() || activeLoadout.frameId;
+
+  if (isHybrid) {
+    activeLoadout.isHybrid = true;
+    activeLoadout.mainsId = ssInstances['select-string-mains']?.getValue() || activeLoadout.mainsId;
+    activeLoadout.crossesId = ssInstances['select-string-crosses']?.getValue() || activeLoadout.crossesId;
+    activeLoadout.mainsTension = parseInt($('#input-tension-mains').value) || activeLoadout.mainsTension;
+    activeLoadout.crossesTension = parseInt($('#input-tension-crosses').value) || activeLoadout.crossesTension;
+    const gm = document.getElementById('gauge-select-mains');
+    const gx = document.getElementById('gauge-select-crosses');
+    activeLoadout.mainsGauge = (gm && gm.value) ? parseFloat(gm.value) : null;
+    activeLoadout.crossesGauge = (gx && gx.value) ? parseFloat(gx.value) : null;
+    activeLoadout.stringId = null;
+    activeLoadout.gauge = null;
+  } else {
+    activeLoadout.isHybrid = false;
+    activeLoadout.stringId = ssInstances['select-string-full']?.getValue() || activeLoadout.stringId;
+    activeLoadout.mainsTension = parseInt($('#input-tension-full-mains').value) || activeLoadout.mainsTension;
+    activeLoadout.crossesTension = parseInt($('#input-tension-full-crosses').value) || activeLoadout.crossesTension;
+    const gf = document.getElementById('gauge-select-full');
+    activeLoadout.gauge = (gf && gf.value) ? parseFloat(gf.value) : null;
+    activeLoadout.mainsId = null;
+    activeLoadout.crossesId = null;
+    activeLoadout.mainsGauge = null;
+    activeLoadout.crossesGauge = null;
+  }
+
+  activeLoadout.frameId = racquetId;
+
+  // Recompute derived fields from the loadout (not from DOM)
+  const setup = getSetupFromLoadout(activeLoadout);
+  if (setup) {
+    const stats = predictSetup(setup.racquet, setup.stringConfig);
+    if (stats) {
+      const tCtx = buildTensionContext(setup.stringConfig, setup.racquet);
+      activeLoadout.stats = stats;
+      activeLoadout.obs = +(computeCompositeScore(stats, tCtx)).toFixed(1);
+      activeLoadout.identity = (generateIdentity(stats, setup.racquet, setup.stringConfig)?.name) || '';
+    }
+
+    // Update name
+    if (!activeLoadout.isHybrid && setup.stringConfig.string) {
+      activeLoadout.name = setup.stringConfig.string.name + ' on ' + setup.racquet.name;
+    } else if (activeLoadout.isHybrid && setup.stringConfig.mains && setup.stringConfig.crosses) {
+      activeLoadout.name = setup.stringConfig.mains.name + ' / ' + setup.stringConfig.crosses.name + ' on ' + setup.racquet.name;
+    }
+  }
+
+  // Mark dirty if this loadout has a saved counterpart
+  activeLoadout._dirty = savedLoadouts.some(l => l.id === activeLoadout.id);
+
+  renderDockPanel();
+  renderDashboard();
 }
 
 function renderDockPanel() {
@@ -5129,13 +5302,7 @@ function renderDockPanel() {
 
     if (obsRing) {
       const obs = activeLoadout.obs || 0;
-      let color = 'var(--text-muted)';
-      if (obs >= 90) color = '#FFD700';
-      else if (obs >= 80) color = '#E040FB';
-      else if (obs >= 70) color = 'var(--lime-text)';
-      else if (obs >= 60) color = 'var(--green-tag, #4CAF50)';
-      else if (obs >= 50) color = 'var(--text-secondary)';
-      else color = 'var(--red, #EF5350)';
+      const color = getObsScoreColor(obs);
       obsRing.style.borderColor = color;
       if (obsVal) obsVal.style.color = color;
     }
@@ -5159,9 +5326,30 @@ function renderDockPanel() {
     }
     if (sourceEl) {
       const src = activeLoadout.source;
-      const labels = { quiz: 'Quiz', compendium: 'Racket Bible', manual: 'Manual', preset: 'Preset' };
-      sourceEl.textContent = labels[src] || '';
-      sourceEl.style.display = src ? '' : 'none';
+      const labels = { quiz: 'Quiz', compendium: 'Racket Bible', manual: 'Manual', preset: 'Preset', optimize: 'Optimizer', shared: 'Shared' };
+      const isDirty = activeLoadout._dirty;
+      if (isDirty) {
+        sourceEl.textContent = '\u270E Modified';
+        sourceEl.style.display = '';
+        sourceEl.classList.add('dock-lo-dirty');
+      } else {
+        sourceEl.textContent = labels[src] || '';
+        sourceEl.style.display = src ? '' : 'none';
+        sourceEl.classList.remove('dock-lo-dirty');
+      }
+    }
+
+    // Update save button label based on dirty state
+    const saveBtnEl = document.querySelector('#dock-lo-active .dock-lo-btn[onclick="saveActiveLoadout()"]');
+    if (saveBtnEl) {
+      const svgIcon = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 13H3a1 1 0 01-1-1V2a1 1 0 011-1h5.5L12 4.5V12a1 1 0 01-1 1z"/><polyline points="8.5 1 8.5 5 12 5"/></svg>';
+      if (activeLoadout._dirty) {
+        saveBtnEl.innerHTML = svgIcon + '\n                Save \u2022';
+        saveBtnEl.classList.add('dock-lo-btn-dirty');
+      } else {
+        saveBtnEl.innerHTML = svgIcon + '\n                Save';
+        saveBtnEl.classList.remove('dock-lo-btn-dirty');
+      }
     }
   }
 
@@ -5333,9 +5521,16 @@ function importLoadouts(event) {
         }
         var lo = createLoadout(raw.frameId, raw.isHybrid ? raw.mainsId : raw.stringId, raw.mainsTension, opts);
         if (lo) {
-          // Check for duplicate by frame+string+tension
+          // Check for duplicate — full identity match including hybrid and crosses tension
           var isDupe = savedLoadouts.some(function(existing) {
-            return existing.frameId === lo.frameId && existing.stringId === lo.stringId && existing.mainsTension === lo.mainsTension;
+            if (existing.frameId !== lo.frameId) return false;
+            if (existing.mainsTension !== lo.mainsTension) return false;
+            if (existing.crossesTension !== lo.crossesTension) return false;
+            if ((existing.isHybrid || false) !== (lo.isHybrid || false)) return false;
+            if (lo.isHybrid) {
+              return existing.mainsId === lo.mainsId && existing.crossesId === lo.crossesId;
+            }
+            return existing.stringId === lo.stringId;
           });
           if (!isDupe) {
             saveLoadout(lo);
@@ -5402,14 +5597,31 @@ function renderMyLoadouts() {
     return;
   }
 
+  var sourceLabels = { quiz: 'Quiz', compendium: 'Bible', manual: '', preset: 'Preset', optimize: 'Optimizer', shared: 'Shared', import: 'Import' };
+
   listEl.innerHTML = savedLoadouts.map(function(lo) {
+    // Fix F: ID match first, then content-match fallback (QA-015)
     var isActive = activeLoadout && activeLoadout.id === lo.id;
+    if (!isActive && activeLoadout) {
+      isActive = activeLoadout.frameId === lo.frameId &&
+        activeLoadout.mainsTension === lo.mainsTension &&
+        activeLoadout.crossesTension === lo.crossesTension &&
+        activeLoadout.isHybrid === (lo.isHybrid || false) &&
+        (lo.isHybrid
+          ? activeLoadout.mainsId === lo.mainsId && activeLoadout.crossesId === lo.crossesId
+          : activeLoadout.stringId === lo.stringId);
+    }
     var racquet = RACQUETS.find(function(r) { return r.id === lo.frameId; });
+
+    // Fix E: Source tag (QA-006)
+    var srcLabel = sourceLabels[lo.source] || '';
+    var sourceTag = srcLabel ? '<span class="dock-myl-source-tag dock-myl-src-' + lo.source + '">' + srcLabel + '</span>' : '';
+
     return '<div class="dock-myl-item ' + (isActive ? 'dock-myl-active' : '') + '" data-lo-id="' + lo.id + '">' +
       '<div class="dock-myl-item-main" onclick="switchToLoadout(\'' + lo.id + '\')">' +
         '<div class="dock-myl-obs">' + (lo.obs ? lo.obs.toFixed(1) : '\u2014') + '</div>' +
         '<div class="dock-myl-item-info">' +
-          '<div class="dock-myl-item-name">' + lo.name + (isActive ? ' <span class="dock-myl-active-badge">Active</span>' : '') + '</div>' +
+          '<div class="dock-myl-item-name">' + lo.name + (isActive ? ' <span class="dock-myl-active-badge">Active</span>' : '') + sourceTag + '</div>' +
           '<div class="dock-myl-item-meta">' + (racquet ? racquet.name : '\u2014') + ' \u00B7 ' + lo.mainsTension + 'lbs</div>' +
         '</div>' +
       '</div>' +
@@ -5420,7 +5632,7 @@ function renderMyLoadouts() {
         '<button class="dock-myl-btn" onclick="addLoadoutToCompare(\'' + lo.id + '\')" title="Compare">' +
           '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="4" height="10" rx="0.5"/><rect x="7" y="1" width="4" height="10" rx="0.5"/></svg>' +
         '</button>' +
-        '<button class="dock-myl-btn dock-myl-btn-remove" onclick="removeLoadout(\'' + lo.id + '\')" title="Remove">' +
+        '<button class="dock-myl-btn dock-myl-btn-remove" onclick="confirmRemoveLoadout(\'' + lo.id + '\')" title="Remove">' +
           '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="3" y1="3" x2="9" y2="9"/><line x1="9" y1="3" x2="3" y2="9"/></svg>' +
         '</button>' +
       '</div>' +
@@ -5428,9 +5640,22 @@ function renderMyLoadouts() {
   }).join('');
 }
 
+// Fix J: Two-step remove confirmation (QA-028)
+function confirmRemoveLoadout(loadoutId) {
+  var item = document.querySelector('.dock-myl-item[data-lo-id="' + loadoutId + '"]');
+  if (!item) return;
+  var actions = item.querySelector('.dock-myl-item-actions');
+  if (!actions) return;
+  actions.innerHTML =
+    '<span class="dock-myl-confirm-text">Delete?</span>' +
+    '<button class="dock-myl-btn dock-myl-btn-confirm-yes" onclick="removeLoadout(\'' + loadoutId + '\')">Yes</button>' +
+    '<button class="dock-myl-btn" onclick="renderMyLoadouts()">No</button>';
+}
+
 // Dock action handlers
 function saveActiveLoadout() {
   if (!activeLoadout) return;
+  activeLoadout._dirty = false;
   saveLoadout(activeLoadout);
 }
 
@@ -5446,8 +5671,38 @@ function duplicateActiveLoadout() {
 
 function resetActiveLoadout() {
   activeLoadout = null;
+
+  // Full editor reset — clear all form elements
   ssInstances['select-racquet']?.setValue('');
   ssInstances['select-string-full']?.setValue('');
+  ssInstances['select-string-mains']?.setValue('');
+  ssInstances['select-string-crosses']?.setValue('');
+  setHybridMode(false);
+
+  // Reset tension inputs to defaults
+  var tfm = document.getElementById('input-tension-full-mains');
+  var tfx = document.getElementById('input-tension-full-crosses');
+  var thm = document.getElementById('input-tension-mains');
+  var thx = document.getElementById('input-tension-crosses');
+  if (tfm) tfm.value = 55;
+  if (tfx) tfx.value = 53;
+  if (thm) thm.value = 55;
+  if (thx) thx.value = 53;
+
+  // Reset gauge dropdowns
+  ['gauge-select-full', 'gauge-select-mains', 'gauge-select-crosses'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) { el.innerHTML = '<option value="">\u2014</option>'; el.disabled = true; }
+  });
+
+  // Close editor details if open
+  var editor = document.getElementById('dock-editor-section');
+  if (editor) editor.open = false;
+
+  // Hide frame specs
+  var specs = document.getElementById('frame-specs');
+  if (specs) specs.classList.add('hidden');
+
   renderDockPanel();
   if (currentMode === 'overview') renderDashboard();
 }
@@ -5472,10 +5727,9 @@ function addLoadoutToCompare(loadoutId) {
 }
 
 // Legacy alias for backward compat
+// Legacy alias for backward compat — routes through the canonical path
 function setActiveLoadout(loadoutData) {
-  activeLoadout = loadoutData;
-  hydrateDock(loadoutData);
-  renderDockPanel();
+  activateLoadout(loadoutData);
 }
 
 function renderDockState() {
@@ -5505,9 +5759,15 @@ function switchMode(mode) {
   isTuneMode = (mode === 'tune');
   isComparisonMode = (mode === 'compare');
 
-  // Show new mode section
+  // Show new mode section with animation replay
   const newSection = document.getElementById('mode-' + mode);
-  if (newSection) newSection.classList.remove('hidden');
+  if (newSection) {
+    newSection.classList.remove('hidden');
+    // Force animation replay by resetting
+    newSection.style.animation = 'none';
+    newSection.offsetHeight; // trigger reflow
+    newSection.style.animation = '';
+  }
 
   // Restore scroll position
   if (workspace) {
@@ -5732,62 +5992,26 @@ function loadPresetFromData(preset) {
   const mt = preset.mainsTension ?? preset.tension ?? 55;
   const xt = preset.crossesTension ?? preset.tension ?? 53;
 
-  // Create proper loadout from preset
-  const _s = preset.isHybrid ? null : STRINGS.find(s => s.id === preset.stringId);
-  const _cfg = preset.isHybrid ? {
-    isHybrid: true,
-    mains: STRINGS.find(s => s.id === preset.mainsId),
-    crosses: STRINGS.find(s => s.id === preset.crossesId),
-    mainsTension: mt,
-    crossesTension: xt
-  } : {
-    isHybrid: false,
-    string: _s,
-    mainsTension: mt,
-    crossesTension: xt
-  };
-  const _stats = predictSetup(racquet, _cfg);
-  const _tCtx = _stats ? buildTensionContext(_cfg, racquet) : null;
-  const _obs = _stats ? computeCompositeScore(_stats, _tCtx) : 0;
-  const _ident = _stats ? generateIdentity(_stats, racquet, _cfg) : null;
-
-  activeLoadout = {
-    id: 'lo-' + Date.now(),
-    name: (_s ? _s.name : 'Hybrid') + ' on ' + racquet.name,
-    frameId: preset.racquetId,
-    stringId: preset.stringId || null,
-    isHybrid: preset.isHybrid || false,
-    mainsId: preset.mainsId || null,
-    crossesId: preset.crossesId || null,
-    mainsTension: mt,
+  const opts = {
+    source: 'preset',
     crossesTension: xt,
-    stats: _stats,
-    obs: +_obs.toFixed(1),
-    identity: _ident ? _ident.name : '',
-    source: 'preset'
   };
-
-  ssInstances['select-racquet']?.setValue(preset.racquetId);
-  showFrameSpecs(racquet);
-
   if (preset.isHybrid) {
-    setHybridMode(true);
-    ssInstances['select-string-mains']?.setValue(preset.mainsId);
-    populateGaugeDropdown(document.getElementById('gauge-select-mains'), preset.mainsId);
-    $('#input-tension-mains').value = mt;
-    ssInstances['select-string-crosses']?.setValue(preset.crossesId);
-    populateGaugeDropdown(document.getElementById('gauge-select-crosses'), preset.crossesId);
-    $('#input-tension-crosses').value = xt;
-  } else {
-    setHybridMode(false);
-    ssInstances['select-string-full']?.setValue(preset.stringId);
-    populateGaugeDropdown(document.getElementById('gauge-select-full'), preset.stringId);
-    $('#input-tension-full-mains').value = mt;
-    $('#input-tension-full-crosses').value = xt;
+    opts.isHybrid = true;
+    opts.mainsId = preset.mainsId;
+    opts.crossesId = preset.crossesId;
   }
 
-  renderDockPanel();
-  renderDashboard();
+  const lo = createLoadout(
+    preset.racquetId,
+    preset.isHybrid ? preset.mainsId : preset.stringId,
+    mt,
+    opts
+  );
+  if (lo) {
+    activateLoadout(lo);
+    renderDashboard();
+  }
 }
 
 function loadPresetIntoSlot(presetIdx, slotIdx) {
@@ -5877,7 +6101,7 @@ function renderComparisonPresets() {
     return;
   }
 
-  let html = '<span class="comp-presets-label">QUICK ADD</span>';
+  let html = '';
   suggestions.slice(0, 5).forEach((s, idx) => {
     html += `<button class="comp-preset-btn" data-sug-idx="${idx}" title="${s.label} · OBS ${s.obs || '—'}">
       <span class="comp-preset-name">${s.label}</span>
@@ -5933,9 +6157,9 @@ const STAT_CSS_CLASSES = ['spin', 'power', 'control', 'launch', 'feel', 'comfort
 function getSlotColors() {
   const isDark = document.documentElement.dataset.theme === 'dark';
   return [
-    { border: '#C7F63A', bg: 'rgba(199, 246, 58, 0.20)', bgFaint: 'rgba(199, 246, 58, 0.08)', label: 'A', cssClass: 'a', borderDash: [] },
-    { border: '#7CCBFF', bg: 'rgba(124, 203, 255, 0.18)', bgFaint: 'rgba(124, 203, 255, 0.08)', label: 'B', cssClass: 'b', borderDash: [6, 3] },
-    { border: '#FF9A57', bg: 'rgba(255, 154, 87, 0.18)', bgFaint: 'rgba(255, 154, 87, 0.08)', label: 'C', cssClass: 'c', borderDash: [2, 3] }
+    { border: isDark ? '#38BDF8' : '#0EA5E9', bg: isDark ? 'rgba(56, 189, 248, 0.16)' : 'rgba(14, 165, 233, 0.14)', bgFaint: isDark ? 'rgba(56, 189, 248, 0.06)' : 'rgba(14, 165, 233, 0.06)', label: 'A', cssClass: 'a', borderDash: [] },
+    { border: isDark ? '#A78BFA' : '#8B5CF6', bg: isDark ? 'rgba(167, 139, 250, 0.16)' : 'rgba(139, 92, 246, 0.14)', bgFaint: isDark ? 'rgba(167, 139, 250, 0.06)' : 'rgba(139, 92, 246, 0.06)', label: 'B', cssClass: 'b', borderDash: [6, 3] },
+    { border: isDark ? '#FB923C' : '#F97316', bg: isDark ? 'rgba(251, 146, 60, 0.16)' : 'rgba(249, 115, 22, 0.14)', bgFaint: isDark ? 'rgba(251, 146, 60, 0.06)' : 'rgba(249, 115, 22, 0.06)', label: 'C', cssClass: 'c', borderDash: [2, 3] }
   ];
 }
 let SLOT_COLORS = getSlotColors();
@@ -6284,7 +6508,11 @@ function populateRacquetDropdown(targetEl) {
     onChange: (val) => {
       const r = RACQUETS.find(x => x.id === val);
       showFrameSpecs(r);
-      renderDashboard();
+      if (activeLoadout) {
+        commitEditorToLoadout();
+      } else {
+        renderDashboard();
+      }
     }
   });
 }
@@ -6300,7 +6528,11 @@ function populateStringDropdown(targetEl, initialValue) {
       // Update gauge display
       const gaugeEl = wrapper.dataset.gaugeTarget ? document.getElementById(wrapper.dataset.gaugeTarget) : null;
       if (gaugeEl) populateGaugeDropdown(gaugeEl, val);
-      renderDashboard();
+      if (activeLoadout) {
+        commitEditorToLoadout();
+      } else {
+        renderDashboard();
+      }
     }
   });
 }
@@ -6348,7 +6580,7 @@ function populateGaugeDropdown(el, stringId) {
     }).join('');
     el.disabled = false;
     // Fire change handler to rebuild on gauge change
-    el.onchange = () => renderDashboard();
+    el.onchange = () => { activeLoadout ? commitEditorToLoadout() : renderDashboard(); };
   } else {
     el.textContent = s.gauge;
   }
@@ -6381,7 +6613,10 @@ function showFrameSpecs(racquet) {
 // MAIN DASHBOARD RENDER
 // ============================================
 
-function getCurrentSetup() {
+// _getSetupFromEditorDOM: reads build state directly from dock editor form elements.
+// Used ONLY as fallback when no activeLoadout exists (e.g., creation form, first-time user).
+// For all normal operation, getCurrentSetup() reads from the loadout model instead.
+function _getSetupFromEditorDOM() {
   const racquetId = ssInstances['select-racquet']?.getValue() || '';
   const racquet = RACQUETS.find(r => r.id === racquetId);
   if (!racquet) return null;
@@ -6440,6 +6675,34 @@ function getCurrentSetup() {
   }
 }
 
+// getCurrentSetup: Smart wrapper — reads from activeLoadout model when available,
+// falls back to DOM editor for creation form / no-loadout state.
+// This is the ONLY function external code should call to get the current build.
+function getCurrentSetup() {
+  if (activeLoadout) {
+    return getSetupFromLoadout(activeLoadout);
+  }
+  return _getSetupFromEditorDOM();
+}
+
+// Wave 2: Assign stagger animation indices to direct children of a container
+function _assignStaggerIndices(containerSel) {
+  const container = document.querySelector(containerSel);
+  if (!container) return;
+  const children = container.children;
+  for (let i = 0; i < children.length; i++) {
+    const child = children[i];
+    // Skip hidden elements
+    if (child.classList.contains('hidden') || child.style.display === 'none') continue;
+    child.classList.add('stagger-item');
+    child.style.setProperty('--stagger-i', i);
+    // Force animation replay
+    child.style.animation = 'none';
+    child.offsetHeight;
+    child.style.animation = '';
+  }
+}
+
 function renderDashboard() {
   const setup = getCurrentSetup();
 
@@ -6457,30 +6720,9 @@ function renderDashboard() {
   const identity = generateIdentity(stats, racquet, stringConfig);
   const fitProfile = generateFitProfile(stats, racquet, stringConfig);
   const warnings = generateWarnings(racquet, stringConfig, stats);
-  const badge = getSetupBadge(racquet, stringConfig);
 
-  // Sync active loadout with dock form changes
-  if (activeLoadout && setup) {
-    const _tCtx = buildTensionContext(stringConfig, racquet);
-    const _obs = computeCompositeScore(stats, _tCtx);
-    activeLoadout.stats = stats;
-    activeLoadout.obs = +_obs.toFixed(1);
-    activeLoadout.frameId = racquet.id;
-    activeLoadout.identity = identity ? identity.name : '';
-    activeLoadout.mainsTension = stringConfig.mainsTension;
-    activeLoadout.crossesTension = stringConfig.crossesTension;
-    if (!stringConfig.isHybrid && stringConfig.string) {
-      activeLoadout.stringId = stringConfig.string.id;
-      activeLoadout.name = stringConfig.string.name + ' on ' + racquet.name;
-    }
-    renderDockPanel();
-  }
-
-  // Summary
-  renderSummary(racquet, stringConfig, badge);
-
-  // 4-Card Overview Grid
-  renderOverviewCards(racquet, stringConfig, stats, identity, fitProfile);
+  // Hero Band (replaces summary + identity + rating cards)
+  renderOverviewHero(racquet, stringConfig, stats, identity);
 
   // Stats
   renderStatBars(stats);
@@ -6489,62 +6731,66 @@ function renderDashboard() {
   // Fit
   renderFitProfile(fitProfile);
 
+  // Progressive depth (inside <details>)
+  renderOCFoundation(racquet, stringConfig, stats);
+  renderOCSnapshot(fitProfile);
+
   // Warnings
   renderWarnings(warnings);
+
+  // Wave 2: Assign stagger indices to top-level dashboard sections
+  _assignStaggerIndices('#dashboard-content');
 
   // If Tune mode is open, refresh its panels with the updated setup
   refreshTuneIfActive();
 }
 
-function renderSummary(racquet, stringConfig, badge) {
-  const grid = $('#summary-grid');
-  const badgeEl = $('#identity-badge');
-  badgeEl.textContent = badge;
+function renderOverviewHero(racquet, stringConfig, stats, identity) {
+  const el = $('#overview-hero');
+  const tensionCtx = buildTensionContext(stringConfig, racquet);
+  const score = computeCompositeScore(stats, tensionCtx);
+  const pct = Math.min(score / 100, 1);
+  const circumference = 2 * Math.PI * 42;
+  const dashOffset = circumference * (1 - pct);
+  const tier = getObsTier(score);
 
-  let stringName, stringTension;
+  // String name for meta line
+  let stringName;
   if (stringConfig.isHybrid) {
     stringName = `${stringConfig.mains.name} ${stringConfig.mains.gauge} / ${stringConfig.crosses.name} ${stringConfig.crosses.gauge}`;
-    stringTension = `M: ${stringConfig.mainsTension} / X: ${stringConfig.crossesTension} lbs`;
   } else {
     stringName = `${stringConfig.string.name} ${stringConfig.string.gauge}`;
-    stringTension = `M: ${stringConfig.mainsTension} / X: ${stringConfig.crossesTension} lbs`;
   }
+  const tensionLabel = `M${stringConfig.mainsTension} / X${stringConfig.crossesTension}`;
 
-  grid.innerHTML = `
-    <div class="summary-item">
-      <span class="summary-label">Frame</span>
-      <span class="summary-value">${racquet.name}</span>
+  // Tags
+  const tags = (identity.tags || []).map(t => `<span class="hero-tag">${t}</span>`).join('');
+
+  el.innerHTML = `
+    <div class="hero-score">
+      <div class="hero-obs-ring">
+        <svg viewBox="0 0 100 100">
+          <circle class="ring-bg" cx="50" cy="50" r="42" />
+          <circle class="ring-fill" cx="50" cy="50" r="42"
+            stroke-dasharray="${circumference.toFixed(1)}"
+            stroke-dashoffset="${dashOffset.toFixed(1)}"
+            style="stroke:${getObsScoreColor(score)}" />
+        </svg>
+        <span class="hero-obs-value" style="color:${getObsScoreColor(score)}">${score.toFixed(1)}</span>
+      </div>
+      <div class="hero-obs-tier">${tier.label}</div>
     </div>
-    <div class="summary-item">
-      <span class="summary-label">Year</span>
-      <span class="summary-value">${racquet.year}</span>
-    </div>
-    <div class="summary-item">
-      <span class="summary-label">Weight / SW</span>
-      <span class="summary-value">${racquet.strungWeight}g / ${racquet.swingweight}</span>
-    </div>
-    <div class="summary-item">
-      <span class="summary-label">Stiffness</span>
-      <span class="summary-value">${racquet.stiffness} RA</span>
-    </div>
-    <div class="summary-item">
-      <span class="summary-label">Pattern</span>
-      <span class="summary-value">${racquet.pattern}</span>
-    </div>
-    <div class="summary-item">
-      <span class="summary-label">String</span>
-      <span class="summary-value">${stringName}</span>
-    </div>
-    <div class="summary-item">
-      <span class="summary-label">Tension</span>
-      <span class="summary-value">${stringTension}</span>
-    </div>
-    <div class="summary-item">
-      <span class="summary-label">Setup Type</span>
-      <span class="summary-value">${stringConfig.isHybrid ? 'Hybrid' : 'Full Bed'}</span>
+    <div class="hero-identity">
+      <div class="hero-archetype">${identity.archetype}</div>
+      <div class="hero-desc">${identity.description}</div>
+      <div class="hero-tags">${tags}</div>
+      <div class="hero-meta">
+        ${racquet.name} <span class="hero-sep">·</span> ${stringName} <span class="hero-sep">·</span> ${tensionLabel}
+      </div>
     </div>
   `;
 }
+
 
 // ============================================
 // OVERVIEW 4-CARD GRID
@@ -6722,51 +6968,6 @@ function getRatingDescriptor(score, identity) {
   return `Developing ${archLower} configuration`;
 }
 
-function renderOverviewCards(racquet, stringConfig, stats, identity, fitProfile) {
-  renderOCIdentity(identity);
-  renderOCRating(stats, identity, buildTensionContext(stringConfig, racquet));
-  renderOCFoundation(racquet, stringConfig, stats);
-  renderOCSnapshot(fitProfile);
-}
-
-function renderOCIdentity(identity) {
-  const el = $('#oc-identity');
-  // Truncate description to ~2 lines (approx 120 chars)
-  const desc = identity.description.length > 130
-    ? identity.description.substring(0, 127) + '...'
-    : identity.description;
-
-  el.innerHTML = `
-    <div class="oc-eyebrow">Setup Identity</div>
-    <div class="oc-identity-title">${identity.archetype.toUpperCase()}</div>
-    <div class="oc-identity-desc">${desc}</div>
-  `;
-}
-
-function renderOCRating(stats, identity, tensionCtx) {
-  const el = $('#oc-rating');
-  const score = computeCompositeScore(stats, tensionCtx);
-  const pct = Math.min(score / 100, 1);
-  // SVG ring: radius 42, circumference = 2*PI*42 ≈ 263.89
-  const circumference = 2 * Math.PI * 42;
-  const dashOffset = circumference * (1 - pct);
-  const descriptor = getRatingDescriptor(score, identity);
-
-  el.innerHTML = `
-    <div class="oc-eyebrow">Overall Build Rating</div>
-    <div class="oc-rating-ring">
-      <svg viewBox="0 0 100 100">
-        <circle class="ring-bg" cx="50" cy="50" r="42" />
-        <circle class="ring-fill" cx="50" cy="50" r="42"
-          stroke-dasharray="${circumference.toFixed(1)}"
-          stroke-dashoffset="${dashOffset.toFixed(1)}" />
-      </svg>
-      <div class="oc-rating-score">${score.toFixed(1)}</div>
-    </div>
-    <div class="oc-rating-label">Composite Build Score</div>
-    <div class="oc-rating-desc">${descriptor}</div>
-  `;
-}
 
 function renderOCFoundation(racquet, stringConfig, stats) {
   const el = $('#oc-foundation');
@@ -6788,7 +6989,6 @@ function renderOCFoundation(racquet, stringConfig, stats) {
   }
 
   el.innerHTML = `
-    <div class="oc-eyebrow">Data Foundation</div>
     <div class="oc-foundation-group">
       <div class="oc-foundation-group-title">Frame</div>
       <div class="oc-foundation-group-values">${racquet.strungWeight}g ${sep} SW ${racquet.swingweight} ${sep} ${racquet.stiffness} RA ${sep} ${racquet.pattern}</div>
@@ -6814,7 +7014,6 @@ function renderOCSnapshot(fitProfile) {
   const sweetSpot = sweetSpotMatch ? sweetSpotMatch[1] : fitProfile.tensionRec;
 
   el.innerHTML = `
-    <div class="oc-eyebrow">Fit Snapshot</div>
     <div class="oc-snapshot-section">
       <div class="oc-snapshot-label best-for">Best For</div>
       <div class="oc-snapshot-value">${bestForText}</div>
@@ -6848,11 +7047,14 @@ function renderStatBars(stats) {
     container.appendChild(row);
   });
 
-  // Animate bars
+  // Animate bars with opacity modulation
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      container.querySelectorAll('.stat-bar-fill').forEach(bar => {
-        bar.style.width = bar.dataset.target + '%';
+      container.querySelectorAll('.stat-bar-fill').forEach((bar, idx) => {
+        const val = parseFloat(bar.dataset.target);
+        bar.style.width = val + '%';
+        bar.style.opacity = (0.25 + (val / 100) * 0.75).toFixed(2);
+        bar.style.transitionDelay = (idx * 50) + 'ms';
       });
     });
   });
@@ -6867,8 +7069,8 @@ function renderRadarChart(stats) {
   const gridColor = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)';
   const angleColor = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)';
   const labelColor = isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.44)';
-  const accentColor = '#C7F63A';
-  const fillColor = isDark ? 'rgba(199, 246, 58, 0.10)' : 'rgba(199, 246, 58, 0.12)';
+  const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--fn').trim() || '#0EA5E9';
+  const fillColor = isDark ? 'rgba(56, 189, 248, 0.12)' : 'rgba(14, 165, 233, 0.10)';
 
   if (currentRadarChart) {
     currentRadarChart.data.datasets[0].data = data;
@@ -7432,6 +7634,8 @@ function renderCompareSummaries() {
     $('#compare-verdict').style.display = 'none';
     $('#compare-matrix').style.display = 'none';
     $('#compare-proof').style.display = 'none';
+    const rd = document.getElementById('compare-details-radar');
+    if (rd) rd.style.display = 'none';
     return;
   }
 
@@ -7442,6 +7646,8 @@ function renderCompareSummaries() {
     $('#compare-verdict').style.display = 'none';
     $('#compare-matrix').style.display = 'none';
     $('#compare-proof').style.display = 'none';
+    const rd = document.getElementById('compare-details-radar');
+    if (rd) rd.style.display = 'none';
   }
 
   let html = '';
@@ -7514,12 +7720,13 @@ function renderCompareSummaries() {
                   stroke-dasharray="${circumference}" stroke-dashoffset="${dashOffset}"
                   stroke-linecap="round" transform="rotate(-90 32 32)" />
               </svg>
-              <span class="compare-summary-score-value">${obsScore}</span>
+              <span class="compare-summary-score-value" style="color:${getObsScoreColor(parseFloat(obsScore))}">${obsScore}</span>
             </div>
             <span class="compare-summary-score-label">OBS</span>
           </div>
         </div>
         <div class="compare-summary-meta">${metaHTML}</div>
+        ${_isCompareSlotStale(slot) ? '<div class="compare-slot-stale"><span class="compare-stale-text">\u21BB Source loadout changed</span><button class="compare-stale-btn" onclick="_refreshCompareSlot(' + index + ')">Refresh</button></div>' : ''}
         <div class="compare-summary-actions">
           <button class="compare-action-btn" onclick="openCompareEditor(${index})">
             <svg viewBox="0 0 16 16" fill="none"><path d="M11.5 1.5l3 3L5 14H2v-3L11.5 1.5z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -7667,16 +7874,19 @@ function renderCompareVerdict() {
 function renderCompareMatrix() {
   const container = $('#compare-matrix');
   const proof = $('#compare-proof');
+  const radarDetails = document.getElementById('compare-details-radar');
   const validSlots = comparisonSlots.filter(s => s.stats);
 
   if (validSlots.length < 2) {
     container.style.display = 'none';
+    if (radarDetails) radarDetails.style.display = 'none';
     proof.style.display = 'none';
     return;
   }
 
   container.style.display = '';
   proof.style.display = '';
+  if (radarDetails) radarDetails.style.display = '';
 
   const a = validSlots[0];
   const b = validSlots[1];
@@ -8297,10 +8507,10 @@ function renderSweepChart(setup) {
   const isDark = document.documentElement.dataset.theme === 'dark';
 
   const curveColors = {
-    control: { border: '#C7F63A', bg: 'rgba(199,246,58,0.10)' },
-    comfort: { border: '#7CCBFF', bg: 'rgba(124,203,255,0.10)' },
-    spin:    { border: '#FF9A57', bg: 'rgba(255,154,87,0.10)' },
-    power:   { border: isDark ? 'rgba(255,255,255,0.40)' : 'rgba(0,0,0,0.35)', bg: 'transparent' }
+    control: { border: isDark ? '#38BDF8' : '#0EA5E9', bg: isDark ? 'rgba(56,189,248,0.10)' : 'rgba(14,165,233,0.08)' },
+    comfort: { border: isDark ? '#A78BFA' : '#8B5CF6', bg: isDark ? 'rgba(167,139,250,0.10)' : 'rgba(139,92,246,0.08)' },
+    spin:    { border: isDark ? '#FB923C' : '#F97316', bg: isDark ? 'rgba(251,146,60,0.10)' : 'rgba(249,115,22,0.08)' },
+    power:   { border: isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.30)', bg: 'transparent' }
   };
 
   const datasets = [
@@ -8395,14 +8605,14 @@ function renderSweepChart(setup) {
         const ex = xScale.getPixelForValue(tuneState.exploredTension);
         if (ex >= chartArea.left && ex <= chartArea.right) {
           ctx.save();
-          ctx.strokeStyle = '#C7F63A';
+          ctx.strokeStyle = isDark ? '#38BDF8' : '#0EA5E9';
           ctx.lineWidth = 1.5;
           ctx.setLineDash([]);
           ctx.beginPath();
           ctx.moveTo(ex, chartArea.top);
           ctx.lineTo(ex, chartArea.bottom);
           ctx.stroke();
-          ctx.fillStyle = '#C7F63A';
+          ctx.fillStyle = isDark ? '#38BDF8' : '#0EA5E9';
           ctx.font = "600 10px 'General Sans', sans-serif";
           ctx.textAlign = 'center';
           ctx.fillText(`${tuneState.exploredTension} lbs`, ex, chartArea.top - 6);
@@ -8416,7 +8626,7 @@ function renderSweepChart(setup) {
         const lx = xScale.getPixelForValue(w.low);
         const rx = xScale.getPixelForValue(w.high);
         ctx.save();
-        ctx.fillStyle = isDark ? 'rgba(199,246,58,0.06)' : 'rgba(199,246,58,0.10)';
+        ctx.fillStyle = isDark ? 'rgba(56,189,248,0.06)' : 'rgba(14,165,233,0.08)';
         ctx.fillRect(lx, chartArea.top, rx - lx, chartArea.bottom - chartArea.top);
         ctx.restore();
       }
@@ -8556,15 +8766,38 @@ function getObsTier(score) {
   return OBS_TIERS[0];
 }
 
+// Ice Court score color system — monochrome + fn blue at peak
+function getObsScoreColor(score) {
+  const isDark = document.documentElement.dataset.theme === 'dark';
+  if (score >= 80) return isDark ? 'var(--fn, #38BDF8)' : 'var(--fn, #0EA5E9)';
+  if (score >= 60) return 'var(--text-primary)';
+  if (score >= 40) return 'var(--text-muted)';
+  return 'var(--text-faint)';
+}
+
 function getObsBadgeStyle(score) {
-  if (score >= 90) return 'background: rgba(168, 64, 64, 0.15); color: #a84040;';
-  if (score >= 80) return 'background: rgba(185, 80, 69, 0.12); color: #b85045;';
-  if (score >= 70) return 'background: rgba(201, 112, 64, 0.12); color: #c97040;';
-  if (score >= 60) return 'background: rgba(181, 181, 54, 0.12); color: #8a8a28;';
-  if (score >= 50) return 'background: rgba(143, 166, 62, 0.10); color: #6b8f4a;';
-  if (score >= 40) return 'background: rgba(90, 140, 90, 0.10); color: #5a8a5a;';
-  if (score >= 30) return 'background: rgba(90, 122, 90, 0.10); color: #5a7a5a;';
-  return 'background: rgba(80, 100, 80, 0.10); color: #4a6a4a;';
+  const isDark = document.documentElement.dataset.theme === 'dark';
+  if (score >= 80) return isDark
+    ? 'background: rgba(56, 189, 248, 0.12); color: #38BDF8;'
+    : 'background: rgba(14, 165, 233, 0.10); color: #0369A1;';
+  if (score >= 70) return isDark
+    ? 'background: rgba(250, 250, 250, 0.08); color: #FAFAFA;'
+    : 'background: rgba(24, 24, 27, 0.06); color: #18181B;';
+  if (score >= 60) return isDark
+    ? 'background: rgba(161, 161, 170, 0.10); color: #A1A1AA;'
+    : 'background: rgba(63, 63, 70, 0.08); color: #3F3F46;';
+  if (score >= 50) return isDark
+    ? 'background: rgba(113, 113, 122, 0.10); color: #71717A;'
+    : 'background: rgba(113, 113, 122, 0.08); color: #71717A;';
+  if (score >= 40) return isDark
+    ? 'background: rgba(251, 191, 36, 0.10); color: #FBBF24;'
+    : 'background: rgba(217, 119, 6, 0.08); color: #B45309;';
+  if (score >= 30) return isDark
+    ? 'background: rgba(251, 146, 60, 0.10); color: #FB923C;'
+    : 'background: rgba(234, 88, 12, 0.08); color: #C2410C;';
+  return isDark
+    ? 'background: rgba(248, 113, 113, 0.10); color: #F87171;'
+    : 'background: rgba(220, 38, 38, 0.06); color: #DC2626;';
 }
 
 function renderOverallBuildScore(setup) {
@@ -8593,7 +8826,7 @@ function renderOverallBuildScore(setup) {
   container.innerHTML = `
     <div class="obs-top-row">
       <div class="obs-score-group">
-        <span class="obs-score-value">${score.toFixed(1)}</span>
+        <span class="obs-score-value" style="color:${getObsScoreColor(score)}">${score.toFixed(1)}</span>
         <span class="obs-score-label">Composite</span>
       </div>
       <span class="obs-rank-badge" style="${getObsBadgeStyle(score)}">${tier.label}</span>
@@ -9159,6 +9392,14 @@ function onTuneSliderInput(e) {
   tuneState.exploredTension = val;
   updateSliderLabel();
 
+  // Wave 2: Pulse the displayed value
+  const valueEl = $('#slider-current-value');
+  if (valueEl) {
+    valueEl.classList.remove('slider-value-pulse');
+    valueEl.offsetHeight; // reflow to restart animation
+    valueEl.classList.add('slider-value-pulse');
+  }
+
   // Update delta display
   renderDeltaVsBaseline();
 
@@ -9191,21 +9432,9 @@ function onTuneSliderInput(e) {
       }
     }
 
-    // Update active loadout OBS in real-time
+    // Update active loadout via the canonical commit path
     if (activeLoadout) {
-      const updatedSetup = getCurrentSetup();
-      if (updatedSetup) {
-        const stats = predictSetup(updatedSetup.racquet, updatedSetup.stringConfig);
-        if (stats) {
-          const tCtx = buildTensionContext(updatedSetup.stringConfig, updatedSetup.racquet);
-          const obs = computeCompositeScore(stats, tCtx);
-          activeLoadout.stats = stats;
-          activeLoadout.obs = +obs.toFixed(1);
-          activeLoadout.mainsTension = updatedSetup.stringConfig.mainsTension;
-          activeLoadout.crossesTension = updatedSetup.stringConfig.crossesTension;
-          renderDockPanel();
-        }
-      }
+      commitEditorToLoadout();
     }
   }
 }
@@ -9342,7 +9571,11 @@ function openTuneForSlot(slotIndex) {
 function toggleTheme() {
   const html = document.documentElement;
   const current = html.dataset.theme;
+
+  // Wave 2: Smooth color crossfade
+  html.classList.add('theme-transitioning');
   html.dataset.theme = current === 'dark' ? 'light' : 'dark';
+  setTimeout(() => html.classList.remove('theme-transitioning'), 450);
 
   // Refresh theme-dependent colors
   SLOT_COLORS = getSlotColors();
@@ -9381,20 +9614,27 @@ function init() {
   populateStringDropdown($('#select-string-mains'));
   populateStringDropdown($('#select-string-crosses'));
 
-  // Tension inputs
-  $('#input-tension-full-mains').addEventListener('input', renderDashboard);
-  $('#input-tension-full-crosses').addEventListener('input', renderDashboard);
-  $('#input-tension-mains').addEventListener('input', renderDashboard);
-  $('#input-tension-crosses').addEventListener('input', renderDashboard);
+  // Tension inputs — route through commitEditorToLoadout when active loadout exists
+  function _onEditorChange() {
+    if (activeLoadout) {
+      commitEditorToLoadout();
+    } else {
+      renderDashboard();
+    }
+  }
+  $('#input-tension-full-mains').addEventListener('input', _onEditorChange);
+  $('#input-tension-full-crosses').addEventListener('input', _onEditorChange);
+  $('#input-tension-mains').addEventListener('input', _onEditorChange);
+  $('#input-tension-crosses').addEventListener('input', _onEditorChange);
 
   // String mode toggle
   $('#btn-full').addEventListener('click', () => {
     setHybridMode(false);
-    renderDashboard();
+    _onEditorChange();
   });
   $('#btn-hybrid').addEventListener('click', () => {
     setHybridMode(true);
-    renderDashboard();
+    _onEditorChange();
   });
 
   // Presets (dynamic) — Quick Presets section removed from dock, but keep comparison presets
@@ -10045,13 +10285,13 @@ function renderOptimizerResults(candidates, sortBy, currentOBS) {
     const typeTag = c.type === 'hybrid' ? '<span class="opt-tag-hybrid">H</span>' : '<span class="opt-tag-full">F</span>';
     const idx = i; // for action data attribute
 
-    html += `<tr class="opt-row" data-opt-idx="${idx}">
+    html += `<tr class="opt-row${i === 0 ? ' opt-row-top' : ''}" data-opt-idx="${idx}">
       <td class="opt-td opt-td-rank">${i + 1}</td>
       <td class="opt-td opt-td-type">${typeTag}</td>
       <td class="opt-td opt-td-string">${c.label}</td>
       <td class="opt-td opt-td-gauge">${c.gauge || '—'}</td>
       <td class="opt-td opt-td-tension">${tensionLabel}</td>
-      <td class="opt-td opt-td-num opt-td-obs">${c.score.toFixed(1)}</td>
+      <td class="opt-td opt-td-num opt-td-obs" style="color:${getObsScoreColor(c.score)};font-weight:700">${c.score.toFixed(1)}</td>
       <td class="opt-td opt-td-num ${deltaCls}">${deltaStr}</td>
       <td class="opt-td opt-td-num">${c.stats.spin?.toFixed(0) || '—'}</td>
       <td class="opt-td opt-td-num">${c.stats.power?.toFixed(0) || '—'}</td>
@@ -10157,7 +10397,7 @@ function optActionSave(idx) {
   const preset = _optBuildPresetData(c);
   
   // Create a proper loadout and save it
-  var opts = { source: 'manual' };
+  var opts = { source: 'optimize' };
   if (preset.isHybrid) {
     opts.isHybrid = true;
     opts.mainsId = preset.mainsId;
@@ -10187,6 +10427,7 @@ function optActionSave(idx) {
 
 let _fmbStep = 1;
 const _fmbAnswers = { swing: null, ball: null, court: null, painPoints: [], priorities: [] };
+let _fmbCurrentFrames = []; // stores ranked frame results for index-based action handlers
 
 function openFindMyBuild() {
   _fmbStep = 1;
@@ -10440,6 +10681,7 @@ function _fmbShowResults(profile) {
 
   // === Frame-first results: find top 5 matching frames ===
   const rankedFrames = _fmbRankFrames(profile);
+  _fmbCurrentFrames = rankedFrames; // store for index-based action handlers
 
   directionsEl.innerHTML = `
     <div class="fmb-frame-results">
@@ -10516,6 +10758,14 @@ function _fmbSearchDirection(direction) {
     typeBtn.classList.add('active');
   }
 
+  // Fix H: Seed optimizer frame from quiz's top-ranked frame (QA-021)
+  if (_fmbCurrentFrames && _fmbCurrentFrames.length > 0) {
+    var topFrame = _fmbCurrentFrames[0].racquet;
+    setVal('opt-frame-search', topFrame.name);
+    var frameValEl = document.getElementById('opt-frame-value');
+    if (frameValEl) frameValEl.value = topFrame.id;
+  }
+
   // Close wizard
   closeFindMyBuild();
 
@@ -10535,6 +10785,7 @@ function _fmbSearchDirection(direction) {
 const _compendiumBuildCache = {};
 let _compSelectedRacquetId = null;
 let _compSortKey = 'score';
+let _compCurrentBuilds = []; // stores sorted builds for current frame (for index-based action handlers)
 
 function initCompendium() {
   // Populate brand filter
@@ -10640,6 +10891,7 @@ function _compRenderMain(racquet) {
     if (_compSortKey === 'score') return b.score - a.score;
     return (b.stats[_compSortKey] || 0) - (a.stats[_compSortKey] || 0);
   });
+  _compCurrentBuilds = sorted; // store for index-based action handlers
 
   // Frame stat bars (skip durability and playability — always 50 for frame-only)
   const frameStatKeys = ['spin', 'power', 'control', 'launch', 'feel', 'comfort', 'stability', 'forgiveness', 'maneuverability'];
@@ -10818,7 +11070,6 @@ function _compRenderBuildCard(build, index, racquet) {
   const isHybrid = build.type === 'hybrid';
   const stringLabel = isHybrid ? (build.label || build.string.name) : build.string.name;
   const metaLabel = isHybrid ? `Hybrid &middot; M:${build.tension} / X:${build.crossesTension} lbs` : `Full Bed &middot; ${build.tension} lbs`;
-  const actionId = isHybrid ? build.mainsId : build.string.id;
 
   return `<div class="comp-build-card" style="border-left-color:${borderColor}">
     <div class="comp-card-top">
@@ -10836,9 +11087,9 @@ function _compRenderBuildCard(build, index, racquet) {
       <span>DUR <b>${Math.round(s.durability)}</b></span>
     </div>
     <div class="comp-card-actions">
-      <button class="comp-card-btn" onclick="_compActionSave('${racquet.id}','${actionId}',${build.tension})">Save</button>
-      <button class="comp-card-btn" onclick="_compActionTune('${racquet.id}','${actionId}',${build.tension})">Tune</button>
-      <button class="comp-card-btn comp-card-btn-primary" onclick="_compActionSetActive('${racquet.id}','${actionId}',${build.tension})">Set Active</button>
+      <button class="comp-card-btn" onclick="_compAction('save',${index},event)">Save</button>
+      <button class="comp-card-btn" onclick="_compAction('tune',${index})">Tune</button>
+      <button class="comp-card-btn comp-card-btn-primary" onclick="_compAction('setActive',${index})">Set Active</button>
     </div>
   </div>`;
 }
@@ -10850,54 +11101,95 @@ function _compSetSort(key) {
 }
 
 // --- Build card action handlers ---
+// Unified action handler — reads full build data from _compCurrentBuilds by index.
+// Correctly handles both full-bed and hybrid builds.
 
-function _compBuildPreset(racquetId, stringId, tension) {
-  return {
-    id: 'comp-' + Date.now(),
-    name: '',
-    racquetId: racquetId,
-    isHybrid: false,
-    mainsId: null,
-    crossesId: null,
-    mainsTension: tension,
-    crossesTension: tension,
-    stringId: stringId
+function _compCreateLoadoutFromBuild(build) {
+  var racquetId = _compSelectedRacquetId;
+  var isHybrid = build.type === 'hybrid';
+  var opts = {
+    source: 'compendium',
+    isHybrid: isHybrid,
+    crossesTension: build.crossesTension || build.tension,
   };
-}
-
-function _compActionSetActive(racquetId, stringId, tension) {
-  var lo = createLoadout(racquetId, stringId, tension, { source: 'compendium' });
-  if (lo) {
-    activateLoadout(lo);
-    switchMode('overview');
-    renderDashboard();
+  if (isHybrid) {
+    opts.mainsId = build.mainsId;
+    opts.crossesId = build.crossesId;
   }
+  var stringId = isHybrid ? build.mainsId : build.string.id;
+  return createLoadout(racquetId, stringId, build.tension, opts);
 }
 
-function _compActionTune(racquetId, stringId, tension) {
-  var lo = createLoadout(racquetId, stringId, tension, { source: 'compendium' });
-  if (lo) {
-    activateLoadout(lo);
-    switchMode('tune');
-  }
-}
+function _compAction(action, buildIndex, evt) {
+  var build = _compCurrentBuilds[buildIndex];
+  if (!build) return;
 
-function _compActionSave(racquetId, stringId, tension) {
-  var lo = createLoadout(racquetId, stringId, tension, { source: 'compendium' });
-  if (lo) {
-    saveLoadout(lo);
-    // Visual feedback on the button
-    if (event && event.target) {
-      event.target.textContent = 'Saved \u2713';
-      event.target.disabled = true;
-      setTimeout(function() {
-        event.target.textContent = 'Save';
-        event.target.disabled = false;
-      }, 1500);
+  if (action === 'save') {
+    var lo = _compCreateLoadoutFromBuild(build);
+    if (lo) {
+      saveLoadout(lo);
+      // Visual feedback
+      var btn = evt && evt.target;
+      if (btn) {
+        btn.textContent = 'Saved \u2713';
+        btn.disabled = true;
+        setTimeout(function() { btn.textContent = 'Save'; btn.disabled = false; }, 1500);
+      }
     }
+  } else if (action === 'tune') {
+    var lo = _compCreateLoadoutFromBuild(build);
+    if (lo) {
+      saveLoadout(lo); // QA-016: save before tuning so build isn't lost
+      activateLoadout(lo);
+      switchMode('tune');
+    }
+  } else if (action === 'setActive') {
+    var lo = _compCreateLoadoutFromBuild(build);
+    if (lo) {
+      activateLoadout(lo);
+      switchMode('overview');
+      renderDashboard();
+    }
+  } else if (action === 'compare') {
+    _compAddBuildToCompare(build);
   }
 }
 
+function _compAddBuildToCompare(build) {
+  if (comparisonSlots.length >= 3) comparisonSlots.pop();
+
+  var racquetId = _compSelectedRacquetId;
+  var racquet = RACQUETS.find(function(r) { return r.id === racquetId; });
+  if (!racquet) return;
+
+  var isHybrid = build.type === 'hybrid';
+  var stringId = isHybrid ? '' : build.string.id;
+  var cfg;
+  if (isHybrid) {
+    cfg = { isHybrid: true, mains: build.mains, crosses: build.crosses, mainsTension: build.tension, crossesTension: build.crossesTension };
+  } else {
+    cfg = { isHybrid: false, string: build.string, mainsTension: build.tension, crossesTension: build.tension };
+  }
+  var stats = predictSetup(racquet, cfg);
+  var identity = stats ? generateIdentity(stats, racquet, cfg) : null;
+
+  comparisonSlots.push({
+    id: Date.now(),
+    racquetId: racquetId,
+    stringId: stringId,
+    isHybrid: isHybrid,
+    mainsId: isHybrid ? build.mainsId : '',
+    crossesId: isHybrid ? build.crossesId : '',
+    mainsTension: build.tension,
+    crossesTension: build.crossesTension || build.tension,
+    stats: stats,
+    identity: identity
+  });
+  switchMode('compare');
+}
+
+// Legacy scalar-param compare handler — used by _addSuggestionToCompare and _compareQuickAdd
+// These flows only produce full-bed slots from dropdown selections.
 function _compActionCompare(racquetId, stringId, tension) {
   if (comparisonSlots.length >= 3) {
     comparisonSlots.pop();
@@ -10981,18 +11273,24 @@ function _fmbRenderFrameCard(fr, idx) {
     'Balanced': 'var(--text-secondary)'
   };
 
-  const buildCards = builds.map(b => {
+  const buildCards = builds.map((b, bIdx) => {
     const borderColor = archColors[b.archetype] || archColors['Balanced'];
+    const isHybrid = b.type === 'hybrid';
+    const stringLabel = isHybrid ? (b.label || b.string.name) : b.string.name;
+    const metaLabel = isHybrid
+      ? `Hybrid &middot; M:${b.tension} / X:${b.crossesTension} lbs`
+      : `Full Bed &middot; ${b.tension} lbs`;
+
     return `<div class="fmb-build-mini" style="border-left: 3px solid ${borderColor}">
       <div class="fmb-build-mini-header">
         <span class="fmb-build-mini-label">${b.archetype || 'Build'}</span>
         <span class="fmb-build-mini-obs">${b.score.toFixed(1)}</span>
       </div>
-      <div class="fmb-build-mini-string">${b.string.name}</div>
-      <div class="fmb-build-mini-tension">Full Bed &middot; ${b.tension} lbs</div>
+      <div class="fmb-build-mini-string">${stringLabel}</div>
+      <div class="fmb-build-mini-tension">${metaLabel}</div>
       <div class="fmb-build-btns">
-        <button class="fmb-build-select" onclick="_fmbActivateBuild('${r.id}','${b.string.id}',${b.tension})">Activate</button>
-        <button class="fmb-build-save" onclick="_fmbSaveBuild('${r.id}','${b.string.id}',${b.tension},this)">Save</button>
+        <button class="fmb-build-select" onclick="_fmbAction('activate',${idx},${bIdx})">Activate</button>
+        <button class="fmb-build-save" onclick="_fmbAction('save',${idx},${bIdx},this)">Save</button>
       </div>
     </div>`;
   }).join('');
@@ -11009,30 +11307,51 @@ function _fmbRenderFrameCard(fr, idx) {
   </div>`;
 }
 
-function _fmbActivateBuild(racquetId, stringId, tension) {
-  closeFindMyBuild();
-  var lo = createLoadout(racquetId, stringId, tension, { source: 'quiz' });
-  if (lo) {
+// Unified FMB action handler — reads full build data by frame+build index
+function _fmbAction(action, frameIdx, buildIdx, btn) {
+  var fr = _fmbCurrentFrames[frameIdx];
+  if (!fr) return;
+  var build = fr.builds[buildIdx];
+  if (!build) return;
+
+  var racquetId = fr.racquet.id;
+  var isHybrid = build.type === 'hybrid';
+  var opts = {
+    source: 'quiz',
+    isHybrid: isHybrid,
+    crossesTension: build.crossesTension || build.tension,
+  };
+  if (isHybrid) {
+    opts.mainsId = build.mainsId;
+    opts.crossesId = build.crossesId;
+  }
+  var stringId = isHybrid ? build.mainsId : build.string.id;
+  var lo = createLoadout(racquetId, stringId, build.tension, opts);
+  if (!lo) return;
+
+  if (action === 'activate') {
+    closeFindMyBuild();
     activateLoadout(lo);
     switchMode('overview');
     renderDashboard();
-  }
-}
-
-function _fmbSaveBuild(racquetId, stringId, tension, btn) {
-  var lo = createLoadout(racquetId, stringId, tension, { source: 'quiz' });
-  if (lo) {
+  } else if (action === 'save') {
     saveLoadout(lo);
-    // Visual feedback
     if (btn) {
       btn.textContent = 'Saved \u2713';
       btn.disabled = true;
-      setTimeout(function() {
-        btn.textContent = 'Save';
-        btn.disabled = false;
-      }, 1500);
+      setTimeout(function() { btn.textContent = 'Save'; btn.disabled = false; }, 1500);
     }
   }
+}
+
+// Legacy aliases for backward compat
+function _fmbActivateBuild(racquetId, stringId, tension) {
+  var lo = createLoadout(racquetId, stringId, tension, { source: 'quiz' });
+  if (lo) { closeFindMyBuild(); activateLoadout(lo); switchMode('overview'); renderDashboard(); }
+}
+function _fmbSaveBuild(racquetId, stringId, tension, btn) {
+  var lo = createLoadout(racquetId, stringId, tension, { source: 'quiz' });
+  if (lo) { saveLoadout(lo); if (btn) { btn.textContent = 'Saved \u2713'; btn.disabled = true; setTimeout(function() { btn.textContent = 'Save'; btn.disabled = false; }, 1500); } }
 }
 
 // Legacy alias
@@ -11270,6 +11589,7 @@ function _cfActivate() {
   activateLoadout(lo);
 
   if (isFirstLoadout) {
+    saveLoadout(lo); // QA-014: auto-save first loadout so it isn't lost
     switchMode('tune');
   } else if (currentMode === 'overview') {
     renderDashboard();
@@ -11578,8 +11898,63 @@ function _addLoadoutAsSlot(lo) {
     mainsTension: lo.mainsTension,
     crossesTension: lo.crossesTension,
     stats: stats,
-    identity: identity
+    identity: identity,
+    sourceLoadoutId: lo.id || null,
+    snapshotObs: lo.obs || 0
   });
+}
+
+function _isCompareSlotStale(slot) {
+  if (!slot.sourceLoadoutId) return false;
+  // Check active loadout
+  if (activeLoadout && activeLoadout.id === slot.sourceLoadoutId) {
+    return activeLoadout.mainsTension !== slot.mainsTension ||
+      activeLoadout.crossesTension !== slot.crossesTension ||
+      activeLoadout.stringId !== slot.stringId ||
+      activeLoadout.isHybrid !== slot.isHybrid ||
+      activeLoadout.mainsId !== (slot.mainsId || null) ||
+      activeLoadout.crossesId !== (slot.crossesId || null);
+  }
+  // Check saved loadouts
+  var src = savedLoadouts.find(function(l) { return l.id === slot.sourceLoadoutId; });
+  if (!src) return false;
+  return src.mainsTension !== slot.mainsTension ||
+    src.crossesTension !== slot.crossesTension ||
+    src.stringId !== slot.stringId ||
+    src.isHybrid !== slot.isHybrid ||
+    src.mainsId !== (slot.mainsId || null) ||
+    src.crossesId !== (slot.crossesId || null);
+}
+
+function _refreshCompareSlot(slotIndex) {
+  var slot = comparisonSlots[slotIndex];
+  if (!slot || !slot.sourceLoadoutId) return;
+  var src = null;
+  if (activeLoadout && activeLoadout.id === slot.sourceLoadoutId) {
+    src = activeLoadout;
+  } else {
+    src = savedLoadouts.find(function(l) { return l.id === slot.sourceLoadoutId; });
+  }
+  if (!src) return;
+
+  // Re-snapshot from source
+  slot.racquetId = src.frameId;
+  slot.stringId = src.stringId || '';
+  slot.isHybrid = src.isHybrid || false;
+  slot.mainsId = src.mainsId || '';
+  slot.crossesId = src.crossesId || '';
+  slot.mainsTension = src.mainsTension;
+  slot.crossesTension = src.crossesTension;
+  slot.snapshotObs = src.obs || 0;
+
+  // Recompute stats
+  recalcSlot(slotIndex);
+
+  // Re-render compare
+  renderCompareSummaries();
+  renderCompareVerdict();
+  renderCompareMatrix();
+  updateComparisonRadar();
 }
 
 function _autoFillCompareFromSaved() {
@@ -11599,7 +11974,13 @@ function _autoFillCompareFromSaved() {
   }
 
   if (added < 2 && savedLoadouts.length > 0) {
-    _addLoadoutAsSlot(savedLoadouts[0]);
+    // QA-018: Don't add a duplicate if the only saved loadout is already in a slot
+    var first = savedLoadouts[0];
+    var alreadyPresent = comparisonSlots.some(function(s) {
+      return s.racquetId === first.frameId && s.stringId === (first.stringId || '') &&
+        s.mainsTension === first.mainsTension && s.isHybrid === (first.isHybrid || false);
+    });
+    if (!alreadyPresent) _addLoadoutAsSlot(first);
   }
 
   renderComparisonSlots();

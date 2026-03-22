@@ -75,9 +75,6 @@
   --font-body: 'General Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
 
-  /* ═══ LAYOUT ═══ */
-  --header-h: 85px;
-
   /* ═══ SPACING ═══ */
   --space-1: 4px;
   --space-2: 8px;
@@ -131,6 +128,9 @@
   --score-mid: var(--text-muted);
   --score-low: var(--text-faint);
 
+  /* ═══ BORDER HELPERS ═══ */
+  --border-faint: var(--border-subtle);
+
   /* ═══ LEGACY COMPAT ALIASES ═══ */
   --cyan: var(--fn-text);
   --green: var(--green-tag);
@@ -139,11 +139,6 @@
   --cyan-dim: var(--fn-dim);
   --green-dim: var(--green-tag-dim);
   --amber-dim: var(--amber-tag-dim);
-  --cyan-glow: none;
-  --green-glow: none;
-  --amber-glow: none;
-  --red-glow: none;
-  --purple-glow: none;
   --purple: #7C3AED;
   --purple-dim: rgba(124, 58, 237, 0.08);
   --font-data: var(--font-mono);
@@ -5586,7 +5581,6 @@ body {
   }
   .opt-table-wrap {
     overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
   }
 }
 

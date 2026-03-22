@@ -3624,7 +3624,15 @@ function getGaugeOptions(stringData) {
 
 // ============================================
 // FRAME METADATA — captures what raw specs can't
-// Per-frame adjustments for technology, aero, generation improvements
+// Per-frame adjustments for technology, aero, generation improvements.
+// These bonuses are added on top of the physics-derived scores in calcFrameBase().
+//
+// Fields:
+//   aeroBonus   — aerodynamic frame design benefit → adds to power + spin
+//   comfortTech — vibration-dampening technology   → adds to comfort + feel
+//   spinTech    — textured/open-throat tech         → adds to spin
+//   genBonus    — generation/revision improvement   → small boost across all attrs
+//
 // Scale: 0 = none, 0.5 = minor, 1 = moderate, 1.5 = significant, 2+ = exceptional
 // ============================================
 const FRAME_META = {
@@ -4044,6 +4052,15 @@ const FRAME_META = {
   }
 };
 
+/**
+ * PREDICTION LAYER 0 — Frame base scores.
+ * Normalizes raw racquet specs (stiffness, swingweight, beam, headSize, balance, pattern)
+ * to [0, 1], then derives 9 attribute scores via weighted linear models.
+ * Tradeoff ceilings (power+control, maneuverability+stability) are soft-enforced
+ * before a final sigmoid-like compression targets the 50–85 output range.
+ * @param {Object} racquet — entry from the RACQUETS array
+ * @returns {Object} raw attribute scores (power, spin, control, …, maneuverability)
+ */
 function calcFrameBase(racquet) {
   const { stiffness, beamWidth, swingweight, pattern, headSize, strungWeight, balance, id } = racquet;
   const avgBeam = getAvgBeam(beamWidth);
@@ -4224,6 +4241,11 @@ function calcFrameBase(racquet) {
 // Score compression: 50-60 avg, 60-75 strong, 75-85 excellent, 85+ rare/exceptional.
 // No string should casually hit 90+ without being a genuine outlier.
 
+/**
+ * Soft linear compression for TWU-derived raw scores.
+ * Pulls extremes toward the midpoint (65): raw ~38–98 → compressed ~32–88.
+ * spread < 1 compresses (narrows range), spread > 1 expands.
+ */
 function compressScore(raw, floor = 30, ceiling = 95) {
   // Compress twScore (raw 0-100) into a more realistic range.
   // twScore ~38-98 → compressed ~32-88.
@@ -4234,6 +4256,17 @@ function compressScore(raw, floor = 30, ceiling = 95) {
   return Math.max(floor, Math.min(ceiling, compressed));
 }
 
+/**
+ * PREDICTION LAYER 1 — Standalone string profile.
+ * Derives attribute scores from TWU-measured physical properties:
+ *   twScore    — lab-measured multi-axis ratings (power, spin, control, etc.)
+ *   stiffness  — lb/in (115 softest → 234 stiffest)
+ *   tensionLoss — % of initial tension lost after break-in (10% best → 50% worst)
+ *   spinPotential — TWU friction-based scale (4.5 low → 9.4 high)
+ * No frame or tension interaction yet — those are applied in later layers.
+ * @param {Object} stringData — entry from the STRINGS array
+ * @returns {Object} attribute scores (power, spin, control, comfort, feel, durability, playability)
+ */
 function calcBaseStringProfile(stringData) {
   const tw = stringData.twScore;
   const stiff = stringData.stiffness; // lb/in: 115 (Truffle X elastic) to 234 (RPM Blast 17). All values TWU-measured or estimated in same unit.
@@ -4347,6 +4380,19 @@ function calcStringFrameMod(stringData) {
   };
 }
 
+/**
+ * PREDICTION LAYER 2 — Tension overlay.
+ * Returns per-attribute deltas based on absolute tension level and the
+ * mains/crosses differential. Pattern-aware: open beds (≤18 crosses) reward
+ * mains-tighter differentials for spin/snapback, while dense beds (≥20 crosses)
+ * prefer near-equal tension — reversing this degrades the score.
+ * Every 2 lbs above frame midpoint: ~+2 control, ~−2 power (absolute level effect).
+ * @param {number} mainsTension
+ * @param {number} crossesTension
+ * @param {number[]} tensionRange — [min, max] from racquet spec (used to find midpoint)
+ * @param {string} pattern — e.g. "16x19"
+ * @returns {Object} per-attribute modifier deltas
+ */
 function calcTensionModifier(mainsTension, crossesTension, tensionRange, pattern) {
   const avgTension = (mainsTension + crossesTension) / 2;
   const mid = (tensionRange[0] + tensionRange[1]) / 2;
@@ -4720,6 +4766,24 @@ function calcHybridInteraction(mainsData, crossesData) {
   return mods;
 }
 
+/**
+ * Top-level prediction entry point — combines all layers into a final stats object.
+ *
+ * Layer stack:
+ *   0. calcFrameBase        — racquet physics → 9 raw frame scores
+ *   1. calcBaseStringProfile — string physics → standalone string scores
+ *      calcStringFrameMod   — string×frame interaction modifiers
+ *   2. calcTensionModifier   — tension level + mains/crosses differential deltas
+ *   3. calcHybridInteraction — (hybrid only) pairing-specific bonuses/penalties
+ *
+ * For hybrid setups, mains dominate power/comfort/feel/spin (70/30 weight);
+ * crosses dominate control and durability (60/40 weight).
+ *
+ * @param {Object} racquet      — entry from RACQUETS
+ * @param {Object} stringConfig — { isHybrid, string?, mains?, crosses?,
+ *                                   mainsTension, crossesTension }
+ * @returns {Object} final attribute scores + identity archetype + debug info
+ */
 function predictSetup(racquet, stringConfig) {
   const frameBase = calcFrameBase(racquet);
 
@@ -7865,8 +7929,6 @@ function renderComparisonSlots() {
   const addBtn = $('#btn-add-slot');
   if (addBtn) addBtn.style.display = comparisonSlots.length >= 3 ? 'none' : '';
 }
-
-function renderSlotStats() { return ''; }
 
 function recalcSlot(index) {
   const slot = comparisonSlots[index];
@@ -12243,16 +12305,16 @@ function _fmbSelectBuild(racquetId, stringId, tension) {
 // FEATURE: Dock Creation Flow (unified state-based)
 // ============================================
 
-var _cfCreatingNew = false;
+let _cfCreatingNew = false;
 
 function _initQaSearchable(searchId, hiddenId, dropdownId, items) {
-  var searchEl = document.getElementById(searchId);
-  var hiddenEl = document.getElementById(hiddenId);
-  var dropdownEl = document.getElementById(dropdownId);
+  const searchEl = document.getElementById(searchId);
+  const hiddenEl = document.getElementById(hiddenId);
+  const dropdownEl = document.getElementById(dropdownId);
   if (!searchEl || !hiddenEl || !dropdownEl) return;
 
   function renderDropdown(filter) {
-    var filtered = filter ? items.filter(function(item) {
+    const filtered = filter ? items.filter(function(item) {
       return item.label.toLowerCase().indexOf(filter.toLowerCase()) >= 0;
     }) : items;
 
@@ -12923,7 +12985,7 @@ function _compareQuickAdd() {
 
   _compActionCompare(frameId, stringId, tension);
 
-  var prompt = document.getElementById('compare-qa-prompt');
+  const prompt = document.getElementById('compare-qa-prompt');
   if (prompt) prompt.remove();
 }
 
@@ -12933,7 +12995,7 @@ document.addEventListener('DOMContentLoaded', () => {
   _initDockCollapse();
 
   // Dock scroll shadow
-  var dock = document.getElementById('build-dock');
+  const dock = document.getElementById('build-dock');
   if (dock) {
     dock.addEventListener('scroll', function() {
       dock.classList.toggle('dock-scrolled', dock.scrollTop > 0);

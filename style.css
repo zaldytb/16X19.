@@ -525,28 +525,31 @@ body {
   transition: grid-template-columns 300ms var(--ease-out);
 }
 
+.dock-collapse-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--space-2);
+}
+
 .dock-collapse-btn {
-  position: absolute;
-  top: var(--space-3);
-  right: var(--space-3);
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xs);
-  background: var(--bg-elevated);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
   color: var(--text-muted);
   cursor: pointer;
-  z-index: 2;
   transition: all var(--dur-fast) var(--ease-out);
   padding: 0;
+  flex-shrink: 0;
 }
 .dock-collapse-btn:hover {
-  background: var(--bg-base);
-  border-color: var(--border-medium);
-  color: var(--text-primary);
+  background: var(--fn);
+  border-color: var(--fn);
+  color: #FFFFFF;
 }
 
 .dock-rail {
@@ -673,6 +676,7 @@ body {
     padding: var(--space-5) var(--space-5) var(--space-6);
   }
   .dock-collapse-btn,
+  .dock-collapse-row,
   .dock-rail {
     display: none !important;
   }
@@ -704,7 +708,6 @@ body {
   flex-direction: column;
   gap: var(--space-5);
   min-width: 0;
-  position: relative;
 }
 
 .panel-section {

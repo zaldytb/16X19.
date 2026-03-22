@@ -9438,6 +9438,10 @@ function onTuneSliderInput(e) {
     if (activeLoadout) {
       commitEditorToLoadout();
     }
+
+    // Re-render OBS card with updated tension
+    const updatedSetup = getCurrentSetup();
+    if (updatedSetup) renderOverallBuildScore(updatedSetup);
   }
 }
 
@@ -11774,6 +11778,11 @@ function _applyGaugeSelection(gauge, sectionIdx) {
         }
       }
     }
+  }
+
+  // Commit gauge change to active loadout BEFORE re-rendering
+  if (activeLoadout) {
+    commitEditorToLoadout();
   }
 
   renderDashboard();

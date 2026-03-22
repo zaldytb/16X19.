@@ -817,6 +817,10 @@ body {
     grid-template-columns: 1fr 1fr;
     gap: var(--space-2);
   }
+  /* Header: hide logo SVG to give mode buttons more room */
+  .logo-svg { display: none; }
+  .site-title { font-size: 0.75rem; }
+  .mode-btn { padding: 5px 8px; }
 }
 
 /* Toggle */
@@ -1262,6 +1266,12 @@ body {
   .hero-tags { justify-content: center; }
 }
 
+@media (max-width: 480px) {
+  .hero-obs-ring { width: 90px; height: 90px; }
+  .hero-obs-value { font-size: 1.65rem; }
+  .hero-obs-tier { font-size: 0.65rem; }
+}
+
 /* ═══ OVERVIEW COLLAPSIBLE DETAILS ═══ */
 .overview-details {
   background: var(--bg-card);
@@ -1422,6 +1432,10 @@ body {
   .stat-row {
     grid-template-columns: 85px 1fr 32px;
     gap: var(--space-2);
+  }
+  .stat-label {
+    font-size: 0.65rem;
+    letter-spacing: -0.01em;
   }
 }
 
@@ -1721,6 +1735,10 @@ body {
   .compare-summaries { grid-template-columns: repeat(3, 1fr); }
 }
 
+@media (max-width: 600px) {
+  .compare-summaries { grid-template-columns: 1fr; }
+}
+
 .compare-summary-card {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
@@ -1892,6 +1910,11 @@ body {
   background: var(--fn);
   border-color: var(--fn);
   color: #FFFFFF;
+}
+
+/* Raise editing card above siblings so SS dropdown isn't clipped */
+.compare-card-editing {
+  z-index: 5;
 }
 
 .compare-ed-row { display: flex; flex-direction: column; gap: var(--space-2); }
@@ -5567,6 +5590,58 @@ body {
   }
 }
 
+/* Filter toggle button: injected by JS, hidden on desktop */
+.opt-filter-toggle {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  /* Show filter toggle */
+  .opt-filter-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 9px 14px;
+    margin-bottom: var(--space-3);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .opt-filter-toggle-icon {
+    transition: transform 0.2s ease;
+    color: var(--text-muted);
+  }
+  .opt-filter-toggle.filters-open .opt-filter-toggle-icon {
+    transform: rotate(180deg);
+  }
+  .opt-filters.opt-filters-collapsed {
+    display: none;
+  }
+  /* Hide non-essential columns: gauge, tension, and all 7 stat columns */
+  .opt-table th:nth-child(n+6):nth-child(-n+14),
+  .opt-row td:nth-child(n+6):nth-child(-n+14) {
+    display: none;
+  }
+  /* String name can wrap */
+  .opt-td-string {
+    white-space: normal;
+    max-width: 140px;
+    line-height: 1.3;
+  }
+  /* Compact action buttons */
+  .opt-act-btn {
+    font-size: 0.65rem;
+    padding: 3px 6px;
+  }
+}
+
 /* ============================================
    FIND MY BUILD — Wizard
    ============================================ */
@@ -7839,6 +7914,10 @@ button.gauge-explore-col-header:hover .gauge-col-apply {
   /* Tighter padding when expanded */
   .build-dock.dock-expanded {
     border-bottom: 2px solid var(--fn-text);
+  }
+  /* Tighter section spacing inside expanded dock */
+  .build-dock.dock-expanded .builder-panel {
+    gap: var(--space-3);
   }
 }
 

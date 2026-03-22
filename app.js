@@ -10767,6 +10767,24 @@ function initOptimize() {
       renderOptimizerResults(_optLastCandidates, sortBy, _optLastCurrentOBS);
     }
   });
+
+  // Mobile: inject filter toggle button (collapses filter panel on narrow screens)
+  if (!document.getElementById('opt-filter-toggle')) {
+    const toggleBtn = document.createElement('button');
+    toggleBtn.id = 'opt-filter-toggle';
+    toggleBtn.className = 'opt-filter-toggle';
+    toggleBtn.innerHTML = `<span>Filters</span><svg class="opt-filter-toggle-icon" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 4.5h10M4 7h6M6 9.5h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+    const optLayout = document.querySelector('.opt-layout');
+    const optFilters = document.getElementById('opt-filters');
+    if (optLayout && optFilters) {
+      optLayout.insertBefore(toggleBtn, optFilters);
+      toggleBtn.addEventListener('click', () => {
+        const filters = document.getElementById('opt-filters');
+        const isCollapsed = filters.classList.toggle('opt-filters-collapsed');
+        toggleBtn.classList.toggle('filters-open', !isCollapsed);
+      });
+    }
+  }
 }
 
 // --- Searchable dropdown helper ---

@@ -1,5 +1,22 @@
 'use strict';
 
+// TWU Bulk Racquet Scraper
+//
+// How it works (discovered via compareracquets.js):
+//   1. Main page has <select name="racquetA"> with option values like "racquetA-ABR"
+//   2. Each option triggers getmatch(value) → POST compareracquetsdata.cgi?<value>
+//   3. That endpoint returns JSON directly — no HTML table parsing needed
+//
+// JSON fields returned:
+//   mfg, racquet           → name = mfg + ' ' + racquet
+//   headsize               → sq in
+//   weight                 → grams (strungWeight)
+//   balance                → cm
+//   length                 → inches
+//   swingweight            → kg·cm²
+//   flex                   → RA/RDC (stiffness)
+//   twistweight, vibration, acor, sweet → notes only
+
 const https = require('https');
 const fs    = require('fs');
 const path  = require('path');
@@ -14,18 +31,19 @@ function getArg(flag) {
 }
 
 const DRY_RUN  = args.includes('--dry-run');
-const LIMIT    = getArg('--limit')  != null ? parseInt(getArg('--limit'),  10) : null;
-const START    = getArg('--start')  != null ? parseInt(getArg('--start'),  10) : 0;
-const DELAY_MS = getArg('--delay')  != null ? parseInt(getArg('--delay'),  10) : 300;
+const LIMIT    = getArg('--limit') != null ? parseInt(getArg('--limit'),  10) : null;
+const START    = getArg('--start') != null ? parseInt(getArg('--start'),  10) : 0;
+const DELAY_MS = getArg('--delay') != null ? parseInt(getArg('--delay'),  10) : 300;
 const TODAY    = new Date().toISOString().slice(0, 10);
 const OUT_FILE = getArg('--out') ||
   path.join(__dirname, '..', 'data', `twu-scrape-${TODAY}.csv`);
 
-const BASE_URL = 'https://twu.tennis-warehouse.com/cgi-bin/compareracquets.cgi';
+const MAIN_URL = 'https://twu.tennis-warehouse.com/cgi-bin/compareracquets.cgi';
+const DATA_URL = 'https://twu.tennis-warehouse.com/cgi-bin/compareracquetsdata.cgi';
 
-// ─── HTTP fetch ───────────────────────────────────────────────────────────────
+// ─── HTTP helpers ─────────────────────────────────────────────────────────────
 
-function fetch(url) {
+function httpGet(url) {
   return new Promise((resolve, reject) => {
     const req = https.get(url, {
       headers: {
@@ -48,111 +66,97 @@ function fetch(url) {
   });
 }
 
-// ─── HTML helpers ─────────────────────────────────────────────────────────────
-
-function stripTags(s) {
-  return s.replace(/<[^>]+>/g, '').trim();
+// POST with no body — option code goes in the query string per compareracquets.js:
+//   url = "compareracquetsdata.cgi" + "?" + id;
+//   request.open("POST", url, true);
+//   request.send(null);
+function httpPost(url) {
+  return new Promise((resolve, reject) => {
+    const req = https.request(url, {
+      method:  'POST',
+      headers: {
+        'User-Agent':   'Mozilla/5.0 (compatible; LoadoutLab-scraper/1.0)',
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Referer':      MAIN_URL
+      }
+    }, res => {
+      const chunks = [];
+      res.on('data',  c => chunks.push(c));
+      res.on('error', reject);
+      res.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+    });
+    req.setTimeout(15000, () => req.destroy(new Error('Request timed out (15s)')));
+    req.on('error', reject);
+    req.end();
+  });
 }
 
-function decodeEntities(s) {
-  return s
-    .replace(/&amp;/g,        '&')
-    .replace(/&lt;/g,         '<')
-    .replace(/&gt;/g,         '>')
-    .replace(/&quot;/g,       '"')
-    .replace(/&apos;/g,       "'")
-    .replace(/&#(\d+);/g,     (_, n) => String.fromCharCode(+n))
-    .replace(/&nbsp;/g,       ' ')
-    .trim();
-}
-
-// Extract inner HTML of element with given id (td or th).
-function extractById(html, id) {
-  const re = new RegExp(
-    `<(?:td|th)[^>]+id="${id}"[^>]*>([\\s\\S]*?)<\\/(?:td|th)>`, 'i'
-  );
-  const m = html.match(re);
-  return m ? m[1] : null;
-}
-
-// First number before <br> in a multi-value TWU cell ("100<br>645").
-function beforeBr(raw) {
-  if (!raw) return NaN;
-  return parseFloat(raw.split(/<br\s*\/?>/i)[0].replace(/[^0-9.-]/g, ''));
-}
-
-// Second number after <br> in a multi-value TWU cell ("11.36<br>322").
-function afterBr(raw) {
-  if (!raw) return NaN;
-  const parts = raw.split(/<br\s*\/?>/i);
-  return parts.length < 2 ? NaN : parseFloat(parts[1].replace(/[^0-9.-]/g, ''));
-}
-
-// Direct numeric value from a single-value cell ("319").
-function directNum(raw) {
-  if (!raw) return NaN;
-  return parseFloat(stripTags(raw));
-}
-
-// Return string representation or '' when NaN.
-function numStr(n) {
-  return isNaN(n) ? '' : String(n);
-}
-
-// ─── Parse racquet list ───────────────────────────────────────────────────────
+// ─── Parse racquet list from main page ───────────────────────────────────────
+// Extracts option value codes + trimmed display text from <select name="racquetA">.
 
 function parseRacquetList(html) {
-  const m = html.match(/<select[^>]+name="A"[^>]*>([\s\S]*?)<\/select>/i);
-  if (!m) throw new Error('Could not find <select name="A"> in main page');
+  const m = html.match(/<select[^>]+name="racquetA"[^>]*>([\s\S]*?)<\/select>/i);
+  if (!m) throw new Error('Could not find <select name="racquetA"> in main page');
 
-  const options = [];
-  const optRe   = /<option([^>]*)>([^<]*)/gi;
+  const racquets = [];
+  const optRe    = /<option([^>]*)>([^<]*)/gi;
   let opt;
   while ((opt = optRe.exec(m[1])) !== null) {
     const valM = opt[1].match(/value="([^"]*)"/i);
-    const val  = decodeEntities((valM ? valM[1] : opt[2]).trim());
-    if (val) options.push(val);
+    if (!valM) continue;
+    const code = valM[1].trim();
+    const text = opt[2].trim();
+    if (!code || code === 'none') continue;
+    racquets.push({ code, text });
   }
-  return options;
+  return racquets;
 }
 
-// ─── Parse comparison page — column A only ───────────────────────────────────
+// ─── Fetch and parse one racquet via the JSON data API ───────────────────────
 
-function parseRacquet(html) {
-  const nameRaw = extractById(html, 'racquetnameA');
-  if (!nameRaw) return null;
+async function fetchRacquet(code) {
+  const url  = `${DATA_URL}?${encodeURIComponent(code)}`;
+  const body = await httpPost(url);
 
-  const name = decodeEntities(stripTags(nameRaw));
-  if (!name) return null;
+  let json;
+  try {
+    json = JSON.parse(body);
+  } catch (e) {
+    throw new Error(`JSON parse failed: ${e.message} (body: ${body.slice(0, 80)})`);
+  }
 
-  const headsizeRaw = extractById(html, 'headsizeA');
-  const weightRaw   = extractById(html, 'weightA');
-  const balanceRaw  = extractById(html, 'balanceA');
-  const swingwtRaw  = extractById(html, 'swingweightA');
-  const flexRaw     = extractById(html, 'flexA');
-  const twistRaw    = extractById(html, 'twistweightA');
-  const vibRaw      = extractById(html, 'vibfrequencyA');
-  const acorRaw     = extractById(html, 'acorA');
-  const sweetRaw    = extractById(html, 'sweetA');
-  const lgthRaw     = extractById(html, 'lgthA');
+  if (!json.racquet && !json.mfg) {
+    throw new Error('JSON response missing racquet/mfg fields');
+  }
 
-  const headSize     = numStr(beforeBr(headsizeRaw));
-  const strungWeight = numStr(afterBr(weightRaw));
-  const balanceCm    = numStr(afterBr(balanceRaw));
-  const balanceIn    = beforeBr(balanceRaw);
+  return json;
+}
 
-  // Length: default 27.0 if not present or parse fails.
-  const lgthIn  = beforeBr(lgthRaw);
-  const lengthIn = isNaN(lgthIn) ? 27.0 : lgthIn;
+// ─── Map JSON response to CSV row ────────────────────────────────────────────
+// JSON units (confirmed from compareracquets.js):
+//   headsize   → sq in (integer)
+//   weight     → grams
+//   balance    → cm
+//   length     → inches
+//   swingweight → kg·cm²
+//   flex        → RA/RDC
+//   sweet       → sq in
 
-  const swingweight = numStr(directNum(swingwtRaw));
-  const stiffness   = numStr(directNum(flexRaw));
+function jsonToRow(json) {
+  const name = `${json.mfg} ${json.racquet}`.trim();
+  const id   = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
-  // Balance points — corrected for non-standard length frames.
-  // Even balance point shifts with length: a 27.5" frame balances at 13.75",
-  // so (evenPoint - balanceIn) * 8 gives the correct head-light/heavy reading.
-  let balancePts = '';
-  if (!isNaN(balanceIn)) {
+  // Year: last 4-digit year found in name ("Pure Drive 2015" → "2015").
+  const yearMatches = name.match(/\b(19|20)\d{2}\b/g);
+  const year = yearMatches ? yearMatches[yearMatches.length - 1] : '';
+
+  // Balance points — corrected for non-standard length (e.g. 27.5" frames).
+  // balance from API is cm; convert to inches first.
+  const lengthIn  = parseFloat(json.length)  || 27.0;
+  const balanceCm = parseFloat(json.balance);
+  let balancePts  = '';
+  if (!isNaN(balanceCm)) {
+    const balanceIn = balanceCm / 2.54;
     const evenPoint = lengthIn / 2;
     const pts = Math.round((evenPoint - balanceIn) * 8);
     if      (pts > 0) balancePts = `${pts} pts HL`;
@@ -160,38 +164,25 @@ function parseRacquet(html) {
     else              balancePts = 'Even';
   }
 
-  // Year: last 4-digit year found in name ("Blade 98 (16x19) (2015)" → "2015").
-  const yearMatches = name.match(/\b(19|20)\d{2}\b/g);
-  const year = yearMatches ? yearMatches[yearMatches.length - 1] : '';
-
-  // ID: same logic as toKebab() in ingest.js.
-  const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-
-  // Notes: extra TWU fields not in the frame schema.
+  // Notes: extra TWU fields not in frame schema.
   const noteParts = [];
-  const twist = directNum(twistRaw);
-  const vib   = directNum(vibRaw);
-  const acor  = directNum(acorRaw);
-  const sweet = beforeBr(sweetRaw);
-
-  if (!isNaN(twist)) noteParts.push(`twistweight=${twist}`);
-  if (!isNaN(vib))   noteParts.push(`vibration=${vib}Hz`);
-  if (!isNaN(acor))  noteParts.push(`power=${acor}%`);
-  if (!isNaN(sweet)) noteParts.push(`sweetzone=${sweet}sqin`);
-  if (lengthIn !== 27.0) noteParts.push(`length=${lengthIn}in`);
-
+  if (json.twistweight != null) noteParts.push(`twistweight=${json.twistweight}`);
+  if (json.vibration   != null) noteParts.push(`vibration=${json.vibration}Hz`);
+  if (json.acor        != null) noteParts.push(`power=${json.acor}%`);
+  if (json.sweet       != null) noteParts.push(`sweetzone=${json.sweet}sqin`);
+  if (lengthIn !== 27.0)        noteParts.push(`length=${lengthIn}in`);
   const notes = noteParts.length ? `TWU: ${noteParts.join(' ')}` : '';
 
   return {
     id,
     name,
     year,
-    headSize,
-    strungWeight,
-    balance:      balanceCm,
+    headSize:     json.headsize != null ? String(json.headsize) : '',
+    strungWeight: json.weight   != null ? String(json.weight)   : '',
+    balance:      json.balance  != null ? String(json.balance)  : '',
     balancePts,
-    swingweight,
-    stiffness,
+    swingweight:  json.swingweight != null ? String(json.swingweight) : '',
+    stiffness:    json.flex        != null ? String(json.flex)        : '',
     beamWidth:    '',
     pattern:      '',
     tensionRange: '',
@@ -239,7 +230,7 @@ async function main() {
 
   let mainHtml;
   try {
-    mainHtml = await fetch(BASE_URL);
+    mainHtml = await httpGet(MAIN_URL);
   } catch (e) {
     console.error(`Failed to fetch main page: ${e.message}`);
     process.exit(1);
@@ -257,13 +248,12 @@ async function main() {
 
   if (DRY_RUN) {
     console.log('\n-- DRY RUN: racquet list --');
-    allRacquets.forEach((name, i) => console.log(`  [${i + 1}] ${name}`));
+    allRacquets.forEach(({ code, text }, i) => console.log(`  [${i + 1}] ${text}  (${code})`));
     return;
   }
 
-  const anchor = allRacquets[0];
-  const slice  = allRacquets.slice(START, LIMIT != null ? START + LIMIT : undefined);
-  const total  = slice.length;
+  const slice = allRacquets.slice(START, LIMIT != null ? START + LIMIT : undefined);
+  const total = slice.length;
 
   if (total === 0) {
     console.log('No racquets to scrape (check --start / --limit values).');
@@ -271,54 +261,29 @@ async function main() {
   }
 
   console.log(`Scraping ${total} racquet(s) (start=${START}, delay=${DELAY_MS}ms)`);
-  console.log(`Anchor (B): ${anchor}`);
-  console.log(`Output:     ${OUT_FILE}\n`);
+  console.log(`Output: ${OUT_FILE}\n`);
 
   const results  = [];
   const seen     = new Set();
   const failures = [];
 
   for (let i = 0; i < slice.length; i++) {
-    const racquet   = slice[i];
+    const { code, text } = slice[i];
     const globalIdx = START + i + 1;
     const totalEnd  = START + total;
-    process.stdout.write(`[${globalIdx}/${totalEnd}] ${racquet} ... `);
+    process.stdout.write(`[${globalIdx}/${totalEnd}] ${text} ... `);
 
-    const url = `${BASE_URL}?A=${encodeURIComponent(racquet)}&B=${encodeURIComponent(anchor)}`;
-
-    let html;
+    let json;
     try {
-      html = await fetch(url);
+      json = await fetchRacquet(code);
     } catch (e) {
       process.stdout.write(`FAIL (${e.message})\n`);
-      failures.push({ name: racquet, reason: e.message });
+      failures.push({ name: text, reason: e.message });
       if (i < slice.length - 1) await sleep(DELAY_MS);
       continue;
     }
 
-    if (!html.includes('simtable')) {
-      process.stdout.write('FAIL (no comparison table)\n');
-      failures.push({ name: racquet, reason: 'no comparison table in response' });
-      if (i < slice.length - 1) await sleep(DELAY_MS);
-      continue;
-    }
-
-    let row;
-    try {
-      row = parseRacquet(html);
-    } catch (e) {
-      process.stdout.write(`FAIL (${e.message})\n`);
-      failures.push({ name: racquet, reason: e.message });
-      if (i < slice.length - 1) await sleep(DELAY_MS);
-      continue;
-    }
-
-    if (!row) {
-      process.stdout.write('FAIL (no data extracted)\n');
-      failures.push({ name: racquet, reason: 'no data extracted' });
-      if (i < slice.length - 1) await sleep(DELAY_MS);
-      continue;
-    }
+    const row = jsonToRow(json);
 
     if (seen.has(row.name)) {
       process.stdout.write('SKIP (duplicate)\n');
@@ -328,7 +293,7 @@ async function main() {
 
     seen.add(row.name);
     results.push(row);
-    process.stdout.write('OK\n');
+    process.stdout.write(`OK  (${row.name})\n`);
 
     if (i < slice.length - 1) await sleep(DELAY_MS);
   }

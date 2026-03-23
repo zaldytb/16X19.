@@ -1509,6 +1509,7 @@ function renderDockPanel() {
   _syncDockRail();
   renderDockContextPanel();
   renderMobileLoadoutPills();
+  _syncDockMiniBar();
 }
 
 function renderMobileLoadoutPills() {
@@ -2006,6 +2007,20 @@ function toggleMobileDock() {
   if (dock) dock.classList.toggle('dock-expanded');
 }
 
+function _syncDockMiniBar() {
+  var obsEl = document.getElementById('dock-mini-obs');
+  var nameEl = document.getElementById('dock-mini-name');
+  if (!obsEl || !nameEl) return;
+  if (activeLoadout) {
+    var obs = activeLoadout.obs || 0;
+    obsEl.textContent = obs > 0 ? obs.toFixed(1) : '';
+    nameEl.textContent = activeLoadout.name || 'Active loadout';
+  } else {
+    obsEl.textContent = '';
+    nameEl.textContent = 'No active loadout';
+  }
+}
+
 // ═══ DOCK COLLAPSE RAIL ═══
 
 function toggleDockCollapse() {
@@ -2050,6 +2065,23 @@ function _initDockCollapse() {
       }
     }
   } catch(e) {}
+}
+
+function initDockMiniBar() {
+  var miniBar = document.getElementById('dock-mini-bar');
+  if (!miniBar) return;
+  miniBar.addEventListener('click', function() {
+    var dock = document.getElementById('build-dock');
+    if (!dock) return;
+    if (dock.classList.contains('dock-expanded')) {
+      dock.classList.remove('dock-expanded');
+      miniBar.classList.remove('mini-expanded');
+    } else {
+      dock.classList.add('dock-expanded');
+      miniBar.classList.add('mini-expanded');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  });
 }
 
 // ============================================
@@ -2447,6 +2479,8 @@ function switchMode(mode) {
   if (_isMobileScroll) {
     const dock = document.getElementById('build-dock');
     if (dock) dock.classList.remove('dock-expanded');
+    const miniBar = document.getElementById('dock-mini-bar');
+    if (miniBar) miniBar.classList.remove('mini-expanded');
   }
 
   const prevMode = currentMode;
@@ -9132,6 +9166,7 @@ document.addEventListener('DOMContentLoaded', () => {
   init();
   handleResponsiveHeader();
   _initDockCollapse();
+  initDockMiniBar();
 
   // Dock scroll shadow
   const dock = document.getElementById('build-dock');

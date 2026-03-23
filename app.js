@@ -1509,7 +1509,6 @@ function renderDockPanel() {
   _syncDockRail();
   renderDockContextPanel();
   renderMobileLoadoutPills();
-  _syncDockMiniBar();
 }
 
 function renderMobileLoadoutPills() {
@@ -2004,20 +2003,24 @@ function _syncMobileDockBar() {
 
 function toggleMobileDock() {
   var dock = document.getElementById('build-dock');
-  if (dock) dock.classList.toggle('dock-expanded');
-}
+  var backdrop = document.getElementById('dock-backdrop');
+  var mobileBar = document.getElementById('dock-mobile-bar');
+  if (!dock) return;
 
-function _syncDockMiniBar() {
-  var obsEl = document.getElementById('dock-mini-obs');
-  var nameEl = document.getElementById('dock-mini-name');
-  if (!obsEl || !nameEl) return;
-  if (activeLoadout) {
-    var obs = activeLoadout.obs || 0;
-    obsEl.textContent = obs > 0 ? obs.toFixed(1) : '';
-    nameEl.textContent = activeLoadout.name || 'Active loadout';
-  } else {
-    obsEl.textContent = '';
-    nameEl.textContent = 'No active loadout';
+  var isExpanded = dock.classList.toggle('dock-expanded');
+
+  // Toggle backdrop
+  if (backdrop) {
+    if (isExpanded) {
+      backdrop.classList.add('active');
+    } else {
+      backdrop.classList.remove('active');
+    }
+  }
+
+  // Chevron rotation via class
+  if (mobileBar) {
+    mobileBar.classList.toggle('bar-expanded', isExpanded);
   }
 }
 
@@ -2067,22 +2070,6 @@ function _initDockCollapse() {
   } catch(e) {}
 }
 
-function initDockMiniBar() {
-  var miniBar = document.getElementById('dock-mini-bar');
-  if (!miniBar) return;
-  miniBar.addEventListener('click', function() {
-    var dock = document.getElementById('build-dock');
-    if (!dock) return;
-    if (dock.classList.contains('dock-expanded')) {
-      dock.classList.remove('dock-expanded');
-      miniBar.classList.remove('mini-expanded');
-    } else {
-      dock.classList.add('dock-expanded');
-      miniBar.classList.add('mini-expanded');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  });
-}
 
 // ============================================
 // SHAREABLE URLs + EXPORT/IMPORT
@@ -2475,12 +2462,12 @@ function switchMode(mode) {
     btn.classList.toggle('active', btn.dataset.mode === mode);
   });
 
-  // On mobile, collapse the dock when switching modes
+  // On mobile, close the dock overlay when switching modes
   if (_isMobileScroll) {
     const dock = document.getElementById('build-dock');
-    if (dock) dock.classList.remove('dock-expanded');
-    const miniBar = document.getElementById('dock-mini-bar');
-    if (miniBar) miniBar.classList.remove('mini-expanded');
+    if (dock && dock.classList.contains('dock-expanded')) {
+      toggleMobileDock();
+    }
   }
 
   const prevMode = currentMode;
@@ -9166,7 +9153,6 @@ document.addEventListener('DOMContentLoaded', () => {
   init();
   handleResponsiveHeader();
   _initDockCollapse();
-  initDockMiniBar();
 
   // Dock scroll shadow
   const dock = document.getElementById('build-dock');
@@ -9174,5 +9160,16 @@ document.addEventListener('DOMContentLoaded', () => {
     dock.addEventListener('scroll', function() {
       dock.classList.toggle('dock-scrolled', dock.scrollTop > 0);
     }, { passive: true });
+  }
+
+  // Backdrop closes dock overlay
+  var dockBackdrop = document.getElementById('dock-backdrop');
+  if (dockBackdrop) {
+    dockBackdrop.addEventListener('click', function() {
+      var d = document.getElementById('build-dock');
+      if (d && d.classList.contains('dock-expanded')) {
+        toggleMobileDock();
+      }
+    });
   }
 });

@@ -226,6 +226,23 @@ function buildFrame(fields) {
   return entry;
 }
 
+// ─── CSV → Frame mapping ──────────────────────────────────────────────────────
+// Thin wrapper around buildFrame that sets the correct provenance for CSV imports.
+// brand:   auto-derived from name (first word) — not a CSV column
+// _meta:   all CSV imports default to { aeroBonus:0, comfortTech:0, spinTech:0, genBonus:0 }
+//          (buildFrame already defaults missing _meta.* fields to 0)
+// _provenance: source='csv' distinguishes batch imports from interactive 'manual' entry
+function mapCsvRowToFrame(row) {
+  const entry = buildFrame(row);
+  entry._provenance = {
+    source:          'csv',
+    dateAdded:       TODAY,
+    confidence:      'high',
+    estimatedFields: []
+  };
+  return entry;
+}
+
 function buildString(fields, estimatedFields) {
   const entry = {
     id:            fields.id || toKebab(fields.name),
@@ -568,7 +585,7 @@ function runCSV(type, csvPath) {
     let entry, estimatedFields = [];
     try {
       if (type === 'frame') {
-        entry = buildFrame(row);
+        entry = mapCsvRowToFrame(row);
       } else {
         const needEst = TW_FIELDS.filter(f => !row[`twScore.${f}`]);
         if (needEst.length) {
@@ -630,6 +647,7 @@ function runCSV(type, csvPath) {
 
   if (batch.length) {
     fs.writeFileSync(dataFile, JSON.stringify([...existing, ...batch], null, 2));
+    console.log(`\nRun 'npm run pipeline' to validate and regenerate data.js`);
   }
 
   console.log(`\nImport complete: ${added} added, ${skipped} skipped, ${warnCount} warnings`);
@@ -646,6 +664,31 @@ async function main() {
   const args    = process.argv.slice(2);
   const typeIdx = args.indexOf('--type');
   const csvIdx  = args.indexOf('--csv');
+
+  if (args.includes('--help') || args.includes('-h')) {
+    console.log(`
+Usage:
+  node pipeline/scripts/ingest.js --type frame|string [--csv path]
+
+Modes:
+  --type frame                  Interactive frame entry
+  --type string                 Interactive string entry (supports twScore estimation)
+  --type frame  --csv <path>    Batch frame import from CSV
+  --type string --csv <path>    Batch string import from CSV
+
+CSV column format for frames:
+  id,name,year,headSize,strungWeight,balance,balancePts,swingweight,
+  stiffness,beamWidth,pattern,tensionRange,powerLevel,strokeStyle,
+  swingSpeed,frameProfile,identity,notes
+
+  beamWidth     comma-separated in quotes: "23,26,23" → [23, 26, 23]
+  tensionRange  two numbers in quotes:     "50,59"    → [50, 59]
+  brand         auto-derived from name (first word) — not a CSV column
+  _meta         defaults to all zeros for CSV imports
+  Optional columns may be omitted from the CSV entirely.
+`);
+    process.exit(0);
+  }
 
   if (typeIdx === -1 || !args[typeIdx + 1]) {
     console.error('Usage: node ingest.js --type frame|string [--csv path/to/file.csv]');

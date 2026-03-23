@@ -93,8 +93,11 @@ npm run ingest:frame
 # Add a string interactively (supports twScore estimation)
 npm run ingest:string
 
-# Batch import from CSV
+# Batch import strings from CSV
 node pipeline/scripts/ingest.js --type string --csv path/to/file.csv
+
+# Batch import frames from CSV
+node pipeline/scripts/ingest.js --type frame --csv path/to/frames.csv
 ```
 
 ### Pipeline commands

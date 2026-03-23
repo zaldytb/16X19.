@@ -25,7 +25,13 @@
     ],
     "frameProfile": "Aero-shaped beam with spin-enhancing grommets",
     "identity": "Spin Cannon",
-    "notes": "Classic spin-focused frame. Variable beam width (26mm peak) adds free power. 66 RA provides moderate stiffness. 16x19 open pattern maximizes string movement."
+    "notes": "Classic spin-focused frame. Variable beam width (26mm peak) adds free power. 66 RA provides moderate stiffness. 16x19 open pattern maximizes string movement.",
+    "_meta": {
+      "aeroBonus": 0.5,
+      "comfortTech": 0.5,
+      "spinTech": 1,
+      "genBonus": 0
+    }
   },
   {
     "id": "head-speed-mp-2024",
@@ -53,7 +59,13 @@
     ],
     "frameProfile": "Constant box beam with Auxetic 2 in yoke/handle",
     "identity": "All-Rounder",
-    "notes": "Flat 23mm box beam. Auxetic 2 improves comfort and feel. Higher swingweight (330) than typical 100sq in frames. Good stability. 63 RA is moderate flex."
+    "notes": "Flat 23mm box beam. Auxetic 2 improves comfort and feel. Higher swingweight (330) than typical 100sq in frames. Good stability. 63 RA is moderate flex.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "head-speed-mp-legend-2025",
@@ -81,7 +93,13 @@
     ],
     "frameProfile": "Constant box beam with Hy-Bor (boron+carbon) + Auxetic 2",
     "identity": "Precision All-Rounder",
-    "notes": "Djokovic signature cosmetic. Same mold as Speed MP but with Hy-Bor material — maximizes stability and feel. 60 RA is notably soft for a 100sq in frame. Slightly heavier than 2024 version (318g vs 315g strung). Enhanced stability and comfort over 2024."
+    "notes": "Djokovic signature cosmetic. Same mold as Speed MP but with Hy-Bor material — maximizes stability and feel. 60 RA is notably soft for a 100sq in frame. Slightly heavier than 2024 version (318g vs 315g strung). Enhanced stability and comfort over 2024.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 2,
+      "spinTech": 0,
+      "genBonus": 1.5
+    }
   },
   {
     "id": "head-speed-pro-legend-2025",
@@ -109,7 +127,13 @@
     ],
     "frameProfile": "Constant box beam with Hy-Bor (boron+carbon) + Auxetic 2 + Graphene Inside",
     "identity": "Precision Control",
-    "notes": "Djokovic signature. Dense 18x20 pattern delivers exceptional control and a connected, predictable ball flight. Hy-Bor boron composite in the shaft maximizes stability and crisp feel at impact. 61 RA flex provides comfort without sacrificing responsiveness. Lower swingweight than 2024 Speed Pro improves maneuverability while maintaining plough-through."
+    "notes": "Djokovic signature. Dense 18x20 pattern delivers exceptional control and a connected, predictable ball flight. Hy-Bor boron composite in the shaft maximizes stability and crisp feel at impact. 61 RA flex provides comfort without sacrificing responsiveness. Lower swingweight than 2024 Speed Pro improves maneuverability while maintaining plough-through.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1.5,
+      "spinTech": 0,
+      "genBonus": 1.5
+    }
   },
   {
     "id": "head-speed-pro-2024",
@@ -137,7 +161,13 @@
     ],
     "frameProfile": "Constant box beam, dense pattern, Auxetic 2",
     "identity": "Surgeon's Scalpel",
-    "notes": "18x20 dense pattern for flatter hitters. Heavier static weight but same swingweight as MP due to more head-light balance. Lower power assist, higher control ceiling."
+    "notes": "18x20 dense pattern for flatter hitters. Heavier static weight but same swingweight as MP due to more head-light balance. Lower power assist, higher control ceiling.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "wilson-blade-98-v8",
@@ -165,7 +195,13 @@
     ],
     "frameProfile": "Thin constant beam, braided graphite + Fortyfive",
     "identity": "Control Artist",
-    "notes": "98sq in head + thin 21mm beam = control-biased. Moderate stiffness at 63 RA. Classic player's frame that rewards clean hitting."
+    "notes": "98sq in head + thin 21mm beam = control-biased. Moderate stiffness at 63 RA. Classic player's frame that rewards clean hitting.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "babolat-pure-drive-2024",
@@ -193,7 +229,13 @@
     ],
     "frameProfile": "Variable beam with HTR system",
     "identity": "Power Broker",
-    "notes": "71 RA is stiff — maximum power assist. Variable beam adds launch. The benchmark for 'power racquet' in the intermediate+ category."
+    "notes": "71 RA is stiff — maximum power assist. Variable beam adds launch. The benchmark for 'power racquet' in the intermediate+ category.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "yonex-ezone-100-2024",
@@ -221,7 +263,13 @@
     ],
     "frameProfile": "Isometric head with VDM vibration dampening",
     "identity": "Comfort Power",
-    "notes": "Isometric head increases sweet spot. VDM system dampens vibration. Good blend of comfort and power. 68 RA is moderately stiff."
+    "notes": "Isometric head increases sweet spot. VDM system dampens vibration. Good blend of comfort and power. 68 RA is moderately stiff.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 2,
+      "spinTech": 0,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "wilson-pro-staff-97-v14",
@@ -249,7 +297,13 @@
     ],
     "frameProfile": "Braided construction, thin constant beam",
     "identity": "Classic Heavy Blade",
-    "notes": "97sq in + thin beam + 62 RA = maximum feel and control. Heavy static weight but low swingweight due to very head-light balance. For advanced full swingers."
+    "notes": "97sq in + thin beam + 62 RA = maximum feel and control. Heavy static weight but low swingweight due to very head-light balance. For advanced full swingers.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "babolat-pure-aero-98-2026",
@@ -277,7 +331,13 @@
     ],
     "frameProfile": "Aero-shaped variable beam with NF2 flax fiber dampening",
     "identity": "Precision Spin Blade",
-    "notes": "Smallest head and tightest pattern (16x20) in the 2026 Aero family. Thinnest beam (21mm cap) for control. NF2 natural flax fiber tech absorbs harsh vibrations. 66 RA is moderate stiffness. For advanced players wanting spin + precision."
+    "notes": "Smallest head and tightest pattern (16x20) in the 2026 Aero family. Thinnest beam (21mm cap) for control. NF2 natural flax fiber tech absorbs harsh vibrations. 66 RA is moderate stiffness. For advanced players wanting spin + precision.",
+    "_meta": {
+      "aeroBonus": 1.5,
+      "comfortTech": 2,
+      "spinTech": 1,
+      "genBonus": 1.5
+    }
   },
   {
     "id": "babolat-pure-aero-100-2026",
@@ -305,7 +365,13 @@
     ],
     "frameProfile": "Updated aero beam (6% more aerodynamic) with NF2 flax fiber",
     "identity": "Spin Cannon v2",
-    "notes": "2026 update to the classic Aero 100. Redesigned beam is 6% more aerodynamic for faster swing speed. NF2 natural flax fiber dampens vibration. TW topspin score 9.3. Same spin DNA, better comfort than predecessor."
+    "notes": "2026 update to the classic Aero 100. Redesigned beam is 6% more aerodynamic for faster swing speed. NF2 natural flax fiber dampens vibration. TW topspin score 9.3. Same spin DNA, better comfort than predecessor.",
+    "_meta": {
+      "aeroBonus": 2,
+      "comfortTech": 2,
+      "spinTech": 1.5,
+      "genBonus": 2
+    }
   },
   {
     "id": "babolat-pure-aero-team-2026",
@@ -333,7 +399,13 @@
     ],
     "frameProfile": "Lighter aero beam with NF2 flax fiber dampening",
     "identity": "Spin Cannon Lite",
-    "notes": "Lightweight version of the Pure Aero 100 2026 at 285g unstrung (~301g strung). Same beam shape and 16x19 pattern. Lower swingweight (306) makes it more maneuverable. Ideal for developing players or those wanting spin without the weight."
+    "notes": "Lightweight version of the Pure Aero 100 2026 at 285g unstrung (~301g strung). Same beam shape and 16x19 pattern. Lower swingweight (306) makes it more maneuverable. Ideal for developing players or those wanting spin without the weight.",
+    "_meta": {
+      "aeroBonus": 2,
+      "comfortTech": 2,
+      "spinTech": 1.5,
+      "genBonus": 1.5
+    }
   },
   {
     "id": "head-speed-mp-2026",
@@ -361,7 +433,13 @@
     ],
     "frameProfile": "Constant box beam with Hy-Bor (boron+carbon) + Auxetic 2",
     "identity": "Precision All-Rounder",
-    "notes": "2026 Speed MP carries the Hy-Bor + Auxetic 2 material from the Legend edition. 60 RA is notably soft for a 100 sq in frame. High swingweight (329) provides excellent stability. Balanced all-court platform."
+    "notes": "2026 Speed MP carries the Hy-Bor + Auxetic 2 material from the Legend edition. 60 RA is notably soft for a 100 sq in frame. High swingweight (329) provides excellent stability. Balanced all-court platform.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 2.5,
+      "spinTech": 0,
+      "genBonus": 2
+    }
   },
   {
     "id": "head-speed-pro-2026",
@@ -389,7 +467,13 @@
     ],
     "frameProfile": "Constant box beam, dense pattern, Hy-Bor + Auxetic 2",
     "identity": "Surgeon's Scalpel",
-    "notes": "Dense 18x20 pattern for flatter hitters seeking maximum control. Heavy at 326g strung but head-light (7 pts HL). 61 RA offers good flex and feel. Hy-Bor material enhances stability. For advanced full swingers."
+    "notes": "Dense 18x20 pattern for flatter hitters seeking maximum control. Heavy at 326g strung but head-light (7 pts HL). 61 RA offers good flex and feel. Hy-Bor material enhances stability. For advanced full swingers.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 2,
+      "spinTech": 0,
+      "genBonus": 2
+    }
   },
   {
     "id": "head-speed-mp-l-2026",
@@ -417,7 +501,13 @@
     ],
     "frameProfile": "Lightweight constant box beam with Hy-Bor + Auxetic 2",
     "identity": "Agile All-Rounder",
-    "notes": "Lightweight Speed variant at 295g strung. Slightly head-heavy shift (3 pts HL) compensates for low mass. Same 61 RA flex and Auxetic 2 feel. Good option for players wanting Speed DNA without the weight."
+    "notes": "Lightweight Speed variant at 295g strung. Slightly head-heavy shift (3 pts HL) compensates for low mass. Same 61 RA flex and Auxetic 2 feel. Good option for players wanting Speed DNA without the weight.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 2,
+      "spinTech": 0,
+      "genBonus": 1.5
+    }
   },
   {
     "id": "yonex-muse-98-2026",
@@ -445,7 +535,13 @@
     ],
     "frameProfile": "Isometric head with Energy Flow Shaft (18mm throat) + Uniform Impact Grommets",
     "identity": "Flow State Blade",
-    "notes": "New 2026 Yonex line replacing the VCORE concept. Radical 18mm throat (Energy Flow Shaft) tapers dramatically for flex and feel. Open 16x18 pattern is unusual for a 98 sq in head — exceptional spin for a control frame. Servo Filter dampens vibration."
+    "notes": "New 2026 Yonex line replacing the VCORE concept. Radical 18mm throat (Energy Flow Shaft) tapers dramatically for flex and feel. Open 16x18 pattern is unusual for a 98 sq in head — exceptional spin for a control frame. Servo Filter dampens vibration.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 2.5,
+      "spinTech": 1,
+      "genBonus": 2
+    }
   },
   {
     "id": "yonex-muse-100-2026",
@@ -473,7 +569,13 @@
     ],
     "frameProfile": "Isometric head with Energy Flow Shaft (18mm throat) + Servo Filter",
     "identity": "Comfort Flow",
-    "notes": "Extremely flexible at 57 RA — one of the softest 100 sq in frames on tour. Energy Flow Shaft (18mm throat) delivers unique feel. Open 16x18 pattern boosts spin. Lower swingweight (312) for easy maneuverability. Comfort-first design."
+    "notes": "Extremely flexible at 57 RA — one of the softest 100 sq in frames on tour. Energy Flow Shaft (18mm throat) delivers unique feel. Open 16x18 pattern boosts spin. Lower swingweight (312) for easy maneuverability. Comfort-first design.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 3,
+      "spinTech": 1,
+      "genBonus": 2
+    }
   },
   {
     "id": "yonex-vcore-100-2023",
@@ -501,7 +603,13 @@
     ],
     "frameProfile": "Isometric head with SIF grommets for string snapback, widened hoop at 10/2",
     "identity": "Launch Pad",
-    "notes": "Widest beam in this group (25.3mm constant). SIF grommets maximize string snapback for spin. Wider hoop at 10 and 2 o'clock raises launch angle. 65 RA is moderate-stiff. Good power + spin blend."
+    "notes": "Widest beam in this group (25.3mm constant). SIF grommets maximize string snapback for spin. Wider hoop at 10 and 2 o'clock raises launch angle. 65 RA is moderate-stiff. Good power + spin blend.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 1,
+      "genBonus": 0
+    }
   },
   {
     "id": "head-gravity-pro-2025",
@@ -529,7 +637,13 @@
     ],
     "frameProfile": "Teardrop head shape, thin constant beam, Auxetic 2",
     "identity": "The Heavy Scalpel",
-    "notes": "Heaviest frame in this group at 332g strung. Thinnest beam in the Gravity family (20mm constant). Dense 18x20 pattern + 59 RA flex = maximum control and feel. Teardrop head shape shifts mass to 12 o'clock. For advanced baseliners."
+    "notes": "Heaviest frame in this group at 332g strung. Thinnest beam in the Gravity family (20mm constant). Dense 18x20 pattern + 59 RA flex = maximum control and feel. Teardrop head shape shifts mass to 12 o'clock. For advanced baseliners.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1,
+      "spinTech": 0,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "head-gravity-tour-2025",
@@ -557,7 +671,13 @@
     ],
     "frameProfile": "Teardrop head shape, constant beam, Auxetic 2",
     "identity": "Control Artist",
-    "notes": "2025 redesign with 98 sq in head (was 100) and 16x19 pattern (was 18x20). More spin-friendly than previous Gravity Tour. Teardrop head shifts sweetspot higher. 59 RA flex provides excellent feel. High swingweight (328) for stability."
+    "notes": "2025 redesign with 98 sq in head (was 100) and 16x19 pattern (was 18x20). More spin-friendly than previous Gravity Tour. Teardrop head shifts sweetspot higher. 59 RA flex provides excellent feel. High swingweight (328) for stability.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1,
+      "spinTech": 0.5,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "head-gravity-mp-2025",
@@ -585,7 +705,13 @@
     ],
     "frameProfile": "Teardrop head shape, constant beam, Half Cap grommet system",
     "identity": "Flex Control",
-    "notes": "Lowest stiffness in this group at 57 RA — maximum flex and comfort. Half Cap grommet system enhances string movement. 16x20 pattern adds control over a standard 16x19. Lighter weight (312g) with slight head-heavy lean (3 pts HL) for easy handling."
+    "notes": "Lowest stiffness in this group at 57 RA — maximum flex and comfort. Half Cap grommet system enhances string movement. 16x20 pattern adds control over a standard 16x19. Lighter weight (312g) with slight head-heavy lean (3 pts HL) for easy handling.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1,
+      "spinTech": 0.5,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "wilson-shift-99-2025",
@@ -613,7 +739,13 @@
     ],
     "frameProfile": "Constant beam, low vertical flex, Shift construction",
     "identity": "Spin Architect",
-    "notes": "Modern spin-focused frame with unique low vertical flex and high lateral stiffness. 16x20 dense pattern balances spin access with control. Constant 23.5mm beam provides uniform flex. 67 RA moderately stiff. 318g strung with 6 pts HL for head-light maneuvering."
+    "notes": "Modern spin-focused frame with unique low vertical flex and high lateral stiffness. 16x20 dense pattern balances spin access with control. Constant 23.5mm beam provides uniform flex. 67 RA moderately stiff. 318g strung with 6 pts HL for head-light maneuvering.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 1,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "wilson-shift-99l-2025",
@@ -641,7 +773,13 @@
     ],
     "frameProfile": "Constant beam, low vertical flex, Shift Lite construction",
     "identity": "Accessible Spin",
-    "notes": "Lighter Shift variant at 301g strung for intermediate players. Same low vertical flex design as Shift 99. Slightly higher stiffness (68 RA) compensates for lighter weight. 5 pts HL balance. Same 16x20 pattern for spin-friendly control."
+    "notes": "Lighter Shift variant at 301g strung for intermediate players. Same low vertical flex design as Shift 99. Slightly higher stiffness (68 RA) compensates for lighter weight. 5 pts HL balance. Same 16x20 pattern for spin-friendly control.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 1,
+      "genBonus": 0
+    }
   },
   {
     "id": "wilson-rf01-pro-2025",
@@ -669,7 +807,13 @@
     ],
     "frameProfile": "Tapering beam, Carbon Braid FORTYFIVE, leather grip",
     "identity": "Precision Hammer",
-    "notes": "Federer collaboration. 337g strung — one of the heaviest modern frames. Carbon Braid FORTYFIVE construction for precision and stability. Leather grip adds mass at handle. Tapering beam from 23.2mm to 22mm. High swingweight (331) requires advanced technique. 67 RA moderately stiff."
+    "notes": "Federer collaboration. 337g strung — one of the heaviest modern frames. Carbon Braid FORTYFIVE construction for precision and stability. Leather grip adds mass at handle. Tapering beam from 23.2mm to 22mm. High swingweight (331) requires advanced technique. 67 RA moderately stiff.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "wilson-rf01-2025",
@@ -697,7 +841,13 @@
     ],
     "frameProfile": "Tapering beam, foam interior dampening, synthetic grip",
     "identity": "Flex Precision",
-    "notes": "Lighter, softer RF01 variant at 318g strung. Foam interior adds vibration dampening and comfort. Lower stiffness (64 RA) provides more flex and arm-friendliness. Same tapering beam profile as RF01 Pro. 16x19 for spin access. More accessible than the Pro version."
+    "notes": "Lighter, softer RF01 variant at 318g strung. Foam interior adds vibration dampening and comfort. Lower stiffness (64 RA) provides more flex and arm-friendliness. Same tapering beam profile as RF01 Pro. 16x19 for spin access. More accessible than the Pro version.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1.5,
+      "spinTech": 0,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "babolat-pure-strike-97-2025",
@@ -725,7 +875,13 @@
     ],
     "frameProfile": "Thin constant beam, NF2-Tech, leather grip",
     "identity": "Surgical Control",
-    "notes": "Thinnest beam in the Pure Strike line at 21/22/21mm. NF2-Tech for enhanced feel. Leather grip adds weight at handle — 7 pts HL is extremely head-light. 332g strung for stability. 63 RA flex for comfort and feel. 16x20 dense pattern maximizes control. 97 sq in head demands precision."
+    "notes": "Thinnest beam in the Pure Strike line at 21/22/21mm. NF2-Tech for enhanced feel. Leather grip adds weight at handle — 7 pts HL is extremely head-light. 332g strung for stability. 63 RA flex for comfort and feel. 16x20 dense pattern maximizes control. 97 sq in head demands precision.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1.5,
+      "spinTech": 0,
+      "genBonus": 1
+    }
   },
   {
     "id": "babolat-pure-strike-98-16x19-2025",
@@ -753,7 +909,13 @@
     ],
     "frameProfile": "Variable beam, FSI Control tech, C-Fly construction",
     "identity": "Attack Control",
-    "notes": "FSI Control technology optimizes string interaction. 16x19 open pattern provides more spin access than 18x20 sibling. Variable beam (21/23/21mm) adds slight power boost at throat. 330 swingweight for plow-through. 64 RA provides moderate flex. 4 pts HL balance."
+    "notes": "FSI Control technology optimizes string interaction. 16x19 open pattern provides more spin access than 18x20 sibling. Variable beam (21/23/21mm) adds slight power boost at throat. 330 swingweight for plow-through. 64 RA provides moderate flex. 4 pts HL balance.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "babolat-pure-strike-98-18x20-2025",
@@ -781,7 +943,13 @@
     ],
     "frameProfile": "Variable beam, dense pattern, FSI Control tech",
     "identity": "Flat Control",
-    "notes": "Dense 18x20 pattern for maximum control and flat ball-striking. Same frame as 16x19 sibling but 2 more cross strings reduce string movement. Slightly higher swingweight (332) due to extra string. 63 RA — slightly softer flex than the 16x19. Ideal for serve-and-volley and flat hitters."
+    "notes": "Dense 18x20 pattern for maximum control and flat ball-striking. Same frame as 16x19 sibling but 2 more cross strings reduce string movement. Slightly higher swingweight (332) due to extra string. 63 RA — slightly softer flex than the 16x19. Ideal for serve-and-volley and flat hitters.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "babolat-pure-strike-100-16x19-2025",
@@ -809,7 +977,13 @@
     ],
     "frameProfile": "Variable beam, largest Pure Strike head, C-Fly construction",
     "identity": "Forgiving Control",
-    "notes": "Most forgiving frame in the Pure Strike line with 100 sq in head. Larger sweetspot compensates for off-center hits. 318g strung — lightest Strike for easier handling. Same 21/23/21mm beam profile. 63 RA for comfortable flex. 16x19 adds spin access. Best entry point to the Strike line."
+    "notes": "Most forgiving frame in the Pure Strike line with 100 sq in head. Larger sweetspot compensates for off-center hits. 318g strung — lightest Strike for easier handling. Same 21/23/21mm beam profile. 63 RA for comfortable flex. 16x19 adds spin access. Best entry point to the Strike line.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "solinco-whiteout-v2-290-2025",
@@ -837,7 +1011,13 @@
     ],
     "frameProfile": "Constant box beam, Arch-2 construction, 40T Carbon",
     "identity": "Light Control",
-    "notes": "Light control frame at 303g strung. Arch-2 construction enhances torsional stability. 40T high-modulus carbon for crisp feel. Constant 21.7mm box beam for consistent flex. 3 pts HL balance makes it slightly more head-heavy than the 305. 65 RA moderate stiffness. Accessible for intermediate players seeking precision."
+    "notes": "Light control frame at 303g strung. Arch-2 construction enhances torsional stability. 40T high-modulus carbon for crisp feel. Constant 21.7mm box beam for consistent flex. 3 pts HL balance makes it slightly more head-heavy than the 305. 65 RA moderate stiffness. Accessible for intermediate players seeking precision.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "solinco-whiteout-v2-305-2025",
@@ -865,7 +1045,13 @@
     ],
     "frameProfile": "Constant box beam, Arch-2 construction, 40T Carbon",
     "identity": "Classic Control",
-    "notes": "Classic control frame with 323g strung weight. Constant 21.7mm box beam for uniform flex and clean feel. 40T high-modulus carbon construction for precision. 328 swingweight for stability and plow-through. 65 RA moderate stiffness with good comfort. The heavier sibling of the 290 — built for advanced baseliners."
+    "notes": "Classic control frame with 323g strung weight. Constant 21.7mm box beam for uniform flex and clean feel. 40T high-modulus carbon construction for precision. 328 swingweight for stability and plow-through. 65 RA moderate stiffness with good comfort. The heavier sibling of the 290 — built for advanced baseliners.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "solinco-blackout-v2-300-2025",
@@ -893,7 +1079,13 @@
     ],
     "frameProfile": "Variable beam, Power Flex Zone, Foam Tech Core",
     "identity": "Power Tweener",
-    "notes": "Versatile all-court frame with variable beam (23.5/26/23mm) for power boost. Power Flex Zone enhances energy return. Foam Tech Core for vibration dampening and comfort. 100 sq in head for forgiveness. 320g strung with 6 pts HL for head-light feel. 66 RA moderate stiffness. Bridge between power and control."
+    "notes": "Versatile all-court frame with variable beam (23.5/26/23mm) for power boost. Power Flex Zone enhances energy return. Foam Tech Core for vibration dampening and comfort. 100 sq in head for forgiveness. 320g strung with 6 pts HL for head-light feel. 66 RA moderate stiffness. Bridge between power and control.",
+    "_meta": {
+      "aeroBonus": 0.5,
+      "comfortTech": 1,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "solinco-blackout-v2-285-2025",
@@ -921,7 +1113,13 @@
     ],
     "frameProfile": "Variable beam, Power Flex Zone, Foam Tech Core",
     "identity": "Easy Power",
-    "notes": "Lightweight Blackout at 301g strung for juniors and recreational players. Nearly even balance (1 pt HL) shifts mass toward the head for extra free power. Same variable beam profile as the 300. Higher stiffness (67 RA) compensates for lighter weight. Most powerful frame in the Solinco lineup. Foam Tech Core for comfort."
+    "notes": "Lightweight Blackout at 301g strung for juniors and recreational players. Nearly even balance (1 pt HL) shifts mass toward the head for extra free power. Same variable beam profile as the 300. Higher stiffness (67 RA) compensates for lighter weight. Most powerful frame in the Solinco lineup. Foam Tech Core for comfort.",
+    "_meta": {
+      "aeroBonus": 0.5,
+      "comfortTech": 1,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "head-speed-tour-2026",
@@ -949,7 +1147,13 @@
     ],
     "frameProfile": "Constant box beam with Hy-Bor (boron+carbon) + Auxetic 2",
     "identity": "Compact Precision",
-    "notes": "New 97 sq in Speed variant sitting between MP and Pro. Constant 23mm box beam with 61 RA flex. 6 pts HL balance with 325 swingweight for stability. Hy-Bor boron composite in shaft. 16x19 open pattern for spin access in a control-oriented frame. For advanced all-court players wanting a smaller head."
+    "notes": "New 97 sq in Speed variant sitting between MP and Pro. Constant 23mm box beam with 61 RA flex. 6 pts HL balance with 325 swingweight for stability. Hy-Bor boron composite in shaft. 16x19 open pattern for spin access in a control-oriented frame. For advanced all-court players wanting a smaller head.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 2,
+      "spinTech": 0,
+      "genBonus": 2
+    }
   },
   {
     "id": "head-speed-elite-2026",
@@ -977,7 +1181,13 @@
     ],
     "frameProfile": "Wide constant beam with Hy-Bor + Auxetic 2",
     "identity": "Easy Speed",
-    "notes": "Lightweight Speed variant at 289g strung with wider 25mm beam for more power assist. 2 pts HL balance and 303 swingweight for easy handling. 63 RA moderate stiffness. 100 sq in head for forgiveness. Entry-level Speed for recreational players stepping up."
+    "notes": "Lightweight Speed variant at 289g strung with wider 25mm beam for more power assist. 2 pts HL balance and 303 swingweight for easy handling. 63 RA moderate stiffness. 100 sq in head for forgiveness. Entry-level Speed for recreational players stepping up.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1.5,
+      "spinTech": 0,
+      "genBonus": 1
+    }
   },
   {
     "id": "head-speed-team-2026",
@@ -1005,7 +1215,13 @@
     ],
     "frameProfile": "Oversized head with Hy-Bor + Auxetic 2",
     "identity": "Forgiving Speed",
-    "notes": "Oversized 105 sq in Speed variant for maximum forgiveness. Lightweight at 283g strung. 5 pts HL balance unusual for a lightweight — keeps it maneuverable. 62 RA flex for comfort. 24mm constant beam. For developing players or doubles specialists."
+    "notes": "Oversized 105 sq in Speed variant for maximum forgiveness. Lightweight at 283g strung. 5 pts HL balance unusual for a lightweight — keeps it maneuverable. 62 RA flex for comfort. 24mm constant beam. For developing players or doubles specialists.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1.5,
+      "spinTech": 0,
+      "genBonus": 1
+    }
   },
   {
     "id": "head-speed-mp-ul-2026",
@@ -1033,7 +1249,13 @@
     ],
     "frameProfile": "Ultra-light constant box beam with Hy-Bor + Auxetic 2",
     "identity": "Ultra-Light Speed",
-    "notes": "Lightest Speed at 278g strung (265g unstrung). Maintains 23mm box beam and 100 sq in head. Very low swingweight (291) for easy maneuverability. 2 pts HL with 61 RA flex. For juniors, seniors, or players wanting Speed DNA at minimal weight."
+    "notes": "Lightest Speed at 278g strung (265g unstrung). Maintains 23mm box beam and 100 sq in head. Very low swingweight (291) for easy maneuverability. 2 pts HL with 61 RA flex. For juniors, seniors, or players wanting Speed DNA at minimal weight.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1.5,
+      "spinTech": 0,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "head-boom-pro-2026",
@@ -1061,7 +1283,13 @@
     ],
     "frameProfile": "Morph Beam with Hy-Bor + Auxetic 2, unique head shape",
     "identity": "Boom Control",
-    "notes": "Heaviest Boom at 326g strung with 7 pts HL balance. Hy-Bor boron in shaft for stability. 98 sq in head + 64 RA for control-oriented play. Morph Beam transitions from 22mm to 21.5mm. Unique head shape provides forgiving upper hoop. For advanced baseliners."
+    "notes": "Heaviest Boom at 326g strung with 7 pts HL balance. Hy-Bor boron in shaft for stability. 98 sq in head + 64 RA for control-oriented play. Morph Beam transitions from 22mm to 21.5mm. Unique head shape provides forgiving upper hoop. For advanced baseliners.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 2,
+      "spinTech": 0,
+      "genBonus": 2
+    }
   },
   {
     "id": "head-boom-mp-2026",
@@ -1089,7 +1317,13 @@
     ],
     "frameProfile": "Morph Beam with Hy-Bor + Auxetic 2",
     "identity": "Flexible Power",
-    "notes": "100 sq in Boom with 61 RA — flexible and arm-friendly. Morph Beam (23/24/22mm) provides slight power boost at throat. 6 pts HL for head-light feel despite 312g weight. Hy-Bor in shaft. Good blend of power, spin, and comfort."
+    "notes": "100 sq in Boom with 61 RA — flexible and arm-friendly. Morph Beam (23/24/22mm) provides slight power boost at throat. 6 pts HL for head-light feel despite 312g weight. Hy-Bor in shaft. Good blend of power, spin, and comfort.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 2,
+      "spinTech": 0,
+      "genBonus": 2
+    }
   },
   {
     "id": "head-boom-mp-l-2026",
@@ -1117,7 +1351,13 @@
     ],
     "frameProfile": "Lightweight Morph Beam with Hy-Bor + Auxetic 2",
     "identity": "Light Boom",
-    "notes": "Lightweight Boom at 289g strung. Same Morph Beam profile as Boom MP. 3 pts HL balance for easier handling. 63 RA slightly stiffer than MP. 305 swingweight. For intermediate players wanting Boom DNA with less weight."
+    "notes": "Lightweight Boom at 289g strung. Same Morph Beam profile as Boom MP. 3 pts HL balance for easier handling. 63 RA slightly stiffer than MP. 305 swingweight. For intermediate players wanting Boom DNA with less weight.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 2,
+      "spinTech": 0,
+      "genBonus": 1.5
+    }
   },
   {
     "id": "head-boom-mp-ul-2026",
@@ -1145,7 +1385,13 @@
     ],
     "frameProfile": "Ultra-light Morph Beam with Auxetic 2",
     "identity": "Ultra-Light Boom",
-    "notes": "Lightest Boom at 269g strung. Same Morph Beam as other Boom MPs. Very low swingweight (290) for maximum maneuverability. 62 RA flex for comfort. For juniors, beginners, or players needing minimal weight."
+    "notes": "Lightest Boom at 269g strung. Same Morph Beam as other Boom MPs. Very low swingweight (290) for maximum maneuverability. 62 RA flex for comfort. For juniors, beginners, or players needing minimal weight.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1,
+      "spinTech": 0,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "head-boom-team-2026",
@@ -1173,7 +1419,13 @@
     ],
     "frameProfile": "Oversized head with wide beam, Hy-Bor + Auxetic 2",
     "identity": "Power Launcher",
-    "notes": "Largest Boom head at 107 sq in with 26mm wide beam for maximum power assist. Even balance pushes mass toward head for effortless power. 275g strung for easy handling. 62 RA flex. For recreational and developing players seeking easy power and forgiveness."
+    "notes": "Largest Boom head at 107 sq in with 26mm wide beam for maximum power assist. Even balance pushes mass toward head for effortless power. 275g strung for easy handling. 62 RA flex. For recreational and developing players seeking easy power and forgiveness.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1,
+      "spinTech": 0.5,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "head-boom-elite-2026",
@@ -1201,7 +1453,13 @@
     ],
     "frameProfile": "Oversized variable beam with Auxetic 2",
     "identity": "Easy Launcher",
-    "notes": "Oversized 107 sq in Boom with head-heavy balance (3 pts HH) for maximum power without effort. Variable beam (23/26/22mm) adds launch at throat. 283g strung. 62 RA for comfort. For beginners and recreational players wanting effortless power."
+    "notes": "Oversized 107 sq in Boom with head-heavy balance (3 pts HH) for maximum power without effort. Variable beam (23/26/22mm) adds launch at throat. 283g strung. 62 RA for comfort. For beginners and recreational players wanting effortless power.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1,
+      "spinTech": 0.5,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "head-radical-pro-2025",
@@ -1229,7 +1487,13 @@
     ],
     "frameProfile": "Variable beam with Auxetic 2, Graphene Inside",
     "identity": "Heavy Radical",
-    "notes": "Heaviest Radical at 332g strung. Thin variable beam (20/21.5/21mm) for control. 98 sq in head + 16x19 pattern provides good spin access. 65 RA moderate stiffness. 329 swingweight for plough-through. 6 pts HL balance. For advanced players seeking a heavier control frame with spin."
+    "notes": "Heaviest Radical at 332g strung. Thin variable beam (20/21.5/21mm) for control. 98 sq in head + 16x19 pattern provides good spin access. 65 RA moderate stiffness. 329 swingweight for plough-through. 6 pts HL balance. For advanced players seeking a heavier control frame with spin.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1,
+      "spinTech": 0,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "head-radical-mp-2025",
@@ -1257,7 +1521,13 @@
     ],
     "frameProfile": "Variable beam with Auxetic 2, Graphene Inside",
     "identity": "Radical All-Rounder",
-    "notes": "Core Radical frame at 318g strung. Variable beam (20/23/21mm) adds power at throat. 98 sq in head with 16x19 pattern for spin. 66 RA moderate stiffness. 4 pts HL balanced feel. Good all-around frame for intermediate to advanced players."
+    "notes": "Core Radical frame at 318g strung. Variable beam (20/23/21mm) adds power at throat. 98 sq in head with 16x19 pattern for spin. 66 RA moderate stiffness. 4 pts HL balanced feel. Good all-around frame for intermediate to advanced players.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1,
+      "spinTech": 0,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "head-radical-team-2025",
@@ -1285,7 +1555,13 @@
     ],
     "frameProfile": "Wider variable beam with Auxetic 2",
     "identity": "Accessible Radical",
-    "notes": "Larger 102 sq in head for more forgiveness. Lighter at 295g strung. Wider beam (22/25/23mm) for more power. 63 RA softer flex. 303 swingweight for easy handling. 4 pts HL balance. Entry point to the Radical line for intermediate players."
+    "notes": "Larger 102 sq in head for more forgiveness. Lighter at 295g strung. Wider beam (22/25/23mm) for more power. 63 RA softer flex. 303 swingweight for easy handling. 4 pts HL balance. Entry point to the Radical line for intermediate players.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "head-radical-team-l-2025",
@@ -1313,7 +1589,13 @@
     ],
     "frameProfile": "Lightweight variable beam with Auxetic 2",
     "identity": "Light Radical",
-    "notes": "Lightest Radical at 278g strung. Head-heavy balance (2 pts HH) compensates for low mass. 102 sq in head for forgiveness. 66 RA stiffer than Team to maintain crispness. Same beam profile as Radical Team. For juniors and recreational players."
+    "notes": "Lightest Radical at 278g strung. Head-heavy balance (2 pts HH) compensates for low mass. 102 sq in head for forgiveness. 66 RA stiffer than Team to maintain crispness. Same beam profile as Radical Team. For juniors and recreational players.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "head-extreme-pro-2024",
@@ -1341,7 +1623,13 @@
     ],
     "frameProfile": "Variable beam with Auxetic 2, Spin Grommets",
     "identity": "Spin Control",
-    "notes": "Control-oriented Extreme with 98 sq in head. Spin Grommets enhance string movement and snapback. Variable beam (22/23/21mm). 64 RA moderate stiffness. 6 pts HL balance. 322 swingweight. For advanced players wanting spin access with precision."
+    "notes": "Control-oriented Extreme with 98 sq in head. Spin Grommets enhance string movement and snapback. Variable beam (22/23/21mm). 64 RA moderate stiffness. 6 pts HL balance. 322 swingweight. For advanced players wanting spin access with precision.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 1,
+      "genBonus": 0
+    }
   },
   {
     "id": "head-extreme-mp-2024",
@@ -1369,7 +1657,13 @@
     ],
     "frameProfile": "Wide variable beam with Auxetic 2, Spin Grommets, Spin Shaft",
     "identity": "Spin Launcher",
-    "notes": "Main Extreme frame with widest beam in the line (26mm at throat) for power. Spin Grommets + Spin Shaft maximize string snapback and launch angle. 66 RA moderate-stiff. 100 sq in head for forgiveness. Spin-focused all-rounder."
+    "notes": "Main Extreme frame with widest beam in the line (26mm at throat) for power. Spin Grommets + Spin Shaft maximize string snapback and launch angle. 66 RA moderate-stiff. 100 sq in head for forgiveness. Spin-focused all-rounder.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 1.5,
+      "genBonus": 0
+    }
   },
   {
     "id": "head-extreme-team-2024",
@@ -1397,7 +1691,13 @@
     ],
     "frameProfile": "Oversized with Auxetic 2, Spin Grommets, Spin Shaft",
     "identity": "Easy Spin",
-    "notes": "Largest Extreme head at 105 sq in. Lightweight at 278g strung with head-heavy balance (2 pts HH) for easy power. Wide variable beam (23/26/21mm). 61 RA soft flex. Spin Grommets for extra spin. For recreational and developing players."
+    "notes": "Largest Extreme head at 105 sq in. Lightweight at 278g strung with head-heavy balance (2 pts HH) for easy power. Wide variable beam (23/26/21mm). 61 RA soft flex. Spin Grommets for extra spin. For recreational and developing players.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 1,
+      "genBonus": 0
+    }
   },
   {
     "id": "head-extreme-mp-l-2024",
@@ -1425,7 +1725,13 @@
     ],
     "frameProfile": "Lightweight variable beam with Auxetic 2, Spin Grommets",
     "identity": "Light Spin",
-    "notes": "Lighter Extreme MP at 295g strung. Same wide beam profile (23/26/21mm) for power. 100 sq in head with Spin Grommets. 64 RA moderate stiffness. 3 pts HL balance. 308 swingweight. For intermediate players wanting spin with manageable weight."
+    "notes": "Lighter Extreme MP at 295g strung. Same wide beam profile (23/26/21mm) for power. 100 sq in head with Spin Grommets. 64 RA moderate stiffness. 3 pts HL balance. 308 swingweight. For intermediate players wanting spin with manageable weight.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 1,
+      "genBonus": 0
+    }
   },
   {
     "id": "head-gravity-team-2025",
@@ -1453,7 +1759,13 @@
     ],
     "frameProfile": "Teardrop head, constant beam, Half Cap technology",
     "identity": "Flexible Team",
-    "notes": "Largest Gravity head at 104 sq in. Very soft at 57 RA — same flex as Gravity MP. Constant 24mm beam. 16x20 dense pattern unusual for a Team frame — adds control. Teardrop head shape. Lightweight at 283g strung. For intermediate players wanting Gravity comfort."
+    "notes": "Largest Gravity head at 104 sq in. Very soft at 57 RA — same flex as Gravity MP. Constant 24mm beam. 16x20 dense pattern unusual for a Team frame — adds control. Teardrop head shape. Lightweight at 283g strung. For intermediate players wanting Gravity comfort.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1,
+      "spinTech": 0.5,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "head-gravity-team-l-2025",
@@ -1481,7 +1793,13 @@
     ],
     "frameProfile": "Teardrop head, constant beam, Auxetic 2, Half Cap technology",
     "identity": "Gravity Lite",
-    "notes": "Lightest Gravity variant. Same 104 sq in teardrop head and 57 RA flex as Gravity Team. Very comfortable and forgiving. 16x20 pattern for control. For recreational and developing players wanting maximum comfort."
+    "notes": "Lightest Gravity variant. Same 104 sq in teardrop head and 57 RA flex as Gravity Team. Very comfortable and forgiving. 16x20 pattern for control. For recreational and developing players wanting maximum comfort.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1,
+      "spinTech": 0.5,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "head-prestige-pro-2023",
@@ -1509,7 +1827,13 @@
     ],
     "frameProfile": "Thin constant beam with Auxetic 2, Graphene 360+",
     "identity": "Classic Prestige",
-    "notes": "Heaviest Head frame at 337g strung. Thinnest beam at 20mm constant. 58 RA — very flexible for exceptional feel. 18x20 dense pattern for maximum control. 7 pts HL balance. 98 sq in head. For advanced players seeking premium feel and precision. The purist's racquet."
+    "notes": "Heaviest Head frame at 337g strung. Thinnest beam at 20mm constant. 58 RA — very flexible for exceptional feel. 18x20 dense pattern for maximum control. 7 pts HL balance. 98 sq in head. For advanced players seeking premium feel and precision. The purist's racquet.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "head-prestige-tour-2023",
@@ -1537,7 +1861,13 @@
     ],
     "frameProfile": "Constant beam with Auxetic 2, Graphene Inside",
     "identity": "Tour Precision",
-    "notes": "Smallest Head frame at 95 sq in. 22mm constant beam. 62 RA moderate flex. 16x19 pattern gives more spin than Pro. Heavy at 332g with 330 swingweight — maximum stability. 6 pts HL balance. Unique small head demands precision but rewards clean hitting."
+    "notes": "Smallest Head frame at 95 sq in. 22mm constant beam. 62 RA moderate flex. 16x19 pattern gives more spin than Pro. Heavy at 332g with 330 swingweight — maximum stability. 6 pts HL balance. Unique small head demands precision but rewards clean hitting.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "head-prestige-mp-2023",
@@ -1565,7 +1895,13 @@
     ],
     "frameProfile": "Thin constant box beam with Auxetic 2, Graphene Inside",
     "identity": "Box Beam Classic",
-    "notes": "99 sq in head with unique 18x19 pattern. Classic 21.5mm box beam for clean feel. 62 RA moderate flex. 326g strung with 327 swingweight for stability. 3 pts HL balance. The quintessential box beam player's frame. For advanced all-court players."
+    "notes": "99 sq in head with unique 18x19 pattern. Classic 21.5mm box beam for clean feel. 62 RA moderate flex. 326g strung with 327 swingweight for stability. 3 pts HL balance. The quintessential box beam player's frame. For advanced all-court players.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "head-prestige-mp-l-2023",
@@ -1593,7 +1929,13 @@
     ],
     "frameProfile": "Lightweight box beam with Auxetic 2",
     "identity": "Light Prestige",
-    "notes": "Lighter Prestige at 318g strung. 16x19 open pattern (vs 18x19 on MP) for more spin access. 61 RA softer flex. 6 pts HL with 309 swingweight — more maneuverable than MP. Same 21.5mm box beam. Bridge between Prestige precision and everyday playability."
+    "notes": "Lighter Prestige at 318g strung. 16x19 open pattern (vs 18x19 on MP) for more spin access. 61 RA softer flex. 6 pts HL with 309 swingweight — more maneuverable than MP. Same 21.5mm box beam. Bridge between Prestige precision and everyday playability.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "head-prestige-team-2023",
@@ -1621,7 +1963,13 @@
     ],
     "frameProfile": "Lightweight box beam with Auxetic 2, elongated shaft",
     "identity": "Accessible Prestige",
-    "notes": "Lightest Prestige at ~300g strung. Same 21.5mm box beam but 16x19 open pattern for spin. 63 RA stiffer than heavier siblings to maintain crispness. 3 pts HL balance. 308 swingweight for easy handling. Entry point to Prestige precision for intermediate players."
+    "notes": "Lightest Prestige at ~300g strung. Same 21.5mm box beam but 16x19 open pattern for spin. 63 RA stiffer than heavier siblings to maintain crispness. 3 pts HL balance. 308 swingweight for easy handling. Entry point to Prestige precision for intermediate players.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "babolat-pure-aero-super-lite-2026",
@@ -1649,7 +1997,13 @@
     ],
     "frameProfile": "Ultra-light aero beam with NF2 flax fiber dampening",
     "identity": "Featherweight Spin",
-    "notes": "Lightest Pure Aero at 269g strung. Same aero beam and NF2 tech as the 100. 64 RA moderate stiffness. Very low swingweight (273) makes it extremely maneuverable. 2 pts HL balance. For juniors, seniors, or players who need maximum maneuverability with spin DNA."
+    "notes": "Lightest Pure Aero at 269g strung. Same aero beam and NF2 tech as the 100. 64 RA moderate stiffness. Very low swingweight (273) makes it extremely maneuverable. 2 pts HL balance. For juniors, seniors, or players who need maximum maneuverability with spin DNA.",
+    "_meta": {
+      "aeroBonus": 2,
+      "comfortTech": 2,
+      "spinTech": 1.5,
+      "genBonus": 1.5
+    }
   },
   {
     "id": "babolat-pure-aero-team-2023",
@@ -1677,7 +2031,13 @@
     ],
     "frameProfile": "Aero beam with SWX Pure Feel dampening",
     "identity": "Spin Team",
-    "notes": "Lighter Pure Aero 2023 at 301g strung. Higher stiffness (67 RA) than the standard Aero for more pop. 5 pts HL balance is more head-light than typical team frames. Same aero beam profile. Good stepping stone to the full Aero."
+    "notes": "Lighter Pure Aero 2023 at 301g strung. Higher stiffness (67 RA) than the standard Aero for more pop. 5 pts HL balance is more head-light than typical team frames. Same aero beam profile. Good stepping stone to the full Aero.",
+    "_meta": {
+      "aeroBonus": 0.5,
+      "comfortTech": 0.5,
+      "spinTech": 1,
+      "genBonus": 0
+    }
   },
   {
     "id": "babolat-pure-aero-lite-2023",
@@ -1705,7 +2065,13 @@
     ],
     "frameProfile": "Lightweight aero beam with NF2-Tech dampening",
     "identity": "Light Spin Cannon",
-    "notes": "Lightweight Pure Aero at 283g strung. Nearly even balance (1 pt HL) compensates for low mass. 65 RA moderate stiffness. Same aero beam profile for spin. 304 swingweight despite light weight. For recreational players wanting spin without the weight."
+    "notes": "Lightweight Pure Aero at 283g strung. Nearly even balance (1 pt HL) compensates for low mass. 65 RA moderate stiffness. Same aero beam profile for spin. 304 swingweight despite light weight. For recreational players wanting spin without the weight.",
+    "_meta": {
+      "aeroBonus": 0.5,
+      "comfortTech": 0.5,
+      "spinTech": 1,
+      "genBonus": 0
+    }
   },
   {
     "id": "babolat-pure-aero-rafa-2023",
@@ -1733,7 +2099,13 @@
     ],
     "frameProfile": "Aeromodular beam with FSI Spin, Woofer system",
     "identity": "Rafa Spin",
-    "notes": "Nadal signature model. Stiffer than standard Aero (69 RA vs 66) for more power and launch. Nearly even balance (1 pt HL) with 323 swingweight for stability. Same aero beam. Woofer grommet system for extra ball pocketing. Graphite construction without NF2 dampening — more raw feel."
+    "notes": "Nadal signature model. Stiffer than standard Aero (69 RA vs 66) for more power and launch. Nearly even balance (1 pt HL) with 323 swingweight for stability. Same aero beam. Woofer grommet system for extra ball pocketing. Graphite construction without NF2 dampening — more raw feel.",
+    "_meta": {
+      "aeroBonus": 0.5,
+      "comfortTech": 0,
+      "spinTech": 1.5,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "babolat-pure-aero-rafa-origin-2023",
@@ -1761,7 +2133,13 @@
     ],
     "frameProfile": "Heavy aero beam with FSI Spin, no dampening tech",
     "identity": "Rafa Pro Spec",
-    "notes": "Closest to Nadal's actual match spec. Extremely heavy at 337g strung with 371 swingweight — one of the highest in any production frame. 70 RA stiff for maximum power. 1 pt HL balance pushes mass to head. No comfort tech — raw graphite construction. Demands elite fitness and swing speed."
+    "notes": "Closest to Nadal's actual match spec. Extremely heavy at 337g strung with 371 swingweight — one of the highest in any production frame. 70 RA stiff for maximum power. 1 pt HL balance pushes mass to head. No comfort tech — raw graphite construction. Demands elite fitness and swing speed.",
+    "_meta": {
+      "aeroBonus": 0.5,
+      "comfortTech": 0,
+      "spinTech": 1,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "babolat-pure-drive-2021",
@@ -1789,7 +2167,13 @@
     ],
     "frameProfile": "Variable beam with HTR system, SWX Pure Feel",
     "identity": "Power Standard",
-    "notes": "The benchmark power racquet. 71 RA is stiff for maximum power assist. Variable beam (26mm peak) adds launch angle. HTR system improves torsional stability. SWX Pure Feel dampens vibration. 320 swingweight with 4 pts HL. The default recommendation for intermediate players wanting easy power."
+    "notes": "The benchmark power racquet. 71 RA is stiff for maximum power assist. Variable beam (26mm peak) adds launch angle. HTR system improves torsional stability. SWX Pure Feel dampens vibration. 320 swingweight with 4 pts HL. The default recommendation for intermediate players wanting easy power.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "babolat-pure-drive-team-2021",
@@ -1817,7 +2201,13 @@
     ],
     "frameProfile": "Lighter variable beam with HTR system",
     "identity": "Team Power",
-    "notes": "Lighter Pure Drive at 302g strung. Slightly stiffer than standard (72 RA). Same variable beam for power. 310 swingweight. 4 pts HL. HTR system for stability. For players wanting Pure Drive power in a lighter package."
+    "notes": "Lighter Pure Drive at 302g strung. Slightly stiffer than standard (72 RA). Same variable beam for power. 310 swingweight. 4 pts HL. HTR system for stability. For players wanting Pure Drive power in a lighter package.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "babolat-pure-drive-lite-2021",
@@ -1845,7 +2235,13 @@
     ],
     "frameProfile": "Ultra-light variable beam with HTR system",
     "identity": "Light Power",
-    "notes": "Lightest Pure Drive at 283g strung. Still stiff (69 RA) for power despite light weight. Nearly even balance (1 pt HL). 299 swingweight. Same variable beam profile. For developing players, seniors, or anyone wanting Pure Drive DNA at minimum weight."
+    "notes": "Lightest Pure Drive at 283g strung. Still stiff (69 RA) for power despite light weight. Nearly even balance (1 pt HL). 299 swingweight. Same variable beam profile. For developing players, seniors, or anyone wanting Pure Drive DNA at minimum weight.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "babolat-pure-strike-team-2025",
@@ -1873,7 +2269,13 @@
     ],
     "frameProfile": "Variable beam with Control Frame Technology, NF2-Tech",
     "identity": "Strike Lite",
-    "notes": "Lightest Pure Strike at 303g strung. 100 sq in head for forgiveness. Same variable beam (21/23/21mm) as the Strike line. 64 RA moderate stiffness. NF2-Tech for dampening. 1 pt HL balance. 307 swingweight. Entry point to the Strike line — control-focused but accessible."
+    "notes": "Lightest Pure Strike at 303g strung. 100 sq in head for forgiveness. Same variable beam (21/23/21mm) as the Strike line. 64 RA moderate stiffness. NF2-Tech for dampening. 1 pt HL balance. 307 swingweight. Entry point to the Strike line — control-focused but accessible.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1.5,
+      "spinTech": 0,
+      "genBonus": 1
+    }
   },
   {
     "id": "tecnifibre-tfight-iso-305",
@@ -1901,7 +2303,13 @@
     ],
     "frameProfile": "Constant box beam with ISOFLEX, RS Section, foam-filled",
     "identity": "Heavy Precision",
-    "notes": "Very high swingweight (338) — one of the heaviest swinging 98 sq in frames. 22.5mm constant box beam for clean feel. 18x19 dense pattern for control. ISOFLEX ensures consistent stringbed. RS Section beam combines square/round profiles. Foam-filled for solid, plush feel. 64 RA moderate flex. For advanced players."
+    "notes": "Very high swingweight (338) — one of the heaviest swinging 98 sq in frames. 22.5mm constant box beam for clean feel. 18x19 dense pattern for control. ISOFLEX ensures consistent stringbed. RS Section beam combines square/round profiles. Foam-filled for solid, plush feel. 64 RA moderate flex. For advanced players.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "tecnifibre-tfight-305s",
@@ -1929,7 +2337,13 @@
     ],
     "frameProfile": "Constant box beam with RS Section, ISOFLEX, foam-filled",
     "identity": "Tour Control",
-    "notes": "Updated TFight flagship. Same 22.5mm box beam and 18x19 pattern as ISO 305 but lower swingweight (324 vs 338) and more head-light (6 pts HL vs 3). 63 RA soft flex. ISOFLEX for progressive stiffness. Foam-filled for solid feel. More maneuverable successor to the ISO 305."
+    "notes": "Updated TFight flagship. Same 22.5mm box beam and 18x19 pattern as ISO 305 but lower swingweight (324 vs 338) and more head-light (6 pts HL vs 3). 63 RA soft flex. ISOFLEX for progressive stiffness. Foam-filled for solid feel. More maneuverable successor to the ISO 305.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1,
+      "spinTech": 0,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "tecnifibre-tfight-iso-300",
@@ -1957,7 +2371,13 @@
     ],
     "frameProfile": "Constant box beam with ISOFLEX, Dynacore HD",
     "identity": "TFight All-Rounder",
-    "notes": "More accessible TFight with 16x19 open pattern for spin. 66 RA slightly stiffer than 305. Same 22.5mm box beam for clean feel. 318g strung with 320 swingweight. 4 pts HL balanced. ISOFLEX for consistent stringbed. Good middle ground between control and versatility."
+    "notes": "More accessible TFight with 16x19 open pattern for spin. 66 RA slightly stiffer than 305. Same 22.5mm box beam for clean feel. 318g strung with 320 swingweight. 4 pts HL balanced. ISOFLEX for consistent stringbed. Good middle ground between control and versatility.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "tecnifibre-tfight-iso-285",
@@ -1985,7 +2405,13 @@
     ],
     "frameProfile": "Constant beam with ISOFLEX, RSL Beam, foam-filled",
     "identity": "Accessible Control",
-    "notes": "Larger 100 sq in TFight for more forgiveness. 23mm constant beam. Lighter at 298g strung. 63 RA soft flex for comfort. 5 pts HL with 303 swingweight. ISOFLEX stringbed. RSL Beam for power/control blend. Entry point to the TFight line for intermediate players."
+    "notes": "Larger 100 sq in TFight for more forgiveness. 23mm constant beam. Lighter at 298g strung. 63 RA soft flex for comfort. 5 pts HL with 303 swingweight. ISOFLEX stringbed. RSL Beam for power/control blend. Entry point to the TFight line for intermediate players.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "tecnifibre-tfight-iso-270",
@@ -2013,7 +2439,13 @@
     ],
     "frameProfile": "Lightweight constant beam with ISOFLEX, RSL Beam",
     "identity": "Light TFight",
-    "notes": "Lightweight TFight at 283g strung. 100 sq in head with 23mm constant beam. 65 RA moderate stiffness. 4 pts HL balance. 300 swingweight. ISOFLEX for consistent stringbed. For recreational to intermediate players wanting TFight feel at lower weight."
+    "notes": "Lightweight TFight at 283g strung. 100 sq in head with 23mm constant beam. 65 RA moderate stiffness. 4 pts HL balance. 300 swingweight. ISOFLEX for consistent stringbed. For recreational to intermediate players wanting TFight feel at lower weight.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "tecnifibre-tfight-iso-255",
@@ -2041,7 +2473,13 @@
     ],
     "frameProfile": "Ultra-light constant beam with ISOFLEX",
     "identity": "Ultra-Light TFight",
-    "notes": "Lightest TFight at 269g strung. Even balance compensates for ultra-light mass. 67 RA stiffer to maintain crispness. 100 sq in head with 23mm beam. 299 swingweight. For juniors, beginners, or those needing minimal weight."
+    "notes": "Lightest TFight at 269g strung. Even balance compensates for ultra-light mass. 67 RA stiffer to maintain crispness. 100 sq in head with 23mm beam. 299 swingweight. For juniors, beginners, or those needing minimal weight.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "tecnifibre-tf40-305-18x20",
@@ -2069,7 +2507,13 @@
     ],
     "frameProfile": "Thin constant beam with RS Sharp Section, Foam Inside",
     "identity": "Dense Control",
-    "notes": "Medvedev's racquet. 22mm constant thin beam for maximum control. Dense 18x20 pattern. 64 RA moderate flex. Foam-filled for solid, plush feel. RS Sharp Section (5-sided beam) for stability. 328 swingweight for plough-through. 3 pts HL. For advanced flat hitters."
+    "notes": "Medvedev's racquet. 22mm constant thin beam for maximum control. Dense 18x20 pattern. 64 RA moderate flex. Foam-filled for solid, plush feel. RS Sharp Section (5-sided beam) for stability. 328 swingweight for plough-through. 3 pts HL. For advanced flat hitters.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "tecnifibre-tf40-305-16x19",
@@ -2097,7 +2541,13 @@
     ],
     "frameProfile": "Thin constant beam with RS Sharp Section, Foam Inside",
     "identity": "Spin-Friendly Control",
-    "notes": "Open pattern TF40 with 16x19 for more spin access than 18x20 sibling. Same 22mm box beam and 64 RA. 320 swingweight — lower than 18x20 (328). RS Sharp Section and foam fill for solid feel. 2nd gen (2024) with Extensed BG eyelets. More versatile than dense pattern version."
+    "notes": "Open pattern TF40 with 16x19 for more spin access than 18x20 sibling. Same 22mm box beam and 64 RA. 320 swingweight — lower than 18x20 (328). RS Sharp Section and foam fill for solid feel. 2nd gen (2024) with Extensed BG eyelets. More versatile than dense pattern version.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "tecnifibre-tf40-315-16x19",
@@ -2125,7 +2575,13 @@
     ],
     "frameProfile": "Heavy player spec with RS Sharp Section, Foam Inside",
     "identity": "Player Spec TF40",
-    "notes": "Heaviest TF40 at 332g strung. Very head-light (8 pts HL) for a heavy frame — low swingweight (313) despite high static weight. 22mm box beam. 64 RA. 16x19 for spin access. For advanced players who want heavy mass at handle for stability and feel."
+    "notes": "Heaviest TF40 at 332g strung. Very head-light (8 pts HL) for a heavy frame — low swingweight (313) despite high static weight. 22mm box beam. 64 RA. 16x19 for spin access. For advanced players who want heavy mass at handle for stability and feel.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "tecnifibre-tf40-290",
@@ -2153,7 +2609,13 @@
     ],
     "frameProfile": "Lightweight TF40 with RS Sharp Section, Foam Inside",
     "identity": "Accessible TF40",
-    "notes": "Lightest TF40 at 303g strung. Same 22mm box beam and RS Sharp Section. 65 RA slightly stiffer for response at lower weight. 312 swingweight for good maneuverability. 3 pts HL. Foam-filled for the signature TF40 solid feel. Entry point to TF40 precision."
+    "notes": "Lightest TF40 at 303g strung. Same 22mm box beam and RS Sharp Section. 65 RA slightly stiffer for response at lower weight. 312 swingweight for good maneuverability. 3 pts HL. Foam-filled for the signature TF40 solid feel. Entry point to TF40 precision.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "tecnifibre-tempo-298-iga",
@@ -2181,7 +2643,13 @@
     ],
     "frameProfile": "Constant beam with Dynacore XTC, foam-filled",
     "identity": "Iga Power Control",
-    "notes": "Iga Swiatek's signature frame. Stiffest Tecnifibre at 71 RA — significantly stiffer than TFight/TF40 lines. 23mm constant beam. 98 sq in head. 322 swingweight for stability. Foam-filled for solid feel. Unique in the Tecnifibre range for its power-oriented stiffness combined with precision head size."
+    "notes": "Iga Swiatek's signature frame. Stiffest Tecnifibre at 71 RA — significantly stiffer than TFight/TF40 lines. 23mm constant beam. 98 sq in head. 322 swingweight for stability. Foam-filled for solid feel. Unique in the Tecnifibre range for its power-oriented stiffness combined with precision head size.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "yonex-ezone-98-2024",
@@ -2209,7 +2677,13 @@
     ],
     "frameProfile": "Isometric tapered beam with 2G-NAMD SPEED, VDM",
     "identity": "Precision EZONE",
-    "notes": "98 sq in EZONE with dramatically tapered beam (23.8/24.5/19.5mm). 63 RA moderate flex. Isometric head for enlarged sweetspot. 6 pts HL with 320 swingweight. VDM vibration dampening. 2G-NAMD SPEED carbon for speed and power. For advanced players wanting EZONE comfort with 98 precision."
+    "notes": "98 sq in EZONE with dramatically tapered beam (23.8/24.5/19.5mm). 63 RA moderate flex. Isometric head for enlarged sweetspot. 6 pts HL with 320 swingweight. VDM vibration dampening. 2G-NAMD SPEED carbon for speed and power. For advanced players wanting EZONE comfort with 98 precision.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 2,
+      "spinTech": 0,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "yonex-ezone-98l-2024",
@@ -2237,7 +2711,13 @@
     ],
     "frameProfile": "Lightweight isometric tapered beam with VDM",
     "identity": "Light EZONE 98",
-    "notes": "Lighter EZONE 98 at 300g strung. Same tapered beam. Est. 64 RA slightly stiffer. 308 swingweight. 4 pts HL. Good option for intermediate players wanting a 98 sq in head without heavy weight."
+    "notes": "Lighter EZONE 98 at 300g strung. Same tapered beam. Est. 64 RA slightly stiffer. 308 swingweight. 4 pts HL. Good option for intermediate players wanting a 98 sq in head without heavy weight.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "yonex-ezone-100l-2024",
@@ -2265,7 +2745,13 @@
     ],
     "frameProfile": "Lightweight isometric beam with 2G-NAMD SPEED, VDM, Liner Tech",
     "identity": "Light Comfort Power",
-    "notes": "Lighter EZONE 100 at 301g strung. Wider beam (26.5mm peak) for power. 67 RA stiffer for more pop. 3 pts HL with 310 swingweight. VDM + Liner Tech for comfort. 2G-NAMD SPEED. For recreational to intermediate players wanting easy power."
+    "notes": "Lighter EZONE 100 at 301g strung. Wider beam (26.5mm peak) for power. 67 RA stiffer for more pop. 3 pts HL with 310 swingweight. VDM + Liner Tech for comfort. 2G-NAMD SPEED. For recreational to intermediate players wanting easy power.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "yonex-vcore-95-2026",
@@ -2293,7 +2779,13 @@
     ],
     "frameProfile": "Thin constant beam with Servo Filter, 2G-NAMD FlexForce",
     "identity": "VCORE Blade",
-    "notes": "Smallest VCORE at 95 sq in with dense 16x20 pattern. 22mm constant beam for control. 62 RA soft flex. Heavy at 326g with 323 swingweight. 6 pts HL. Servo Filter for vibration. For advanced players wanting maximum precision with spin access."
+    "notes": "Smallest VCORE at 95 sq in with dense 16x20 pattern. 22mm constant beam for control. 62 RA soft flex. Heavy at 326g with 323 swingweight. 6 pts HL. Servo Filter for vibration. For advanced players wanting maximum precision with spin access.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 2,
+      "spinTech": 0.5,
+      "genBonus": 1.5
+    }
   },
   {
     "id": "yonex-vcore-98-2026",
@@ -2321,7 +2813,13 @@
     ],
     "frameProfile": "Variable beam with Servo Filter, 2G-NAMD FlexForce, SIF grommets",
     "identity": "VCORE Precision",
-    "notes": "98 sq in VCORE with variable beam (23/23.5/22mm). 63 RA moderate flex. Servo Filter for vibration. SIF grommets enhance snapback. 323g strung with 321 swingweight. 4 pts HL. For advanced players wanting spin + control."
+    "notes": "98 sq in VCORE with variable beam (23/23.5/22mm). 63 RA moderate flex. Servo Filter for vibration. SIF grommets enhance snapback. 323g strung with 321 swingweight. 4 pts HL. For advanced players wanting spin + control.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 2,
+      "spinTech": 1,
+      "genBonus": 1.5
+    }
   },
   {
     "id": "yonex-vcore-98l-2026",
@@ -2349,7 +2847,13 @@
     ],
     "frameProfile": "Lightweight variable beam with Servo Filter, 2G-NAMD FlexForce",
     "identity": "Light VCORE 98",
-    "notes": "Lighter VCORE 98 at ~303g strung. 98 sq in head with 16x19 pattern. Est. 64 RA. ~310 swingweight. For intermediate players wanting VCORE 98 precision at lighter weight."
+    "notes": "Lighter VCORE 98 at ~303g strung. 98 sq in head with 16x19 pattern. Est. 64 RA. ~310 swingweight. For intermediate players wanting VCORE 98 precision at lighter weight.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1.5,
+      "spinTech": 0.5,
+      "genBonus": 1
+    }
   },
   {
     "id": "yonex-vcore-100-2026",
@@ -2377,7 +2881,13 @@
     ],
     "frameProfile": "Variable beam with Servo Filter, 2G-NAMD FlexForce, SIF grommets",
     "identity": "Spin Launcher v2",
-    "notes": "2026 VCORE 100 with redesigned aero beam. Servo Filter elastic layer in NAMD FlexForce. Wider beam (26mm peak) for power. 65 RA moderate stiffness. SIF grommets for snapback. 325 swingweight for stability. 4 pts HL. The spin-focused all-rounder."
+    "notes": "2026 VCORE 100 with redesigned aero beam. Servo Filter elastic layer in NAMD FlexForce. Wider beam (26mm peak) for power. 65 RA moderate stiffness. SIF grommets for snapback. 325 swingweight for stability. 4 pts HL. The spin-focused all-rounder.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 2,
+      "spinTech": 1,
+      "genBonus": 1.5
+    }
   },
   {
     "id": "yonex-vcore-100l-2026",
@@ -2405,7 +2915,13 @@
     ],
     "frameProfile": "Lightweight variable beam with Servo Filter, 2G-NAMD FlexForce",
     "identity": "Light Spin Launcher",
-    "notes": "Lighter VCORE 100 at 295g strung. Same variable beam for power. 66 RA slightly stiffer. Nearly even balance (1 pt HL). 313 swingweight. Good spin potential at lighter weight."
+    "notes": "Lighter VCORE 100 at 295g strung. Same variable beam for power. 66 RA slightly stiffer. Nearly even balance (1 pt HL). 313 swingweight. Good spin potential at lighter weight.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1.5,
+      "spinTech": 0.5,
+      "genBonus": 1
+    }
   },
   {
     "id": "yonex-percept-97-2023",
@@ -2433,7 +2949,13 @@
     ],
     "frameProfile": "Thin constant beam with 2G-NAMD FlexForce, Servo Filter, elongated shaft",
     "identity": "Percept Scalpel",
-    "notes": "97 sq in with thinnest beam (21mm constant). 60 RA very soft for excellent feel. 7 pts HL extremely head-light despite 326g. Lower swingweight (315) for its weight. Servo Filter + elongated shaft for flex and pocketing. For advanced feel players."
+    "notes": "97 sq in with thinnest beam (21mm constant). 60 RA very soft for excellent feel. 7 pts HL extremely head-light despite 326g. Lower swingweight (315) for its weight. Servo Filter + elongated shaft for flex and pocketing. For advanced feel players.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 2,
+      "spinTech": 0,
+      "genBonus": 1
+    }
   },
   {
     "id": "yonex-percept-97h-2023",
@@ -2461,7 +2983,13 @@
     ],
     "frameProfile": "Heavy thin constant beam with 2G-NAMD FlexForce, Servo Filter",
     "identity": "Heavy Percept",
-    "notes": "Heaviest racquet in the database at 346g strung (330g unstrung). 333 swingweight — massive stability. 97 sq in + 21mm beam + 62 RA = maximum control and feel. 6 pts HL. For advanced players who want the heaviest, most stable control frame available."
+    "notes": "Heaviest racquet in the database at 346g strung (330g unstrung). 333 swingweight — massive stability. 97 sq in + 21mm beam + 62 RA = maximum control and feel. 6 pts HL. For advanced players who want the heaviest, most stable control frame available.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1.5,
+      "spinTech": 0,
+      "genBonus": 1
+    }
   },
   {
     "id": "yonex-percept-100-2023",
@@ -2489,7 +3017,13 @@
     ],
     "frameProfile": "Constant beam with 2G-NAMD FlexForce, Servo Filter",
     "identity": "Percept All-Rounder",
-    "notes": "100 sq in Percept with 23mm constant beam. 66 RA moderate stiffness. 4 pts HL with 318 swingweight. Servo Filter for vibration dampening. More accessible than 97 — good control/comfort blend."
+    "notes": "100 sq in Percept with 23mm constant beam. 66 RA moderate stiffness. 4 pts HL with 318 swingweight. Servo Filter for vibration dampening. More accessible than 97 — good control/comfort blend.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 2,
+      "spinTech": 0,
+      "genBonus": 1
+    }
   },
   {
     "id": "yonex-percept-100d-2023",
@@ -2517,7 +3051,13 @@
     ],
     "frameProfile": "Dense pattern constant beam with 2G-NAMD FlexForce",
     "identity": "Dense Percept",
-    "notes": "Same frame as Percept 100 but with dense 18x19 pattern. More control, less spin. 320g slightly heavier. Same 66 RA and 23mm beam. For advanced players who prefer flatter shots and maximum control."
+    "notes": "Same frame as Percept 100 but with dense 18x19 pattern. More control, less spin. 320g slightly heavier. Same 66 RA and 23mm beam. For advanced players who prefer flatter shots and maximum control.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 2,
+      "spinTech": 0,
+      "genBonus": 1
+    }
   },
   {
     "id": "yonex-percept-104-2023",
@@ -2545,7 +3085,13 @@
     ],
     "frameProfile": "Oversized constant beam with Servo Filter",
     "identity": "Comfort Percept",
-    "notes": "Largest Percept at 104 sq in. Lighter at ~298g strung. 22mm constant beam. 65 RA moderate stiffness. 3 pts HL with ~310 swingweight. Most forgiving Percept for intermediate players."
+    "notes": "Largest Percept at 104 sq in. Lighter at ~298g strung. 22mm constant beam. 65 RA moderate stiffness. 3 pts HL with ~310 swingweight. Most forgiving Percept for intermediate players.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "yonex-regna-98-2024",
@@ -2573,7 +3119,13 @@
     ],
     "frameProfile": "Premium variable beam with next-gen graphite, Vibration Dampening Mesh",
     "identity": "Premium Precision",
-    "notes": "Yonex's limited premium line. 98 sq in with thin variable beam (21.5/22/22mm). 65 RA moderate stiffness. 6 pts HL with 322 swingweight. Premium materials and construction. For advanced players seeking refined feel and precision."
+    "notes": "Yonex's limited premium line. 98 sq in with thin variable beam (21.5/22/22mm). 65 RA moderate stiffness. 6 pts HL with 322 swingweight. Premium materials and construction. For advanced players seeking refined feel and precision.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 2.5,
+      "spinTech": 1,
+      "genBonus": 2
+    }
   },
   {
     "id": "wilson-pro-staff-97l-v14",
@@ -2601,7 +3153,13 @@
     ],
     "frameProfile": "Lighter constant beam, braided graphite + Fortyfive",
     "identity": "Light Staff",
-    "notes": "Lighter Pro Staff at 306g strung. Wider beam (23.5mm vs 21.5mm on 97) for more power. Stiffer at 68 RA. 313 swingweight for easier handling. 6 pts HL. Same braided graphite construction. More accessible than full-weight 97."
+    "notes": "Lighter Pro Staff at 306g strung. Wider beam (23.5mm vs 21.5mm on 97) for more power. Stiffer at 68 RA. 313 swingweight for easier handling. 6 pts HL. Same braided graphite construction. More accessible than full-weight 97.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "wilson-pro-staff-97ul-v14",
@@ -2629,7 +3187,13 @@
     ],
     "frameProfile": "Ultra-light constant beam, braided graphite",
     "identity": "Ultra-Light Staff",
-    "notes": "Lightest Pro Staff at 285g strung. 23.5mm beam for power assist. 67 RA moderate-stiff. 3 pts HL with 301 swingweight. 97 sq in head maintained. For recreational players wanting Pro Staff heritage at minimal weight."
+    "notes": "Lightest Pro Staff at 285g strung. 23.5mm beam for power assist. 67 RA moderate-stiff. 3 pts HL with 301 swingweight. 97 sq in head maintained. For recreational players wanting Pro Staff heritage at minimal weight.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "wilson-pro-staff-team-v14",
@@ -2657,7 +3221,13 @@
     ],
     "frameProfile": "Lightweight constant beam with 100 sq in head",
     "identity": "Staff Team",
-    "notes": "100 sq in Pro Staff variant at ~296g strung. Larger head for forgiveness. 23.5mm beam. 67 RA. 3 pts HL with low 290 swingweight. Entry-level Pro Staff for developing players."
+    "notes": "100 sq in Pro Staff variant at ~296g strung. Larger head for forgiveness. 23.5mm beam. 67 RA. 3 pts HL with low 290 swingweight. Entry-level Pro Staff for developing players.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "wilson-blade-98-16x19-v9",
@@ -2685,7 +3255,13 @@
     ],
     "frameProfile": "Thin constant beam with StableFeel, braided graphite + Fortyfive",
     "identity": "Blade Control",
-    "notes": "Latest Blade with 21mm thin beam. StableFeel tech for firmer response. 62 RA moderate flex. 323g with 324 swingweight. 16x19 for spin access. 4 pts HL. Braided graphite + basalt construction. For advanced all-court players."
+    "notes": "Latest Blade with 21mm thin beam. StableFeel tech for firmer response. 62 RA moderate flex. 323g with 324 swingweight. 16x19 for spin access. 4 pts HL. Braided graphite + basalt construction. For advanced all-court players.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1,
+      "spinTech": 0,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "wilson-blade-98-18x20-v9",
@@ -2713,7 +3289,13 @@
     ],
     "frameProfile": "Dense pattern thin beam with StableFeel, braided graphite",
     "identity": "Blade Pro",
-    "notes": "Dense 18x20 Blade for maximum control. 21mm thin beam. 60 RA softer flex than 16x19 sibling. 330 swingweight for stability. Same 323g. For advanced flat hitters wanting precision."
+    "notes": "Dense 18x20 Blade for maximum control. 21mm thin beam. 60 RA softer flex than 16x19 sibling. 330 swingweight for stability. Same 323g. For advanced flat hitters wanting precision.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1,
+      "spinTech": 0,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "wilson-blade-100-v9",
@@ -2741,7 +3323,13 @@
     ],
     "frameProfile": "Constant beam with StableFeel, braided graphite",
     "identity": "Blade All-Rounder",
-    "notes": "100 sq in Blade with 22mm beam. 60 RA soft flex — very comfortable. 318g with 322 swingweight. 4 pts HL. StableFeel for firmer response. Most versatile Blade for intermediate to advanced players."
+    "notes": "100 sq in Blade with 22mm beam. 60 RA soft flex — very comfortable. 318g with 322 swingweight. 4 pts HL. StableFeel for firmer response. Most versatile Blade for intermediate to advanced players.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1,
+      "spinTech": 0,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "wilson-blade-100l-v9",
@@ -2769,7 +3357,13 @@
     ],
     "frameProfile": "Lightweight constant beam with braided graphite",
     "identity": "Light Blade",
-    "notes": "Lighter Blade at 301g strung. Stiffer at 69 RA to maintain response. 22mm beam. 3 pts HL with 308 swingweight. 100 sq in. More accessible Blade for intermediate players."
+    "notes": "Lighter Blade at 301g strung. Stiffer at 69 RA to maintain response. 22mm beam. 3 pts HL with 308 swingweight. 100 sq in. More accessible Blade for intermediate players.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "wilson-blade-100ul-v9",
@@ -2797,7 +3391,13 @@
     ],
     "frameProfile": "Ultra-light constant beam with braided graphite",
     "identity": "Ultra-Light Blade",
-    "notes": "Lightest standard Blade at 283g strung. 65 RA. 22mm beam. Nearly even balance (1 pt HL). 304 swingweight. For recreational players wanting Blade feel at minimal weight."
+    "notes": "Lightest standard Blade at 283g strung. 65 RA. 22mm beam. Nearly even balance (1 pt HL). 304 swingweight. For recreational players wanting Blade feel at minimal weight.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "wilson-blade-101l-v9",
@@ -2825,7 +3425,13 @@
     ],
     "frameProfile": "Lightweight wider beam with 16x20 pattern",
     "identity": "Blade Tweener",
-    "notes": "101 sq in Blade variant with wider 23mm beam and dense 16x20 pattern. 289g strung. 68 RA stiffer for response. 3 pts HL with 303 swingweight. Bridge between Blade precision and easy handling."
+    "notes": "101 sq in Blade variant with wider 23mm beam and dense 16x20 pattern. 289g strung. 68 RA stiffer for response. 3 pts HL with 303 swingweight. Bridge between Blade precision and easy handling.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "wilson-blade-104-v9",
@@ -2853,7 +3459,13 @@
     ],
     "frameProfile": "Oversized constant beam with StableFeel, braided graphite",
     "identity": "Blade Comfort",
-    "notes": "Largest Blade at 104 sq in for maximum forgiveness. 22mm beam. 64 RA moderate. 306g with 311 swingweight. Unusual 6 pts HL — more head-light than typical 104 frames. Good for doubles or players wanting a bigger sweetspot."
+    "notes": "Largest Blade at 104 sq in for maximum forgiveness. 22mm beam. 64 RA moderate. 306g with 311 swingweight. Unusual 6 pts HL — more head-light than typical 104 frames. Good for doubles or players wanting a bigger sweetspot.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1,
+      "spinTech": 0,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "wilson-shift-99-pro-v1",
@@ -2881,7 +3493,13 @@
     ],
     "frameProfile": "Dense pattern, low vertical flex, Shift construction",
     "identity": "Shift Control",
-    "notes": "Dense 18x20 Shift for maximum control. Heavy at 332g with 332 swingweight. 68 RA stiffer than standard Shift. 6 pts HL. Same low vertical flex design. 23.5mm constant beam. For advanced players wanting Shift DNA with dense pattern precision."
+    "notes": "Dense 18x20 Shift for maximum control. Heavy at 332g with 332 swingweight. 68 RA stiffer than standard Shift. 6 pts HL. Same low vertical flex design. 23.5mm constant beam. For advanced players wanting Shift DNA with dense pattern precision.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 1,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "wilson-clash-98-v2",
@@ -2909,7 +3527,13 @@
     ],
     "frameProfile": "Constant beam with FreeFlex, StableSmart, Fortyfive",
     "identity": "Flex Control",
-    "notes": "98 sq in Clash with maximum flex (60 RA). 24mm constant beam wider than typical 98. Dense 16x20 pattern. 326g with 327 swingweight. FreeFlex tech allows flex without sacrificing stability. For players wanting supreme comfort with control."
+    "notes": "98 sq in Clash with maximum flex (60 RA). 24mm constant beam wider than typical 98. Dense 16x20 pattern. 326g with 327 swingweight. FreeFlex tech allows flex without sacrificing stability. For players wanting supreme comfort with control.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 2,
+      "spinTech": 0,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "wilson-clash-100-v2",
@@ -2937,7 +3561,13 @@
     ],
     "frameProfile": "Wide constant beam with FreeFlex, StableSmart",
     "identity": "Maximum Flex",
-    "notes": "57 RA — one of the softest 100 sq in frames available. 24.5mm wide constant beam. FreeFlex + StableSmart for flex without instability. 312g with 313 swingweight. 4 pts HL. Exceptional comfort for arm-sensitive players."
+    "notes": "57 RA — one of the softest 100 sq in frames available. 24.5mm wide constant beam. FreeFlex + StableSmart for flex without instability. 312g with 313 swingweight. 4 pts HL. Exceptional comfort for arm-sensitive players.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 2.5,
+      "spinTech": 0,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "wilson-clash-100-pro-v2",
@@ -2965,7 +3595,13 @@
     ],
     "frameProfile": "Heavy constant beam with FreeFlex, StableSmart",
     "identity": "Flex Power",
-    "notes": "Heavier Clash 100 at 326g with dense 16x20 pattern. 59 RA very flexible. 24.5mm wide beam. 325 swingweight for stability. 6 pts HL. Maximum comfort + control in a heavier package."
+    "notes": "Heavier Clash 100 at 326g with dense 16x20 pattern. 59 RA very flexible. 24.5mm wide beam. 325 swingweight for stability. 6 pts HL. Maximum comfort + control in a heavier package.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 2,
+      "spinTech": 0,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "wilson-clash-100l-v2",
@@ -2993,7 +3629,13 @@
     ],
     "frameProfile": "Lightweight constant beam with FreeFlex",
     "identity": "Light Flex",
-    "notes": "Lighter Clash at 296g strung. Maintains 58 RA flex — very soft. 24.5mm beam. 3 pts HL with 305 swingweight. For intermediate players wanting Clash comfort at lighter weight."
+    "notes": "Lighter Clash at 296g strung. Maintains 58 RA flex — very soft. 24.5mm beam. 3 pts HL with 305 swingweight. For intermediate players wanting Clash comfort at lighter weight.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 2,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "wilson-clash-100ul-v2",
@@ -3021,7 +3663,13 @@
     ],
     "frameProfile": "Ultra-light constant beam with FreeFlex",
     "identity": "Ultra-Light Flex",
-    "notes": "Lightest Clash at 281g strung. 63 RA stiffer than heavier siblings to maintain response. Even balance. 24.5mm beam. 300 swingweight. For recreational players wanting maximum comfort."
+    "notes": "Lightest Clash at 281g strung. 63 RA stiffer than heavier siblings to maintain response. Even balance. 24.5mm beam. 300 swingweight. For recreational players wanting maximum comfort.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "wilson-clash-108-v2",
@@ -3049,7 +3697,13 @@
     ],
     "frameProfile": "Oversized constant beam with FreeFlex",
     "identity": "Clash Power",
-    "notes": "Largest Clash at 108 sq in. 295g strung but high 325 swingweight from head-heavy mass distribution. 63 RA. 24.5mm beam. Maximum power + comfort + forgiveness. For recreational players and doubles."
+    "notes": "Largest Clash at 108 sq in. 295g strung but high 325 swingweight from head-heavy mass distribution. 63 RA. 24.5mm beam. Maximum power + comfort + forgiveness. For recreational players and doubles.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "wilson-ultra-100-v4",
@@ -3077,7 +3731,13 @@
     ],
     "frameProfile": "Variable beam with Power Rib, Fortyfive, Crush Zone",
     "identity": "Power Machine",
-    "notes": "Power-focused frame with 70 RA stiffness — one of the stiffest in the database. Wide variable beam (26.5mm peak) for launch. Power Rib for stability. Crush Zone dampens vibration. 318g with 317 swingweight. For intermediate players wanting maximum power assist."
+    "notes": "Power-focused frame with 70 RA stiffness — one of the stiffest in the database. Wide variable beam (26.5mm peak) for launch. Power Rib for stability. Crush Zone dampens vibration. 318g with 317 swingweight. For intermediate players wanting maximum power assist.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "wilson-ultra-100l-v4",
@@ -3105,7 +3765,13 @@
     ],
     "frameProfile": "Lightweight variable beam with Power Rib",
     "identity": "Light Power",
-    "notes": "Lighter Ultra at ~296g strung. Same wide variable beam for power. 67 RA. 3 pts HL with ~298 swingweight. Power Rib for stability. For developing players wanting easy power."
+    "notes": "Lighter Ultra at ~296g strung. Same wide variable beam for power. 67 RA. 3 pts HL with ~298 swingweight. Power Rib for stability. For developing players wanting easy power.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "wilson-ultra-108-v4",
@@ -3133,7 +3799,13 @@
     ],
     "frameProfile": "Oversized wide variable beam, Power Rib",
     "identity": "Max Power",
-    "notes": "Widest beam in the database (27.5mm peak). 108 sq in + 70 RA = maximum power assist. Open 16x18 pattern. 283g strung with even balance. 311 swingweight. For beginners and recreational players wanting effortless power."
+    "notes": "Widest beam in the database (27.5mm peak). 108 sq in + 70 RA = maximum power assist. Open 16x18 pattern. 283g strung with even balance. 311 swingweight. For beginners and recreational players wanting effortless power.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "wilson-ultra-pro-97-v4",
@@ -3161,7 +3833,13 @@
     ],
     "frameProfile": "Thin constant beam, Fortyfive, Crush Zone",
     "identity": "Ultra Precision",
-    "notes": "Thinnest beam in the Ultra line (20.6mm constant). 62 RA soft flex — very different character from Ultra 100. 97 sq in for precision. 323g with 317 swingweight. 4 pts HL. A control frame wearing Ultra branding. For advanced players."
+    "notes": "Thinnest beam in the Ultra line (20.6mm constant). 62 RA soft flex — very different character from Ultra 100. 97 sq in for precision. 323g with 317 swingweight. 4 pts HL. A control frame wearing Ultra branding. For advanced players.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "diadem-elevate-98-v3",
@@ -3189,7 +3867,13 @@
     ],
     "frameProfile": "Thin constant beam with Kraibon elastomer, FS system, HMT carbon",
     "identity": "Precision Machine",
-    "notes": "Diadem's flagship control frame. 21.5mm thin constant beam + 16x20 dense pattern. 61 RA very flexible for excellent feel. Kraibon elastomer dampens vibration. 326g with 330 swingweight — heavy and stable. HMT carbon for clean feedback. Competes with Blade 98 and TF40."
+    "notes": "Diadem's flagship control frame. 21.5mm thin constant beam + 16x20 dense pattern. 61 RA very flexible for excellent feel. Kraibon elastomer dampens vibration. 326g with 330 swingweight — heavy and stable. HMT carbon for clean feedback. Competes with Blade 98 and TF40.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1.5,
+      "spinTech": 0,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "diadem-elevate-98-v3-tour",
@@ -3217,7 +3901,13 @@
     ],
     "frameProfile": "Player spec thin beam with Kraibon, FS system, HMT carbon",
     "identity": "Tour Precision",
-    "notes": "Tour-weighted Elevate at 322g strung. Very head-light (7 pts HL) for maneuverability. 64 RA slightly stiffer than standard. Same 21.5mm thin beam and 16x20 pattern. For advanced players who want a lighter, more head-light control frame."
+    "notes": "Tour-weighted Elevate at 322g strung. Very head-light (7 pts HL) for maneuverability. 64 RA slightly stiffer than standard. Same 21.5mm thin beam and 16x20 pattern. For advanced players who want a lighter, more head-light control frame.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1.5,
+      "spinTech": 0,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "diadem-elevate-98-v3-lite",
@@ -3245,7 +3935,13 @@
     ],
     "frameProfile": "Lightweight thin beam with Kraibon, FS system",
     "identity": "Light Elevate",
-    "notes": "Lighter Elevate at ~307g strung. Same 21.5mm thin beam and 16x20 pattern. 64 RA. 3 pts HL with ~312 swingweight. More accessible entry to Elevate precision for intermediate players."
+    "notes": "Lighter Elevate at ~307g strung. Same 21.5mm thin beam and 16x20 pattern. 64 RA. 3 pts HL with ~312 swingweight. More accessible entry to Elevate precision for intermediate players.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "diadem-nova-100",
@@ -3273,7 +3969,13 @@
     ],
     "frameProfile": "Constant beam with FS2 system, Kraibon elastomer, HMT carbon",
     "identity": "Power Precision",
-    "notes": "100 sq in Diadem power frame. 69 RA stiff for power assist. 23.5mm constant beam. Unusually head-light (7 pts HL) for a power frame — great maneuverability. FS2 Flex Stabilization for controlled flex. Kraibon for vibration dampening."
+    "notes": "100 sq in Diadem power frame. 69 RA stiff for power assist. 23.5mm constant beam. Unusually head-light (7 pts HL) for a power frame — great maneuverability. FS2 Flex Stabilization for controlled flex. Kraibon for vibration dampening.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1,
+      "spinTech": 0,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "diadem-nova-100-lite",
@@ -3301,7 +4003,13 @@
     ],
     "frameProfile": "Lightweight constant beam with FS system, HMT carbon",
     "identity": "Light Nova",
-    "notes": "Lighter Nova at ~302g strung. Same 23.5mm beam and 69 RA stiffness. 6 pts HL with 310 swingweight. FS system for flex stability. More accessible Nova for intermediate players."
+    "notes": "Lighter Nova at ~302g strung. Same 23.5mm beam and 69 RA stiffness. 6 pts HL with 310 swingweight. FS system for flex stability. More accessible Nova for intermediate players.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "volkl-v8-pro-2023",
@@ -3329,7 +4037,13 @@
     ],
     "frameProfile": "Variable beam with V-Feel technology (VCell, REVA, VSENSOR)",
     "identity": "Dense Control",
-    "notes": "Volkl's flagship player frame. Dense 18x20 pattern in a 100 sq in head — rare combo. Variable beam (22/24/22mm). V-Feel tech for comfort and feedback. 67 RA moderate stiffness. 6 pts HL for maneuverability. Good blend of control and forgiveness."
+    "notes": "Volkl's flagship player frame. Dense 18x20 pattern in a 100 sq in head — rare combo. Variable beam (22/24/22mm). V-Feel tech for comfort and feedback. 67 RA moderate stiffness. 6 pts HL for maneuverability. Good blend of control and forgiveness.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "volkl-vcell-8-300",
@@ -3357,7 +4071,13 @@
     ],
     "frameProfile": "Variable beam with V-Cell, REVA, VTEX",
     "identity": "Spin Power",
-    "notes": "Open 16x18 pattern for maximum string movement and spin. Variable beam (22/24/22mm). 67 RA moderate stiffness. V-Cell construction for vibration dampening. 312g with 312 swingweight. 5 pts HL. Good power + spin blend."
+    "notes": "Open 16x18 pattern for maximum string movement and spin. Variable beam (22/24/22mm). 67 RA moderate stiffness. V-Cell construction for vibration dampening. 312g with 312 swingweight. 5 pts HL. Good power + spin blend.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0.5,
+      "genBonus": 0
+    }
   },
   {
     "id": "volkl-vcell-8-285",
@@ -3385,7 +4105,13 @@
     ],
     "frameProfile": "Lightweight variable beam with V-Cell, REVA, Super Grommets",
     "identity": "Light Volkl Power",
-    "notes": "Lighter Volkl at 300g strung. 70 RA stiffer for power at lower weight. Variable beam (22/24/22mm). 16x19 open pattern. Super Grommets for string movement. 4 pts HL with 303 swingweight. For intermediate players."
+    "notes": "Lighter Volkl at 300g strung. 70 RA stiffer for power at lower weight. Variable beam (22/24/22mm). 16x19 open pattern. Super Grommets for string movement. 4 pts HL with 303 swingweight. For intermediate players.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "dunlop-fx-500-2023",
@@ -3413,7 +4139,13 @@
     ],
     "frameProfile": "Variable beam with Sonic Core Infinergy, Power Boost Frame",
     "identity": "Sonic Power",
-    "notes": "Dunlop's flagship power frame. Sonic Core Infinergy for energy return and dampening. Wide variable beam (23/26/23mm) for launch and power. 69 RA stiff. Power Boost Frame geometry. 320g with 321 swingweight. Competes with Pure Drive."
+    "notes": "Dunlop's flagship power frame. Sonic Core Infinergy for energy return and dampening. Wide variable beam (23/26/23mm) for launch and power. 69 RA stiff. Power Boost Frame geometry. 320g with 321 swingweight. Competes with Pure Drive.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1,
+      "spinTech": 0,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "dunlop-fx-500-ls-2023",
@@ -3441,7 +4173,13 @@
     ],
     "frameProfile": "Lightweight variable beam with Sonic Core Infinergy",
     "identity": "Light Sonic",
-    "notes": "Lighter FX 500 at 301g strung. Same variable beam (23/26/23mm). 67 RA slightly softer than full FX 500. 3 pts HL with 305 swingweight. Sonic Core Infinergy for comfort. For intermediate players wanting FX 500 power without full weight."
+    "notes": "Lighter FX 500 at 301g strung. Same variable beam (23/26/23mm). 67 RA slightly softer than full FX 500. 3 pts HL with 305 swingweight. Sonic Core Infinergy for comfort. For intermediate players wanting FX 500 power without full weight.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "dunlop-fx-500-lite-2023",
@@ -3469,7 +4207,13 @@
     ],
     "frameProfile": "Ultra-light variable beam with Sonic Core Infinergy, Power Boost+",
     "identity": "Light Power Boost",
-    "notes": "Lightest FX 500 at 283g strung. 68 RA stiff for power at low weight. Nearly even balance (1 pt HL). Same wide variable beam. Power Boost+ Groove for extra energy return. For recreational and developing players wanting easy power."
+    "notes": "Lightest FX 500 at 283g strung. 68 RA stiff for power at low weight. Nearly even balance (1 pt HL). Same wide variable beam. Power Boost+ Groove for extra energy return. For recreational and developing players wanting easy power.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "dunlop-cx-200-tour-16x19-2024",
@@ -3497,7 +4241,13 @@
     ],
     "frameProfile": "Thin constant beam with Sonic Core Infinergy, Powergrid Stringtech+, Vibroshield",
     "identity": "Tour Scalpel",
-    "notes": "Smallest Dunlop head at 95 sq in with thinnest beam (20.5mm constant). 326g strung with 7 pts HL — heavy but extremely head-light. 66 RA moderate stiffness. Powergrid Stringtech+ optimizes string interaction. Vibroshield dampens vibration. For advanced precision players."
+    "notes": "Smallest Dunlop head at 95 sq in with thinnest beam (20.5mm constant). 326g strung with 7 pts HL — heavy but extremely head-light. 66 RA moderate stiffness. Powergrid Stringtech+ optimizes string interaction. Vibroshield dampens vibration. For advanced precision players.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1,
+      "spinTech": 0,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "dunlop-cx-200-2024",
@@ -3525,7 +4275,13 @@
     ],
     "frameProfile": "Thin constant beam with Sonic Core Infinergy, Powergrid Stringtech+, Vibroshield",
     "identity": "CX Control",
-    "notes": "Core CX 200 frame. 21.5mm thin constant beam for control. 64 RA flexible for feel. 7 pts HL extremely head-light with 314 swingweight. Sonic Core Infinergy for energy return. Vibroshield dampens vibration. 2024 mold update. Competes with Blade 98 and Prestige MP."
+    "notes": "Core CX 200 frame. 21.5mm thin constant beam for control. 64 RA flexible for feel. 7 pts HL extremely head-light with 314 swingweight. Sonic Core Infinergy for energy return. Vibroshield dampens vibration. 2024 mold update. Competes with Blade 98 and Prestige MP.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1,
+      "spinTech": 0,
+      "genBonus": 0.5
+    }
   },
   {
     "id": "dunlop-cx-200-ls-2024",
@@ -3553,7 +4309,13 @@
     ],
     "frameProfile": "Lightweight thin beam with Sonic Core Infinergy, Powergrid Stringtech+",
     "identity": "Light CX",
-    "notes": "Lighter CX 200 at 303g strung. Same 21.5mm thin beam. 63 RA soft flex. 3 pts HL with 309 swingweight. More accessible control frame for intermediate players wanting CX precision without full weight."
+    "notes": "Lighter CX 200 at 303g strung. Same 21.5mm thin beam. 63 RA soft flex. 3 pts HL with 309 swingweight. More accessible control frame for intermediate players wanting CX precision without full weight.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1,
+      "spinTech": 0,
+      "genBonus": 0
+    }
   },
   {
     "id": "dunlop-sx-300-2022",
@@ -3581,7 +4343,13 @@
     ],
     "frameProfile": "Variable beam with Spin Boost+ Grommets, Sonic Core Infinergy",
     "identity": "Spin Machine",
-    "notes": "Dunlop's spin-focused frame. Spin Boost+ Grommets maximize string movement and snapback. Wide variable beam (23/26/23mm) for power and launch. 68 RA moderate-stiff. 322 swingweight for stability. Sonic Core Infinergy for energy return. Competes with Pure Aero."
+    "notes": "Dunlop's spin-focused frame. Spin Boost+ Grommets maximize string movement and snapback. Wide variable beam (23/26/23mm) for power and launch. 68 RA moderate-stiff. 322 swingweight for stability. Sonic Core Infinergy for energy return. Competes with Pure Aero.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 1,
+      "genBonus": 0
+    }
   },
   {
     "id": "dunlop-sx-300-tour-2022",
@@ -3609,6 +4377,12 @@
     ],
     "frameProfile": "Variable beam with Spin Boost+ Grommets, Sonic Core Infinergy",
     "identity": "Spin Precision",
-    "notes": "98 sq in SX for more precision with spin. Same variable beam and Spin Boost+ tech. 66 RA moderate stiffness. 6 pts HL with 324 swingweight. Heavier and more head-light than SX 300 for better control. For advanced spin players."
+    "notes": "98 sq in SX for more precision with spin. Same variable beam and Spin Boost+ tech. 66 RA moderate stiffness. 6 pts HL with 324 swingweight. Heavier and more head-light than SX 300 for better control. For advanced spin players.",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 1,
+      "genBonus": 0
+    }
   }
 ]

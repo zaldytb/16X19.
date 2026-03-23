@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Frame Batch Editor — Loadout Lab</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#18181b;--surface:#27272a;--surface2:#3f3f46;--border:#52525b;
+  --text:#f4f4f5;--muted:#a1a1aa;--accent:#60a5fa;
+  --err:#ef4444;--warn:#f59e0b;
+  --sel:#1a2d42;--focus-bg:#163050;
+  --btn:#3f3f46;--btn-h:#52525b;
+  --frozen-sel:#1a2d42;
+}
+[data-theme=light]{
+  --bg:#f4f4f5;--surface:#fff;--surface2:#e4e4e7;--border:#d4d4d8;
+  --text:#18181b;--muted:#71717a;--accent:#2563eb;
+  --err:#dc2626;--warn:#b45309;
+  --sel:#dbeafe;--focus-bg:#eff6ff;
+  --btn:#e4e4e7;--btn-h:#d4d4d8;
+  --frozen-sel:#dbeafe;
+}
+
+body{
+  font:13px/1.4 system-ui,-apple-system,'Segoe UI',sans-serif;
+  background:var(--bg);color:var(--text);
+  height:100vh;display:flex;flex-direction:column;overflow:hidden;
+}
+#app{display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+
+/* ── Header ── */
+#hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);
+  flex-shrink:0;gap:12px;
+}
+#hdr-title{font-weight:700;font-size:15px;letter-spacing:.06em;color:var(--accent);}
+#hdr-actions{display:flex;gap:8px;}
+
+/* ── Toolbar ── */
+#toolbar{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:7px 16px;background:var(--surface);border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+#toolbar-btns{display:flex;gap:6px;}
+#summary{margin-left:auto;color:var(--muted);font-size:12px;white-space:nowrap;}
+
+/* ── Buttons ── */
+button{
+  background:var(--btn);color:var(--text);border:1px solid var(--border);
+  border-radius:5px;padding:5px 10px;cursor:pointer;font-size:12px;
+  line-height:1.4;transition:background .12s;white-space:nowrap;
+}
+button:hover{background:var(--btn-h);}
+button:disabled{opacity:.38;cursor:not-allowed;pointer-events:none;}
+#btn-download{
+  border-color:var(--accent);
+  background:color-mix(in srgb,var(--btn) 55%,var(--accent) 45%);
+}
+#btn-download:hover{background:var(--accent);color:#fff;}
+.btn-danger:hover{background:#7f1d1d;border-color:var(--err);}
+
+/* ── Table wrapper ── */
+#table-wrap{flex:1;overflow:auto;min-height:0;position:relative;}
+
+/* ── Table ── */
+table{border-collapse:collapse;table-layout:fixed;width:max-content;}
+th,td{border:1px solid var(--border);padding:3px 7px;overflow:hidden;text-overflow:ellipsis;}
+
+thead th{
+  background:var(--surface);position:sticky;top:0;z-index:2;
+  font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;
+  color:var(--muted);user-select:none;white-space:nowrap;height:30px;
+}
+thead th.req-th{color:var(--accent);}
+.req-badge{font-size:9px;margin-left:2px;color:var(--accent);vertical-align:super;}
+
+tbody td{
+  background:var(--surface);color:var(--text);
+  font-family:'SF Mono','Fira Code','Cascadia Code',monospace;font-size:12px;
+  white-space:nowrap;cursor:text;height:27px;vertical-align:middle;
+}
+tbody td:focus{
+  outline:2px solid var(--accent);outline-offset:-2px;
+  background:var(--focus-bg);z-index:1;position:relative;
+}
+tr.selected td{background:var(--sel);}
+tr.selected td:focus{background:var(--focus-bg);}
+
+/* Validation outlines — !important to override focus outline */
+td.cell-err{outline:2px solid var(--err)!important;outline-offset:-2px;}
+td.cell-warn{outline:2px solid var(--warn)!important;outline-offset:-2px;}
+
+/* ── Frozen columns ── */
+.col-f0{position:sticky;left:0;z-index:2;}
+.col-f1{position:sticky;left:160px;z-index:2;}
+thead th.col-f0,thead th.col-f1{z-index:4;}
+
+/* Solid background for frozen cells — overrides tr.selected */
+tbody td.col-f0,tbody td.col-f1{
+  background:var(--surface);
+  border-right:2px solid var(--border);
+}
+tr.selected td.col-f0,
+tr.selected td.col-f1{background:var(--frozen-sel);}
+tbody td.col-f0:focus,
+tbody td.col-f1:focus{background:var(--focus-bg)!important;}
+
+/* ── Footer bar ── */
+#footer-bar{
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;
+  padding:8px 16px;background:var(--surface);border-top:1px solid var(--border);
+  flex-shrink:0;
+}
+#footer-left{display:flex;gap:8px;}
+
+/* ── Paste zone ── */
+#paste-zone{
+  padding:10px 16px;background:var(--surface);border-top:1px solid var(--border);
+  flex-shrink:0;display:flex;flex-direction:column;gap:8px;
+}
+#paste-zone label{font-size:12px;color:var(--muted);}
+#paste-input{
+  width:100%;height:88px;background:var(--bg);color:var(--text);
+  border:1px solid var(--border);border-radius:4px;padding:8px;
+  font:12px/1.4 'SF Mono','Fira Code',monospace;resize:vertical;
+}
+#paste-input:focus{outline:1px solid var(--accent);}
+#paste-actions{display:flex;gap:8px;}
+
+/* ── Help modal ── */
+#help-modal{
+  position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:100;
+  display:flex;align-items:center;justify-content:center;
+}
+#help-content{
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  width:min(740px,96vw);max-height:86vh;overflow-y:auto;
+  display:flex;flex-direction:column;
+}
+#help-hdr{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 16px;border-bottom:1px solid var(--border);
+  position:sticky;top:0;background:var(--surface);z-index:1;
+}
+#help-hdr strong{font-size:14px;color:var(--accent);}
+#help-body{padding:16px;display:flex;flex-direction:column;gap:4px;}
+#help-body h3{
+  font-size:11px;color:var(--accent);text-transform:uppercase;
+  letter-spacing:.06em;margin:14px 0 6px;
+}
+#help-body h3:first-child{margin-top:0;}
+#help-body ol{padding-left:18px;font-size:13px;display:flex;flex-direction:column;gap:5px;}
+#help-body code{
+  background:var(--bg);padding:2px 6px;border-radius:3px;
+  font-size:11px;font-family:'SF Mono','Fira Code',monospace;
+}
+
+/* Help tables */
+.ht{border-collapse:collapse;width:100%;font-size:12px;}
+.ht td,.ht th{border:1px solid var(--border);padding:4px 8px;text-align:left;}
+.ht th{
+  background:var(--surface2);font-weight:600;font-size:11px;
+  text-transform:uppercase;letter-spacing:.04em;color:var(--muted);
+}
+.ht td:first-child{font-family:'SF Mono','Fira Code',monospace;color:var(--accent);}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="hdr">
+    <span id="hdr-title">FRAME BATCH EDITOR</span>
+    <div id="hdr-actions">
+      <button id="btn-theme" onclick="toggleTheme()" title="Toggle theme">&#9728;</button>
+      <button onclick="showHelp()">? Help</button>
+    </div>
+  </header>
+
+  <div id="toolbar">
+    <div id="toolbar-btns">
+      <button onclick="addRow()" title="Append a new empty row">+ Add Row</button>
+      <button onclick="duplicateRow()" title="Duplicate selected row">&#10697; Duplicate</button>
+      <button onclick="deleteRow()" title="Delete selected row">&#10005; Delete</button>
+      <button onclick="clearAll()" class="btn-danger" title="Remove all rows">&#8960; Clear All</button>
+    </div>
+    <span id="summary">0 rows</span>
+  </div>
+
+  <div id="table-wrap">
+    <table id="editor-table">
+      <thead id="editor-thead"></thead>
+      <tbody id="frame-rows"></tbody>
+    </table>
+  </div>
+
+  <div id="footer-bar">
+    <div id="footer-left">
+      <button onclick="document.getElementById('file-input').click()">&#128194; Load CSV</button>
+      <input type="file" id="file-input" accept=".csv" style="display:none">
+      <button onclick="togglePasteZone()">&#128203; Paste from Spreadsheet</button>
+    </div>
+    <button id="btn-download" onclick="downloadCSV()" disabled>&#8595; Download CSV</button>
+  </div>
+
+  <div id="paste-zone" hidden>
+    <label for="paste-input">
+      Paste tab-separated data from Excel / Google Sheets.
+      First row can match column names (e.g. <code>id&nbsp;&nbsp;name&nbsp;&nbsp;year&nbsp;&nbsp;...</code>) or omit for positional mapping.
+    </label>
+    <textarea id="paste-input" placeholder="Paste tab-separated data here..."></textarea>
+    <div id="paste-actions">
+      <button onclick="parseTSV()">Parse &amp; Add Rows</button>
+      <button onclick="togglePasteZone()">Cancel</button>
+    </div>
+  </div>
+</div><!-- #app -->
+
+<div id="help-modal" hidden>
+  <div id="help-content">
+    <div id="help-hdr">
+      <strong>Frame Batch Editor &mdash; Help</strong>
+      <button onclick="hideHelp()">&#10005;</button>
+    </div>
+    <div id="help-body">
+      <h3>Keyboard shortcuts</h3>
+      <table class="ht">
+        <tr><td>Tab / Shift+Tab</td><td>Move to next / previous cell</td></tr>
+        <tr><td>Enter</td><td>Move to same column in next row (adds row if on last)</td></tr>
+        <tr><td>Escape</td><td>Revert cell to value before editing started</td></tr>
+        <tr><td>Click row</td><td>Select row (enables Duplicate / Delete)</td></tr>
+      </table>
+      <h3>Validation indicators</h3>
+      <table class="ht">
+        <tr><td style="color:var(--err)">Red border</td><td>Error — row is excluded from CSV export until fixed</td></tr>
+        <tr><td style="color:var(--warn)">Orange border</td><td>Warning — value is outside typical range but row is still exported</td></tr>
+        <tr><td style="color:var(--accent)">Column header *</td><td>Required field</td></tr>
+      </table>
+      <h3>Workflow</h3>
+      <ol>
+        <li>Fill in rows &mdash; or load an existing CSV / paste from a spreadsheet</li>
+        <li>Fix any red-border cells (hover for tooltip explaining the error)</li>
+        <li>Click <strong>Download CSV</strong> &mdash; only valid rows are included</li>
+        <li>Run: <code>node pipeline/scripts/ingest.js --type frame --csv path/to/frames-batch-YYYY-MM-DD.csv</code></li>
+        <li>Run: <code>npm run pipeline</code> to validate and regenerate data.js</li>
+      </ol>
+      <h3>Column reference</h3>
+      <table class="ht">
+        <thead><tr><th>Column</th><th>Req</th><th>Type</th><th>Notes</th></tr></thead>
+        <tbody id="help-col-rows"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ── Column definitions ────────────────────────────────────────────────────────
+// Order matches: node pipeline/scripts/ingest.js --type frame --help
+const COLS = [
+  { key:'id',           label:'id',           type:'id',          req:true,  def:'',          w:160,
+    hint:'Kebab-case unique ID, auto-generated from name. e.g. babolat-pure-aero-100-318g' },
+  { key:'name',         label:'name',         type:'string',      req:true,  def:'',          w:200,
+    hint:'Full name including weight. e.g. "Babolat Pure Aero 100 318g"' },
+  { key:'year',         label:'year',         type:'integer',     req:true,  def:'2026',      w:58,
+    hint:'Integer year, e.g. 2026' },
+  { key:'headSize',     label:'headSize',     type:'number',      req:true,  def:'100',       w:82,
+    hint:'Head size in sq inches. Typical: 85–115' },
+  { key:'strungWeight', label:'strungWeight', type:'number',      req:true,  def:'315',       w:100,
+    hint:'Strung weight in grams. Typical: 240–380' },
+  { key:'balance',      label:'balance',      type:'number',      req:true,  def:'33.0',      w:75,
+    hint:'Balance point in cm from butt, e.g. 33.0' },
+  { key:'balancePts',   label:'balancePts',   type:'string',      req:false, def:'',          w:90,
+    hint:'Human-readable balance, e.g. "4 pts HL" (optional)' },
+  { key:'swingweight',  label:'swingweight',  type:'number',      req:true,  def:'320',       w:98,
+    hint:'Swingweight in kg·cm². Typical: 260–380' },
+  { key:'stiffness',    label:'stiffness',    type:'number',      req:true,  def:'65',        w:80,
+    hint:'Frame stiffness RA rating. Typical: 50–80' },
+  { key:'beamWidth',    label:'beamWidth',    type:'beamwidth',   req:true,  def:'23,23,23',  w:92,
+    hint:'Beam width profile in mm, comma-separated. e.g. 23,26,23 (will be quoted in CSV)' },
+  { key:'pattern',      label:'pattern',      type:'pattern',     req:true,  def:'16x19',     w:70,
+    hint:'String pattern in NNxNN format, e.g. 16x19' },
+  { key:'tensionRange', label:'tensionRange', type:'tensionrange',req:true,  def:'48,57',     w:102,
+    hint:'Tension range in lbs, two numbers comma-separated. e.g. 48,57 (will be quoted in CSV)' },
+  { key:'powerLevel',   label:'powerLevel',   type:'string',      req:false, def:'',          w:100,
+    hint:'e.g. "Low-Medium" (optional)' },
+  { key:'strokeStyle',  label:'strokeStyle',  type:'string',      req:false, def:'',          w:100,
+    hint:'e.g. "Medium-Full" (optional)' },
+  { key:'swingSpeed',   label:'swingSpeed',   type:'string',      req:false, def:'',          w:100,
+    hint:'e.g. "Medium-Fast" (optional)' },
+  { key:'frameProfile', label:'frameProfile', type:'string',      req:false, def:'',          w:150,
+    hint:'Free text frame profile description (optional)' },
+  { key:'identity',     label:'identity',     type:'string',      req:false, def:'',          w:100,
+    hint:'Flavor text identity tag, e.g. "Spin Cannon" (optional)' },
+  { key:'notes',        label:'notes',        type:'string',      req:false, def:'',          w:200,
+    hint:'Free text notes (optional)' },
+];
+
+// Map key → column index for quick lookup
+const COL_IDX = Object.fromEntries(COLS.map((c, i) => [c.key, i]));
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let rows   = [];   // array of plain objects { [colKey]: string, _idManual: bool }
+let selRow = -1;
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+function toKebab(s) {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+// ── Validation ────────────────────────────────────────────────────────────────
+function validateCell(col, val) {
+  const v = (val || '').trim();
+
+  if (col.req && !v) return { err: true, msg: 'Required — cannot be empty' };
+  if (!v) return { ok: true };
+
+  switch (col.type) {
+    case 'integer': {
+      const n = Number(v);
+      if (!Number.isInteger(n) || String(n) !== v)
+        return { err: true, msg: 'Must be a whole number, e.g. 2026' };
+      return { ok: true };
+    }
+    case 'number': {
+      const n = parseFloat(v);
+      if (isNaN(n)) return { err: true, msg: 'Must be a valid number' };
+      if (col.key === 'headSize'    && (n < 85  || n > 115)) return { warn: true, msg: `${n} outside typical range 85–115 sq in` };
+      if (col.key === 'swingweight' && (n < 260 || n > 380)) return { warn: true, msg: `${n} outside typical range 260–380 kg·cm²` };
+      if (col.key === 'stiffness'   && (n < 50  || n > 80))  return { warn: true, msg: `${n} outside typical range 50–80 RA` };
+      if (col.key === 'strungWeight'&& (n < 240 || n > 380)) return { warn: true, msg: `${n} outside typical range 240–380 g` };
+      return { ok: true };
+    }
+    case 'pattern':
+      if (!/^\d+x\d+$/.test(v)) return { err: true, msg: 'Must match NNxNN format, e.g. 16x19' };
+      return { ok: true };
+    case 'beamwidth': {
+      const parts = v.split(',').map(s => parseFloat(s.trim()));
+      if (!parts.length || parts.some(isNaN))
+        return { err: true, msg: 'Must be comma-separated numbers, e.g. 23,26,23' };
+      const bad = parts.filter(n => n < 14 || n > 32);
+      if (bad.length) return { warn: true, msg: `Value(s) outside typical range 14–32 mm: ${bad.join(', ')}` };
+      return { ok: true };
+    }
+    case 'tensionrange': {
+      const parts = v.split(',').map(s => parseFloat(s.trim()));
+      if (parts.length !== 2 || parts.some(isNaN))
+        return { err: true, msg: 'Must be exactly two numbers, e.g. 48,57' };
+      return { ok: true };
+    }
+    case 'id':
+      if (v && !/^[a-z0-9-]+$/.test(v))
+        return { warn: true, msg: 'ID should contain only lowercase letters, digits, and hyphens' };
+      return { ok: true };
+    default:
+      return { ok: true };
+  }
+}
+
+function isRowValid(row) {
+  return COLS.every(col => !validateCell(col, row[col.key] || '').err);
+}
+
+// ── Row data factory ──────────────────────────────────────────────────────────
+function makeRow(overrides) {
+  const row = { _idManual: false };
+  COLS.forEach(c => { row[c.key] = c.def; });
+  if (overrides) Object.assign(row, overrides);
+  return row;
+}
+
+// ── Row operations ────────────────────────────────────────────────────────────
+function addRow() {
+  const row = makeRow();
+  rows.push(row);
+  const ri = rows.length - 1;
+  appendRowToDOM(ri);
+  selectRow(ri);
+  updateSummary();
+  // Focus name cell so user can type immediately
+  const nameTd = document.querySelector(`#frame-rows td[data-row="${ri}"][data-col="1"]`);
+  if (nameTd) setTimeout(() => nameTd.focus(), 0);
+}
+
+function duplicateRow() {
+  if (selRow < 0 || selRow >= rows.length) {
+    alert('Select a row first.'); return;
+  }
+  const copy = Object.assign({}, rows[selRow]);
+  rows.splice(selRow + 1, 0, copy);
+  rebuildTable();
+  selectRow(selRow + 1);
+  updateSummary();
+}
+
+function deleteRow() {
+  if (selRow < 0 || selRow >= rows.length) {
+    alert('Select a row first.'); return;
+  }
+  if (!confirm(`Delete row ${selRow + 1}?`)) return;
+  rows.splice(selRow, 1);
+  selRow = Math.min(selRow, rows.length - 1);
+  rebuildTable();
+  updateSummary();
+}
+
+function clearAll() {
+  if (!rows.length) return;
+  if (!confirm(`Remove all ${rows.length} row${rows.length !== 1 ? 's' : ''}?`)) return;
+  rows   = [];
+  selRow = -1;
+  rebuildTable();
+  updateSummary();
+}
+
+// ── DOM rendering ─────────────────────────────────────────────────────────────
+function rebuildTable() {
+  document.getElementById('frame-rows').innerHTML = '';
+  rows.forEach((_, ri) => appendRowToDOM(ri));
+}
+
+function appendRowToDOM(ri) {
+  const tbody = document.getElementById('frame-rows');
+  const row   = rows[ri];
+  const tr    = document.createElement('tr');
+  tr.dataset.row = ri;
+  if (ri === selRow) tr.classList.add('selected');
+  tr.addEventListener('mousedown', () => selectRow(ri));
+
+  COLS.forEach((col, ci) => {
+    const td           = document.createElement('td');
+    td.contentEditable = 'true';
+    td.spellcheck      = false;
+    td.dataset.row     = ri;
+    td.dataset.col     = ci;
+    td.dataset.key     = col.key;
+    td.textContent     = row[col.key];
+
+    if (ci === 0) td.classList.add('col-f0');
+    if (ci === 1) td.classList.add('col-f1');
+
+    applyValidation(td, col, row[col.key]);
+
+    td.addEventListener('focus',   () => { selectRow(ri); td._origVal = td.textContent; });
+    td.addEventListener('blur',    () => handleBlur(td, ri, ci, col));
+    td.addEventListener('keydown', e  => handleKeydown(e, td, ri, ci));
+
+    tr.appendChild(td);
+  });
+
+  tbody.appendChild(tr);
+}
+
+function handleBlur(td, ri, ci, col) {
+  // Normalize: strip newlines that paste can introduce
+  const val = td.textContent.replace(/[\r\n]+/g, ' ').trim();
+  td.textContent  = val;
+  rows[ri][col.key] = val;
+
+  // Auto-generate ID from name when not manually overridden
+  if (col.key === 'name' && !rows[ri]._idManual) {
+    const generated = toKebab(val);
+    rows[ri].id = generated;
+    const idTd = document.querySelector(`#frame-rows td[data-row="${ri}"][data-col="0"]`);
+    if (idTd) { idTd.textContent = generated; applyValidation(idTd, COLS[0], generated); }
+  }
+  // Mark id as manually set so name changes no longer overwrite it
+  if (col.key === 'id') rows[ri]._idManual = true;
+
+  applyValidation(td, col, val);
+  updateSummary();
+}
+
+function handleKeydown(e, td, ri, ci) {
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    td.textContent = td._origVal !== undefined ? td._origVal : rows[ri][COLS[ci].key];
+    td.blur();
+    return;
+  }
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    if (ri + 1 < rows.length) {
+      const nextTd = document.querySelector(`#frame-rows td[data-row="${ri+1}"][data-col="${ci}"]`);
+      if (nextTd) { nextTd.focus(); return; }
+    }
+    // Last row — add a new one and focus same column
+    rows.push(makeRow());
+    const nri = rows.length - 1;
+    appendRowToDOM(nri);
+    selectRow(nri);
+    updateSummary();
+    const newTd = document.querySelector(`#frame-rows td[data-row="${nri}"][data-col="${ci}"]`);
+    if (newTd) setTimeout(() => newTd.focus(), 0);
+    return;
+  }
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const dir = e.shiftKey ? -1 : 1;
+    let nci = ci + dir, nri = ri;
+    if (nci < 0)            { nci = COLS.length - 1; nri = ri - 1; }
+    else if (nci >= COLS.length) { nci = 0;           nri = ri + 1; }
+    if (nri >= 0 && nri < rows.length) {
+      const nextTd = document.querySelector(`#frame-rows td[data-row="${nri}"][data-col="${nci}"]`);
+      if (nextTd) nextTd.focus();
+    }
+  }
+}
+
+function applyValidation(td, col, val) {
+  td.classList.remove('cell-err', 'cell-warn');
+  const r = validateCell(col, val);
+  if (r.err) {
+    td.classList.add('cell-err');
+    td.title = r.msg;
+  } else if (r.warn) {
+    td.classList.add('cell-warn');
+    td.title = 'Warning: ' + r.msg;
+  } else {
+    td.title = col.hint || '';
+  }
+}
+
+function selectRow(ri) {
+  selRow = ri;
+  document.querySelectorAll('#frame-rows tr').forEach((tr, i) => {
+    tr.classList.toggle('selected', i === ri);
+  });
+}
+
+function updateSummary() {
+  const total = rows.length;
+  const valid = rows.filter(isRowValid).length;
+  const errs  = total - valid;
+  document.getElementById('summary').textContent =
+    `${total} row${total !== 1 ? 's' : ''} \u00b7 ${valid} valid \u00b7 ${errs} error${errs !== 1 ? 's' : ''}`;
+  const btn = document.getElementById('btn-download');
+  btn.textContent = `\u2193 Download CSV (${valid} valid row${valid !== 1 ? 's' : ''})`;
+  btn.disabled = valid === 0;
+}
+
+// ── CSV generation (RFC 4180) ─────────────────────────────────────────────────
+function quoteCell(val) {
+  // Quote if value contains comma, double-quote, CR, or LF
+  if (/[",\r\n]/.test(val)) return '"' + val.replace(/"/g, '""') + '"';
+  return val;
+}
+
+function buildCSVString() {
+  const header = COLS.map(c => c.key).join(',');
+  const dataRows = rows
+    .filter(isRowValid)
+    .map(row => COLS.map(col => quoteCell(row[col.key] || '')).join(','));
+  return [header, ...dataRows].join('\r\n');
+}
+
+function downloadCSV() {
+  const csv  = buildCSVString();
+  const date = new Date().toISOString().slice(0, 10);
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `frames-batch-${date}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ── CSV parsing (mirrors ingest.js parseCSV logic exactly) ───────────────────
+function parseCSVLine(line) {
+  const fields = [];
+  let i = 0;
+  while (i <= line.length) {
+    if (i === line.length) { fields.push(''); break; }
+    if (line[i] === '"') {
+      let j = i + 1, val = '';
+      while (j < line.length) {
+        if (line[j] === '"' && line[j + 1] === '"') { val += '"'; j += 2; }
+        else if (line[j] === '"')                   { j++; break; }
+        else                                        { val += line[j++]; }
+      }
+      fields.push(val);
+      i = j + 1; // skip comma after closing quote
+    } else {
+      const j = line.indexOf(',', i);
+      if (j === -1) { fields.push(line.slice(i).trim()); break; }
+      fields.push(line.slice(i, j).trim());
+      i = j + 1;
+    }
+  }
+  return fields;
+}
+
+function parseCSVContent(content) {
+  const lines = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+    .split('\n').filter(l => l.trim());
+  if (lines.length < 2)
+    throw new Error('CSV must have a header row and at least one data row');
+
+  const headers = parseCSVLine(lines[0]).map(h => h.trim());
+  return lines.slice(1).map(line => {
+    const vals = parseCSVLine(line);
+    const row  = makeRow();
+    row._idManual = true; // IDs in loaded CSVs are explicit
+    headers.forEach((h, idx) => {
+      if (COL_IDX[h] !== undefined) row[h] = (vals[idx] || '').trim();
+    });
+    return row;
+  });
+}
+
+function loadCSV(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const parsed = parseCSVContent(e.target.result);
+      parsed.forEach(r => rows.push(r));
+      rebuildTable();
+      updateSummary();
+    } catch (err) {
+      alert('Error loading CSV: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ── TSV / paste from spreadsheet ──────────────────────────────────────────────
+function parseTSV() {
+  const raw = document.getElementById('paste-input').value.trim();
+  if (!raw) { alert('Nothing to parse — paste tab-separated data first.'); return; }
+
+  const lines      = raw.split('\n').filter(l => l.trim());
+  const firstCells = lines[0].split('\t').map(s => s.trim());
+
+  // Detect header row: any cell matches a known column key
+  const hasHeader = firstCells.some(cell => COL_IDX[cell] !== undefined);
+
+  const headers   = hasHeader ? firstCells : COLS.map(c => c.key);
+  const dataLines = hasHeader ? lines.slice(1) : lines;
+
+  let added = 0;
+  dataLines.forEach(line => {
+    const cells = line.split('\t').map(s => s.trim());
+    const row   = makeRow();
+    headers.forEach((h, idx) => {
+      if (COL_IDX[h] !== undefined && cells[idx] !== undefined) row[h] = cells[idx];
+    });
+    // Auto-generate id if not in headers and name is present
+    if (!hasHeader || !headers.includes('id')) {
+      if (row.name) { row.id = toKebab(row.name); }
+    } else {
+      row._idManual = true;
+    }
+    rows.push(row);
+    added++;
+  });
+
+  document.getElementById('paste-input').value = '';
+  rebuildTable();
+  updateSummary();
+  togglePasteZone();
+  if (added) alert(`Added ${added} row${added !== 1 ? 's' : ''}.`);
+}
+
+// ── UI helpers ────────────────────────────────────────────────────────────────
+function togglePasteZone() {
+  const z = document.getElementById('paste-zone');
+  z.hidden = !z.hidden;
+  if (!z.hidden) setTimeout(() => document.getElementById('paste-input').focus(), 0);
+}
+
+function toggleTheme() {
+  const html = document.documentElement;
+  const next = html.dataset.theme === 'dark' ? 'light' : 'dark';
+  html.dataset.theme = next;
+  document.getElementById('btn-theme').textContent = next === 'dark' ? '\u2600' : '\u263E';
+  try { localStorage.setItem('ll-frame-editor-theme', next); } catch (e) { /* no-op */ }
+}
+
+function showHelp() { document.getElementById('help-modal').hidden = false; }
+function hideHelp() { document.getElementById('help-modal').hidden = true; }
+
+// ── Initialisation ────────────────────────────────────────────────────────────
+function init() {
+  // Restore saved theme
+  try {
+    const saved = localStorage.getItem('ll-frame-editor-theme');
+    if (saved === 'light') {
+      document.documentElement.dataset.theme = 'light';
+      document.getElementById('btn-theme').textContent = '\u263E';
+    }
+  } catch (e) { /* no-op */ }
+
+  // Build <colgroup> so table-layout:fixed honours our widths
+  const table = document.getElementById('editor-table');
+  const cg    = document.createElement('colgroup');
+  COLS.forEach(col => {
+    const c   = document.createElement('col');
+    c.style.width = col.w + 'px';
+    cg.appendChild(c);
+  });
+  table.insertBefore(cg, table.querySelector('thead'));
+
+  // Build thead
+  const thead = document.getElementById('editor-thead');
+  const tr    = document.createElement('tr');
+  COLS.forEach((col, ci) => {
+    const th = document.createElement('th');
+    th.innerHTML = col.label + (col.req ? '<span class="req-badge">*</span>' : '');
+    th.title     = col.hint || '';
+    if (col.req) th.classList.add('req-th');
+    if (ci === 0) th.classList.add('col-f0');
+    if (ci === 1) th.classList.add('col-f1');
+    tr.appendChild(th);
+  });
+  thead.appendChild(tr);
+
+  // Populate help column reference table
+  const helpBody = document.getElementById('help-col-rows');
+  COLS.forEach(col => {
+    const r  = document.createElement('tr');
+    const td1 = document.createElement('td'); td1.textContent = col.label;
+    const td2 = document.createElement('td'); td2.textContent = col.req ? '\u2713' : '';
+    const td3 = document.createElement('td');
+    td3.textContent = col.type;
+    td3.style.fontFamily = 'monospace';
+    td3.style.fontSize   = '11px';
+    const td4 = document.createElement('td'); td4.textContent = col.hint || '';
+    r.append(td1, td2, td3, td4);
+    helpBody.appendChild(r);
+  });
+
+  // File input handler
+  document.getElementById('file-input').addEventListener('change', e => {
+    const f = e.target.files[0];
+    if (f) { loadCSV(f); e.target.value = ''; }
+  });
+
+  // Close help on backdrop click
+  document.getElementById('help-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('help-modal')) hideHelp();
+  });
+
+  // Start with one empty row
+  addRow();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

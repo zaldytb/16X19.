@@ -100,6 +100,15 @@ node pipeline/scripts/ingest.js --type string --csv path/to/file.csv
 node pipeline/scripts/ingest.js --type frame --csv path/to/frames.csv
 ```
 
+#### Visual batch editor (no CLI required)
+
+Open `tools/frame-editor.html` in any browser to add frames in a spreadsheet-like table. Fill in rows, click Download CSV, then run:
+
+```bash
+node pipeline/scripts/ingest.js --type frame --csv path/to/downloaded.csv
+npm run pipeline
+```
+
 #### GUI — batch frame import (no CLI required)
 
 A desktop app is available in `tools/frame-gui/` for adding multiple frames without using the command line:

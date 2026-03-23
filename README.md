@@ -79,3 +79,58 @@ Final scores are blended and clamped to [0, 100] before display.
 
 Loadouts are stored in `localStorage`. The Share button encodes the active
 loadout into a URL query string (`?build=…`) for easy sharing without a backend.
+
+## Data Pipeline
+
+Equipment data (racquets, strings) lives in `pipeline/data/` as JSON files. The browser loads `data.js` which is generated from these JSON files.
+
+### Adding new equipment
+
+```bash
+# Add a frame interactively
+npm run ingest:frame
+
+# Add a string interactively (supports twScore estimation)
+npm run ingest:string
+
+# Batch import from CSV
+node pipeline/scripts/ingest.js --type string --csv path/to/file.csv
+```
+
+### Pipeline commands
+
+| Command | Description |
+|---------|-------------|
+| `npm run validate` | Check all data against schemas |
+| `npm run export` | Regenerate data.js from JSON |
+| `npm run export:verify` | Regenerate + run canary tests |
+| `npm run canary` | Run 5 regression canaries |
+| `npm run canary:baseline` | Re-record canary expected values |
+| `npm run estimate` | Show estimation accuracy stats |
+| `npm run pipeline` | Full validate + export + verify |
+
+### File structure
+
+```
+pipeline/
+  data/
+    frames.json        ← 129 racquets (source of truth)
+    strings.json       ← 52 strings (source of truth)
+    canaries.json      ← regression test definitions
+  schemas/
+    frame.schema.json  ← validation schema for frames
+    string.schema.json ← validation schema for strings
+  scripts/
+    extract.js         ← one-time: extract data from app.js
+    validate.js        ← schema + range validation
+    estimate.js        ← string property estimation
+    ingest.js          ← add new entries (interactive/CSV)
+    canary-test.js     ← regression canary runner
+    export-to-app.js   ← JSON → data.js generator
+  engine/
+    core.js            ← portable engine (22 functions, Node.js)
+```
+
+### Key principle
+
+`pipeline/data/*.json` is the source of truth. `data.js` is generated — never edit it directly. `app.js` contains only engine + UI — no equipment data.

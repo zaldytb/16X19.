@@ -1,8 +1,14 @@
 'use strict';
-// One-off calibration script — fits linear models for power, control,
-// playabilityDuration against the 52-string dataset via OLS regression.
-// Run: node pipeline/scripts/calibrate.js
-// Outputs fitted coefficients and per-field MAE.
+// Estimation coefficient calibration script
+// Fits linear models for twScore sub-fields (power, control, playabilityDuration)
+// against the string database using OLS regression.
+//
+// Re-run this when:
+// - You've added 20+ new strings with actual TWU data
+// - estimate.js accuracy test shows any sub-field MAE > 12
+//
+// Usage: node pipeline/scripts/calibrate.js
+// Output: fitted coefficients to paste into estimate.js
 
 const fs   = require('fs');
 const path = require('path');

@@ -1,3 +1,10 @@
+// ⚠️  ONE-TIME MIGRATION SCRIPT — DO NOT RE-RUN
+// This script extracted RACQUETS, STRINGS, and FRAME_META from app.js
+// into pipeline/data/*.json during the initial pipeline setup.
+// The data blocks have since been removed from app.js.
+// Running this again will produce empty/broken output.
+// To regenerate data.js from JSON, use: npm run export
+
 'use strict';
 const path = require('path');
 const fs   = require('fs');

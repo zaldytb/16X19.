@@ -1,3 +1,10 @@
+// ⚠️  ONE-TIME MIGRATION SCRIPT — DO NOT RE-RUN
+// This script removed RACQUETS, STRINGS, and FRAME_META data blocks from app.js
+// during the initial pipeline setup, leaving only the engine + UI code.
+// The data blocks have already been removed from app.js.
+// Running this again will silently corrupt app.js (markers no longer exist).
+// To regenerate data.js from JSON, use: npm run export
+
 'use strict';
 const fs   = require('fs');
 const path = require('path');

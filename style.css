@@ -8102,6 +8102,121 @@ button.gauge-explore-col-header:hover .gauge-col-apply {
 }
 
 /* ============================================
+   MOBILE CONTENT LAYOUT FIXES  (≤1024px)
+   ============================================ */
+
+@media (max-width: 1024px) {
+  /* --- General --- */
+  .workspace {
+    overflow-x: hidden;
+  }
+  .card {
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+  }
+  /* Prevent iOS auto-zoom on focus */
+  .text-input,
+  .select-input,
+  .gauge-select {
+    font-size: 16px;
+  }
+
+  /* --- Bible (Compendium) --- */
+  .comp-roster {
+    max-height: 200px;
+  }
+  .comp-frame-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 4px;
+    padding: 8px;
+    scrollbar-width: none;
+  }
+  .comp-frame-list::-webkit-scrollbar {
+    display: none;
+  }
+  .comp-frame-item {
+    min-width: 140px;
+    flex-shrink: 0;
+  }
+  .comp-build-grid {
+    grid-template-columns: 1fr;
+  }
+  .comp-specs-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* --- Tune --- */
+  .sweep-chart-container {
+    height: 200px;
+  }
+  .slider-current-value {
+    font-size: 1.1rem;
+  }
+
+  /* --- Compare --- */
+  .comparison-radar-container {
+    max-width: 280px;
+  }
+  .compare-card-editor {
+    width: 100%;
+  }
+
+  /* --- Optimize --- */
+  .opt-filter-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 9px 14px;
+    margin-bottom: var(--space-3);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .opt-filters.opt-filters-collapsed {
+    display: none;
+  }
+  .opt-table {
+    font-size: 0.68rem;
+  }
+
+  /* --- Overview hero --- */
+  .hero-obs-ring {
+    width: 100px;
+    height: 100px;
+  }
+  .hero-obs-value {
+    font-size: 1.5rem;
+  }
+
+  /* --- Landing search --- */
+  .landing-search {
+    padding-top: 6vh !important;
+  }
+  .landing-title {
+    font-size: 1.2rem;
+  }
+
+  /* --- Find My Build wizard --- */
+  .fmb-wizard {
+    padding: 16px 12px;
+  }
+  .fmb-question {
+    font-size: 1rem;
+  }
+}
+
+/* ============================================
    WAVE 2: THEME CROSSFADE
    ============================================ */
 html.theme-transitioning,

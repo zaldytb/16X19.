@@ -499,9 +499,10 @@ body {
   opacity: 1;
 }
 
-/* Mobile header actions + tab bar — hidden on desktop */
+/* Mobile header actions + tab bar + pills — hidden on desktop */
 .mobile-header-actions { display: none; }
 .mobile-tab-bar { display: none; }
+.mobile-loadout-pills { display: none; }
 
 /* ============================================
    PERSISTENT SHELL LAYOUT
@@ -702,15 +703,14 @@ body {
     height: auto;
     border-right: none;
     border-bottom: 1px solid var(--border-subtle);
-    padding: var(--space-5) var(--space-5) var(--space-6);
+    padding: 0;
+    overflow: visible;
+    max-height: none;
   }
   .dock-collapse-btn,
   .dock-collapse-row,
   .dock-rail {
     display: none !important;
-  }
-  .build-dock.dock-collapsed .builder-panel {
-    display: flex;
   }
   .workspace {
     padding: var(--space-5) var(--space-5) calc(56px + env(safe-area-inset-bottom) + 16px);
@@ -786,9 +786,6 @@ body {
 }
 
 @media (max-width: 600px) {
-  .build-dock {
-    padding: var(--space-4) var(--space-4) var(--space-5);
-  }
   .workspace {
     padding: var(--space-4) var(--space-4) var(--space-10);
   }
@@ -8038,29 +8035,69 @@ button.gauge-explore-col-header:hover .gauge-col-apply {
     transition: transform 0.2s ease;
   }
   
-  /* Hide dock content by default on mobile */
+  /* Collapsed state: hide via max-height for smooth transition */
   .build-dock .builder-panel {
-    display: none;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
     border-top: 1px solid var(--border-subtle);
+    gap: var(--space-3);
   }
-  
+
   /* Expanded state */
   .build-dock.dock-expanded .builder-panel {
-    display: block;
-    max-height: 60vh;
+    max-height: 50vh;
     overflow-y: auto;
   }
   .build-dock.dock-expanded .dock-mob-chevron {
     transform: rotate(180deg);
   }
-  
-  /* Tighter padding when expanded */
   .build-dock.dock-expanded {
     border-bottom: 2px solid var(--fn-text);
   }
-  /* Tighter section spacing inside expanded dock */
-  .build-dock.dock-expanded .builder-panel {
-    gap: var(--space-3);
+
+  /* Mobile loadout pills */
+  .mobile-loadout-pills {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding: 8px 0;
+    margin-bottom: 4px;
+  }
+  .mobile-loadout-pills:empty {
+    display: none;
+  }
+  .mobile-loadout-pills::-webkit-scrollbar {
+    display: none;
+  }
+  .mobile-lo-pill {
+    white-space: nowrap;
+    padding: 6px 14px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-card);
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mobile-lo-pill.active {
+    border-color: var(--fn);
+    background: var(--fn-dim);
+    color: var(--fn-text);
+  }
+  .mobile-lo-pill-obs {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    opacity: 0.7;
   }
 }
 

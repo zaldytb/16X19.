@@ -1508,6 +1508,26 @@ function renderDockPanel() {
   _syncMobileDockBar();
   _syncDockRail();
   renderDockContextPanel();
+  renderMobileLoadoutPills();
+}
+
+function renderMobileLoadoutPills() {
+  const container = document.getElementById('mobile-loadout-pills');
+  if (!container) return;
+  if (window.innerWidth > 1024) {
+    container.innerHTML = '';
+    return;
+  }
+  if (!savedLoadouts || savedLoadouts.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+  container.innerHTML = savedLoadouts.map(lo => {
+    const isActive = activeLoadout && activeLoadout.id === lo.id;
+    const name = (lo.name || 'Loadout').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const obs = lo.obs ? lo.obs.toFixed(1) : '\u2014';
+    return `<button class="mobile-lo-pill${isActive ? ' active' : ''}" onclick="switchToLoadout('${lo.id}')">${name}<span class="mobile-lo-pill-obs">${obs}</span></button>`;
+  }).join('');
 }
 
 // ============================================
@@ -3371,6 +3391,7 @@ function _assignStaggerIndices(containerSel) {
 }
 
 function renderDashboard() {
+  renderMobileLoadoutPills();
   const setup = getCurrentSetup();
 
   if (!setup) {

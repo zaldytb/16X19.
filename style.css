@@ -713,10 +713,58 @@ body {
     display: none !important;
   }
   .workspace {
-    padding: var(--space-5) var(--space-5) calc(56px + env(safe-area-inset-bottom) + 16px);
+    padding: calc(var(--space-5) + 36px) var(--space-5) calc(56px + env(safe-area-inset-bottom) + 16px);
     height: auto;
     overflow-y: visible;
   }
+
+  /* Mini-bar: fixed dock toggle, always visible below header */
+  .dock-mini-bar {
+    display: flex;
+    position: fixed;
+    top: 48px;
+    left: 0;
+    right: 0;
+    height: 36px;
+    z-index: 90;
+    align-items: center;
+    padding: 0 16px;
+    gap: 8px;
+    background: var(--bg-card);
+    border-bottom: 0.5px solid var(--border-subtle);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  .dock-mini-obs {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--fn);
+    min-width: 28px;
+  }
+  .dock-mini-obs:empty { display: none; }
+  .dock-mini-name {
+    flex: 1;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .dock-mini-chevron {
+    flex-shrink: 0;
+    color: var(--text-muted);
+    transition: transform 0.2s ease;
+  }
+  .dock-mini-bar.mini-expanded .dock-mini-chevron {
+    transform: rotate(180deg);
+  }
+  /* Hide the old inline dock bar — replaced by mini-bar */
+  .dock-mobile-bar { display: none !important; }
 
   /* Hide desktop mode switcher on mobile */
   .mode-switcher { display: none !important; }
@@ -7988,6 +8036,9 @@ button.gauge-explore-col-header:hover .gauge-col-apply {
 
 /* Hidden on desktop */
 .dock-mobile-bar {
+  display: none;
+}
+.dock-mini-bar {
   display: none;
 }
 

@@ -835,7 +835,17 @@ body {
 
 @media (max-width: 600px) {
   .workspace {
-    padding: var(--space-4) var(--space-4) var(--space-10);
+    padding: calc(var(--space-4) + 36px) var(--space-4) calc(56px + env(safe-area-inset-bottom) + 16px);
+  }
+}
+
+/* Desktop: explicit reset so no mobile rule can ever bleed through */
+@media (min-width: 1025px) {
+  .builder-panel {
+    display: flex !important;
+    flex-direction: column;
+    max-height: none !important;
+    overflow: visible !important;
   }
 }
 

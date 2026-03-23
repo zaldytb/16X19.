@@ -839,13 +839,16 @@ body {
   }
 }
 
-/* Desktop: explicit reset so no mobile rule can ever bleed through */
+/* Desktop: explicit reset — ensures no mobile rule ever bleeds through */
 @media (min-width: 1025px) {
   .builder-panel {
     display: flex !important;
-    flex-direction: column;
+    flex-direction: column !important;
     max-height: none !important;
     overflow: visible !important;
+    height: auto !important;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
 }
 
@@ -8478,3 +8481,22 @@ html.theme-transitioning *::after {
 /* Create form split tension row */
 .dock-cf-row { display: flex; gap: 8px; }
 .dock-cf-half { flex: 1; }
+
+/* ============================================
+   DESKTOP SAFETY NET — last rule in file
+   High-specificity override to guarantee .builder-panel
+   is always fully visible on desktop (>1024px),
+   regardless of any mobile rule specificity.
+   ============================================ */
+@media (min-width: 1025px) {
+  .build-dock .builder-panel,
+  .build-dock:not(.dock-expanded) .builder-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    max-height: none !important;
+    overflow: visible !important;
+    height: auto !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+}

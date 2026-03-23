@@ -8214,6 +8214,31 @@ button.gauge-explore-col-header:hover .gauge-col-apply {
   .fmb-question {
     font-size: 1rem;
   }
+
+  /* --- Touch targets (min 44px) --- */
+  .mobile-tab-btn {
+    min-height: 44px;
+  }
+  .dock-mobile-bar {
+    min-height: 44px;
+  }
+  .toggle-btn {
+    min-height: 40px;
+  }
+  .comp-frame-item {
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  /* --- Tab bar active indicator: smooth color transition --- */
+  .mobile-tab-btn.active::after {
+    transition: width 0.2s ease-out;
+  }
+
+  /* --- Share toast: float above tab bar --- */
+  .share-toast-show {
+    bottom: calc(56px + env(safe-area-inset-bottom) + 16px);
+  }
 }
 
 /* ============================================

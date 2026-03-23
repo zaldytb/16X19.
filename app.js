@@ -2418,9 +2418,16 @@ function renderDockState() {
 function switchMode(mode) {
   if (mode === currentMode) return;
 
-  // Save scroll position of current mode's workspace
+  // On mobile the page itself scrolls (workspace has height:auto/overflow:visible)
   const workspace = document.getElementById('workspace');
-  if (workspace) scrollPositions[currentMode] = workspace.scrollTop;
+  const _isMobileScroll = window.innerWidth <= 1024;
+
+  // Save scroll position of current mode
+  if (_isMobileScroll) {
+    scrollPositions[currentMode] = window.scrollY;
+  } else if (workspace) {
+    scrollPositions[currentMode] = workspace.scrollTop;
+  }
 
   // Hide current mode section
   const currentSection = document.getElementById('mode-' + currentMode);
@@ -2435,6 +2442,12 @@ function switchMode(mode) {
   document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.mode === mode);
   });
+
+  // On mobile, collapse the dock when switching modes
+  if (_isMobileScroll) {
+    const dock = document.getElementById('build-dock');
+    if (dock) dock.classList.remove('dock-expanded');
+  }
 
   const prevMode = currentMode;
   currentMode = mode;
@@ -2454,11 +2467,13 @@ function switchMode(mode) {
   }
 
   // Restore scroll position
-  if (workspace) {
-    requestAnimationFrame(() => {
+  requestAnimationFrame(() => {
+    if (_isMobileScroll) {
+      window.scrollTo(0, scrollPositions[mode] || 0);
+    } else if (workspace) {
       workspace.scrollTop = scrollPositions[mode] || 0;
-    });
-  }
+    }
+  });
 
   // Mode-specific initialization
   if (mode === 'overview') {
@@ -6672,6 +6687,11 @@ function init() {
 
   // Initialize landing search
   _initLandingSearch();
+
+  // Sync mobile tab bar to initial active mode (currentMode defaults to 'overview')
+  document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === currentMode);
+  });
 }
 
 // ============================================
@@ -6960,6 +6980,10 @@ function initOptimize() {
         const isCollapsed = filters.classList.toggle('opt-filters-collapsed');
         toggleBtn.classList.toggle('filters-open', !isCollapsed);
       });
+      // Start collapsed on mobile
+      if (window.matchMedia('(max-width: 1024px)').matches) {
+        optFilters.classList.add('opt-filters-collapsed');
+      }
     }
   }
 }

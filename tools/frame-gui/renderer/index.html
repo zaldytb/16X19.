@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';" />
+  <title>Frame GUI — Loadout Lab</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div id="app">
+
+  <!-- ── Top bar: repo root selector ──────────────────────────────────── -->
+  <div id="topbar">
+    <span class="label">Repo root:</span>
+    <input id="repoRootInput" type="text" placeholder="/path/to/loadout-lab"
+           spellcheck="false" />
+    <button id="browseBtn">Browse…</button>
+    <span style="flex:1"></span>
+    <span id="rowCount" style="color:var(--text-muted);font-size:12px;">0 rows</span>
+  </div>
+
+  <!-- ── Toolbar: row operations ──────────────────────────────────────── -->
+  <div id="toolbar">
+    <button id="addRowBtn">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+        <path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round"/>
+      </svg>
+      Add Row
+    </button>
+    <button id="dupRowBtn" disabled>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
+           stroke="currentColor" stroke-width="1.5">
+        <rect x="3" y="1" width="8" height="8" rx="1"/>
+        <rect x="1" y="3" width="8" height="8" rx="1" fill="var(--surface2)"/>
+      </svg>
+      Duplicate
+    </button>
+    <button id="delRowBtn" class="danger" disabled>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
+           stroke="currentColor" stroke-width="1.5">
+        <path d="M1 3h10M4 3V2h4v1M5 5v4M7 5v4M2 3l.7 7h6.6L10 3"/>
+      </svg>
+      Delete Row
+    </button>
+    <div class="toolbar-sep"></div>
+    <button id="clearAllBtn" class="danger" disabled>Clear All</button>
+  </div>
+
+  <!-- ── Table ─────────────────────────────────────────────────────────── -->
+  <div id="table-wrap">
+    <!-- Empty state shown when no rows -->
+    <div id="empty-state">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none"
+           stroke="currentColor" stroke-width="1.5">
+        <rect x="6" y="10" width="36" height="30" rx="3"/>
+        <path d="M6 18h36M16 10v8M32 10v8"/>
+        <path d="M14 28h8M14 33h14" stroke-linecap="round"/>
+      </svg>
+      <p>No rows yet — click <strong>Add Row</strong> or <strong>Load CSV</strong> to begin.</p>
+    </div>
+
+    <table id="frame-table">
+      <thead><tr></tr></thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- ── Action bar ────────────────────────────────────────────────────── -->
+  <div id="actionbar">
+    <button id="loadCsvBtn">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
+           stroke="currentColor" stroke-width="1.5">
+        <path d="M2 10h8M6 2v6M3 5l3 3 3-3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Load CSV
+    </button>
+    <button id="saveCsvBtn" disabled>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
+           stroke="currentColor" stroke-width="1.5">
+        <path d="M2 2h6l2 2v6H2V2zM4 2v3h4V2M3 7h6" stroke-linecap="round"
+              stroke-linejoin="round"/>
+      </svg>
+      Save CSV
+    </button>
+    <div class="spacer"></div>
+    <label class="pipeline-opt">
+      <input id="runPipelineChk" type="checkbox" />
+      Also run pipeline after import
+    </label>
+    <button id="importBtn" class="primary" disabled>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
+           stroke="currentColor" stroke-width="1.5">
+        <path d="M6 1v7M3 5l3 3 3-3" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M1 9v1a1 1 0 001 1h8a1 1 0 001-1V9" stroke-linecap="round"/>
+      </svg>
+      Import into Loadout Lab
+    </button>
+  </div>
+
+  <!-- ── Log panel ─────────────────────────────────────────────────────── -->
+  <div id="log-panel"></div>
+
+</div>
+<script src="renderer.js"></script>
+</body>
+</html>

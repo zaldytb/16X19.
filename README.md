@@ -100,6 +100,18 @@ node pipeline/scripts/ingest.js --type string --csv path/to/file.csv
 node pipeline/scripts/ingest.js --type frame --csv path/to/frames.csv
 ```
 
+#### GUI — batch frame import (no CLI required)
+
+A desktop app is available in `tools/frame-gui/` for adding multiple frames without using the command line:
+
+```bash
+cd tools/frame-gui
+npm install
+npm start
+```
+
+Select the repo root on first launch. Use the table editor to add or paste frame rows, then click **Import into Loadout Lab**. The GUI writes a CSV to `pipeline/import/` and runs the ingest script automatically — it never edits `frames.json` or `data.js` directly. See [`tools/frame-gui/README.md`](tools/frame-gui/README.md) for full details.
+
 ### Pipeline commands
 
 | Command | Description |

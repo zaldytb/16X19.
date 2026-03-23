@@ -2411,6 +2411,11 @@ function switchMode(mode) {
     btn.classList.toggle('active', btn.dataset.mode === mode);
   });
 
+  // Sync mobile tab bar active state
+  document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === mode);
+  });
+
   const prevMode = currentMode;
   currentMode = mode;
 
@@ -6601,6 +6606,17 @@ function init() {
       if (mode) switchMode(mode);
     });
   });
+
+  // Mobile tab bar buttons
+  document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.dataset.mode;
+      if (mode) switchMode(mode);
+    });
+  });
+  // Mobile header info button
+  const mobileInfoBtn = document.getElementById('btn-mode-howitworks-mobile');
+  if (mobileInfoBtn) mobileInfoBtn.addEventListener('click', () => switchMode('howitworks'));
 
   // Tune slider
   $('#tune-slider').addEventListener('input', onTuneSliderInput);

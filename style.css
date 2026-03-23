@@ -477,6 +477,10 @@ body {
   opacity: 1;
 }
 
+/* Mobile tab bar — hidden on desktop */
+.mobile-tab-bar { display: none; }
+.mobile-info-btn { display: none; }
+
 /* ============================================
    PERSISTENT SHELL LAYOUT
    ============================================ */
@@ -687,9 +691,78 @@ body {
     display: flex;
   }
   .workspace {
-    padding: var(--space-5) var(--space-5) var(--space-12);
+    padding: var(--space-5) var(--space-5) calc(56px + env(safe-area-inset-bottom) + 16px);
     height: auto;
     overflow-y: visible;
+  }
+
+  /* Hide desktop mode switcher on mobile */
+  .mode-switcher { display: none !important; }
+  .mode-btn-util { display: none !important; }
+
+  /* Show mobile info button in header */
+  .mobile-info-btn { display: flex !important; }
+
+  /* Mobile bottom tab bar */
+  .mobile-tab-bar {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    align-items: center;
+    justify-content: space-around;
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 0.5px solid var(--border-subtle);
+    z-index: 300;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .mobile-tab-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+  }
+
+  .mobile-tab-btn.active {
+    color: var(--fn);
+  }
+
+  .mobile-tab-btn.active::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 2px;
+    background: var(--fn);
+    border-radius: 1px;
+  }
+
+  .mobile-tab-btn svg {
+    width: 20px;
+    height: 20px;
+    opacity: 0.6;
+  }
+
+  .mobile-tab-btn.active svg {
+    opacity: 1;
   }
 }
 
@@ -5519,6 +5592,11 @@ body {
 /* Dark: stat group dividers */
 [data-theme="dark"] .stat-group {
   border-bottom-color: rgba(255,255,255,0.04);
+}
+
+/* Dark: mobile tab bar shadow */
+[data-theme="dark"] .mobile-tab-bar {
+  box-shadow: 0 -1px 12px rgba(0,0,0,0.3);
 }
 
 /* --- Exclude tags --- */

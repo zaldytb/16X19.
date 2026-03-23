@@ -337,30 +337,46 @@ body {
 }
 
 @media (max-width: 1024px) {
+  :root {
+    --header-h: 48px;
+  }
   .site-header {
     grid-template-columns: 1fr;
+    height: 48px;
+    padding: 0;
   }
   .header-dock-region {
     border-right: none;
-    padding: var(--space-3) var(--space-5);
+    padding: 0 16px;
+    height: 48px;
     justify-content: space-between;
   }
   .header-workspace-region {
     display: none;
   }
+  .mobile-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .mobile-info-btn,
+  .mobile-theme-btn {
+    display: flex;
+    width: 32px;
+    height: 32px;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
 }
 
 @media (max-width: 600px) {
-  .header-dock-region {
-    padding: var(--space-3) var(--space-4);
-  }
-  .site-title {
-    font-size: 0.82rem;
-    white-space: nowrap;
-  }
-  .site-subtitle {
-    display: none;
-  }
   .logo-svg {
     width: 28px;
     height: 28px;
@@ -368,12 +384,18 @@ body {
   .logo-group {
     gap: var(--space-2);
   }
-  /* Compact mode-switcher on small mobile: icon-only */
-  .mode-btn span {
+}
+
+@media (max-width: 480px) {
+  .site-title {
+    font-size: 0.72rem;
+  }
+  .site-subtitle {
     display: none;
   }
-  .mode-btn {
-    padding: 6px 10px;
+  .logo-svg {
+    width: 24px;
+    height: 24px;
   }
 }
 
@@ -477,9 +499,9 @@ body {
   opacity: 1;
 }
 
-/* Mobile tab bar — hidden on desktop */
+/* Mobile header actions + tab bar — hidden on desktop */
+.mobile-header-actions { display: none; }
 .mobile-tab-bar { display: none; }
-.mobile-info-btn { display: none; }
 
 /* ============================================
    PERSISTENT SHELL LAYOUT
@@ -699,9 +721,6 @@ body {
   /* Hide desktop mode switcher on mobile */
   .mode-switcher { display: none !important; }
   .mode-btn-util { display: none !important; }
-
-  /* Show mobile info button in header */
-  .mobile-info-btn { display: flex !important; }
 
   /* Mobile bottom tab bar */
   .mobile-tab-bar {

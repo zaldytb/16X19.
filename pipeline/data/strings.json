@@ -1,0 +1,1406 @@
+[
+  {
+    "id": "solinco-confidential-16",
+    "name": "Solinco Confidential",
+    "gauge": "16 (1.30mm)",
+    "gaugeNum": 1.3,
+    "material": "Polyester",
+    "shape": "Square/4-pointed edges",
+    "stiffness": 222.3,
+    "tensionLoss": 22.2,
+    "spinPotential": 6.4,
+    "twScore": {
+      "power": 42,
+      "spin": 90,
+      "comfort": 63,
+      "control": 93,
+      "feel": 83,
+      "playabilityDuration": 88,
+      "durability": 91
+    },
+    "identity": "Control Lockdown",
+    "notes": "Stiff poly (222 lb/in) with excellent tension maintenance (22% loss — top tier). Four grippy edges for spin. Needs 3-4 hrs break-in. Rewards full swings with pinpoint accuracy.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "solinco-hyper-g-16",
+    "name": "Solinco Hyper-G",
+    "gauge": "16 (1.30mm)",
+    "gaugeNum": 1.3,
+    "material": "Polyester",
+    "shape": "Pentagon/5-sided",
+    "stiffness": 219.5,
+    "tensionLoss": 26.3,
+    "spinPotential": 7,
+    "twScore": {
+      "power": 50,
+      "spin": 92,
+      "comfort": 62,
+      "control": 88,
+      "feel": 80,
+      "playabilityDuration": 80,
+      "durability": 88
+    },
+    "identity": "Spin Shredder",
+    "notes": "Iconic green poly. Pentagon shape bites the ball aggressively. Slightly softer than Confidential with a bit more power. Good all-around aggressive poly.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "solinco-tour-bite-16",
+    "name": "Solinco Tour Bite",
+    "gauge": "16 (1.30mm)",
+    "gaugeNum": 1.3,
+    "material": "Polyester",
+    "shape": "Pentagon/5-sided",
+    "stiffness": 202.9,
+    "tensionLoss": 47.1,
+    "spinPotential": 6.7,
+    "twScore": {
+      "power": 38,
+      "spin": 88,
+      "comfort": 52,
+      "control": 95,
+      "feel": 78,
+      "playabilityDuration": 70,
+      "durability": 90
+    },
+    "identity": "Iron Maiden",
+    "notes": "Very firm, very controlled. High tension loss (47%) means it starts tight and opens up quickly. Stiff but not as stiff as Confidential. For players who want maximum control and don't mind frequent restrings.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "babolat-rpm-blast-17",
+    "name": "Babolat RPM Blast",
+    "gauge": "17 (1.25mm)",
+    "gaugeNum": 1.25,
+    "material": "Polyester",
+    "shape": "Octagonal",
+    "stiffness": 234,
+    "tensionLoss": 33.3,
+    "spinPotential": 4.6,
+    "twScore": {
+      "power": 55,
+      "spin": 82,
+      "comfort": 60,
+      "control": 85,
+      "feel": 80,
+      "playabilityDuration": 72,
+      "durability": 82
+    },
+    "identity": "The Pro Standard",
+    "notes": "Nadal's string. Very stiff (234 lb/in). Moderate tension loss. TWU spin potential is low (4.6) but real-world spin comes from snap-back of the octagonal shape. Good power for a poly.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "babolat-vs-touch-16",
+    "name": "Babolat VS Touch",
+    "gauge": "16 (1.30mm)",
+    "gaugeNum": 1.3,
+    "material": "Natural Gut",
+    "shape": "Round (braided)",
+    "stiffness": 140,
+    "tensionLoss": 12,
+    "spinPotential": 5,
+    "twScore": {
+      "power": 85,
+      "spin": 65,
+      "comfort": 98,
+      "control": 65,
+      "feel": 95,
+      "playabilityDuration": 95,
+      "durability": 50
+    },
+    "identity": "The Silk Cannon",
+    "notes": "Gold standard natural gut. Softest stiffness (~140 lb/in), best tension maintenance (12% loss), maximum comfort and feel. High power, lower control ceiling. Fragile in wet conditions. Best pocketing of any string material.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "luxilon-alu-power-16l",
+    "name": "Luxilon ALU Power",
+    "gauge": "16L (1.25mm)",
+    "gaugeNum": 1.25,
+    "material": "Polyester",
+    "shape": "Round",
+    "stiffness": 209.2,
+    "tensionLoss": 46.6,
+    "spinPotential": 5.8,
+    "twScore": {
+      "power": 65,
+      "spin": 78,
+      "comfort": 58,
+      "control": 82,
+      "feel": 85,
+      "playabilityDuration": 60,
+      "durability": 80
+    },
+    "identity": "Legacy Standard",
+    "notes": "The most famous poly. Good feel and power for a poly but terrible tension maintenance (47% loss). Goes dead fast. The string that defined the poly era but showing its age.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "restring-sync",
+    "name": "ReString Sync",
+    "gauge": "17 (1.24mm)",
+    "gaugeNum": 1.24,
+    "material": "Polyester",
+    "shape": "Round (coated)",
+    "stiffness": 195,
+    "tensionLoss": 18,
+    "spinPotential": 6.8,
+    "twScore": {
+      "power": 55,
+      "spin": 82,
+      "comfort": 72,
+      "control": 85,
+      "feel": 78,
+      "playabilityDuration": 92,
+      "durability": 88
+    },
+    "identity": "The Endurance Build",
+    "notes": "Outstanding tension maintenance (~18% loss). Coated surface resists notching. Slightly muted feel compared to ALU Power but vastly superior playability duration. Good spin and comfort for its control level.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "restring-zero",
+    "name": "ReString Zero",
+    "gauge": "17 (1.24mm)",
+    "gaugeNum": 1.24,
+    "material": "Polyester",
+    "shape": "Round (textured coating)",
+    "stiffness": 188,
+    "tensionLoss": 20,
+    "spinPotential": 7.5,
+    "twScore": {
+      "power": 58,
+      "spin": 88,
+      "comfort": 70,
+      "control": 82,
+      "feel": 80,
+      "playabilityDuration": 88,
+      "durability": 82
+    },
+    "identity": "The Spin Tank",
+    "notes": "More snap-back than Sync. Better spin access but slightly less tension maintenance and durability. More textured coating gives better ball bite. Good blend of spin and longevity.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "head-lynx-tour-17",
+    "name": "Head Lynx Tour",
+    "gauge": "17 (1.25mm)",
+    "gaugeNum": 1.25,
+    "material": "Polyester",
+    "shape": "Square",
+    "stiffness": 217.7,
+    "tensionLoss": 24.6,
+    "spinPotential": 7.1,
+    "twScore": {
+      "power": 48,
+      "spin": 88,
+      "comfort": 62,
+      "control": 88,
+      "feel": 80,
+      "playabilityDuration": 82,
+      "durability": 86
+    },
+    "identity": "The Consistent Edge",
+    "notes": "Square profile for spin, good tension maintenance (24.6% loss). Pairs well with Speed frames. Stiff and controlled with decent playability duration.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "head-hawk-power-17",
+    "name": "Head Hawk Power",
+    "gauge": "17 (1.25mm)",
+    "gaugeNum": 1.25,
+    "material": "Polyester",
+    "shape": "Spiral",
+    "stiffness": 203.5,
+    "tensionLoss": 48.3,
+    "spinPotential": 7.5,
+    "twScore": {
+      "power": 60,
+      "spin": 86,
+      "comfort": 65,
+      "control": 80,
+      "feel": 78,
+      "playabilityDuration": 65,
+      "durability": 78
+    },
+    "identity": "Power Spinner",
+    "notes": "More power and spin than Lynx Tour but much worse tension maintenance (48%). Spiral shape generates good ball bite. Loses playability relatively fast.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "tecnifibre-razor-soft-17",
+    "name": "Tecnifibre Razor Soft",
+    "gauge": "17 (1.25mm)",
+    "gaugeNum": 1.25,
+    "material": "Polyester",
+    "shape": "Round",
+    "stiffness": 212,
+    "tensionLoss": 33.3,
+    "spinPotential": 7.4,
+    "twScore": {
+      "power": 52,
+      "spin": 82,
+      "comfort": 70,
+      "control": 84,
+      "feel": 82,
+      "playabilityDuration": 78,
+      "durability": 80
+    },
+    "identity": "Comfort Control",
+    "notes": "Good blend of comfort and control. Moderate stiffness and tension loss. A safe all-arounder poly.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "toroline-o-toro-17",
+    "name": "Toroline O-Toro",
+    "gauge": "17 (1.23mm)",
+    "gaugeNum": 1.23,
+    "material": "Polyester",
+    "shape": "Hexagonal",
+    "stiffness": 165.7,
+    "tensionLoss": 44.4,
+    "spinPotential": 9.4,
+    "twScore": {
+      "power": 60,
+      "spin": 95,
+      "comfort": 75,
+      "control": 78,
+      "feel": 75,
+      "playabilityDuration": 72,
+      "durability": 78
+    },
+    "identity": "Spin Launcher",
+    "notes": "TWU spin potential 9.4 — top tier. 104% more spin than RPM Blast in lab testing. Very soft at 166 lb/in. High tension loss (44%) means it opens up fast. Hexagonal shape with exceptional snapback. Best-selling Toroline string.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "toroline-o-toro-spin-17",
+    "name": "Toroline O-Toro Spin",
+    "gauge": "17 (1.23mm)",
+    "gaugeNum": 1.23,
+    "material": "Polyester",
+    "shape": "Textured Hexagonal",
+    "stiffness": 173.2,
+    "tensionLoss": 38.3,
+    "spinPotential": 8.2,
+    "twScore": {
+      "power": 55,
+      "spin": 90,
+      "comfort": 72,
+      "control": 82,
+      "feel": 73,
+      "playabilityDuration": 74,
+      "durability": 80
+    },
+    "identity": "Textured Spin Machine",
+    "notes": "Textured version of O-Toro with slightly higher stiffness (173 vs 166). Better tension maintenance (38% vs 44%). Slightly less peak spin but more controlled response. Good middle ground between O-Toro and O-Toro Tour.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "toroline-o-toro-tour-17",
+    "name": "Toroline O-Toro Tour",
+    "gauge": "17 (1.23mm)",
+    "gaugeNum": 1.23,
+    "material": "Polyester",
+    "shape": "Hexagonal",
+    "stiffness": 216.6,
+    "tensionLoss": 25,
+    "spinPotential": 7.7,
+    "twScore": {
+      "power": 48,
+      "spin": 85,
+      "comfort": 65,
+      "control": 90,
+      "feel": 80,
+      "playabilityDuration": 85,
+      "durability": 88
+    },
+    "identity": "Tour Control Hex",
+    "notes": "~15% stiffer than O-Toro, comparable to RPM Blast and 4G. TWU tension loss only 25% — excellent. Higher stiffness (217) gives more control and stability at high swing speeds. Best for advanced players who want control-first with spin access.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "toroline-o-toro-snap-16l",
+    "name": "Toroline O-Toro Snap",
+    "gauge": "16L (1.25mm)",
+    "gaugeNum": 1.25,
+    "material": "Polyester",
+    "shape": "Round (ultra-slick)",
+    "stiffness": 170,
+    "tensionLoss": 40,
+    "spinPotential": 8.5,
+    "twScore": {
+      "power": 58,
+      "spin": 88,
+      "comfort": 73,
+      "control": 80,
+      "feel": 76,
+      "playabilityDuration": 75,
+      "durability": 80
+    },
+    "identity": "Snapback Specialist",
+    "notes": "Same formula as O-Toro in an ultra-slick 1.25mm round shape. Maximum snapback for dynamic string movement. Lower launch angle than hex O-Toro. Works well as fullbed or hybrid mains. Released mid-2025.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "toroline-caviar-16l",
+    "name": "Toroline Caviar",
+    "gauge": "16L (1.24mm)",
+    "gaugeNum": 1.24,
+    "material": "Polyester",
+    "shape": "Hexagonal",
+    "stiffness": 185,
+    "tensionLoss": 30,
+    "spinPotential": 7.5,
+    "twScore": {
+      "power": 55,
+      "spin": 85,
+      "comfort": 72,
+      "control": 85,
+      "feel": 80,
+      "playabilityDuration": 88,
+      "durability": 86
+    },
+    "identity": "Precision Hex",
+    "notes": "Six-sided hex profile for precision. More lively and flexible than typical polys. Outstanding tension maintenance and durability. Near-perfect balance of power and control — slightly softer and more powerful than O-Toro Tour. Available in 16L, 17, and 18 gauges.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "toroline-wasabi-17",
+    "name": "Toroline Wasabi",
+    "gauge": "17 (1.23mm)",
+    "gaugeNum": 1.23,
+    "material": "Polyester",
+    "shape": "Square (4 ultra-sharp edges)",
+    "stiffness": 210,
+    "tensionLoss": 35,
+    "spinPotential": 8,
+    "twScore": {
+      "power": 52,
+      "spin": 88,
+      "comfort": 68,
+      "control": 85,
+      "feel": 75,
+      "playabilityDuration": 75,
+      "durability": 82
+    },
+    "identity": "Sharp Bite",
+    "notes": "Four ultra-sharp edges grip the ball aggressively before snapping back. Firmer and more control-oriented than most Toroline strings. Low-friction surface promotes snapback. Good balance of spin, power, and control. Average tension maintenance.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "toroline-toro-toro-17",
+    "name": "Toroline Toro Toro / Super Toro",
+    "gauge": "17 (1.23mm)",
+    "gaugeNum": 1.23,
+    "material": "Polyester",
+    "shape": "Hexagonal",
+    "stiffness": 195,
+    "tensionLoss": 32,
+    "spinPotential": 7.8,
+    "twScore": {
+      "power": 52,
+      "spin": 85,
+      "comfort": 70,
+      "control": 86,
+      "feel": 78,
+      "playabilityDuration": 82,
+      "durability": 84
+    },
+    "identity": "Precision Allrounder",
+    "notes": "Super slick six-sided co-poly for surgical precision. Softer flex for enhanced pocketing and feel. Predictable response. Toro Toro (pink) and Super Toro (dark blue) are the same string in different colors. Medium stiffness. Also available in 16L (1.27mm).",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "toroline-snapper-17",
+    "name": "Toroline Snapper",
+    "gauge": "17 (1.23mm)",
+    "gaugeNum": 1.23,
+    "material": "Polyester",
+    "shape": "Octagonal (extra slick)",
+    "stiffness": 185,
+    "tensionLoss": 30,
+    "spinPotential": 8,
+    "twScore": {
+      "power": 58,
+      "spin": 86,
+      "comfort": 74,
+      "control": 82,
+      "feel": 80,
+      "playabilityDuration": 82,
+      "durability": 80
+    },
+    "identity": "Slick Spin Cannon",
+    "notes": "Octagonal shape with extra-slick coating for maximum snapback. Soft and plush — doesn't need a dampener. More power and pocketing than Wasabi. Consistent string bed throughout life. Named for snapback action, not power snap. Lavender color.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "toroline-truffle-x-17",
+    "name": "Toroline Truffle X",
+    "gauge": "17 (1.30mm)",
+    "gaugeNum": 1.3,
+    "material": "Co-Polyester (elastic)",
+    "shape": "Round",
+    "stiffness": 115,
+    "tensionLoss": 10,
+    "spinPotential": 5.5,
+    "twScore": {
+      "power": 88,
+      "spin": 60,
+      "comfort": 95,
+      "control": 60,
+      "feel": 90,
+      "playabilityDuration": 92,
+      "durability": 50
+    },
+    "identity": "Elastic Comfort",
+    "notes": "Insanely low static stiffness (0.20 kg/mm) — softer than natural gut. Elastic nature stretches under tension. Explosive pocketing and pop. Best as hybrid cross or full bed at gut-like tensions (~55 lbs + 5% prestretch recommended). Excellent tension maintenance. Low durability.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "toroline-ether-17",
+    "name": "Toroline Ether",
+    "gauge": "17 (1.20mm)",
+    "gaugeNum": 1.2,
+    "material": "Polyester",
+    "shape": "Square",
+    "stiffness": 200,
+    "tensionLoss": 30,
+    "spinPotential": 8.5,
+    "twScore": {
+      "power": 55,
+      "spin": 90,
+      "comfort": 65,
+      "control": 84,
+      "feel": 82,
+      "playabilityDuration": 68,
+      "durability": 65
+    },
+    "identity": "Thin Spin Blade",
+    "notes": "Toroline's thinnest string (1.20mm) with a square profile. Maximum spin access with great feel. Firm stiffness level. Low durability due to thin gauge — will notch quickly under heavy hitting. Best for non-breakers or hybrid setups.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "toroline-absolute-17",
+    "name": "Toroline Absolute",
+    "gauge": "17 (1.20mm)",
+    "gaugeNum": 1.2,
+    "material": "Polyester",
+    "shape": "Hexagonal",
+    "stiffness": 190,
+    "tensionLoss": 30,
+    "spinPotential": 7.8,
+    "twScore": {
+      "power": 60,
+      "spin": 85,
+      "comfort": 70,
+      "control": 82,
+      "feel": 78,
+      "playabilityDuration": 72,
+      "durability": 68
+    },
+    "identity": "Plush Power Hex",
+    "notes": "Thin 1.20mm hexagonal co-poly for a plush yet crispy feel. Generates ample spin and free power. Softer than Ether at the same gauge. Good for players wanting spin access with a lively, comfortable response.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "toroline-enso-17",
+    "name": "Toroline enso",
+    "gauge": "17 (1.23mm)",
+    "gaugeNum": 1.23,
+    "material": "Polyester",
+    "shape": "Round",
+    "stiffness": 180,
+    "tensionLoss": 28,
+    "spinPotential": 7,
+    "twScore": {
+      "power": 55,
+      "spin": 80,
+      "comfort": 75,
+      "control": 85,
+      "feel": 82,
+      "playabilityDuration": 85,
+      "durability": 85
+    },
+    "identity": "Balanced Feel",
+    "notes": "Flexible co-poly with good control without deadness. Good spin without harshness. Excellent tension maintenance (~28% loss). Round shape keeps response predictable. Pairs well with O-Toro as a hybrid cross. One of Toroline's most balanced offerings.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "grapplesnake-tour-sniper-17",
+    "name": "Grapplesnake Tour Sniper",
+    "gauge": "17 (1.25mm)",
+    "gaugeNum": 1.25,
+    "material": "Polyester",
+    "shape": "Pentagonal",
+    "stiffness": 206,
+    "tensionLoss": 22,
+    "spinPotential": 7,
+    "twScore": {
+      "power": 45,
+      "spin": 82,
+      "comfort": 65,
+      "control": 92,
+      "feel": 85,
+      "playabilityDuration": 90,
+      "durability": 90
+    },
+    "identity": "Precision Sniper",
+    "notes": "Pentagonal shape with pre-stretched construction to minimize initial tension loss. TWU stiffness 206. Similar feel to ALU Power Soft but with vastly superior tension maintenance (~22% est.). Low power, elite control. Extremely consistent and durable. For advanced players.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "grapplesnake-tour-m8-17",
+    "name": "Grapplesnake Tour M8",
+    "gauge": "17 (1.25mm)",
+    "gaugeNum": 1.25,
+    "material": "Polyester",
+    "shape": "Octagonal",
+    "stiffness": 210.3,
+    "tensionLoss": 34.3,
+    "spinPotential": 8.2,
+    "twScore": {
+      "power": 48,
+      "spin": 88,
+      "comfort": 68,
+      "control": 88,
+      "feel": 82,
+      "playabilityDuration": 85,
+      "durability": 88
+    },
+    "identity": "Goldilocks Control",
+    "notes": "Eight-sided co-poly with slick surface for snapback. TWU spin potential 8.2 — excellent. Stiffness 210 sits between Alpha (soft) and Tour Sniper (firm). Great tension maintenance (34% loss). 'Goldilocks' balanced feel. One of TW's highest-rated polys of 2025.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "restring-slap-17",
+    "name": "ReString Slap",
+    "gauge": "17 (1.23mm)",
+    "gaugeNum": 1.23,
+    "material": "Polyester",
+    "shape": "Hexagonal",
+    "stiffness": 188,
+    "tensionLoss": 20,
+    "spinPotential": 8.5,
+    "twScore": {
+      "power": 58,
+      "spin": 90,
+      "comfort": 70,
+      "control": 82,
+      "feel": 78,
+      "playabilityDuration": 88,
+      "durability": 82
+    },
+    "identity": "Spin Slapper",
+    "notes": "Built on the foundation of ReString Zero with a six-sided geometric profile. Exceptional grip and spin potential. Carries Zero's explosive snapback technology for consistent low-friction string movement. Good tension maintenance (~20% est.). Also available in 16g (1.28mm).",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "yonex-poly-tour-pro-17",
+    "name": "Yonex Poly Tour Pro",
+    "gauge": "17 (1.20mm)",
+    "gaugeNum": 1.2,
+    "material": "Polyester",
+    "shape": "Round",
+    "stiffness": 189,
+    "tensionLoss": 40,
+    "spinPotential": 6,
+    "twScore": {
+      "power": 55,
+      "spin": 75,
+      "comfort": 75,
+      "control": 80,
+      "feel": 88,
+      "playabilityDuration": 60,
+      "durability": 70
+    },
+    "identity": "Plush Feel",
+    "notes": "Soft round poly (189 lb/in) with excellent feel and comfort. Famously mushy — great pocketing. High tension loss (40%) means it goes dead relatively fast. Low spin potential in lab but good real-world snapback. Casper Ruud's string. Best at higher tensions.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "yonex-poly-tour-rev-16l",
+    "name": "Yonex Poly Tour Rev",
+    "gauge": "16L (1.25mm)",
+    "gaugeNum": 1.25,
+    "material": "Polyester",
+    "shape": "Octagonal (silicone oil infused)",
+    "stiffness": 193.2,
+    "tensionLoss": 34.4,
+    "spinPotential": 7.2,
+    "twScore": {
+      "power": 55,
+      "spin": 85,
+      "comfort": 68,
+      "control": 82,
+      "feel": 80,
+      "playabilityDuration": 72,
+      "durability": 78
+    },
+    "identity": "Silicone Spinner",
+    "notes": "Silicone oil-infused octagonal poly. TWU spin potential 7.2, stiffness 193. Good snapback from silicone coating but coating wears off over time. Slicker feel than most shaped polys. Moderate tension loss (34%). Purple color.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "yonex-poly-tour-spin-16l",
+    "name": "Yonex Poly Tour Spin",
+    "gauge": "16L (1.25mm)",
+    "gaugeNum": 1.25,
+    "material": "Polyester",
+    "shape": "Octagonal",
+    "stiffness": 214,
+    "tensionLoss": 30,
+    "spinPotential": 7,
+    "twScore": {
+      "power": 48,
+      "spin": 82,
+      "comfort": 62,
+      "control": 88,
+      "feel": 75,
+      "playabilityDuration": 78,
+      "durability": 85
+    },
+    "identity": "Firm Spin Control",
+    "notes": "Stiffer Yonex poly (214 lb/in) for control-oriented players. Octagonal profile bites the ball well. Better tension maintenance than Poly Tour Pro. One of Yonex's firmer offerings alongside Spin G. Good for players who want control with spin access.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "yonex-poly-tour-fire-16l",
+    "name": "Yonex Poly Tour Fire",
+    "gauge": "16L (1.25mm)",
+    "gaugeNum": 1.25,
+    "material": "Polyester",
+    "shape": "Round (silicone oil infused)",
+    "stiffness": 194.9,
+    "tensionLoss": 35,
+    "spinPotential": 5.8,
+    "twScore": {
+      "power": 60,
+      "spin": 78,
+      "comfort": 68,
+      "control": 80,
+      "feel": 82,
+      "playabilityDuration": 75,
+      "durability": 80
+    },
+    "identity": "Lively Stealth",
+    "notes": "TWU stiffness 195, spin 5.8. Round poly with silicone oil infusion for snapback. Lively and powerful response — more pop than most polys. Stiffer than Poly Tour Pro but softer than Poly Tour Spin. Great on serves. Good tension maintenance. Also available in 1.20mm and 1.30mm.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "dunlop-black-widow-17",
+    "name": "Dunlop Black Widow",
+    "gauge": "17 (1.26mm)",
+    "gaugeNum": 1.26,
+    "material": "Polyester",
+    "shape": "Heptagonal (7-sided)",
+    "stiffness": 217,
+    "tensionLoss": 31,
+    "spinPotential": 5.4,
+    "twScore": {
+      "power": 55,
+      "spin": 82,
+      "comfort": 68,
+      "control": 84,
+      "feel": 78,
+      "playabilityDuration": 72,
+      "durability": 72
+    },
+    "identity": "Seven-Edge Spinner",
+    "notes": "Unique 7-sided heptagonal profile for aggressive ball bite. Moderate stiffness (217 lb/in) with decent tension maintenance (31% loss). Softer feel than typical shaped polys. Good spin access from the multi-edge design. Notches relatively quickly under heavy topspin. Good value poly.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "babolat-rpm-blast-rough-17",
+    "name": "Babolat RPM Blast Rough",
+    "gauge": "17 (1.25mm)",
+    "gaugeNum": 1.25,
+    "material": "Polyester",
+    "shape": "Octagonal (textured)",
+    "stiffness": 196,
+    "tensionLoss": 35.7,
+    "spinPotential": 9.9,
+    "twScore": {
+      "power": 43,
+      "spin": 95,
+      "comfort": 66,
+      "control": 82,
+      "feel": 72,
+      "playabilityDuration": 68,
+      "durability": 79
+    },
+    "identity": "Rough Spin Monster",
+    "notes": "TWU spin potential 9.9 — near the absolute top. Textured version of RPM Blast with significantly more grip. Softer and more powerful than standard RPM Blast (196 vs 234 lb/in). Moderate tension loss (36%). Texture wears down over 8-10 hours. For aggressive spin players who want maximum ball bite.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "babolat-rpm-team-17",
+    "name": "Babolat RPM Team",
+    "gauge": "17 (1.25mm)",
+    "gaugeNum": 1.25,
+    "material": "Polyester",
+    "shape": "Octagonal",
+    "stiffness": 245,
+    "tensionLoss": 25,
+    "spinPotential": 5.3,
+    "twScore": {
+      "power": 55,
+      "spin": 75,
+      "comfort": 72,
+      "control": 88,
+      "feel": 82,
+      "playabilityDuration": 82,
+      "durability": 85
+    },
+    "identity": "Comfort Control Poly",
+    "notes": "Alcaraz's string. Very stiff (245 lb/in) yet surprisingly comfortable thanks to micro air bubbles in the core. Slick silicone coating for snapback. Good tension maintenance. Lower spin potential in lab (5.3) but real-world feel is snappy and responsive. More comfortable alternative to RPM Blast with better durability.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "babolat-synthetic-gut-17",
+    "name": "Babolat Synthetic Gut",
+    "gauge": "17 (1.25mm)",
+    "gaugeNum": 1.25,
+    "material": "Synthetic Gut",
+    "shape": "Round",
+    "stiffness": 162,
+    "tensionLoss": 22,
+    "spinPotential": 6,
+    "twScore": {
+      "power": 72,
+      "spin": 65,
+      "comfort": 82,
+      "control": 68,
+      "feel": 75,
+      "playabilityDuration": 70,
+      "durability": 62
+    },
+    "identity": "Budget Allrounder",
+    "notes": "Solid-core synthetic gut with surprisingly high TWU spin potential (6.0) for its category. Soft stiffness (162 lb/in), good comfort and power. Decent tension maintenance for a syn gut. Popular as hybrid crosses with poly mains. Best bang-for-buck string on the market. Formerly Spiraltek.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "solinco-hyper-g-soft-16l",
+    "name": "Solinco Hyper-G Soft",
+    "gauge": "16L (1.25mm)",
+    "gaugeNum": 1.25,
+    "material": "Polyester",
+    "shape": "Pentagon/5-sided (shaped)",
+    "stiffness": 172,
+    "tensionLoss": 28.7,
+    "spinPotential": 5.2,
+    "twScore": {
+      "power": 57,
+      "spin": 80,
+      "comfort": 79,
+      "control": 93,
+      "feel": 82,
+      "playabilityDuration": 78,
+      "durability": 86
+    },
+    "identity": "Soft Control Shredder",
+    "notes": "Softer version of Hyper-G (172 vs 219 lb/in). Shaped edges for spin with slick surface for snapback. Excellent control (93/100 TW) with much better comfort than original. Good tension maintenance (28.7% loss). Lower spin potential than Hyper-G in TWU lab testing (5.2 vs 7.0). Arm-friendly option for players who love Hyper-G's control but need more comfort.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "solinco-mach-10-16l",
+    "name": "Solinco Mach 10",
+    "gauge": "16L (1.25mm)",
+    "gaugeNum": 1.25,
+    "material": "Polyester",
+    "shape": "Pentagonal (5-sided)",
+    "stiffness": 215,
+    "tensionLoss": 26,
+    "spinPotential": 7.5,
+    "twScore": {
+      "power": 55,
+      "spin": 85,
+      "comfort": 72,
+      "control": 88,
+      "feel": 80,
+      "playabilityDuration": 78,
+      "durability": 82
+    },
+    "identity": "CloudFORM Precision",
+    "notes": "Solinco's CloudFORM technology for power and comfort without quick tension loss. Five sharp edges for excellent ball bite and low-friction snapback. Softer alternative to the Solinco big three (Hyper-G, Tour Bite, Confidential). Used by Jensen Brooksby. Good all-around stats with above-average spin access.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "solinco-confidential-soft-16l",
+    "name": "Solinco Confidential Soft",
+    "gauge": "16L (1.25mm)",
+    "gaugeNum": 1.25,
+    "material": "Polyester",
+    "shape": "Pentagon/5-sided",
+    "stiffness": 195,
+    "tensionLoss": 24,
+    "spinPotential": 6,
+    "twScore": {
+      "power": 50,
+      "spin": 86,
+      "comfort": 74,
+      "control": 90,
+      "feel": 85,
+      "playabilityDuration": 84,
+      "durability": 86
+    },
+    "identity": "Soft Lockdown",
+    "notes": "2026 Prizm Project Electric Soft Pink version of Confidential. More forgiving, livelier, and more arm-friendly than original Confidential. Softer stiffness (~195 vs 222 lb/in est.) with maintained control and spin characteristics. Good tension maintenance inherited from the Confidential line. For players who want Confidential's control DNA with better comfort.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "tecnifibre-black-code-17",
+    "name": "Tecnifibre Black Code",
+    "gauge": "17 (1.24mm)",
+    "gaugeNum": 1.24,
+    "material": "Polyester",
+    "shape": "Pentagonal (5-sided)",
+    "stiffness": 236,
+    "tensionLoss": 40.2,
+    "spinPotential": 4.2,
+    "twScore": {
+      "power": 40,
+      "spin": 78,
+      "comfort": 55,
+      "control": 90,
+      "feel": 72,
+      "playabilityDuration": 65,
+      "durability": 83
+    },
+    "identity": "Stiff Control Anchor",
+    "notes": "Very stiff poly (236 lb/in) with pentagonal shape. Thermo Core Technology for added elasticity. High tension loss (40%) means it starts tight and opens up fast. Low TWU spin potential (4.2) but real-world feel is controlled and precise. Good durability. Used by Chris Eubanks. Available in many gauges (1.18–1.32mm).",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "tecnifibre-razor-code-17",
+    "name": "Tecnifibre Razor Code",
+    "gauge": "17 (1.25mm)",
+    "gaugeNum": 1.25,
+    "material": "Polyester",
+    "shape": "Round",
+    "stiffness": 229.2,
+    "tensionLoss": 29.6,
+    "spinPotential": 5.6,
+    "twScore": {
+      "power": 50,
+      "spin": 78,
+      "comfort": 65,
+      "control": 88,
+      "feel": 78,
+      "playabilityDuration": 80,
+      "durability": 95
+    },
+    "identity": "Iron Durability",
+    "notes": "Round poly with Thermo Core Technology for flexibility. Very stiff (229 lb/in) but good tension maintenance (29.6% loss). Exceptional durability (TW 95/100) — one of the longest-lasting polys. Crisp yet comfortable for its stiffness level. Control-oriented with moderate spin potential. A reliable workhorse string.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "volkl-cyclone-16",
+    "name": "Volkl Cyclone",
+    "gauge": "16 (1.30mm)",
+    "gaugeNum": 1.3,
+    "material": "Polyester",
+    "shape": "Decagonal (10-sided)",
+    "stiffness": 197.2,
+    "tensionLoss": 47.9,
+    "spinPotential": 6.2,
+    "twScore": {
+      "power": 67,
+      "spin": 82,
+      "comfort": 83,
+      "control": 82,
+      "feel": 78,
+      "playabilityDuration": 68,
+      "durability": 89
+    },
+    "identity": "Gear-Shaped Spinner",
+    "notes": "Unique 10-sided gear shape for spin access. High comfort (83/100 TW) despite shaped design — one of the most arm-friendly shaped polys. Excellent durability (89/100). High tension loss (48%) means it opens up fast. Good value co-poly popular among intermediate to advanced players. Crisp, lively response.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "wilson-natural-gut-17",
+    "name": "Wilson Natural Gut",
+    "gauge": "17 (1.25mm)",
+    "gaugeNum": 1.25,
+    "material": "Natural Gut",
+    "shape": "Round (braided)",
+    "stiffness": 81,
+    "tensionLoss": 12,
+    "spinPotential": 2.2,
+    "twScore": {
+      "power": 88,
+      "spin": 55,
+      "comfort": 96,
+      "control": 62,
+      "feel": 95,
+      "playabilityDuration": 92,
+      "durability": 48
+    },
+    "identity": "Premium Feel Cannon",
+    "notes": "Made from beef serosa — elite natural gut. Extremely soft stiffness (81 lb/in at 17g). Excellent tension maintenance (~12% loss). Low TWU spin potential (2.2) but exceptional pocketing and power. Best for hybrid setups with poly mains. Sensitive to humidity. Slightly firmer and more durable than Babolat VS Touch.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "wilson-revolve-17",
+    "name": "Wilson Revolve",
+    "gauge": "17 (1.25mm)",
+    "gaugeNum": 1.25,
+    "material": "Polyester",
+    "shape": "Round",
+    "stiffness": 192,
+    "tensionLoss": 36.2,
+    "spinPotential": 7.7,
+    "twScore": {
+      "power": 58,
+      "spin": 85,
+      "comfort": 77,
+      "control": 88,
+      "feel": 80,
+      "playabilityDuration": 75,
+      "durability": 93
+    },
+    "identity": "Low-Friction Control",
+    "notes": "Round poly with unique low-friction molecular structure for enhanced snapback and spin. TWU spin potential 7.7 — high for a round string. Excellent control (88/100 TW) with exceptional durability (93/100). Good comfort for a poly. Reliable, long-lasting workhorse string.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "wilson-revolve-spin-17",
+    "name": "Wilson Revolve Spin",
+    "gauge": "17 (1.25mm)",
+    "gaugeNum": 1.25,
+    "material": "Polyester",
+    "shape": "Pentagonal (5-sided)",
+    "stiffness": 168,
+    "tensionLoss": 32,
+    "spinPotential": 8,
+    "twScore": {
+      "power": 44,
+      "spin": 92,
+      "comfort": 73,
+      "control": 93,
+      "feel": 75,
+      "playabilityDuration": 72,
+      "durability": 90
+    },
+    "identity": "Spin Precision",
+    "notes": "Shaped co-poly with low-friction UHMW coating for maximum snapback. Softer stiffness (~168 lb/in est. for 17g from 173 at 16g). Exceptional spin (92/100 TW) and control (93/100). Good tension maintenance for a shaped poly. Low power — very control-oriented. Ideal for aggressive spin players who generate their own pace.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "wilson-nxt-16",
+    "name": "Wilson NXT",
+    "gauge": "16 (1.30mm)",
+    "gaugeNum": 1.3,
+    "material": "Multifilament",
+    "shape": "Round",
+    "stiffness": 174,
+    "tensionLoss": 18,
+    "spinPotential": 4,
+    "twScore": {
+      "power": 86,
+      "spin": 62,
+      "comfort": 89,
+      "control": 65,
+      "feel": 88,
+      "playabilityDuration": 82,
+      "durability": 64
+    },
+    "identity": "Premium Multifilament",
+    "notes": "World's most popular multifilament. 1600 Xycro Micro fibers with PU coating. 10% larger sweetspot and low vibration. Excellent comfort and feel — great for tennis elbow sufferers. High power, lower control ceiling. Good tension maintenance (~18% loss) for a multi. Frays under heavy topspin. Best as full bed or hybrid cross.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "diadem-solstice-power-16l",
+    "name": "Diadem Solstice Power",
+    "gauge": "16L (1.25mm)",
+    "gaugeNum": 1.25,
+    "material": "Polyester",
+    "shape": "Six-pointed Star",
+    "stiffness": 209,
+    "tensionLoss": 27,
+    "spinPotential": 7.3,
+    "twScore": {
+      "power": 55,
+      "spin": 85,
+      "comfort": 72,
+      "control": 85,
+      "feel": 78,
+      "playabilityDuration": 72,
+      "durability": 75
+    },
+    "identity": "Star Core Spinner",
+    "notes": "Unique six-pointed star cross-section — Star Core Technology for low friction snapback and aggressive ball bite. Good tension maintenance (27% loss). Moderate stiffness (209 lb/in). Comfortable for a shaped poly. Playable for 8-11 hours. Available in 1.20–1.35mm gauges.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "grapplesnake-irukandji-17",
+    "name": "Grapplesnake Irukandji",
+    "gauge": "17 (1.25mm equiv.)",
+    "gaugeNum": 1.25,
+    "material": "Co-Polyester (elastic)",
+    "shape": "Rounded Rectangular (0.90×1.45mm)",
+    "stiffness": 160,
+    "tensionLoss": 20,
+    "spinPotential": 6.5,
+    "twScore": {
+      "power": 72,
+      "spin": 75,
+      "comfort": 85,
+      "control": 72,
+      "feel": 85,
+      "playabilityDuration": 80,
+      "durability": 72
+    },
+    "identity": "Hybrid Cross Specialist",
+    "notes": "Engineered as the ideal hybrid cross for gut/multi mains. Unique rounded rectangular shape (0.90×1.45mm) maximizes contact area and snapback. Bridges co-poly and multifilament properties — elastic, soft, great feel. More power and comfort than typical polys. Works well full bed too. No direct TWU data — estimates based on reviews and similar soft co-polys.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "grapplesnake-aspera-triplum-17",
+    "name": "Grapplesnake Aspera Triplum",
+    "gauge": "17 (1.19mm)",
+    "gaugeNum": 1.19,
+    "material": "Polyester",
+    "shape": "Square (textured/abrasive)",
+    "stiffness": 220,
+    "tensionLoss": 30,
+    "spinPotential": 9,
+    "twScore": {
+      "power": 52,
+      "spin": 92,
+      "comfort": 68,
+      "control": 85,
+      "feel": 72,
+      "playabilityDuration": 68,
+      "durability": 70
+    },
+    "identity": "Triple Spin Tech",
+    "notes": "Triple spin technology: shape + abrasive surface + diamond indentations. Thin gauge (1.19mm) with square edges for massive ball bite. Soft and stretchy for a shaped poly — recommend stringing +2 lbs above desired tension. Great snapback initially but notches relatively quickly. Not for heavy hitters. Constant-pull stringing recommended.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "grapplesnake-tour-mako-17",
+    "name": "Grapplesnake Tour Mako",
+    "gauge": "17 (1.25mm)",
+    "gaugeNum": 1.25,
+    "material": "Polyester",
+    "shape": "Round (mildly abrasive)",
+    "stiffness": 200,
+    "tensionLoss": 30,
+    "spinPotential": 7.5,
+    "twScore": {
+      "power": 58,
+      "spin": 82,
+      "comfort": 78,
+      "control": 82,
+      "feel": 82,
+      "playabilityDuration": 65,
+      "durability": 68
+    },
+    "identity": "Plush Round Poly",
+    "notes": "Evolution of Tour M8 + Paradox Pro. Round but mildly textured surface for spin access. One of the softest polys with excellent pocketing. Available in Teal (softer) and Silver (firmer w/ aluminum). +2 lb tension recommended. Amazing initial feel but can drop off after 4-6 hours. 2024/2025 release.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "grapplesnake-game-changer-17",
+    "name": "Grapplesnake Game Changer",
+    "gauge": "17 (1.20mm)",
+    "gaugeNum": 1.2,
+    "material": "Polyester",
+    "shape": "Square",
+    "stiffness": 215,
+    "tensionLoss": 28,
+    "spinPotential": 9,
+    "twScore": {
+      "power": 55,
+      "spin": 92,
+      "comfort": 72,
+      "control": 85,
+      "feel": 75,
+      "playabilityDuration": 72,
+      "durability": 78
+    },
+    "identity": "Tour Spin Machine",
+    "notes": "Developed in 2020 with tour pros for maximum spin, comfort, and durability. Sharp square edges for massive ball bite. Thin gauge (1.20mm) comparable to a 16g round poly in durability. Neon green color. Good tension maintenance. Not available at Tennis Warehouse US. Tour-level performance.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "luxilon-4g-16l",
+    "name": "Luxilon 4G",
+    "gauge": "16L (1.25mm)",
+    "gaugeNum": 1.25,
+    "material": "Polyester",
+    "shape": "Round",
+    "stiffness": 259,
+    "tensionLoss": 21,
+    "spinPotential": 3.9,
+    "twScore": {
+      "power": 50,
+      "spin": 68,
+      "comfort": 65,
+      "control": 92,
+      "feel": 82,
+      "playabilityDuration": 88,
+      "durability": 82
+    },
+    "identity": "Tension Lock",
+    "notes": "Extremely stiff (259 lb/in — one of the stiffest polys). Exceptional tension maintenance (only 21% loss — elite tier). Low spin potential (3.9) but rock-solid consistency. Used by Tsitsipas, de Minaur, Dimitrov. Control-oriented with plush feel for its stiffness. Goes dead slower than almost any poly. Best for advanced players who want maximum control stability.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "luxilon-alu-power-rough-16l",
+    "name": "Luxilon ALU Power Rough",
+    "gauge": "16L (1.25mm)",
+    "gaugeNum": 1.25,
+    "material": "Polyester",
+    "shape": "Round (textured)",
+    "stiffness": 209,
+    "tensionLoss": 39.6,
+    "spinPotential": 6.5,
+    "twScore": {
+      "power": 60,
+      "spin": 82,
+      "comfort": 68,
+      "control": 84,
+      "feel": 82,
+      "playabilityDuration": 62,
+      "durability": 78
+    },
+    "identity": "Textured Legacy",
+    "notes": "Textured version of ALU Power for enhanced spin (6.5 vs 5.8 spin potential). Same stiffness as standard (209 lb/in). Slightly better tension maintenance than standard (39.6% vs 46.6% loss). Used in hybrids by Federer, Djokovic, Murray. Rough texture adds grip but wears down over time. Better spin access than standard ALU Power.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "luxilon-element-16l",
+    "name": "Luxilon Element",
+    "gauge": "16L (1.25mm)",
+    "gaugeNum": 1.25,
+    "material": "Polyester",
+    "shape": "Round",
+    "stiffness": 208,
+    "tensionLoss": 33.6,
+    "spinPotential": 5.5,
+    "twScore": {
+      "power": 55,
+      "spin": 75,
+      "comfort": 73,
+      "control": 82,
+      "feel": 80,
+      "playabilityDuration": 72,
+      "durability": 81
+    },
+    "identity": "Comfort Poly",
+    "notes": "Multi-Mono Technology with flexible fibers in polymer matrix for added comfort and power. Softest in the Luxilon lineup. Moderate stiffness (208 lb/in) with decent tension maintenance (33.6% loss). Control-oriented but more comfortable than ALU Power. Good all-around poly for players wanting Luxilon quality with less harshness.",
+    "_provenance": {
+      "source": "app.js",
+      "dateAdded": "2026-03-23",
+      "confidence": "high"
+    }
+  }
+]

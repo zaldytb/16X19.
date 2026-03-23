@@ -1,0 +1,59 @@
+[
+  {
+    "name": "Control Build",
+    "frameId": "head-gravity-pro-2025",
+    "stringId": "solinco-confidential-16",
+    "mainsTension": 52,
+    "crossesTension": 50,
+    "baseline": {
+      "obs": 78.1,
+      "archetype": "Control Platform"
+    }
+  },
+  {
+    "name": "Power Build",
+    "frameId": "babolat-pure-drive-2024",
+    "stringId": "wilson-nxt-16",
+    "mainsTension": 55,
+    "crossesTension": 53,
+    "baseline": {
+      "obs": 58.1,
+      "archetype": "Power Hybrid"
+    }
+  },
+  {
+    "name": "Spin Build",
+    "frameId": "babolat-pure-aero-100-2023",
+    "stringId": "solinco-hyper-g-16",
+    "mainsTension": 52,
+    "crossesTension": 50,
+    "baseline": {
+      "obs": 69.2,
+      "archetype": "Power Hybrid"
+    }
+  },
+  {
+    "name": "Comfort Build",
+    "frameId": "wilson-clash-100-v2",
+    "stringId": "solinco-hyper-g-soft-16l",
+    "mainsTension": 52,
+    "crossesTension": 50,
+    "baseline": {
+      "obs": 70.3,
+      "archetype": "Balanced Setup"
+    }
+  },
+  {
+    "name": "Hybrid Build",
+    "frameId": "head-speed-mp-2024",
+    "isHybrid": true,
+    "mainsId": "babolat-vs-touch-16",
+    "crossesId": "luxilon-alu-power-rough-16l",
+    "mainsTension": 55,
+    "crossesTension": 53,
+    "baseline": {
+      "obs": 72.2,
+      "archetype": "Balanced Setup"
+    }
+  }
+]

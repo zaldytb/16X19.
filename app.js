@@ -1843,9 +1843,22 @@ function _renderDockPanelCompare(container) {
     html += '<div class="dock-ctx-label">Quick add</div>';
     html += '<div class="dock-compare-quickadd">';
     available.slice(0, 5).forEach(lo => {
-      html += `<button class="dock-compare-pill" onclick="_dockCompareQuickAdd('${lo.id}')" title="OBS ${lo.obs ? lo.obs.toFixed(1) : '—'}">
-        ${lo.name || '—'}
-      </button>`;
+      // Fix 6: Show frame name + string name separately in quick add pills
+      var racquet = RACQUETS.find(function(r) { return r.id === lo.frameId; });
+      var frameName = racquet ? racquet.name.split(' ').slice(0, 2).join(' ') : 'Unknown';
+      var stringName = '';
+      if (lo.isHybrid) {
+        var m = STRINGS.find(function(s) { return s.id === lo.mainsId; });
+        var x = STRINGS.find(function(s) { return s.id === lo.crossesId; });
+        stringName = m && x ? m.name.split(' ')[0] + '/' + x.name.split(' ')[0] : 'Hybrid';
+      } else {
+        var str = STRINGS.find(function(s) { return s.id === lo.stringId; });
+        stringName = str ? str.name.split(' ')[0] : '—';
+      }
+      html += '<button class="dock-compare-pill" onclick="_dockCompareQuickAdd(\'' + lo.id + '\')" title="OBS ' + (lo.obs ? lo.obs.toFixed(1) : '—') + '">' +
+        '<span class="dock-compare-pill-frame">' + frameName + '</span>' +
+        '<span class="dock-compare-pill-string">' + stringName + '</span>' +
+      '</button>';
     });
     html += '</div>';
   }
@@ -2310,12 +2323,25 @@ function renderMyLoadouts() {
     var srcLabel = sourceLabels[lo.source] || '';
     var sourceTag = srcLabel ? '<span class="dock-myl-source-tag dock-myl-src-' + lo.source + '">' + srcLabel + '</span>' : '';
 
+    // Fix 6: Two-line layout with full frame name and string name
+    var frameName = racquet ? racquet.name : '\u2014';
+    var stringName = '\u2014';
+    if (lo.isHybrid) {
+      var m = STRINGS.find(function(s) { return s.id === lo.mainsId; });
+      var x = STRINGS.find(function(s) { return s.id === lo.crossesId; });
+      stringName = m && x ? m.name + ' / ' + x.name : '\u2014';
+    } else {
+      var str = STRINGS.find(function(s) { return s.id === lo.stringId; });
+      stringName = str ? str.name : '\u2014';
+    }
+
     return '<div class="dock-myl-item ' + (isActive ? 'dock-myl-active' : '') + '" data-lo-id="' + lo.id + '">' +
       '<div class="dock-myl-item-main" onclick="switchToLoadout(\'' + lo.id + '\')">' +
         '<div class="dock-myl-obs">' + (lo.obs ? lo.obs.toFixed(1) : '\u2014') + '</div>' +
         '<div class="dock-myl-item-info">' +
-          '<div class="dock-myl-item-name">' + lo.name + (isActive ? ' <span class="dock-myl-active-badge">Active</span>' : '') + sourceTag + '</div>' +
-          '<div class="dock-myl-item-meta">' + (racquet ? racquet.name : '\u2014') + ' \u00B7 ' + lo.mainsTension + 'lbs</div>' +
+          '<div class="dock-myl-item-frame">' + frameName + (isActive ? ' <span class="dock-myl-active-badge">Active</span>' : '') + sourceTag + '</div>' +
+          '<div class="dock-myl-item-string">' + stringName + '</div>' +
+          '<div class="dock-myl-item-meta">M' + lo.mainsTension + ' / X' + lo.crossesTension + ' lbs</div>' +
         '</div>' +
       '</div>' +
       '<div class="dock-myl-item-actions">' +
@@ -4307,6 +4333,7 @@ function renderCompareSummaries() {
       div.className = `compare-summary-card compare-card-editing slot-color-${color.cssClass}`;
       div.dataset.slotIndex = index;
       div.style.opacity = '0.85';
+      const quickLoadHTML = _compareBuildLoadFromSavedDropdown(index);
       div.innerHTML = `
         <div class="compare-summary-top">
           <div class="compare-summary-identity">
@@ -4316,6 +4343,7 @@ function renderCompareSummaries() {
           <button class="compare-card-remove" onclick="removeComparisonSlot(${index})" title="Remove">✕</button>
         </div>
         <div class="compare-card-editor" data-slot="${index}">
+          ${quickLoadHTML}
           <div class="compare-ed-row">
             <div class="compare-ed-ss-racquet" data-slot="${index}" data-value="${slot.racquetId || ''}"></div>
           </div>
@@ -4357,6 +4385,9 @@ function renderCompareSummaries() {
     div.className = `compare-summary-card slot-color-${color.cssClass}${isEditing ? ' compare-card-editing' : ''}`;
     div.dataset.slotIndex = index;
 
+    // Build "Load from My Loadouts" dropdown HTML
+    const loadFromSavedHTML = _compareBuildLoadFromSavedDropdown(index);
+
     div.innerHTML = `
       <div class="compare-summary-top">
         <div class="compare-summary-identity">
@@ -4389,6 +4420,7 @@ function renderCompareSummaries() {
         <button class="compare-action-btn compare-action-remove" onclick="removeComparisonSlot(${index})">✕</button>
       </div>
       <div class="compare-card-editor" data-slot="${index}">
+        ${loadFromSavedHTML}
         <div class="compare-ed-row">
           <div class="compare-ed-ss-racquet" data-slot="${index}" data-value="${slot.racquetId || ''}"></div>
         </div>
@@ -4404,6 +4436,57 @@ function renderCompareSummaries() {
     container.appendChild(div);
     if (isEditing) _compareInitEditorSS(div, index, slot);
   });
+}
+
+// Fix 2: Build "Load from My Loadouts" dropdown for compare slot editor
+function _compareBuildLoadFromSavedDropdown(slotIndex) {
+  if (!savedLoadouts || savedLoadouts.length === 0) return '';
+
+  const options = savedLoadouts.map(function(lo) {
+    const racquet = RACQUETS.find(function(r) { return r.id === lo.frameId; });
+    const frameName = racquet ? racquet.name.split(' ').slice(0, 2).join(' ') : 'Unknown';
+    const label = (lo.name || 'Loadout').length > 30 ? (lo.name || 'Loadout').substring(0, 30) + '...' : (lo.name || 'Loadout');
+    return '<option value="' + lo.id + '">' + label + ' (' + frameName + ')</option>';
+  }).join('');
+
+  return '<div class="compare-ed-quickload">' +
+    '<label class="compare-ed-label">Quick Load</label>' +
+    '<select class="compare-ed-quickload-select" onchange="_compareLoadFromSaved(' + slotIndex + ', this.value)">' +
+      '<option value="">Load from My Loadouts...</option>' +
+      options +
+    '</select>' +
+  '</div>';
+}
+
+// Fix 2: Load a saved loadout into a compare slot
+function _compareLoadFromSaved(slotIndex, loadoutId) {
+  if (!loadoutId) return;
+
+  const lo = savedLoadouts.find(function(l) { return l.id === loadoutId; });
+  if (!lo || !comparisonSlots[slotIndex]) return;
+
+  const slot = comparisonSlots[slotIndex];
+  slot.racquetId = lo.frameId;
+  slot.isHybrid = lo.isHybrid || false;
+  slot.mainsTension = lo.mainsTension;
+  slot.crossesTension = lo.crossesTension;
+
+  if (lo.isHybrid) {
+    slot.mainsId = lo.mainsId || '';
+    slot.crossesId = lo.crossesId || '';
+    slot.stringId = '';
+  } else {
+    slot.stringId = lo.stringId || '';
+    slot.mainsId = '';
+    slot.crossesId = '';
+  }
+
+  // Recalculate and re-render
+  recalcSlot(slotIndex);
+  renderCompareSummaries();
+  renderCompareVerdict();
+  renderCompareMatrix();
+  try { updateComparisonRadar(); } catch(e) {}
 }
 
 function _compareEditorStringHTML(slot, index) {
@@ -4775,6 +4858,72 @@ function setHybridMode(isHybrid) {
     $('#full-bed-config').classList.remove('hidden');
     $('#hybrid-config').classList.add('hidden');
   }
+}
+
+// Fix 3: Handle Full Bed <-> Hybrid toggle with confirmation and pre-populate
+function _handleHybridToggle(toHybrid) {
+  const currentlyHybrid = $('#btn-hybrid').classList.contains('active');
+  if (toHybrid === currentlyHybrid) return;
+
+  // Check if there's a string selection that would be lost
+  let hasSelection = false;
+  let currentStringId = '';
+
+  if (currentlyHybrid) {
+    // Currently hybrid - check if mains or crosses is selected
+    const mainsId = ssInstances['select-string-mains']?.getValue();
+    const crossesId = ssInstances['select-string-crosses']?.getValue();
+    hasSelection = !!(mainsId || crossesId);
+    currentStringId = mainsId || ''; // Use mains as the carry-over
+  } else {
+    // Currently full bed - check if string is selected
+    currentStringId = ssInstances['select-string-full']?.getValue() || '';
+    hasSelection = !!currentStringId;
+  }
+
+  // If no selection, switch silently
+  if (!hasSelection) {
+    setHybridMode(toHybrid);
+    _onEditorChange();
+    return;
+  }
+
+  // Has selection - show confirmation
+  const message = toHybrid
+    ? 'Switching to Hybrid will use your current string as the Mains. Continue?'
+    : 'Switching to Full Bed will use your Mains string for the full bed. Continue?';
+
+  if (!confirm(message)) {
+    // User cancelled - toggle stays in current state
+    return;
+  }
+
+  // User confirmed - perform the switch with pre-populate
+  setHybridMode(toHybrid);
+
+  if (toHybrid && currentStringId) {
+    // Full Bed -> Hybrid: carry string to mains
+    ssInstances['select-string-mains']?.setValue(currentStringId);
+    populateGaugeDropdown(document.getElementById('gauge-select-mains'), currentStringId);
+    // Copy gauge if set
+    const fullGauge = document.getElementById('gauge-select-full');
+    const mainsGauge = document.getElementById('gauge-select-mains');
+    if (fullGauge && fullGauge.value && mainsGauge) {
+      mainsGauge.value = fullGauge.value;
+    }
+  } else if (!toHybrid && currentStringId) {
+    // Hybrid -> Full Bed: carry mains to full bed
+    ssInstances['select-string-full']?.setValue(currentStringId);
+    populateGaugeDropdown(document.getElementById('gauge-select-full'), currentStringId);
+    // Copy gauge if set
+    const mainsGauge = document.getElementById('gauge-select-mains');
+    const fullGauge = document.getElementById('gauge-select-full');
+    if (mainsGauge && mainsGauge.value && fullGauge) {
+      fullGauge.value = mainsGauge.value;
+    }
+  }
+
+  _onEditorChange();
 }
 
 // ============================================
@@ -6638,14 +6787,12 @@ function init() {
   $('#input-tension-mains').addEventListener('input', _onEditorChange);
   $('#input-tension-crosses').addEventListener('input', _onEditorChange);
 
-  // String mode toggle
+  // String mode toggle (Fix 3: with confirmation and pre-populate)
   $('#btn-full').addEventListener('click', () => {
-    setHybridMode(false);
-    _onEditorChange();
+    _handleHybridToggle(false);
   });
   $('#btn-hybrid').addEventListener('click', () => {
-    setHybridMode(true);
-    _onEditorChange();
+    _handleHybridToggle(true);
   });
 
   // Presets (dynamic) — Quick Presets section removed from dock, but keep comparison presets
@@ -7101,6 +7248,9 @@ function runOptimizer() {
   const resultsEl = document.getElementById('opt-results');
   const countEl = document.getElementById('opt-results-count');
 
+  // Fix 5: Clear tension filter when running new optimization
+  _optClearTensionFilter();
+
   // Show loading
   resultsEl.innerHTML = '<div class="opt-loading">Computing builds…</div>';
 
@@ -7341,26 +7491,49 @@ function renderOptimizerResults(candidates, sortBy, currentOBS) {
   // Column highlight class
   const sortColClass = sortBy === 'obs' ? 'obs' : sortBy;
 
-  const top = candidates.slice(0, 200); // Cap at 200 rows for perf
+  // Fix 5: Target tension filter (client-side only)
+  const targetTension = window._optTargetTension || '';
 
-  let html = `<div class="opt-table-wrap"><table class="opt-table">
-    <thead><tr>
-      <th class="opt-th opt-th-rank">#</th>
-      <th class="opt-th opt-th-type">Type</th>
-      <th class="opt-th opt-th-string">String(s)</th>
-      <th class="opt-th opt-th-num${sortColClass === 'obs' ? ' opt-th-active' : ''}">OBS</th>
-      <th class="opt-th opt-th-num opt-th-delta">&Delta;</th>
-      <th class="opt-th opt-th-gauge">Ga.</th>
-      <th class="opt-th opt-th-tension">Tension</th>
-      <th class="opt-th opt-th-num${sortColClass === 'spin' ? ' opt-th-active' : ''}">Spn</th>
-      <th class="opt-th opt-th-num${sortColClass === 'power' ? ' opt-th-active' : ''}">Pwr</th>
-      <th class="opt-th opt-th-num${sortColClass === 'control' ? ' opt-th-active' : ''}">Ctl</th>
-      <th class="opt-th opt-th-num${sortColClass === 'comfort' ? ' opt-th-active' : ''}">Cmf</th>
-      <th class="opt-th opt-th-num${sortColClass === 'feel' ? ' opt-th-active' : ''}">Fel</th>
-      <th class="opt-th opt-th-num${sortColClass === 'durability' ? ' opt-th-active' : ''}">Dur</th>
-      <th class="opt-th opt-th-num${sortColClass === 'playability' ? ' opt-th-active' : ''}">Ply</th>
-      <th class="opt-th opt-th-actions"></th>
-    </tr></thead><tbody>`;
+  // Filter candidates by target tension (±1 lb) if specified
+  let displayCandidates = candidates;
+  if (targetTension !== '' && !isNaN(parseInt(targetTension))) {
+    const target = parseInt(targetTension);
+    displayCandidates = candidates.filter(c => Math.abs(c.tension - target) <= 1);
+  }
+
+  const top = displayCandidates.slice(0, 200); // Cap at 200 rows for perf
+
+  // Build tension filter UI
+  let filterHTML = '<div class="opt-tension-filter">' +
+    '<label class="opt-tension-label">Target Tension</label>' +
+    '<input type="number" class="opt-tension-input" id="opt-tension-filter" ' +
+      'value="' + (targetTension !== '' ? targetTension : '') + '" ' +
+      'placeholder="All" min="30" max="70" ' +
+      'onchange="_optApplyTensionFilter(this.value)" ' +
+      'onkeyup="if(event.key===\'Enter\')_optApplyTensionFilter(this.value)">' +
+    '<span class="opt-tension-hint">±1 lb</span>' +
+    '<button class="opt-tension-clear" onclick="_optApplyTensionFilter(\'\')" ' +
+      (targetTension === '' ? 'style="display:none"' : '') + '>Clear</button>' +
+  '</div>';
+
+  let html = filterHTML + '<div class="opt-table-wrap"><table class="opt-table">' +
+    '<thead><tr>' +
+      '<th class="opt-th opt-th-rank">#</th>' +
+      '<th class="opt-th opt-th-type">Type</th>' +
+      '<th class="opt-th opt-th-string">String(s)</th>' +
+      '<th class="opt-th opt-th-num' + (sortColClass === 'obs' ? ' opt-th-active' : '') + '">OBS</th>' +
+      '<th class="opt-th opt-th-num opt-th-delta">&Delta;</th>' +
+      '<th class="opt-th opt-th-gauge">Ga.</th>' +
+      '<th class="opt-th opt-th-tension">Tension</th>' +
+      '<th class="opt-th opt-th-num' + (sortColClass === 'spin' ? ' opt-th-active' : '') + '">Spn</th>' +
+      '<th class="opt-th opt-th-num' + (sortColClass === 'power' ? ' opt-th-active' : '') + '">Pwr</th>' +
+      '<th class="opt-th opt-th-num' + (sortColClass === 'control' ? ' opt-th-active' : '') + '">Ctl</th>' +
+      '<th class="opt-th opt-th-num' + (sortColClass === 'comfort' ? ' opt-th-active' : '') + '">Cmf</th>' +
+      '<th class="opt-th opt-th-num' + (sortColClass === 'feel' ? ' opt-th-active' : '') + '">Fel</th>' +
+      '<th class="opt-th opt-th-num' + (sortColClass === 'durability' ? ' opt-th-active' : '') + '">Dur</th>' +
+      '<th class="opt-th opt-th-num' + (sortColClass === 'playability' ? ' opt-th-active' : '') + '">Ply</th>' +
+      '<th class="opt-th opt-th-actions"></th>' +
+    '</tr></thead><tbody>';
 
   top.forEach((c, i) => {
     const delta = c.score - currentOBS;
@@ -7396,6 +7569,22 @@ function renderOptimizerResults(candidates, sortBy, currentOBS) {
 
   html += '</tbody></table></div>';
   resultsEl.innerHTML = html;
+}
+
+// Fix 5: Apply target tension filter to optimizer results (client-side only)
+function _optApplyTensionFilter(value) {
+  window._optTargetTension = value;
+  // Re-render with existing candidates
+  if (_optLastCandidates && _optLastCandidates.length > 0) {
+    // Get current sort from active header
+    const sortBy = document.querySelector('.opt-th-active')?.textContent?.toLowerCase() || 'obs';
+    renderOptimizerResults(_optLastCandidates, sortBy, _optLastCurrentOBS || 0);
+  }
+}
+
+// Clear tension filter when running new optimization
+function _optClearTensionFilter() {
+  window._optTargetTension = '';
 }
 
 // --- Row action handlers ---
@@ -7892,6 +8081,7 @@ function initCompendium() {
   document.getElementById('comp-filter-pattern').addEventListener('change', _compRenderRoster);
   document.getElementById('comp-filter-stiffness').addEventListener('change', _compRenderRoster);
   document.getElementById('comp-filter-headsize').addEventListener('change', _compRenderRoster);
+  document.getElementById('comp-filter-weight').addEventListener('change', _compRenderRoster);
 
   // Auto-select first frame
   if (RACQUETS.length > 0) {
@@ -7918,6 +8108,7 @@ function _compGetFilteredRacquets() {
   const pattern = document.getElementById('comp-filter-pattern').value;
   const stiffness = document.getElementById('comp-filter-stiffness').value;
   const headsize = document.getElementById('comp-filter-headsize').value;
+  const weight = document.getElementById('comp-filter-weight').value;
 
   return RACQUETS.filter(r => {
     if (search && !r.name.toLowerCase().includes(search)) return false;
@@ -7928,6 +8119,12 @@ function _compGetFilteredRacquets() {
     if (stiffness === 'stiff' && r.stiffness < 66) return false;
     if (headsize === '102' && r.headSize < 102) return false;
     if (headsize && headsize !== '102' && r.headSize !== parseInt(headsize)) return false;
+    // Fix 4: Weight filter (strungWeight in grams)
+    if (weight === 'ultralight' && r.strungWeight >= 285) return false;
+    if (weight === 'light' && (r.strungWeight < 285 || r.strungWeight > 305)) return false;
+    if (weight === 'medium' && (r.strungWeight < 305 || r.strungWeight > 320)) return false;
+    if (weight === 'heavy' && (r.strungWeight < 320 || r.strungWeight > 340)) return false;
+    if (weight === 'tour' && r.strungWeight <= 340) return false;
     return true;
   });
 }
@@ -8685,7 +8882,12 @@ function _cfBuildLoadout() {
 function _cfActivate() {
   var isFirstLoadout = !activeLoadout && savedLoadouts.length === 0;
   var lo = _cfBuildLoadout();
-  if (!lo) return;
+  if (!lo) {
+    _cfHighlightMissingFields();
+    return;
+  }
+  // Clear any previous error states on successful build
+  _cfClearFieldErrors();
 
   _cfCreatingNew = false;
   activateLoadout(lo);
@@ -8698,9 +8900,87 @@ function _cfActivate() {
   }
 }
 
+// Fix 1: Highlight missing fields in create form when Set Active fails
+function _cfHighlightMissingFields() {
+  var form = document.querySelector('.dock-cf-form');
+  if (!form) return;
+
+  var body = form.querySelector('.dock-cf-body');
+  var isHybrid = body && body.dataset.cfHybrid === 'true';
+
+  // Clear previous errors first
+  _cfClearFieldErrors();
+
+  if (isHybrid) {
+    // Hybrid mode: check frame, mains, crosses
+    var hFrame = document.getElementById('dock-cf-h-frame');
+    var mains = document.getElementById('dock-cf-mains');
+    var crosses = document.getElementById('dock-cf-crosses');
+
+    if (!hFrame || !hFrame.value) _cfShowFieldError('dock-cf-h-frame-search', 'Frame is required');
+    if (!mains || !mains.value) _cfShowFieldError('dock-cf-mains-search', 'Select a string from the dropdown');
+    if (!crosses || !crosses.value) _cfShowFieldError('dock-cf-crosses-search', 'Select a string from the dropdown');
+  } else {
+    // Full bed mode: check frame, string
+    var frame = document.getElementById('dock-cf-frame');
+    var string = document.getElementById('dock-cf-string');
+
+    if (!frame || !frame.value) _cfShowFieldError('dock-cf-frame-search', 'Frame is required');
+    if (!string || !string.value) {
+      // Check if user typed something but didn't select
+      var stringSearch = document.getElementById('dock-cf-string-search');
+      if (stringSearch && stringSearch.value.trim()) {
+        _cfShowFieldError('dock-cf-string-search', 'Select a string from the dropdown');
+      } else {
+        _cfShowFieldError('dock-cf-string-search', 'String is required');
+      }
+    }
+  }
+}
+
+function _cfShowFieldError(inputId, message) {
+  var input = document.getElementById(inputId);
+  if (!input) return;
+
+  // Add error class to the searchable wrapper
+  var wrapper = input.closest('.dock-qa-searchable');
+  if (wrapper) wrapper.classList.add('ss-invalid');
+
+  // Add error class to input itself
+  input.classList.add('ss-invalid');
+
+  // Add or update error message
+  var field = input.closest('.dock-qa-field');
+  if (field) {
+    var existingError = field.querySelector('.ss-field-error');
+    if (!existingError) {
+      var errorDiv = document.createElement('div');
+      errorDiv.className = 'ss-field-error';
+      errorDiv.textContent = message;
+      field.appendChild(errorDiv);
+    }
+  }
+}
+
+function _cfClearFieldErrors() {
+  // Remove error classes from all inputs and wrappers
+  document.querySelectorAll('.dock-cf-form .ss-invalid').forEach(function(el) {
+    el.classList.remove('ss-invalid');
+  });
+  // Remove error messages
+  document.querySelectorAll('.dock-cf-form .ss-field-error').forEach(function(el) {
+    el.remove();
+  });
+}
+
 function _cfSave() {
   var lo = _cfBuildLoadout();
-  if (!lo) return;
+  if (!lo) {
+    _cfHighlightMissingFields();
+    return;
+  }
+  // Clear any previous error states on successful build
+  _cfClearFieldErrors();
 
   _cfCreatingNew = false;
   saveLoadout(lo);

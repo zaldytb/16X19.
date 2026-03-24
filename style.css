@@ -2311,6 +2311,39 @@ body {
 }
 .compare-ed-done:hover { background: #0284C7; }
 
+/* Fix 2: Quick Load from My Loadouts dropdown in compare slot editor */
+.compare-ed-quickload {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px dashed var(--border-subtle);
+  margin-bottom: var(--space-1);
+}
+
+.compare-ed-quickload-select {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 0.78rem;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 24px;
+}
+
+.compare-ed-quickload-select:focus {
+  border-color: var(--fn);
+  outline: none;
+}
+
 /* Empty state */
 .compare-empty-state {
   text-align: center;
@@ -5031,6 +5064,21 @@ body {
   overflow: visible;
 }
 
+/* Fix 1: Invalid/Error state for searchable selects */
+.searchable-select.ss-invalid .ss-trigger,
+.dock-qa-search.ss-invalid {
+  border-color: var(--red) !important;
+  box-shadow: 0 0 0 2px var(--red-dim) !important;
+}
+
+.ss-field-error {
+  color: var(--red);
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-top: 6px;
+  padding-left: 2px;
+}
+
 /* Gauge select (interactive dropdown, populated from string selection) */
 .gauge-select {
   width: 100%;
@@ -5490,6 +5538,66 @@ body {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   background: var(--bg-card);
+}
+
+/* Fix 5: Target tension filter */
+.opt-tension-filter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-2);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.opt-tension-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.opt-tension-input {
+  width: 60px;
+  padding: 4px 8px;
+  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
+
+.opt-tension-input:focus {
+  border-color: var(--fn);
+  outline: none;
+}
+
+.opt-tension-hint {
+  font-size: 0.68rem;
+  color: var(--text-faint);
+}
+
+.opt-tension-clear {
+  margin-left: auto;
+  padding: 3px 10px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--dur-fast);
+}
+
+.opt-tension-clear:hover {
+  color: var(--text-primary);
+  background: var(--border-subtle);
 }
 
 .opt-table {
@@ -7228,16 +7336,37 @@ body {
   background: var(--bg-card);
   color: var(--text-secondary);
   cursor: pointer;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 150px;
+  max-width: 180px;
   transition: border-color var(--dur-fast), color var(--dur-fast);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  line-height: 1.2;
 }
 
 .dock-compare-pill:hover {
   border-color: var(--fn);
   color: var(--fn);
+}
+
+.dock-compare-pill-frame {
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.dock-compare-pill-string {
+  font-weight: 500;
+  color: var(--text-muted);
+  font-size: 0.62rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 /* ============================================
@@ -7305,18 +7434,37 @@ body {
 }
 .dock-myl-item-info {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
 }
-.dock-myl-item-name {
+/* Fix 6: Two-line layout with full frame name and string name */
+.dock-myl-item-frame {
   font-size: 12px;
   font-weight: 600;
   color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.3;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+.dock-myl-item-string {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  line-height: 1.3;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
 }
 .dock-myl-item-meta {
   font-size: 10px;
   color: var(--text-muted);
+  white-space: nowrap;
+}
+/* Legacy class for backward compat */
+.dock-myl-item-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

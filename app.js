@@ -3522,9 +3522,6 @@ function renderOverviewHero(racquet, stringConfig, stats, identity) {
   const el = $('#overview-hero');
   const tensionCtx = buildTensionContext(stringConfig, racquet);
   const score = computeCompositeScore(stats, tensionCtx);
-  const pct = Math.min(score / 100, 1);
-  const circumference = 2 * Math.PI * 42;
-  const dashOffset = circumference * (1 - pct);
   const tier = getObsTier(score);
 
   // String name for meta line
@@ -3536,29 +3533,20 @@ function renderOverviewHero(racquet, stringConfig, stats, identity) {
   }
   const tensionLabel = `M${stringConfig.mainsTension} / X${stringConfig.crossesTension}`;
 
-  // Tags
-  const tags = (identity.tags || []).map(t => `<span class="hero-tag">${t}</span>`).join('');
+  // Check if S-Rank for special styling
+  const tierClass = tier.label === 'S Rank' ? 's-rank' : '';
 
   el.innerHTML = `
     <div class="hero-score">
-      <div class="hero-obs-ring">
-        <svg viewBox="0 0 100 100">
-          <circle class="ring-bg" cx="50" cy="50" r="42" />
-          <circle class="ring-fill" cx="50" cy="50" r="42"
-            stroke-dasharray="${circumference.toFixed(1)}"
-            stroke-dashoffset="${dashOffset.toFixed(1)}"
-            style="stroke:${getObsRingColor()}" />
-        </svg>
-        <span class="hero-obs-value" style="color:${getObsScoreColor(score)}">${score.toFixed(1)}</span>
-      </div>
-      <div class="hero-obs-tier">${tier.label}</div>
+      <span class="hero-obs-label">System Sync Rating</span>
+      <span class="hero-obs-value">${score.toFixed(1)}</span>
+      <span class="hero-obs-tier ${tierClass}">${tier.label}</span>
     </div>
     <div class="hero-identity">
       <div class="hero-archetype">${identity.archetype}</div>
       <div class="hero-desc">${identity.description}</div>
-      <div class="hero-tags">${tags}</div>
-      <div class="hero-meta">
-        ${racquet.name} <span class="hero-sep">·</span> ${stringName} <span class="hero-sep">·</span> ${tensionLabel}
+      <div class="hero-terminal">
+        <span class="hero-terminal-value">${racquet.name}</span><span class="hero-terminal-sep">//</span><span class="hero-terminal-value">${stringName}</span><span class="hero-terminal-sep">//</span><span class="hero-terminal-value">${tensionLabel}</span>
       </div>
     </div>
   `;

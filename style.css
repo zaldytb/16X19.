@@ -25,6 +25,11 @@
   --dc-red-fill: rgba(175, 0, 0, 0.08);
   --dc-red-line: rgba(175, 0, 0, 0.7);
   
+  /* ═══ SWEEP CHART COLORS — Strictly for data viz ═══ */
+  --dc-volt: #CCFF00;
+  --dc-amber: #C8A87C;
+  --dc-lavender: #A78BFA;
+  
   /* ═══ STATUS — Reserved for validation only ═══ */
   --dc-err: #AF0000;
   --dc-warn: #D4A843;
@@ -4211,6 +4216,30 @@ body {
   margin: 0;
 }
 
+/* 10-segment battery indicator */
+.obs-battery {
+  display: flex;
+  gap: 3px;
+  width: 100%;
+  height: 8px;
+  margin: var(--space-3) 0;
+}
+
+.obs-battery-seg {
+  flex: 1;
+  height: 100%;
+  background: rgba(255,255,255,0.06);
+  border-radius: 1px;
+}
+
+.obs-battery-filled {
+  background: var(--dc-platinum);
+}
+
+.obs-battery-top.obs-battery-filled {
+  background: var(--dc-red);
+}
+
 /* Bar track */
 .obs-bar-wrapper {
   position: relative;
@@ -6062,6 +6091,13 @@ body {
   box-shadow: 0 4px 16px rgba(0,0,0,0.15);
 }
 
+/* Light mode gauge explorer current cell */
+[data-theme="light"] .gauge-explore-col-header.gauge-current {
+  background: var(--dc-active-bg);
+  border-color: var(--dc-active-bg);
+  color: var(--dc-active-text);
+}
+
 /* ============================================
    ANIMATIONS & KEYFRAMES
    ============================================ */
@@ -7863,8 +7899,9 @@ textarea:focus-visible {
 .slider-label-min,
 .slider-label-max {
   font-family: var(--dc-font-mono);
-  font-size: 0.65rem;
-  color: var(--dc-storm);
+  font-size: 13px;
+  font-weight: var(--dc-weight-medium);
+  color: var(--dc-white);
 }
 
 .slider-track {
@@ -8019,8 +8056,8 @@ textarea:focus-visible {
 
 .slider-current-value {
   font-family: var(--dc-font-mono);
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 1.25rem;
+  font-weight: var(--dc-weight-semibold);
   color: var(--dc-white);
   line-height: 1;
 }

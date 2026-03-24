@@ -5554,14 +5554,12 @@ function renderSweepChart(setup) {
   const tensions = data.map(d => d.tension);
   const isDark = document.documentElement.dataset.theme === 'dark';
 
-  // Digicraft Brutalism — Artful Red primary, clean lines for others
+  // Digicraft Brutalism — Four distinct colors for sweep chart data viz
   const curveColors = {
-    // Primary: Control gets the red accent with barely visible fill
-    control: { border: '#AF0000', bg: 'rgba(175, 0, 0, 0.03)' },
-    // Others: platinum lines only, no fill
-    comfort: { border: 'rgba(220, 223, 226, 0.4)', bg: 'transparent' },
-    spin:    { border: 'rgba(220, 223, 226, 0.25)', bg: 'transparent' },
-    power:   { border: 'rgba(220, 223, 226, 0.15)', bg: 'transparent' }
+    control: { border: '#AF0000', fill: 'rgba(175, 0, 0, 0.06)' },    // Artful Red
+    spin:    { border: '#CCFF00', fill: 'rgba(204, 255, 0, 0.04)' },  // Volt
+    power:   { border: '#C8A87C', fill: 'rgba(200, 168, 124, 0.05)' },// Amber
+    comfort: { border: '#A78BFA', fill: 'rgba(167, 139, 250, 0.05)' } // Lavender
   };
 
   const datasets = [
@@ -5569,23 +5567,11 @@ function renderSweepChart(setup) {
       label: 'Control',
       data: data.map(d => d.stats.control),
       borderColor: curveColors.control.border,
-      backgroundColor: curveColors.control.bg,
+      backgroundColor: curveColors.control.fill,
       fill: true,
       tension: 0.3,
       borderWidth: 2.5,
-      pointRadius: 0,
-      pointHoverRadius: 0,
-      pointStyle: false,
-      pointHitRadius: 8
-    },
-    {
-      label: 'Comfort',
-      data: data.map(d => d.stats.comfort),
-      borderColor: curveColors.comfort.border,
-      backgroundColor: curveColors.comfort.bg,
-      fill: false,
-      tension: 0.3,
-      borderWidth: 1.5,
+      borderDash: [],
       pointRadius: 0,
       pointHoverRadius: 0,
       pointStyle: false,
@@ -5595,10 +5581,11 @@ function renderSweepChart(setup) {
       label: 'Spin',
       data: data.map(d => d.stats.spin),
       borderColor: curveColors.spin.border,
-      backgroundColor: curveColors.spin.bg,
-      fill: false,
+      backgroundColor: curveColors.spin.fill,
+      fill: true,
       tension: 0.3,
-      borderWidth: 1.5,
+      borderWidth: 2,
+      borderDash: [],
       pointRadius: 0,
       pointHoverRadius: 0,
       pointStyle: false,
@@ -5608,11 +5595,25 @@ function renderSweepChart(setup) {
       label: 'Power',
       data: data.map(d => d.stats.power),
       borderColor: curveColors.power.border,
-      backgroundColor: curveColors.power.bg,
-      fill: false,
+      backgroundColor: curveColors.power.fill,
+      fill: true,
       tension: 0.3,
-      borderWidth: 1.5,
-      borderDash: [4, 3],
+      borderWidth: 2,
+      borderDash: [],
+      pointRadius: 0,
+      pointHoverRadius: 0,
+      pointStyle: false,
+      pointHitRadius: 8
+    },
+    {
+      label: 'Comfort',
+      data: data.map(d => d.stats.comfort),
+      borderColor: curveColors.comfort.border,
+      backgroundColor: curveColors.comfort.fill,
+      fill: true,
+      tension: 0.3,
+      borderWidth: 2,
+      borderDash: [],
       pointRadius: 0,
       pointHoverRadius: 0,
       pointStyle: false,
@@ -5720,15 +5721,16 @@ function renderSweepChart(setup) {
           }
         },
         tooltip: {
-          backgroundColor: isDark ? 'rgba(20,20,20,0.95)' : 'rgba(255,255,255,0.95)',
-          titleColor: isDark ? '#fff' : '#1a1a1a',
-          bodyColor: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)',
-          borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
-          borderWidth: 1,
-          titleFont: { family: "'JetBrains Mono', monospace", size: 12, weight: 600 },
-          bodyFont: { family: "'Inter', sans-serif", size: 11 },
+          backgroundColor: '#1A1A1A',
+          borderColor: 'rgba(255,255,255,0.08)',
+          borderWidth: 0.5,
+          titleColor: '#F0F2F4',
+          titleFont: { family: "'JetBrains Mono', monospace", size: 11, weight: 600 },
+          bodyColor: '#DCDFE2',
+          bodyFont: { family: "'JetBrains Mono', monospace", size: 10 },
+          cornerRadius: 4,
           padding: 10,
-          cornerRadius: 6,
+          displayColors: true,
           callbacks: {
             title: (items) => `${items[0].label} lbs`,
             label: (item) => `  ${item.dataset.label}: ${item.raw}`
@@ -5908,22 +5910,17 @@ function renderOverallBuildScore(setup, animate) {
     }
   }
 
-  // Zone divider lines on the bar
-  const zoneLines = OBS_TIERS.slice(1).map(t => 
-    `<div class="obs-zone-line" style="left: ${t.min}%"></div>`
-  ).join('');
-
-  // Ladder shows only tier indicators (dots), not full labels
-  // The full tier label is shown in the obs-rank-badge only
-  const ladderLabels = OBS_TIERS.map((t, i) => {
-    const centerPct = (t.min + t.max) / 2;
-    const clampedPct = Math.max(8, Math.min(92, centerPct));
-    const isActive = score >= t.min && (score < t.max || (t.max === 100 && score >= t.min));
-    const row = i % 2 === 0 ? 'obs-ladder-row-top' : 'obs-ladder-row-bot';
-    // Only show a dot indicator, not the full label
-    const indicator = isActive ? '•' : '';
-    return `<span class="obs-ladder-label ${row} ${isActive ? 'obs-ladder-active' : ''}" style="left: ${clampedPct}%" data-tier="${t.label}">${indicator}</span>`;
-  }).join('');
+  // 10-segment battery indicator
+  const segments = 10;
+  const filled = Math.min(segments, Math.max(0, Math.ceil(score / 10)));
+  let batteryHTML = '<div class="obs-battery">';
+  for (let i = 0; i < segments; i++) {
+    const isFilled = i < filled;
+    const isTopTier = i >= 8; // Top 2 segments (80-100) get red when filled
+    const segClass = isFilled ? (isTopTier ? 'obs-battery-seg obs-battery-filled obs-battery-top' : 'obs-battery-seg obs-battery-filled') : 'obs-battery-seg';
+    batteryHTML += `<div class="${segClass}"></div>`;
+  }
+  batteryHTML += '</div>';
 
   container.innerHTML = `
     <div class="obs-top-row">
@@ -5934,13 +5931,7 @@ function renderOverallBuildScore(setup, animate) {
       </div>
       <span class="obs-rank-badge" style="${getObsBadgeStyle(score)}">${tier.label}</span>
     </div>
-    <div class="obs-bar-wrapper">
-      <div class="obs-bar-track">
-        <div class="obs-marker" style="left: ${Math.max(1, Math.min(99, pct))}%"></div>
-      </div>
-      <div class="obs-bar-zones">${zoneLines}</div>
-      <div class="obs-ladder">${ladderLabels}</div>
-    </div>
+    ${batteryHTML}
     <p class="obs-subtitle">Composite score · rank ladder</p>
   `;
 

@@ -27,6 +27,7 @@
           'dc-white': '#F0F2F4',
           'dc-accent': '#FF4500',
           'dc-red': '#AF0000',
+          'dc-border': 'rgba(150, 150, 150, 0.15)',
         },
         fontFamily: {
           sans: ['Inter', '-apple-system', 'system-ui', 'sans-serif'],
@@ -861,32 +862,32 @@
         <!-- Tab Content: Rackets -->
         <div class="comp-tab-panel" id="comp-tab-rackets">
           <!-- Query HUD Overlay -->
-          <div class="comp-hud" id="comp-hud">
-            <button class="comp-hud-close" onclick="_compToggleHud()">×</button>
-            <input type="text" class="comp-hud-search" id="comp-search" placeholder="Search frames...">
-            <div class="comp-hud-filters">
-              <select id="comp-filter-brand" class="comp-filter-select"><option value="">All Brands</option></select>
-              <select id="comp-filter-pattern" class="comp-filter-select">
+          <div class="fixed inset-0 z-[100] opacity-0 invisible pointer-events-none transition-all duration-300 flex flex-col p-8 md:p-16 bg-dc-void/95 backdrop-blur-none [&.active]:opacity-100 [&.active]:visible [&.active]:pointer-events-auto [&.active]:backdrop-blur-xl" id="comp-hud">
+            <button class="absolute top-6 right-6 bg-transparent border-none text-dc-platinum-dim hover:text-dc-platinum text-4xl cursor-pointer z-[110] transition-colors" onclick="_compToggleHud()">×</button>
+            <input type="text" class="w-full bg-transparent border-0 border-b-2 border-dc-storm focus:border-dc-accent font-mono text-2xl md:text-4xl tracking-tight text-dc-void dark:text-dc-platinum pb-4 mb-8 outline-none transition-colors placeholder:text-dc-storm/50" id="comp-search" placeholder="Search frames...">
+            <div class="flex gap-4 flex-wrap mb-8">
+              <select id="comp-filter-brand" class="bg-transparent border border-dc-platinum-dim text-dc-void dark:text-dc-platinum font-mono text-xs px-3 py-2 cursor-pointer hover:border-dc-platinum transition-colors focus:outline-none focus:border-dc-accent"><option value="">All Brands</option></select>
+              <select id="comp-filter-pattern" class="bg-transparent border border-dc-platinum-dim text-dc-void dark:text-dc-platinum font-mono text-xs px-3 py-2 cursor-pointer hover:border-dc-platinum transition-colors focus:outline-none focus:border-dc-accent">
                 <option value="">All Patterns</option>
                 <option value="16x19">16x19</option>
                 <option value="18x20">18x20</option>
                 <option value="16x20">16x20</option>
                 <option value="16x18">16x18</option>
               </select>
-              <select id="comp-filter-stiffness" class="comp-filter-select">
+              <select id="comp-filter-stiffness" class="bg-transparent border border-dc-platinum-dim text-dc-void dark:text-dc-platinum font-mono text-xs px-3 py-2 cursor-pointer hover:border-dc-platinum transition-colors focus:outline-none focus:border-dc-accent">
                 <option value="">All Stiffness</option>
                 <option value="soft">Soft (&le;59)</option>
                 <option value="medium">Medium (60&ndash;65)</option>
                 <option value="stiff">Stiff (66+)</option>
               </select>
-              <select id="comp-filter-headsize" class="comp-filter-select">
+              <select id="comp-filter-headsize" class="bg-transparent border border-dc-platinum-dim text-dc-void dark:text-dc-platinum font-mono text-xs px-3 py-2 cursor-pointer hover:border-dc-platinum transition-colors focus:outline-none focus:border-dc-accent">
                 <option value="">All Head Sizes</option>
                 <option value="97">97</option>
                 <option value="98">98</option>
                 <option value="100">100</option>
                 <option value="102">102+</option>
               </select>
-              <select id="comp-filter-weight" class="comp-filter-select">
+              <select id="comp-filter-weight" class="bg-transparent border border-dc-platinum-dim text-dc-void dark:text-dc-platinum font-mono text-xs px-3 py-2 cursor-pointer hover:border-dc-platinum transition-colors focus:outline-none focus:border-dc-accent">
                 <option value="">All Weights</option>
                 <option value="ultralight">< 285g (Ultra-Light)</option>
                 <option value="light">285-305g (Light)</option>
@@ -895,7 +896,7 @@
                 <option value="tour">> 340g (Tour)</option>
               </select>
             </div>
-            <div class="comp-hud-grid" id="comp-frame-list"></div>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 overflow-y-auto flex-1 pr-4" id="comp-frame-list"></div>
           </div>
           
           <!-- Main Content (full-bleed) -->

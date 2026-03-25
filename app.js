@@ -7053,7 +7053,7 @@ function _landingSelectFrame(racquetId) {
 
   // Also scroll the roster to highlight
   setTimeout(function() {
-    var item = document.querySelector('.comp-frame-item[data-id="' + racquetId + '"]');
+    var item = document.querySelector('#comp-frame-list > button[data-id="' + racquetId + '"]');
     if (item) item.scrollIntoView({ block: 'center' });
   }, 100);
 
@@ -8295,14 +8295,18 @@ function _compRenderRoster() {
   list.innerHTML = racquets.map(r => {
     const isActive = r.id === _compSelectedRacquetId;
     const specs = `${r.strungWeight}g · ${r.stiffness} RA · ${r.pattern}`;
-    return `<button class="comp-frame-item${isActive ? ' active' : ''}" data-id="${r.id}" onclick="_compSelectFrame('${r.id}')">
-      <div class="comp-frame-row-top">
-        <span class="comp-frame-name">${r.name}</span>
-        <span class="comp-frame-year">${r.year}</span>
+    const baseClasses = "bg-transparent border text-left flex flex-col justify-between gap-6 transition-all duration-200 cursor-pointer p-5";
+    const borderClasses = isActive 
+      ? "border-dc-accent" 
+      : "border-dc-platinum-dim hover:border-dc-platinum";
+    return `<button class="${baseClasses} ${borderClasses}" data-id="${r.id}" onclick="_compSelectFrame('${r.id}')">
+      <div class="flex justify-between items-start gap-2">
+        <span class="text-lg font-semibold leading-tight tracking-tight text-dc-void dark:text-dc-platinum">${r.name}</span>
+        <span class="font-mono text-[9px] tracking-[0.15em] text-dc-platinum-dim mt-1">${r.year}</span>
       </div>
-      <div class="comp-frame-row-bot">
-        <span class="comp-frame-identity">${r.identity || r.pattern}</span>
-        <span class="comp-frame-specs">${specs}</span>
+      <div class="flex flex-col gap-1">
+        <span class="font-mono text-[9px] uppercase tracking-[0.15em] text-dc-accent">${r.identity || r.pattern}</span>
+        <span class="font-mono text-[11px] font-semibold text-dc-void dark:text-dc-platinum">${specs}</span>
       </div>
     </button>`;
   }).join('');
@@ -8320,9 +8324,11 @@ function _compSelectFrame(racquetId) {
   const racquet = RACQUETS.find(r => r.id === racquetId);
   if (!racquet) return;
 
-  // Highlight in roster
-  document.querySelectorAll('.comp-frame-item').forEach(el => {
-    el.classList.toggle('active', el.dataset.id === racquetId);
+  // Highlight in roster (Tailwind class injection)
+  document.querySelectorAll('#comp-frame-list > button').forEach(el => {
+    const isActive = el.dataset.id === racquetId;
+    el.classList.remove('border-dc-accent', 'border-dc-platinum-dim');
+    el.classList.add(isActive ? 'border-dc-accent' : 'border-dc-platinum-dim');
   });
 
   // Transition: fade out → render → fade in
@@ -8357,55 +8363,53 @@ function _compRenderMain(racquet) {
   });
   _compCurrentBuilds = sorted; // store for index-based action handlers
 
-  // Generate hero console output
+  // Generate hero console output (Tailwind)
   const pills = _compGenerateHeroPills(frameBase, racquet);
   const consoleHtml = [];
-  if (pills.bestFor.length > 0) {
-    consoleHtml.push(...pills.bestFor.map(p => `<span class="comp-console-item positive">[+] ${p}</span>`));
-  }
-  if (pills.watchOut.length > 0) {
-    consoleHtml.push(...pills.watchOut.map(p => `<span class="comp-console-item negative">[-] ${p}</span>`));
-  }
+  pills.bestFor.forEach(p => consoleHtml.push(`<span class="font-mono text-[13px] font-bold tracking-[0.05em] uppercase text-dc-void dark:text-dc-platinum">[+] ${p.toUpperCase()}</span>`));
+  pills.watchOut.forEach(p => consoleHtml.push(`<span class="font-mono text-[13px] font-bold tracking-[0.05em] uppercase text-dc-red">[-] ${p.toUpperCase()}</span>`));
 
-  // Grouped stat bars
-  const statGroups = {
-    attack: ['spin', 'power', 'launch'],
-    defense: ['control', 'stability', 'forgiveness'],
-    touch: ['feel', 'comfort', 'maneuverability']
-  };
-  const frameStatLabels = { 
-    spin: 'Spin', power: 'Power', control: 'Control', launch: 'Launch', 
-    feel: 'Feel', comfort: 'Comfort', stability: 'Stability', 
-    forgiveness: 'Forgiveness', maneuverability: 'Maneuverability' 
-  };
-  const groupTitles = { attack: 'Attack', defense: 'Defense', touch: 'Touch' };
+  // Generate Base Frame Profile Stats (Tailwind Battery UI with preview support)
+  let statsHtml = '<div class="flex flex-col gap-6">';
+  const statGroups = [
+    { title: 'Attack', stats: [ {id: 'spin', label: 'Spin'}, {id: 'power', label: 'Power'}, {id: 'launch', label: 'Launch'} ] },
+    { title: 'Defense', stats: [ {id: 'control', label: 'Control'}, {id: 'stability', label: 'Stability'}, {id: 'forgiveness', label: 'Forgiveness'} ] },
+    { title: 'Touch', stats: [ {id: 'feel', label: 'Feel'}, {id: 'comfort', label: 'Comfort'}, {id: 'maneuverability', label: 'Maneuverability'} ] }
+  ];
 
-  const statsHtml = Object.entries(statGroups).map(([group, keys]) => {
-    const rowsHtml = keys.map(k => {
-      const val = frameBase[k] != null ? Math.round(frameBase[k]) : 50;
-      const segments = 20; // 20 segments like OBS battery
-      const filledSegments = Math.round((val / 100) * segments);
-      // Generate segmented bar HTML
-      let segmentsHtml = '';
-      for (let i = 0; i < segments; i++) {
-        const segClass = i < filledSegments ? 'base' : 'empty';
-        segmentsHtml += `<div class="comp-stat-segment ${segClass}" data-seg="${i}"></div>`;
+  statGroups.forEach(g => {
+    statsHtml += `<div class="flex flex-col">
+      <h4 class="font-mono text-[9px] text-dc-storm uppercase tracking-[0.2em] border-b border-dc-border pb-2 mb-3">${g.title}</h4>
+      <div class="flex flex-col gap-2.5">`;
+    
+    g.stats.forEach(s => {
+      let val = Math.round(frameBase[s.id]);
+      let pct = Math.max(0, Math.min(100, val));
+      
+      // Battery segment generator (25 segments for preview granularity)
+      const totalSegments = 25;
+      const filledSegments = Math.round((pct / 100) * totalSegments);
+      
+      let batteryHtml = `<div class="flex flex-1 gap-[2px] h-1.5 items-center" id="comp-track-${s.id}" data-base="${val}">`;
+      for(let i = 0; i < totalSegments; i++) {
+        const bgClass = i < filledSegments 
+          ? 'bg-dc-void dark:bg-dc-platinum'
+          : 'bg-black/10 dark:bg-white/10';
+        
+        batteryHtml += `<div class="flex-1 h-full rounded-[1px] transition-colors duration-150 ${bgClass}" data-seg="${i}"></div>`;
       }
-      return `<div class="comp-stat-row" data-stat="${k}">
-        <span class="comp-stat-label">${frameStatLabels[k]}</span>
-        <div class="comp-stat-track" id="comp-track-${k}" data-base="${val}">
-          ${segmentsHtml}
-        </div>
-        <span class="comp-stat-val" id="comp-val-${k}">
-          <span class="comp-stat-val-base">${val}</span>
-        </span>
-      </div>`;
-    }).join('');
-    return `<div class="comp-stat-group">
-      <h4 class="comp-stat-group-title">${groupTitles[group]}</h4>
-      ${rowsHtml}
-    </div>`;
-  }).join('');
+      batteryHtml += '</div>';
+
+      statsHtml += `
+        <div class="flex items-center gap-4 group" data-stat="${s.id}">
+          <span class="font-mono text-[9px] text-dc-storm group-hover:text-dc-platinum transition-colors uppercase tracking-[0.15em] w-28">${s.label}</span>
+          ${batteryHtml}
+          <span class="font-mono text-[11px] font-bold text-dc-void dark:text-dc-platinum w-8 text-right" id="comp-val-${s.id}">${val}</span>
+        </div>`;
+    });
+    statsHtml += `</div></div>`;
+  });
+  statsHtml += '</div>';
 
   // Sort tabs
   const sortOptions = [
@@ -8416,61 +8420,70 @@ function _compRenderMain(racquet) {
     { key: 'comfort', label: 'Comfort' },
     { key: 'durability', label: 'Durability' }
   ];
-  const sortTabsHtml = sortOptions.map(s =>
-    `<button class="comp-sort-tab${_compSortKey === s.key ? ' active' : ''}" onclick="_compSetSort('${s.key}')">${s.label}</button>`
-  ).join('');
+  const sortTabsHtml = sortOptions.map(s => {
+    const isActive = _compSortKey === s.key;
+    const baseClasses = "font-mono text-[10px] uppercase tracking-[0.1em] pb-2 transition-colors";
+    const activeClasses = isActive 
+      ? "text-dc-accent border-b-2 border-dc-accent -mb-[9px] pb-[7px]" 
+      : "text-dc-storm hover:text-dc-platinum";
+    return `<button class="${baseClasses} ${activeClasses}" onclick="_compSetSort('${s.key}')">${s.label}</button>`;
+  }).join('');
 
   // Build cards - pass frameBase for reason generation
   const cardsHtml = sorted.map((b, i) => _compRenderBuildCard(b, i, racquet, frameBase)).join('');
 
   main.innerHTML = `
     <!-- Hero Block -->
-    <div class="comp-hero">
-      <div class="comp-hero-weight">
-        <span class="comp-hero-weight-num">${racquet.strungWeight}</span>
+    <div class="relative flex flex-col items-start mb-8">
+      
+      <div class="absolute top-6 right-6 md:top-8 md:right-8 flex flex-col items-end">
+        <span class="font-mono text-[9px] text-dc-storm tracking-[0.2em] mb-1">STRUNG WGHT</span>
+        <span class="font-mono text-5xl font-semibold leading-[0.85] text-dc-void dark:text-dc-platinum">
+          ${racquet.strungWeight}<span class="text-xl text-dc-storm ml-1">g</span>
+        </span>
       </div>
       
-      <h2 class="comp-hero-name" onclick="_compToggleHud()">
+      <h2 class="text-5xl md:text-[4rem] font-semibold tracking-tight text-dc-void dark:text-dc-platinum leading-none mb-0 pr-[120px] flex items-center gap-3 cursor-pointer group" onclick="_compToggleHud()">
         ${racquet.name}
-        <span class="hud-trigger">▼</span>
+        <span class="text-2xl text-dc-red opacity-50 group-hover:opacity-100 transition-opacity">▼</span>
       </h2>
       
-      <div class="comp-hero-meta">
-        <span class="comp-hero-year">${racquet.year}</span>
-        <span class="comp-hero-divider">//</span>
-        <span class="comp-hero-identity">${racquet.identity || ''}</span>
+      <div class="flex items-center gap-2 mt-4 font-mono text-[11px] flex-wrap">
+        <span class="text-dc-void dark:text-dc-platinum">${racquet.year}</span>
+        <span class="text-dc-accent opacity-60 text-[11px]">//</span>
+        <span class="text-dc-storm uppercase tracking-[0.15em]">${racquet.identity || ''}</span>
       </div>
       
-      ${racquet.notes ? `<p class="comp-hero-notes">${racquet.notes}</p>` : ''}
+      ${racquet.notes ? `<p class="max-w-[650px] mt-6 text-sm leading-relaxed text-dc-storm">${racquet.notes}</p>` : ''}
       
-      <div class="comp-hero-specs">
-        <div class="comp-hero-spec">
-          <span class="comp-hero-spec-val">${racquet.swingweight}</span>
-          <span class="comp-hero-spec-label">SWINGWEIGHT</span>
+      <div class="grid grid-cols-3 md:grid-cols-6 gap-8 w-full mt-12 pt-8 border-t border-dc-border">
+        <div class="flex flex-col-reverse gap-1.5">
+          <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${racquet.swingweight}</span>
+          <span class="font-mono text-[7px] text-dc-storm tracking-[0.3em] uppercase">SWINGWEIGHT</span>
         </div>
-        <div class="comp-hero-spec">
-          <span class="comp-hero-spec-val">${racquet.stiffness}</span>
-          <span class="comp-hero-spec-label">STIFFNESS</span>
+        <div class="flex flex-col-reverse gap-1.5">
+          <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${racquet.stiffness}</span>
+          <span class="font-mono text-[7px] text-dc-storm tracking-[0.3em] uppercase">STIFFNESS</span>
         </div>
-        <div class="comp-hero-spec">
-          <span class="comp-hero-spec-val">${racquet.pattern}</span>
-          <span class="comp-hero-spec-label">PATTERN</span>
+        <div class="flex flex-col-reverse gap-1.5">
+          <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${racquet.pattern}</span>
+          <span class="font-mono text-[7px] text-dc-storm tracking-[0.3em] uppercase">PATTERN</span>
         </div>
-        <div class="comp-hero-spec">
-          <span class="comp-hero-spec-val">${racquet.headSize}</span>
-          <span class="comp-hero-spec-label">HEAD SIZE</span>
+        <div class="flex flex-col-reverse gap-1.5">
+          <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${racquet.headSize}</span>
+          <span class="font-mono text-[7px] text-dc-storm tracking-[0.3em] uppercase">HEAD SIZE</span>
         </div>
-        <div class="comp-hero-spec">
-          <span class="comp-hero-spec-val">${racquet.balancePts}</span>
-          <span class="comp-hero-spec-label">BALANCE</span>
+        <div class="flex flex-col-reverse gap-1.5">
+          <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${racquet.balancePts}</span>
+          <span class="font-mono text-[7px] text-dc-storm tracking-[0.3em] uppercase">BALANCE</span>
         </div>
-        <div class="comp-hero-spec">
-          <span class="comp-hero-spec-val">${racquet.tensionRange[0]}–${racquet.tensionRange[1]}</span>
-          <span class="comp-hero-spec-label">TENSION</span>
+        <div class="flex flex-col-reverse gap-1.5">
+          <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${racquet.tensionRange[0]}–${racquet.tensionRange[1]}</span>
+          <span class="font-mono text-[7px] text-dc-storm tracking-[0.3em] uppercase">TENSION</span>
         </div>
       </div>
 
-      ${consoleHtml.length > 0 ? `<div class="comp-hero-console">${consoleHtml.join('')}</div>` : ''}
+      ${consoleHtml.length > 0 ? `<div class="flex flex-wrap gap-4 w-full mt-8 p-0">${consoleHtml.join('')}</div>` : ''}
     </div>
 
     <!-- String Modulator Panel -->
@@ -8516,20 +8529,17 @@ function _compRenderMain(racquet) {
       </div>
     </div>
 
-    <!-- Grouped Stats -->
-    <div class="comp-section">
-      <h3 class="comp-section-title">//BASE FRAME PROFILE</h3>
-      <p class="comp-section-sub">Frame-only characteristics before string influence</p>
-      
-      <!-- Stats First -->
-      <div class="comp-stats">${statsHtml}</div>
+    <div class="mb-12">
+      <h3 class="font-mono text-xs tracking-[0.15em] text-dc-void dark:text-dc-platinum uppercase mb-1">// BASE FRAME PROFILE</h3>
+      <p class="text-xs text-dc-storm mb-6 italic">Frame-only characteristics before string influence</p>
+      ${statsHtml}
     </div>
 
     <!-- Top Builds -->
-    <div class="comp-section">
-      <div class="comp-builds-header">
-        <h3 class="comp-section-title">//TOP BUILDS</h3>
-        <div class="comp-sort-tabs">${sortTabsHtml}</div>
+    <div class="mb-12">
+      <div class="flex items-center justify-between mb-4 pb-2 border-b border-dc-border/50">
+        <h3 class="font-mono text-xs tracking-[0.15em] text-dc-void dark:text-dc-platinum uppercase">//TOP BUILDS</h3>
+        <div class="flex gap-4 border-b border-transparent pb-0">${sortTabsHtml}</div>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">${cardsHtml}</div>
     </div>
@@ -8736,10 +8746,10 @@ function _compPreviewStats() {
   if (applyBtn) applyBtn.disabled = false;
 }
 
-// Render preview bars showing before/after (segmented battery style)
+// Render preview bars showing before/after (Tailwind battery style)
 function _compRenderPreviewBars(baseStats, previewStats) {
   const statKeys = ['spin', 'power', 'control', 'launch', 'feel', 'comfort', 'stability', 'forgiveness', 'maneuverability'];
-  const segments = 20;
+  const segments = 25;
   
   statKeys.forEach(k => {
     const baseVal = baseStats[k] != null ? Math.round(baseStats[k]) : 50;
@@ -8750,47 +8760,49 @@ function _compRenderPreviewBars(baseStats, previewStats) {
     const track = document.getElementById(`comp-track-${k}`);
     if (!track) return;
     
-    // Rebuild segments with preview state
+    // Rebuild segments with preview state (Tailwind classes)
     let segmentsHtml = '';
     for (let i = 0; i < segments; i++) {
-      let segClass = 'empty';
+      let bgClass = 'bg-black/10 dark:bg-white/10'; // empty
+      
       if (i < baseFilled) {
-        segClass = 'base'; // Black - base value
+        bgClass = 'bg-dc-void dark:bg-dc-platinum'; // base value
       }
       if (i < previewFilled && previewVal > baseVal) {
-        segClass = 'preview-up'; // Red - increased
+        bgClass = 'bg-dc-red'; // increased (red)
       } else if (i >= previewFilled && i < baseFilled && previewVal < baseVal) {
-        segClass = 'preview-down'; // Dark red - decreased
+        bgClass = 'bg-dc-red/40'; // decreased (dark red)
       }
-      segmentsHtml += `<div class="comp-stat-segment ${segClass}" data-seg="${i}"></div>`;
+      
+      segmentsHtml += `<div class="flex-1 h-full rounded-[1px] transition-colors duration-150 ${bgClass}" data-seg="${i}"></div>`;
     }
     track.innerHTML = segmentsHtml;
-    track.classList.add('has-preview');
+    track.dataset.hasPreview = 'true';
     
     // Update value display
     const valEl = document.getElementById(`comp-val-${k}`);
     if (valEl) {
       const diff = previewVal - baseVal;
-      let diffClass = 'comp-stat-val-same';
-      if (diff > 0) diffClass = 'comp-stat-val-up';
-      if (diff < 0) diffClass = 'comp-stat-val-down';
+      let diffColor = 'text-dc-storm';
+      if (diff > 0) diffColor = 'text-dc-red';
+      if (diff < 0) diffColor = 'text-dc-accent';
       
       valEl.innerHTML = `
-        <span class="comp-stat-val-base">${baseVal}</span>
-        <span class="comp-stat-val-arrow">→</span>
-        <span class="comp-stat-val-preview ${diffClass}">${previewVal}</span>
+        <span class="text-dc-storm">${baseVal}</span>
+        <span class="text-dc-storm mx-1">→</span>
+        <span class="${diffColor}">${previewVal}</span>
       `;
     }
   });
 }
 
-// Clear preview and reset to base stats
+// Clear preview and reset to base stats (Tailwind)
 function _compClearPreview() {
   const { baseStats } = _compInjectState;
   if (!baseStats) return;
   
   const statKeys = ['spin', 'power', 'control', 'launch', 'feel', 'comfort', 'stability', 'forgiveness', 'maneuverability'];
-  const segments = 20;
+  const segments = 25;
   
   statKeys.forEach(k => {
     const baseVal = baseStats[k] != null ? Math.round(baseStats[k]) : 50;
@@ -8798,18 +8810,20 @@ function _compClearPreview() {
     
     const track = document.getElementById(`comp-track-${k}`);
     if (track) {
-      // Reset to base segments only
+      // Reset to base segments only (Tailwind)
       let segmentsHtml = '';
       for (let i = 0; i < segments; i++) {
-        const segClass = i < baseFilled ? 'base' : 'empty';
-        segmentsHtml += `<div class="comp-stat-segment ${segClass}" data-seg="${i}"></div>`;
+        const bgClass = i < baseFilled 
+          ? 'bg-dc-void dark:bg-dc-platinum' 
+          : 'bg-black/10 dark:bg-white/10';
+        segmentsHtml += `<div class="flex-1 h-full rounded-[1px] transition-colors duration-150 ${bgClass}" data-seg="${i}"></div>`;
       }
       track.innerHTML = segmentsHtml;
-      track.classList.remove('has-preview');
+      delete track.dataset.hasPreview;
     }
     
     const valEl = document.getElementById(`comp-val-${k}`);
-    if (valEl) valEl.innerHTML = `<span class="comp-stat-val-base">${baseVal}</span>`;
+    if (valEl) valEl.innerHTML = `<span class="text-dc-void dark:text-dc-platinum">${baseVal}</span>`;
   });
   
   // Disable apply button

@@ -8509,9 +8509,9 @@ function _compRenderMain(racquet) {
         </div>
       </div>
       
-      <div class="comp-modulator-actions">
-        <button class="comp-card-btn comp-card-btn-primary" id="comp-inject-apply" disabled onclick="_compApplyInjection()">Apply</button>
-        <button class="comp-card-btn" onclick="_compClearInjection()">Clear</button>
+      <div class="flex gap-2 mt-4">
+        <button class="flex-1 font-mono text-mouse uppercase tracking-[0.05em] px-3 py-1 border border-dc-platinum bg-transparent text-dc-platinum hover:bg-dc-platinum hover:text-dc-void transition-colors disabled:opacity-40 disabled:cursor-not-allowed" id="comp-inject-apply" disabled onclick="_compApplyInjection()">Apply</button>
+        <button class="font-mono text-mouse uppercase tracking-[0.05em] px-3 py-1 border border-dc-storm bg-transparent text-dc-storm hover:border-dc-platinum hover:text-dc-platinum transition-colors" onclick="_compClearInjection()">Clear</button>
       </div>
     </div>
 
@@ -8530,7 +8530,7 @@ function _compRenderMain(racquet) {
         <h3 class="comp-section-title">//TOP BUILDS</h3>
         <div class="comp-sort-tabs">${sortTabsHtml}</div>
       </div>
-      <div class="comp-build-grid">${cardsHtml}</div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">${cardsHtml}</div>
     </div>
   `;
   
@@ -8980,51 +8980,68 @@ const _compArchetypeColors = {
 };
 
 function _compRenderBuildCard(build, index, racquet, frameStats) {
-  const s = build.stats;
-  const obsStyle = getObsBadgeStyle(build.score);
+  const isFeatured = index === 0;
+  
+  // Tightened padding from p-6 to p-5
+  const cardClasses = isFeatured 
+    ? "relative bg-transparent border border-dc-accent shadow-[0_0_15px_rgba(255,69,0,0.05)] p-5 flex flex-col transition-colors duration-200 col-span-full"
+    : "relative bg-transparent border border-dc-storm/30 hover:border-dc-storm p-5 flex flex-col transition-colors duration-200";
+
+  // Scaled down badge
+  const badgeHtml = isFeatured 
+    ? `<div class="absolute -top-[1px] -left-[1px] bg-dc-accent text-dc-void font-mono text-[8px] font-bold uppercase tracking-widest px-2 py-0.5">BEST OVERALL</div>` 
+    : '';
+
+  // Tighter margins for reason
+  const reasonHtml = isFeatured && frameStats
+    ? `<div class="text-xs text-dc-void/80 dark:text-dc-platinum/90 mb-4 pl-3 border-l-2 border-dc-storm italic">${_compGenerateBuildReason(build, frameStats)}</div>`
+    : '';
+
+  // Build string label and meta
   const isHybrid = build.type === 'hybrid';
   const stringLabel = isHybrid ? (build.label || build.string.name) : build.string.name;
   const metaLabel = isHybrid ? `Hybrid · M:${build.tension} / X:${build.crossesTension}` : `Full Bed · ${build.tension} lbs`;
-  const isFeatured = index === 0;
+  const s = build.stats;
 
-  // Top 3 differentiated stats for terminal display (Elephant & Mouse)
+  // Compressed terminal stats - top 3 only
   const statEntries = [
-    { key: 'spin', label: 'SPIN', val: Math.round(s.spin) },
-    { key: 'power', label: 'PWR', val: Math.round(s.power) },
-    { key: 'control', label: 'CTRL', val: Math.round(s.control) },
-    { key: 'comfort', label: 'CMF', val: Math.round(s.comfort) },
-    { key: 'feel', label: 'FEEL', val: Math.round(s.feel) },
-    { key: 'durability', label: 'DUR', val: Math.round(s.durability) }
-  ].sort((a, b) => b.val - a.val);
-  const topStats = statEntries.slice(0, 3);
-  // Terminal string format: [SPIN <b>78</b>]
-  const statsInline = topStats.map(st =>
-    `<span class="comp-card-stat-term">[${st.label} <b>${st.val}</b>]</span>`
+    { key: 'SPIN', val: Math.round(s.spin) },
+    { key: 'PWR', val: Math.round(s.power) },
+    { key: 'CTRL', val: Math.round(s.control) },
+    { key: 'CMF', val: Math.round(s.comfort) },
+    { key: 'FEEL', val: Math.round(s.feel) },
+    { key: 'DUR', val: Math.round(s.durability) }
+  ].sort((a, b) => b.val - a.val).slice(0, 3);
+
+  const statsHtml = statEntries.map(st => 
+    `<span class="font-mono text-[9px] text-dc-storm tracking-widest">[${st.key} <b class="text-xs text-dc-void dark:text-dc-platinum font-semibold ml-0.5">${st.val}</b>]</span>`
   ).join('');
 
-  // Featured card gets badge and reason text
-  const badgeHtml = isFeatured ? '<div class="comp-card-badge">BEST OVERALL</div>' : '';
-  const reasonHtml = isFeatured && frameStats ? 
-    `<div class="comp-card-reason">${_compGenerateBuildReason(build, frameStats)}</div>` : '';
-  const cardClass = isFeatured ? 'comp-build-card comp-build-featured' : 'comp-build-card';
+  return `
+    <div class="${cardClasses}">
+      ${badgeHtml}
+      
+      <div class="flex justify-between items-start my-1.5">
+        <span class="font-mono text-[9px] text-dc-storm uppercase tracking-[0.2em]">${build.archetype}</span>
+        <span class="font-mono text-4xl md:text-5xl font-semibold text-dc-void dark:text-dc-platinum leading-[0.8] tracking-tighter">${build.score.toFixed(1)}</span>
+      </div>
 
-  // S-Rank hardware tag styling applied via CSS, inline styles eradicated
-  return `<div class="${cardClass}">
-    ${badgeHtml}
-    <div class="comp-card-top">
-      <span class="comp-card-archetype">${build.archetype}</span>
-      <span class="comp-card-obs">${build.score.toFixed(1)}</span>
+      <div class="text-base font-semibold text-dc-void dark:text-dc-platinum tracking-tight mb-0.5 pr-12 leading-tight">${stringLabel}</div>
+      <div class="font-mono text-[10px] text-dc-storm mb-4">${metaLabel}</div>
+
+      ${reasonHtml}
+
+      <div class="grid grid-cols-3 gap-2 mt-auto mb-4">
+        <button class="bg-transparent border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-void font-mono text-[9px] uppercase tracking-widest py-1.5 transition-colors text-center" onclick="_compAction('setActive', ${index})">Set Active</button>
+        <button class="bg-transparent border border-dc-storm/50 dark:border-dc-storm/30 text-dc-storm hover:border-dc-storm hover:bg-dc-storm/10 hover:text-dc-void dark:hover:text-dc-platinum font-mono text-[9px] uppercase tracking-widest py-1.5 transition-colors text-center" onclick="_compAction('tune', ${index})">Tune</button>
+        <button class="bg-transparent border border-dc-storm/50 dark:border-dc-storm/30 text-dc-storm hover:border-dc-storm hover:bg-dc-storm/10 hover:text-dc-void dark:hover:text-dc-platinum font-mono text-[9px] uppercase tracking-widest py-1.5 transition-colors text-center" onclick="_compAction('save', ${index}, event)">Save</button>
+      </div>
+
+      <div class="flex flex-wrap gap-3 pt-3 border-t border-dc-storm/30 dark:border-dc-storm/20">
+        ${statsHtml}
+      </div>
     </div>
-    <div class="comp-card-string">${stringLabel}</div>
-    <div class="comp-card-meta">${metaLabel}</div>
-    ${reasonHtml}
-    <div class="comp-card-actions">
-      <button class="comp-card-btn comp-card-btn-primary" onclick="_compAction('setActive',${index})">Set Active</button>
-      <button class="comp-card-btn" onclick="_compAction('tune',${index})">Tune</button>
-      <button class="comp-card-btn" onclick="_compAction('save',${index},event)">Save</button>
-    </div>
-    <div class="comp-card-stats-inline">${statsInline}</div>
-  </div>`;
+  `;
 }
 
 function _compSetSort(key) {

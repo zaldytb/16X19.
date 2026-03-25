@@ -6193,28 +6193,10 @@ body {
   background-image: radial-gradient(rgba(0,0,0,0.03) 1px, transparent 0);
 }
 
-/* Light mode: Bible/Compendium card fixes */
-[data-theme="light"] .comp-card-archetype {
-  color: var(--dc-platinum, #1A1A1A);
-}
-[data-theme="light"] .comp-card-badge {
-  color: var(--dc-platinum, #1A1A1A);
-  background: var(--dc-platinum, #1A1A1A);
-}
-[data-theme="light"] .comp-modulator-title {
-  color: var(--dc-platinum, #1A1A1A);
-}
-
 /* Light mode: Active sort tab - red */
 [data-theme="light"] .comp-sort-tab.active {
   color: var(--dc-red, #AF0000);
   border-bottom: 2px solid var(--dc-red, #AF0000);
-}
-
-/* Light mode: Featured card badge - red background */
-[data-theme="light"] .comp-build-featured .comp-card-badge {
-  background: var(--dc-red, #AF0000);
-  color: var(--dc-white, #F0F2F4);
 }
 
 [data-theme="light"] .nav-tab:hover {
@@ -7126,164 +7108,6 @@ textarea:focus-visible {
   padding-bottom: 7px;
 }
 
-/* 1. Grid & Base Card Physics */
-.comp-build-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.5rem;
-}
-@media (min-width: 768px) { .comp-build-grid { grid-template-columns: repeat(2, 1fr); } }
-
-.comp-build-card {
-  position: relative;
-  background: transparent;
-  border: 1px solid rgba(150, 150, 150, 0.2);
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  transition: border-color 0.2s ease;
-}
-.comp-build-card:hover {
-  border-color: var(--dc-storm, #5E666C);
-}
-
-/* 2. The Featured Override */
-.comp-build-featured {
-  grid-column: 1 / -1;
-  border-color: var(--dc-accent, #FF4500);
-  box-shadow: 0 0 15px rgba(255, 69, 0, 0.1);
-}
-.comp-card-badge {
-  position: absolute;
-  top: -1px;
-  left: -1px;
-  background: var(--dc-accent, #FF4500);
-  color: var(--dc-void, #1A1A1A);
-  font-family: var(--dc-font-mono, monospace);
-  font-size: 9px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  padding: 4px 10px;
-}
-
-/* 3. Typographic Hierarchy */
-.comp-card-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 0.5rem;
-  margin-top: 0.5rem; /* Buffer for the top badge */
-}
-.comp-card-archetype {
-  font-family: var(--dc-font-mono, monospace);
-  font-size: 10px;
-  color: var(--dc-accent, #FF4500);
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  font-weight: 600;
-  opacity: 0.88;
-}
-.comp-card-obs {
-  font-family: var(--dc-font-mono, monospace);
-  font-size: clamp(2.5rem, 4vw, 3.5rem);
-  font-weight: 650;
-  line-height: 0.82;
-  color: var(--dc-platinum, #DCDFE2);
-  letter-spacing: -0.055em;
-}
-
-.comp-card-string {
-  font-size: clamp(1.1rem, 2vw, 1.35rem);
-  font-weight: 620;
-  color: var(--dc-platinum, #DCDFE2);
-  margin-bottom: 0.25rem;
-  line-height: 1.15;
-  max-width: 18ch;
-  text-wrap: balance;
-}
-.comp-card-meta {
-  font-family: var(--dc-font-mono, monospace);
-  font-size: 9px;
-  color: var(--dc-storm, #5E666C);
-  margin-bottom: 1.5rem;
-  opacity: 0.82;
-  letter-spacing: 0.08em;
-}
-
-.comp-card-reason {
-  font-size: 0.875rem;
-  color: var(--dc-platinum, #DCDFE2);
-  margin-bottom: 1.5rem;
-  padding-left: 12px;
-  border-left: 2px solid var(--dc-storm, #5E666C);
-  opacity: 0.9;
-}
-
-/* 4. Tactical Action Buttons */
-.comp-card-actions {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-bottom: 1.5rem;
-  margin-top: auto; /* Pushes buttons to bottom before stats */
-}
-.comp-card-btn {
-  background: transparent;
-  border: 1px solid rgba(150, 150, 150, 0.25);
-  color: var(--dc-platinum, #DCDFE2);
-  font-family: var(--dc-font-mono, monospace);
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  padding: 0.6rem 0;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-align: center;
-}
-.comp-card-btn:hover {
-  background: rgba(150, 150, 150, 0.1);
-  border-color: var(--dc-storm, #5E666C);
-}
-.comp-card-btn-primary {
-  border-color: var(--dc-accent, #FF4500);
-  color: var(--dc-accent, #FF4500);
-}
-.comp-card-btn-primary:hover {
-  background: var(--dc-accent, #FF4500);
-  color: var(--dc-void, #1A1A1A);
-}
-
-/* 5. Hardware Stat Strip */
-.comp-card-stats-inline {
-  display: flex;
-  gap: 16px;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-.comp-card-stat-term {
-  font-family: var(--dc-font-mono, monospace);
-  font-size: 10px;
-  color: var(--dc-storm, #5E666C);
-  letter-spacing: 0.1em;
-}
-.comp-card-stat-term b {
-  color: var(--dc-platinum, #DCDFE2);
-  font-size: 11px;
-}
-
-/* Legacy chip - deprecated but kept for compatibility */
-.comp-card-stat-chip {
-  font-family: var(--dc-font-mono);
-  font-size: 0.65rem;
-  color: var(--dc-storm);
-}
-
-.comp-card-stat-chip b {
-  color: var(--dc-platinum);
-  font-weight: 600;
-}
-
 /* ============================================
    STRING MODULATOR PANEL
    ============================================ */
@@ -7752,10 +7576,6 @@ textarea:focus-visible {
 @media (max-width: 768px) {
   .comp-specs-grid {
     grid-template-columns: repeat(2, 1fr);
-  }
-  
-  .comp-build-grid {
-    grid-template-columns: 1fr;
   }
   
   .comp-hero-specs {
@@ -9654,7 +9474,6 @@ textarea:focus-visible {
 
 /* Base small action button pattern */
 .opt-act-btn,
-.comp-card-btn,
 .wttn-apply-btn,
 .wttn-save-btn,
 .recs-apply-btn,
@@ -9683,7 +9502,6 @@ textarea:focus-visible {
 
 /* Hover: invert */
 .opt-act-btn:hover,
-.comp-card-btn:hover,
 .wttn-apply-btn:hover,
 .wttn-save-btn:hover,
 .recs-apply-btn:hover,
@@ -9702,7 +9520,6 @@ textarea:focus-visible {
 
 /* Primary variant (Save/Apply primary actions) */
 .opt-act-save,
-.comp-card-btn-primary,
 .wttn-apply-btn,
 .recs-apply-btn,
 .fmb-build-select,

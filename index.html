@@ -9,6 +9,46 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: ['selector', '[data-theme="dark"]'],
+    theme: {
+      extend: {
+        colors: {
+          'dc-void': '#1A1A1A',
+          'dc-void-deep': '#141414',
+          'dc-void-lift': '#222222',
+          'dc-storm': '#5E666C',
+          'dc-storm-light': '#8A9199',
+          'dc-platinum': '#DCDFE2',
+          'dc-platinum-dim': '#B0B5BA',
+          'dc-white': '#F0F2F4',
+          'dc-accent': '#FF4500',
+          'dc-red': '#AF0000',
+        },
+        fontFamily: {
+          sans: ['Inter', '-apple-system', 'system-ui', 'sans-serif'],
+          mono: ['JetBrains Mono', 'SF Mono', 'Fira Code', 'monospace'],
+        },
+        fontSize: {
+          'hero': 'clamp(2.8rem, 5vw, 4.5rem)',
+          'obs': 'clamp(2.5rem, 4vw, 3.5rem)',
+          'mouse': '9px',
+          'micro': '8px',
+        },
+        letterSpacing: {
+          'mouse': '0.18em',
+          'tight-hero': '-0.045em',
+        },
+        borderColor: {
+          'ghost': 'rgba(150, 150, 150, 0.15)',
+        }
+      }
+    }
+  }
+</script>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>

@@ -899,10 +899,20 @@
 
               <div class="hiw-pipeline">
                 <div class="hiw-pipeline-layer">
+                  <div class="hiw-pipeline-badge">L0</div>
+                  <div class="hiw-pipeline-content">
+                    <h3>Frame Physics</h3>
+                    <p>Raw frame specs — head size, beam width, weight, balance, stiffness (RA), swingweight — normalized and transformed into 9 base capability scores. This is pure physics: how much energy the frame stores, how stable it is at contact, how much it flexes on impact. Technology bonuses (aero, comfortTech, spinTech) are applied here. No string interaction yet.</p>
+                  </div>
+                </div>
+                <div class="hiw-pipeline-connector">
+                  <svg width="2" height="32" viewBox="0 0 2 32"><line x1="1" y1="0" x2="1" y2="32" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.3"/></svg>
+                </div>
+                <div class="hiw-pipeline-layer">
                   <div class="hiw-pipeline-badge">L1</div>
                   <div class="hiw-pipeline-content">
-                    <h3>Frame Foundation</h3>
-                    <p>Raw frame geometry — head size, beam width, weight, balance, stiffness index, swing weight — normalized into base capability scores. This is pure physics: how much energy the frame stores, how stable it is at contact, how much it flexes on impact. No string interaction yet.</p>
+                    <h3>String Profile</h3>
+                    <p>Material composition and physical properties — stiffness, tension loss, spin potential, gauge. Each string type (poly, gut, multi, synthetic) has a base character profile plus a modifier layer that captures the specific product's deviation from its category baseline. A Luxilon ALU Power doesn't score like a generic co-poly. Frame coupling modifiers apply here.</p>
                   </div>
                 </div>
                 <div class="hiw-pipeline-connector">
@@ -911,8 +921,8 @@
                 <div class="hiw-pipeline-layer">
                   <div class="hiw-pipeline-badge">L2</div>
                   <div class="hiw-pipeline-content">
-                    <h3>String Character</h3>
-                    <p>Material composition scoring — poly, gut, multi, synthetic, hybrid. Each string type has a two-layer sub-model: base character (spin potential, power coefficient, comfort index, durability, tension stability) plus a modifier layer that captures the specific product's deviation from its category baseline. A Luxilon ALU Power doesn't score like a generic co-poly.</p>
+                    <h3>Tension Modifier</h3>
+                    <p>Pattern-aware tension effects enter here. This layer models how each stat responds to tension changes — not linearly, but through response curves tuned per-string-category. Lower tension doesn't just "add power" uniformly; it changes the energy transfer profile, dwell time, and snapback window. Open patterns (≤18 crosses) reward mains-tighter differentials; dense patterns (≥20 crosses) prefer near-equal tension.</p>
                   </div>
                 </div>
                 <div class="hiw-pipeline-connector">
@@ -921,36 +931,36 @@
                 <div class="hiw-pipeline-layer">
                   <div class="hiw-pipeline-badge">L3</div>
                   <div class="hiw-pipeline-content">
-                    <h3>Tension Response Modeling</h3>
-                    <p>Where tension enters the pipeline. This layer models how each stat responds to tension changes — not linearly, but through response curves tuned per-string-category. Lower tension doesn't just "add power" uniformly; it changes the energy transfer profile, the dwell time, the snapback window, the comfort floor, all at different rates depending on the string-frame interaction. This is the layer that makes the Tune slider meaningful.</p>
+                    <h3>Hybrid Interaction</h3>
+                    <p>For hybrid setups: mains and crosses are scored independently with their own string profiles, then blended with pairing-specific bonuses/penalties (gut×poly, multi×poly, etc.). The blending isn't 50/50 — it's physics-informed, favoring mains for spin/power and crosses for control/feel. Full-bed setups skip this layer.</p>
                   </div>
                 </div>
                 <div class="hiw-pipeline-connector">
                   <svg width="2" height="32" viewBox="0 0 2 32"><line x1="1" y1="0" x2="1" y2="32" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.3"/></svg>
                 </div>
                 <div class="hiw-pipeline-layer">
-                  <div class="hiw-pipeline-badge">L4</div>
+                  <div class="hiw-pipeline-badge">OBS</div>
                   <div class="hiw-pipeline-content">
-                    <h3>Composite Scoring &amp; OBS</h3>
-                    <p>All ten stats collapse into the <strong>Overall Build Score</strong> — a weighted composite that represents the build's total predicted performance envelope. The weights aren't equal: power and spin carry more than durability, because that's how racquet performance actually maps to on-court impact. The OBS feeds the rank ladder from "Delete This" to "Max Aura."</p>
+                    <h3>Composite Scoring</h3>
+                    <p>All 11 stats collapse into the <strong>Overall Build Score</strong> — a weighted composite representing the build's total predicted performance envelope. The weights aren't equal: power and spin carry more than durability, because that's how equipment performance maps to on-court impact. The OBS feeds the 10-tier rank ladder from "Delete This" to "Max Aura."</p>
                   </div>
                 </div>
               </div>
 
               <div class="hiw-callout">
                 <div class="hiw-callout-icon">⚡</div>
-                <p>Hybrid stringing adds a branching step between L2 and L3 — mains and crosses are scored independently with their own string profiles, then blended with a weighted merge that favors mains for spin/power and crosses for comfort/feel. The blending isn't 50/50. It's physics-informed.</p>
+                <p>Hybrid stringing activates <strong>Layer 3</strong> — mains and crosses are scored independently with their own string profiles, then blended with pairing-specific bonuses (gut×poly, multi×poly, etc.). The blending isn't 50/50 — mains dominate spin/power, crosses dominate control/feel. It's physics-informed.</p>
               </div>
             </div>
           </div>
 
-          <!-- SECTION 3: THE TEN STATS -->
+          <!-- SECTION 3: THE ELEVEN STATS -->
           <div class="hiw-section">
             <div class="hiw-section-num">03</div>
             <h2 class="hiw-section-title">What the Numbers Mean</h2>
             <div class="hiw-section-body">
               <p>
-                Ten stats. Each scored 0–100. Each derived from actual physical properties, not vibes. Here's what each one tracks and where its inputs come from.
+                Eleven stats. Each scored 0–100. Each derived from actual physical properties, not vibes. Here's what each one tracks and where its inputs come from.
               </p>
 
               <div class="hiw-stats-grid">
@@ -967,32 +977,36 @@
                   <div class="hiw-stat-desc">Precision and predictability on directional shots. Inversely related to power at the frame level — stiffer, smaller-headed frames score higher. String tension stability and frame torsional rigidity feed this. The surgeon's stat.</div>
                 </div>
                 <div class="hiw-stat-card">
+                  <div class="hiw-stat-name">Comfort</div>
+                  <div class="hiw-stat-desc">Shock absorption and arm-friendliness. String softness, frame flex, and weight distribution. Distinct from feel — you can have high comfort with low feel (soft multi in a flexy frame) or high feel with low comfort (stiff poly in a stiff stick).</div>
+                </div>
+                <div class="hiw-stat-card">
                   <div class="hiw-stat-name">Feel</div>
                   <div class="hiw-stat-desc">Tactile feedback quality and information transfer to the hand. Frame flex index, string elasticity, and dampening characteristics. Natural gut maxes this out. Dead poly minimizes it. Not the same as comfort.</div>
                 </div>
                 <div class="hiw-stat-card">
-                  <div class="hiw-stat-name">Comfort</div>
-                  <div class="hiw-stat-desc">Shock absorption and arm-friendliness. String softness, frame flex, and weight distribution. Distinct from feel — you can have high comfort with low feel (soft multi in a flexy frame) or high feel with low comfort (gut at 60 lbs in a stiff stick).</div>
+                  <div class="hiw-stat-name">Stability</div>
+                  <div class="hiw-stat-desc">Twisting resistance on off-center hits. Swingweight, frame mass, and beam profile. Heavier, wider-beamed frames dominate. This is about physics — mass resists rotation.</div>
+                </div>
+                <div class="hiw-stat-card">
+                  <div class="hiw-stat-name">Forgiveness</div>
+                  <div class="hiw-stat-desc">How well the setup compensates for off-center hits. Combines stability (resistance to twist) with head size (larger sweetspot). The "help me" stat — higher values mean less punishment on imperfect contact.</div>
+                </div>
+                <div class="hiw-stat-card">
+                  <div class="hiw-stat-name">Launch</div>
+                  <div class="hiw-stat-desc">Trajectory height and ball flight. Driven by string stiffness, tension, and pattern density. Softer strings and lower tensions produce higher launch angles. Critical for modern topspin games.</div>
+                </div>
+                <div class="hiw-stat-card">
+                  <div class="hiw-stat-name">Maneuverability</div>
+                  <div class="hiw-stat-desc">How quickly you can whip the frame through the air. Inverse of swingweight — lighter, head-light frames dominate. The reactive stat: net play, returns, and defense all depend on it.</div>
                 </div>
                 <div class="hiw-stat-card">
                   <div class="hiw-stat-name">Durability</div>
-                  <div class="hiw-stat-desc">String longevity and tension maintenance over time. Co-poly scores well on raw survival, gut scores poorly. But "durability" also factors tension stability — how long the string plays like it did when freshly strung.</div>
+                  <div class="hiw-stat-desc">String longevity and notching resistance. Co-poly scores well on raw survival, gut scores poorly. How long before you need to restring — distinct from playability (how long it plays well).</div>
                 </div>
                 <div class="hiw-stat-card">
-                  <div class="hiw-stat-name">Touch</div>
-                  <div class="hiw-stat-desc">Drop shot and net-game finesse. Dwell time at low swing speeds, string elasticity at low deformation, frame head lightness. The artisan stat — high touch builds reward soft hands. Basically: can you land a drop shot on a coin?</div>
-                </div>
-                <div class="hiw-stat-card">
-                  <div class="hiw-stat-name">Stability</div>
-                  <div class="hiw-stat-desc">Twisting resistance on off-center hits. Swing weight, frame mass, and beam profile. Heavier, wider-beamed frames dominate. This is the "forgiveness" stat rebranded honestly — it's about physics, not marketing.</div>
-                </div>
-                <div class="hiw-stat-card">
-                  <div class="hiw-stat-name">Playability</div>
-                  <div class="hiw-stat-desc">How well the string maintains its performance character over hitting sessions. Not the same as durability — a string can survive forever but play dead after 5 hours. Measures the delta between fresh-strung behavior and post-session behavior.</div>
-                </div>
-                <div class="hiw-stat-card">
-                  <div class="hiw-stat-name">Tension Stability</div>
-                  <div class="hiw-stat-desc">How well the string holds its reference tension over time. Natural gut is king here — it stretches to its happy place and stays. Poly is the opposite — dramatic initial drop, then a slow creep. This stat affects every other stat indirectly because tension drift changes the entire build profile.</div>
+                  <div class="hiw-stat-name">Playability Duration</div>
+                  <div class="hiw-stat-desc">How long the string maintains its performance character over hitting sessions. Not the same as durability — a string can survive forever but play dead after 5 hours. The delta between fresh-strung magic and post-session mediocrity.</div>
                 </div>
               </div>
             </div>
@@ -1004,10 +1018,10 @@
             <h2 class="hiw-section-title">The Overall Build Score</h2>
             <div class="hiw-section-body">
               <p>
-                The OBS is a <strong>weighted composite</strong> of all ten stats, collapsed into a single number on a 0–100 scale. It's not a simple average — the weights reflect how much each stat contributes to real on-court performance impact.
+                The OBS is a <strong>weighted composite</strong> of all 11 stats, collapsed into a single number on a 0–100 scale. It's not a simple average — the weights reflect how much each stat contributes to real on-court performance impact.
               </p>
               <p>
-                Power and spin carry more weight than durability. Control carries more than stability. Feel carries more than playability. These weights aren't arbitrary — they're calibrated against the known performance hierarchies of equipment setups that the tennis community broadly agrees on.
+                Power and spin carry more weight than durability. Control carries more than stability. Feel carries more than playability duration. These weights aren't arbitrary — they're calibrated against known equipment behavior and community consensus.
               </p>
               <div class="hiw-rank-preview">
                 <h3>The Rank Ladder</h3>
@@ -1031,30 +1045,72 @@
             </div>
           </div>
 
-          <!-- SECTION 5: TUNE MODE -->
+          <!-- SECTION 5: DATA PIPELINE -->
           <div class="hiw-section">
             <div class="hiw-section-num">05</div>
+            <h2 class="hiw-section-title">The Data Pipeline</h2>
+            <div class="hiw-section-body">
+              <p>
+                Equipment data lives in <code>pipeline/data/</code> as JSON files. The browser loads <code>data.js</code> which is generated from these — never edit <code>data.js</code> directly.
+              </p>
+              <p>
+                <strong>Source of truth:</strong> <code>frames.json</code> (263 racquets) and <code>strings.json</code> (52 strings). These are validated against schemas, then exported to <code>data.js</code> for the browser.
+              </p>
+              <p>
+                <strong>Adding equipment:</strong> Use <code>npm run ingest:frame</code> or <code>npm run ingest:string</code> for interactive entry. Or batch import from CSV. After any addition, run <code>npm run pipeline</code> to validate, export, and run canary regression tests.
+              </p>
+              <p>
+                <strong>TWU scraping:</strong> Bulk scrape the Tennis Warehouse University database with <code>npm run scrape:twu</code> (frames) or <code>npm run scrape:twu-strings</code> (strings). Enrich the CSVs with inferred specs, then ingest.
+              </p>
+              <div class="hiw-callout">
+                <div class="hiw-callout-icon">◆</div>
+                <p>The prediction engine is deterministic — same inputs always produce same outputs. Canary tests guard against regression on every export. The engine lives in <code>app.js</code> for the browser and <code>pipeline/engine/core.js</code> for Node.js — 22 functions, portable, zero dependencies.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION 6: DESIGN SYSTEM -->
+          <div class="hiw-section">
+            <div class="hiw-section-num">06</div>
+            <h2 class="hiw-section-title">The Design System</h2>
+            <div class="hiw-section-body">
+              <p>
+                <strong>Digicraft Brutalism</strong> — a monochrome base with an artful red accent for data visualization. The palette is intentionally restrained: #1A1A1A (void), #DCDFE2 (platinum), #5E666C (storm), with #AF0000 (artful red) reserved exclusively for chart data and OBS visualization.
+              </p>
+              <p>
+                Typography pairs Inter (UI) with JetBrains Mono (data). Halftone grain textures add analog warmth to digital precision. No drop shadows, no gradients, no decorative chrome. The interface gets out of the way so the numbers can speak.
+              </p>
+              <div class="hiw-callout">
+                <div class="hiw-callout-icon">◆</div>
+                <p>The visual system is designed for extended use — hours of exploration without eye fatigue. High contrast for readability, but never harsh. The monochrome base lets the red data accents pop when they matter.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION 6: TUNE MODE -->
+          <div class="hiw-section">
+            <div class="hiw-section-num">06</div>
             <h2 class="hiw-section-title">What Tune Mode Does</h2>
             <div class="hiw-section-body">
               <p>
-                Tune mode exposes <strong>Layer 3</strong> of the pipeline — the tension response model — as an interactive slider. When you drag tension from 40 to 70 lbs, you're not adjusting a linear multiplier. You're watching all ten stats respond through their individual response curves simultaneously.
+                Tune mode exposes <strong>Layer 2</strong> of the pipeline — the tension modifier — as an interactive sandbox. When you drag tension from 40 to 70 lbs, you're not adjusting a linear multiplier. You're watching all 11 stats respond through their individual response curves simultaneously.
               </p>
               <p>
-                This is the core insight the tool was built around: tension doesn't just change "power" or "control" in isolation. It reshapes the <em>entire stat profile</em>. A two-pound tension drop might increase power by 3 points, spin by 1.5, decrease control by 2, and barely touch feel. Tune mode lets you see all of that at once, in real time, on a single chart.
+                This is the core insight: tension doesn't just change "power" or "control" in isolation. It reshapes the <em>entire stat profile</em>. A two-pound tension drop might increase power by 3 points, spin by 1.5, decrease control by 2, and barely touch feel. Tune mode lets you see all of that at once, in real time.
               </p>
               <div class="hiw-callout">
                 <div class="hiw-callout-icon">🎯</div>
-                <p>Tune mode shares the same setup state as the Home page. When you switch to Tune, it carries your current frame + string + tension selection. There's no second configurator — it's one source of truth, one build, explored from a different angle.</p>
+                <p>Tune mode is a <strong>constraint visualization + free control</strong> system. The slider explores freely against the model's optimal tension window. You see cost/gain via the OBS delta chip (green for gains, red for losses) without committing anything until you click "Apply changes."</p>
               </div>
               <p>
-                The "What To Try Next" recommendations in Tune mode are contextual — they analyze your current build's stat balance and suggest tension adjustments, string swaps, or frame changes that would address specific gaps. They're not generic tips; they're computed from your active setup.
+                The "Best Value Move" recommendation updates live as you drag — it reflects your current slider position against the optimal window, not just the baseline. The sweep chart, slider overlay, and Build Score blue bar all share the same computed optimal tension band.
               </p>
             </div>
           </div>
 
-          <!-- SECTION 6: WHAT THIS IS NOT -->
+          <!-- SECTION 7: WHAT THIS IS NOT -->
           <div class="hiw-section">
-            <div class="hiw-section-num">06</div>
+            <div class="hiw-section-num">07</div>
             <h2 class="hiw-section-title">What This Tool Is Not</h2>
             <div class="hiw-section-body">
               <div class="hiw-not-grid">
@@ -1078,9 +1134,9 @@
             </div>
           </div>
 
-          <!-- SECTION 7: WHY IT'S USEFUL -->
+          <!-- SECTION 8: WHY IT'S USEFUL -->
           <div class="hiw-section">
-            <div class="hiw-section-num">07</div>
+            <div class="hiw-section-num">08</div>
             <h2 class="hiw-section-title">Why It's Still Useful</h2>
             <div class="hiw-section-body">
               <p>
@@ -1105,6 +1161,19 @@
           <div class="hiw-header">
             <h2 class="hiw-compact-title">Release notes</h2>
             <p class="release-notes-sub">Technical changelog — what changed, why, and how it affects your workflow.</p>
+          </div>
+
+          <div class="hiw-section">
+            <div class="hiw-section-num">v2.5</div>
+            <h2 class="hiw-section-title">Repository Cleanup & Documentation</h2>
+            <div class="hiw-section-body">
+              <p>
+                Complete repository audit and documentation pass. Deleted orphaned files (<code>split-app.js</code>, temp test artifacts). Added <code>calibrate</code> npm script for string estimation coefficient fitting. Updated <code>.gitignore</code> to exclude TWU scrape CSVs and enriched intermediates.
+              </p>
+              <p>
+                README rewritten with full architecture documentation: 4-layer prediction pipeline, Digicraft Brutalism design system, data pipeline workflows, TWU scraping tools, and complete file structure. How It Works page updated to match — 11 stats, corrected pipeline layers (L0-L3), Data Pipeline and Design System sections added.
+              </p>
+            </div>
           </div>
 
           <div class="hiw-section">

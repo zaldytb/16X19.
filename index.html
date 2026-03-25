@@ -488,23 +488,23 @@
 
         <div id="dashboard-content" class="dashboard-content hidden">
           <!-- Hero Band -->
-          <div class="overview-hero" id="overview-hero"></div>
+          <div class="w-full" id="overview-hero"></div>
 
           <!-- Build DNA (unified stats + radar + fit) -->
-          <div class="card build-dna-card">
-            <div class="build-dna-layout">
-              <div class="build-dna-bars">
-                <div class="stat-bars" id="stat-bars"></div>
-                <div class="build-dna-highlights" id="build-dna-highlights"></div>
+          <div class="bg-dc-void-lift border border-dc-border rounded-lg p-8 md:p-5 relative overflow-hidden shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+            <div class="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6 lg:gap-8 items-start">
+              <div class="flex flex-col gap-2">
+                <div id="stat-bars"></div>
+                <div class="pt-4 mt-4 border-t border-dc-border" id="build-dna-highlights"></div>
               </div>
-              <div class="build-dna-radar">
-                <div class="radar-container">
+              <div class="flex flex-col justify-between h-full">
+                <div class="relative w-full">
                   <canvas id="radar-chart"></canvas>
                 </div>
-                <div class="build-dna-foundation" id="oc-foundation"></div>
+                <div class="w-full bg-black/20 dark:bg-black/20 border border-white/5 rounded-md p-3 px-4" id="oc-foundation"></div>
               </div>
             </div>
-            <div class="build-dna-fit" id="fit-grid"></div>
+            <div class="mt-6 p-4 border border-dc-border bg-black/[0.03] dark:bg-black/20" id="fit-grid"></div>
           </div>
 
           <!-- Warnings -->

@@ -1231,6 +1231,12 @@ function activateLoadout(loadout) {
   }
 
   activeLoadout = loadout;
+  
+  // Persist active loadout ID to localStorage
+  try {
+    if (_store) _store.setItem('tll-active-loadout-id', loadout.id);
+  } catch(e) {}
+  
   hydrateDock(loadout);
   renderDockPanel();
 
@@ -2999,11 +3005,12 @@ function getStringMaterialBadge(material) {
 const _ssRegistry = new Map();
 
 function createSearchableSelect(container, {
-  type = 'racquet', // 'racquet' or 'string'
+  type = 'racquet', // 'racquet', 'string', or 'custom'
   placeholder = 'Select...',
   value = '',
   onChange = () => {},
-  id = ''
+  id = '',
+  options = null // For 'custom' type: array of {value, label} objects
 }) {
   // Clean up previous instance if exists
   if (_ssRegistry.has(container)) {
@@ -3014,7 +3021,12 @@ function createSearchableSelect(container, {
   container.innerHTML = '';
   container.classList.add('searchable-select');
 
-  const items = type === 'racquet' ? getSortedRacquets() : getSortedStrings();
+  let items;
+  if (type === 'custom' && options) {
+    items = options;
+  } else {
+    items = type === 'racquet' ? getSortedRacquets() : getSortedStrings();
+  }
 
   // Build trigger
   const trigger = document.createElement('button');
@@ -3031,7 +3043,13 @@ function createSearchableSelect(container, {
   const searchInput = document.createElement('input');
   searchInput.type = 'text';
   searchInput.className = 'ss-search';
-  searchInput.placeholder = type === 'racquet' ? 'Search racquets...' : 'Search strings...';
+  if (type === 'racquet') {
+    searchInput.placeholder = 'Search racquets...';
+  } else if (type === 'string') {
+    searchInput.placeholder = 'Search strings...';
+  } else {
+    searchInput.placeholder = 'Search...';
+  }
   searchInput.autocomplete = 'off';
   searchWrap.appendChild(searchInput);
   dropdown.appendChild(searchWrap);
@@ -3049,6 +3067,10 @@ function createSearchableSelect(container, {
 
   function getDisplayText(val) {
     if (!val) return '';
+    if (type === 'custom') {
+      const opt = options.find(x => x.value === val);
+      return opt ? opt.label : '';
+    }
     if (type === 'racquet') {
       const r = RACQUETS.find(x => x.id === val);
       return r ? r.name : '';
@@ -3081,8 +3103,18 @@ function createSearchableSelect(container, {
     items.forEach(item => {
       // Build search text
       let searchText, groupKey, primaryText, secondaryText, badgeHTML;
+      let itemId, itemLabel;
 
-      if (type === 'racquet') {
+      if (type === 'custom') {
+        itemId = item.value;
+        itemLabel = item.label;
+        searchText = item.label.toLowerCase();
+        groupKey = '';
+        primaryText = item.label;
+        secondaryText = '';
+        badgeHTML = '';
+      } else if (type === 'racquet') {
+        itemId = item.id;
         searchText = `${item.name} ${item.year || ''} ${item.pattern || ''}`.toLowerCase();
         groupKey = parseRacquetBrand(item.name);
         // Split name: everything before weight suffix becomes primary, weight goes to secondary
@@ -3092,6 +3124,7 @@ function createSearchableSelect(container, {
         secondaryText = `${item.year || ''}`;
         badgeHTML = wtBadge;
       } else {
+        itemId = item.id;
         searchText = `${item.name} ${item.gauge} ${item.material || ''} ${item.gaugeNum || ''} ${item.shape || ''}`.toLowerCase();
         groupKey = item.name.split(' ')[0];
         primaryText = item.name;
@@ -3108,8 +3141,8 @@ function createSearchableSelect(container, {
 
       hasResults = true;
 
-      // Group header
-      if (groupKey !== lastGroup) {
+      // Group header (skip for custom type)
+      if (type !== 'custom' && groupKey !== lastGroup) {
         const groupLabel = document.createElement('div');
         groupLabel.className = 'ss-group-label';
         groupLabel.textContent = groupKey;
@@ -3120,10 +3153,13 @@ function createSearchableSelect(container, {
       // Option
       const opt = document.createElement('div');
       opt.className = 'ss-option';
-      if (item.id === selectedValue) opt.classList.add('ss-selected');
-      opt.dataset.value = item.id;
+      if (itemId === selectedValue) opt.classList.add('ss-selected');
+      opt.dataset.value = itemId;
 
-      if (type === 'string') {
+      if (type === 'custom') {
+        // Simple layout for custom options
+        opt.innerHTML = `<span class="ss-opt-primary">${primaryText}</span>`;
+      } else if (type === 'string') {
         // 2-line stacked layout for strings: name on line 1, type+gauge on line 2
         opt.classList.add('ss-option-stacked');
         opt.innerHTML = `
@@ -3147,7 +3183,7 @@ function createSearchableSelect(container, {
 
       opt.addEventListener('click', (e) => {
         e.stopPropagation();
-        selectOption(item.id);
+        selectOption(itemId);
       });
 
       optionsContainer.appendChild(opt);
@@ -3251,6 +3287,13 @@ function createSearchableSelect(container, {
     setValue: (val) => {
       selectedValue = val;
       updateTrigger();
+    },
+    setOptions: (newOptions) => {
+      if (type === 'custom') {
+        options = newOptions;
+        items = newOptions;
+        renderOptions();
+      }
     },
     _cleanup: () => {
       document.removeEventListener('click', onDocClick);
@@ -3537,35 +3580,42 @@ function renderOverviewHero(racquet, stringConfig, stats, identity) {
   const tierClass = tier.label === 'S Rank' ? 's-rank' : '';
 
   el.innerHTML = `
-    <div class="hero-score">
-      <span class="hero-obs-label">System Sync Rating</span>
-      <span class="hero-obs-value">${score.toFixed(1)}</span>
-      <span class="hero-obs-tier ${tierClass}">${tier.label}</span>
-    </div>
-    <div class="hero-identity">
-      <div class="hero-archetype">${identity.archetype}</div>
-      <div class="hero-desc">${identity.description}</div>
-      <div class="hero-terminal">
-        <span class="hero-terminal-value">${racquet.name}</span><span class="hero-terminal-sep">//</span><span class="hero-terminal-value">${stringName}</span><span class="hero-terminal-sep">//</span><span class="hero-terminal-value">${tensionLabel}</span>
+    <div class="flex flex-col gap-6">
+      <!-- Score + Identity Row -->
+      <div class="flex flex-col lg:flex-row gap-8 lg:gap-12">
+        <!-- Score Block -->
+        <div class="hero-score shrink-0">
+          <span class="hero-obs-label">System Sync Rating</span>
+          <span class="hero-obs-value">${score.toFixed(1)}</span>
+          <span class="hero-obs-tier ${tierClass}">${tier.label}</span>
+        </div>
+        <!-- Identity Block -->
+        <div class="hero-identity flex-1 min-w-0">
+          <div class="hero-archetype">${identity.archetype}</div>
+          <div class="hero-desc">${identity.description}</div>
+          <div class="hero-terminal">
+            <span class="hero-terminal-value">${racquet.name}</span><span class="hero-terminal-sep">//</span><span class="hero-terminal-value">${stringName}</span><span class="hero-terminal-sep">//</span><span class="hero-terminal-value">${tensionLabel}</span>
+          </div>
+        </div>
       </div>
-    </div>
-    <!-- CTA Actions -->
-    <div class="w-full mt-6 pt-6 border-t border-dc-storm/20">
-      <div class="flex gap-3">
-        <button 
-          class="flex-1 bg-dc-accent text-dc-void font-mono text-[10px] font-bold uppercase tracking-widest py-3 px-4 hover:bg-dc-accent/90 transition-colors flex items-center justify-center gap-2"
-          onclick="switchMode('tune')"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v10"/><path d="M21 12h-6m-6 0H1"/></svg>
-          Tune This Build
-        </button>
-        <button 
-          class="flex-1 bg-transparent border border-dc-storm/40 text-dc-platinum font-mono text-[10px] font-bold uppercase tracking-widest py-3 px-4 hover:border-dc-platinum hover:bg-dc-platinum/5 transition-colors flex items-center justify-center gap-2"
-          onclick="switchMode('compendium')"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-          Back to Compendium
-        </button>
+      <!-- CTA Actions -->
+      <div class="mt-2 pt-6 border-t border-dc-storm/20">
+        <div class="flex gap-3">
+          <button 
+            class="flex-1 bg-transparent border border-dc-storm/40 text-dc-platinum font-mono text-[10px] font-bold uppercase tracking-widest py-3 px-4 hover:border-dc-platinum hover:bg-dc-platinum/5 transition-colors flex items-center justify-center gap-2"
+            onclick="switchMode('compendium')"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            //BACK TO BIBLE
+          </button>
+          <button 
+            class="flex-1 bg-dc-accent text-dc-void font-mono text-[10px] font-bold uppercase tracking-widest py-3 px-4 hover:bg-dc-accent/90 transition-colors flex items-center justify-center gap-2"
+            onclick="switchMode('tune')"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v10"/><path d="M21 12h-6m-6 0H1"/></svg>
+            Tune This Build
+          </button>
+        </div>
       </div>
     </div>
   `;
@@ -7799,6 +7849,19 @@ function init() {
 
   // Load saved loadouts from storage
   savedLoadouts = _loadSavedLoadouts();
+  
+  // Restore active loadout from storage (if exists and not a shared build)
+  try {
+    const activeId = _store ? _store.getItem('tll-active-loadout-id') : null;
+    if (activeId && savedLoadouts.length > 0) {
+      const saved = savedLoadouts.find(l => l.id === activeId);
+      if (saved) {
+        activeLoadout = Object.assign({}, saved);
+        activeLoadout._dirty = false;
+        hydrateDock(activeLoadout);
+      }
+    }
+  } catch(e) {}
 
   // Check for shared build URL (must run after data + functions are ready)
   var hadSharedBuild = _handleSharedBuildURL();
@@ -9489,9 +9552,7 @@ function _stringRenderMain(string) {
         <!-- Frame Selector -->
         <div class="flex flex-col gap-3">
           <span class="font-mono text-[9px] text-dc-storm uppercase tracking-[0.2em]">// SELECT FRAME</span>
-          <select id="string-mod-frame" class="appearance-none bg-dc-white dark:bg-dc-void border-b border-dc-storm/50 text-dc-void dark:text-dc-platinum font-mono text-sm py-2 px-2 outline-none focus:border-dc-accent transition-colors cursor-pointer" onchange="_stringOnFrameChange(this.value)">
-            <option value="">Select Frame...</option>
-          </select>
+          <div id="string-mod-frame" data-placeholder="Select Frame..."></div>
           <p class="text-[10px] text-dc-storm italic">Required: Choose a frame to inject this string into</p>
         </div>
         
@@ -9517,9 +9578,7 @@ function _stringRenderMain(string) {
         <!-- Crosses String (only visible in hybrid mode) -->
         <div class="flex flex-col gap-3" id="string-mod-crosses-string-col" style="display:none;">
           <span class="font-mono text-[9px] text-dc-storm uppercase tracking-[0.2em]">// CROSSES STRING</span>
-          <select id="string-mod-crosses-string" class="appearance-none bg-dc-white dark:bg-dc-void border-b border-dc-storm/50 text-dc-void dark:text-dc-platinum font-mono text-sm py-2 px-2 outline-none focus:border-dc-accent transition-colors cursor-pointer" onchange="_stringOnCrossesStringChange(this.value)">
-            <option value="">Same as mains</option>
-          </select>
+          <div id="string-mod-crosses-string" data-placeholder="Same as mains..."></div>
         </div>
       </div>
       
@@ -9614,13 +9673,6 @@ function _stringInitModulator(string) {
   const gauges = getGaugeOptions(string);
   const gaugeOptions = gauges.map(g => `<option value="${g}" ${Math.abs(g - string.gaugeNum) < 0.01 ? 'selected' : ''}>${GAUGE_LABELS[g] || g + 'mm'}</option>`).join('');
   
-  // Populate frame selector
-  const frameSelect = document.getElementById('string-mod-frame');
-  if (frameSelect) {
-    frameSelect.innerHTML = '<option value="">Select Frame...</option>' +
-      RACQUETS.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
-  }
-  
   // Set mains string name display
   const mainsNameEl = document.getElementById('string-mod-mains-name');
   if (mainsNameEl) {
@@ -9633,11 +9685,49 @@ function _stringInitModulator(string) {
     gaugeSelect.innerHTML = '<option value="">Default</option>' + gaugeOptions;
   }
   
-  // Populate crosses string selector (all strings except current)
-  const crossesSelect = document.getElementById('string-mod-crosses-string');
-  if (crossesSelect) {
-    crossesSelect.innerHTML = '<option value="">Same as mains</option>' +
-      STRINGS.filter(s => s.id !== string.id).map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+  // Create searchable frame selector
+  const frameContainer = document.getElementById('string-mod-frame');
+  if (frameContainer && !ssInstances['string-mod-frame']) {
+    ssInstances['string-mod-frame'] = createSearchableSelect(frameContainer, {
+      type: 'racquet',
+      placeholder: 'Select Frame...',
+      value: '',
+      id: 'string-mod-frame-trigger',
+      onChange: (val) => {
+        _stringOnFrameChange(val);
+      }
+    });
+  } else if (frameContainer && ssInstances['string-mod-frame']) {
+    ssInstances['string-mod-frame'].setValue('');
+  }
+  
+  // Create searchable crosses string selector
+  const crossesContainer = document.getElementById('string-mod-crosses-string');
+  if (crossesContainer && !ssInstances['string-mod-crosses-string']) {
+    // Build options array from strings (excluding current)
+    const crossesOptions = STRINGS.filter(s => s.id !== string.id).map(s => ({
+      value: s.id,
+      label: s.name
+    }));
+    
+    ssInstances['string-mod-crosses-string'] = createSearchableSelect(crossesContainer, {
+      type: 'custom',
+      placeholder: 'Same as mains...',
+      value: '',
+      id: 'string-mod-crosses-string-trigger',
+      options: crossesOptions,
+      onChange: (val) => {
+        _stringOnCrossesStringChange(val);
+      }
+    });
+  } else if (crossesContainer && ssInstances['string-mod-crosses-string']) {
+    // Rebuild options with current string excluded
+    const crossesOptions = STRINGS.filter(s => s.id !== string.id).map(s => ({
+      value: s.id,
+      label: s.name
+    }));
+    ssInstances['string-mod-crosses-string'].setOptions(crossesOptions);
+    ssInstances['string-mod-crosses-string'].setValue('');
   }
   
   // Populate crosses gauge selector (same options)
@@ -9893,50 +9983,38 @@ function _stringClearPreview() {
 
 function _stringAddToLoadout() {
   const { stringId, crossesId, frameId, mode, mainsTension, crossesTension } = _stringModState;
-  
+
   if (!stringId || !frameId) {
     alert('Please select both a string and a frame');
     return;
   }
-  
-  const mainsString = STRINGS.find(s => s.id === stringId);
-  const crossesString = (mode === 'hybrid' && crossesId) 
-    ? STRINGS.find(s => s.id === crossesId) 
-    : mainsString;
-  const racquet = RACQUETS.find(r => r.id === frameId);
-  if (!mainsString || !racquet) return;
-  
-  // Build loadout name
+
   const isHybrid = mode === 'hybrid' && crossesId && crossesId !== stringId;
-  const loadoutName = isHybrid 
-    ? `${mainsString.name} / ${crossesString.name} @ ${mainsTension}/${crossesTension}lbs`
-    : `${mainsString.name} @ ${mainsTension}lbs`;
-  
-  // Build loadout
-  const loadout = {
-    id: 'lo_' + Date.now(),
-    name: loadoutName,
-    racquetId: frameId,
-    stringId: stringId,
-    isHybrid: isHybrid,
-    mainsId: stringId,
-    crossesId: isHybrid ? crossesId : stringId,
-    mainsTension: mainsTension,
-    crossesTension: crossesTension,
-    source: 'string-compendium'
+
+  const opts = {
+    source: 'string-compendium',
+    crossesTension: isHybrid ? crossesTension : mainsTension,
   };
-  
-  // Save (without activating)
-  saveLoadout(loadout);
-  
+
+  if (isHybrid) {
+    opts.isHybrid   = true;
+    opts.mainsId    = stringId;
+    opts.crossesId  = crossesId;
+  }
+
+  const lo = createLoadout(frameId, stringId, mainsTension, opts);
+  if (!lo) return;
+
+  saveLoadout(lo);
+
   // Visual feedback
   const addBtn = document.getElementById('string-mod-add');
   if (addBtn) {
-    const originalText = addBtn.textContent;
+    const original = addBtn.textContent;
     addBtn.textContent = 'Saved ✓';
     addBtn.disabled = true;
-    setTimeout(() => {
-      addBtn.textContent = originalText;
+    setTimeout(function() {
+      addBtn.textContent = original;
       addBtn.disabled = false;
     }, 1500);
   }
@@ -9944,65 +10022,42 @@ function _stringAddToLoadout() {
 
 function _stringSetActiveLoadout() {
   const { stringId, crossesId, frameId, mode, mainsTension, crossesTension } = _stringModState;
-  
+
   if (!stringId || !frameId) {
     alert('Please select both a string and a frame');
     return;
   }
-  
-  const mainsString = STRINGS.find(s => s.id === stringId);
-  const crossesString = (mode === 'hybrid' && crossesId) 
-    ? STRINGS.find(s => s.id === crossesId) 
-    : mainsString;
-  const racquet = RACQUETS.find(r => r.id === frameId);
-  if (!mainsString || !racquet) return;
-  
-  // Build loadout name
+
   const isHybrid = mode === 'hybrid' && crossesId && crossesId !== stringId;
-  const loadoutName = isHybrid 
-    ? `${mainsString.name} / ${crossesString.name} @ ${mainsTension}/${crossesTension}lbs`
-    : `${mainsString.name} @ ${mainsTension}lbs`;
-  
-  // Compute stats and OBS for the loadout
-  const cfg = {
-    isHybrid: isHybrid,
-    string: isHybrid ? undefined : mainsString,
-    mains: isHybrid ? mainsString : undefined,
-    crosses: isHybrid ? crossesString : undefined,
-    mainsTension: mainsTension,
-    crossesTension: isHybrid ? crossesTension : mainsTension
-  };
-  const stats = predictSetup(racquet, cfg);
-  const tCtx = stats ? buildTensionContext(cfg, racquet) : null;
-  const obs = stats ? computeCompositeScore(stats, tCtx) : 0;
-  
-  // Build loadout
-  const loadout = {
-    id: 'lo_' + Date.now(),
-    name: loadoutName,
-    racquetId: frameId,
-    stringId: stringId,
-    isHybrid: isHybrid,
-    mainsId: stringId,
-    crossesId: isHybrid ? crossesId : stringId,
-    mainsTension: mainsTension,
+
+  const opts = {
+    source: 'string-compendium',
     crossesTension: isHybrid ? crossesTension : mainsTension,
-    stats: stats,
-    obs: obs,
-    source: 'string-compendium'
   };
-  
-  // Save and activate
-  saveLoadout(loadout);
-  activateLoadout(loadout);
-  
-  // Sync the mod state with the activated loadout so compendium shows correct selection
-  _stringModState.stringId = stringId;
-  _stringModState.crossesId = isHybrid ? crossesId : stringId;
-  _stringModState.frameId = frameId;
-  _stringModState.mode = isHybrid ? 'hybrid' : 'fullbed';
-  _stringModState.mainsTension = mainsTension;
+
+  if (isHybrid) {
+    opts.isHybrid  = true;
+    opts.mainsId   = stringId;
+    opts.crossesId = crossesId;
+  }
+
+  // createLoadout computes stats, obs, identity — the full model
+  const lo = createLoadout(frameId, stringId, mainsTension, opts);
+  if (!lo) return;
+
+  // Sync _stringModState so returning to Strings tab is consistent
+  _stringModState.stringId      = stringId;
+  _stringModState.crossesId     = isHybrid ? crossesId : stringId;
+  _stringModState.frameId       = frameId;
+  _stringModState.mode          = isHybrid ? 'hybrid' : 'fullbed';
+  _stringModState.mainsTension  = mainsTension;
   _stringModState.crossesTension = isHybrid ? crossesTension : mainsTension;
+
+  // Save + activate — activateLoadout calls hydrateDock which
+  // syncs dock editor selects, then renderDashboard reads from
+  // the now-complete loadout model via getSetupFromLoadout()
+  saveLoadout(lo);
+  activateLoadout(lo);
   
   // Switch to overview like Frame Compendium
   switchMode('overview');

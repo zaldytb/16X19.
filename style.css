@@ -6470,14 +6470,7 @@ textarea:focus-visible {
    COMPENDIUM (BIBLE) PAGE STYLES
    ============================================ */
 
-.comp-layout {
-  display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: var(--space-5);
-  height: 100%;
-  overflow: hidden;
-}
-
+/* .comp-layout reset - old grid sidebar layout removed */
 .comp-roster {
   display: flex;
   flex-direction: column;
@@ -6530,22 +6523,30 @@ textarea:focus-visible {
   gap: var(--space-2);
 }
 
+/* 3. Machined Hardware Dropdowns (Kill Native OS Styling) */
 .comp-filter-select {
-  width: 100%;
-  padding: 8px 10px;
-  background: var(--dc-void);
-  border: 1px solid var(--dc-border);
-  border-radius: var(--dc-radius-sm);
-  color: var(--dc-platinum);
-  font-family: var(--dc-font);
-  font-size: 0.75rem;
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: transparent;
+  border: 1px solid var(--dc-storm, #5E666C);
+  color: var(--dc-platinum, #DCDFE2);
+  font-family: var(--dc-font-mono, monospace);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0.5rem 2rem 0.5rem 1rem;
+  border-radius: 2px;
   cursor: pointer;
-  outline: none;
+  /* Inject custom gray SVG chevron */
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235E666C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 12px;
+  transition: all 0.2s ease;
 }
-
-.comp-filter-select:focus {
-  border-color: var(--dc-border-active);
-}
+.comp-filter-select:hover { border-color: var(--dc-platinum, #DCDFE2); }
+.comp-filter-select:focus { outline: none; border-color: var(--dc-accent, #FF4500); }
 
 .comp-frame-list {
   flex: 1;
@@ -6701,17 +6702,298 @@ textarea:focus-visible {
   margin-bottom: var(--space-6);
 }
 
-.comp-section-title {
+/* String Matrix Injector */
+.comp-string-injector {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+  padding: 1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .comp-string-injector {
+    flex-direction: row;
+  }
+}
+
+.comp-string-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.comp-string-label {
+  font-size: 9px;
+  font-family: var(--dc-font-mono);
+  text-transform: uppercase;
+  color: var(--dc-accent);
+  letter-spacing: 0.2em;
+}
+
+.comp-string-select-container {
+  width: 100%;
+}
+
+.comp-string-select-container .searchable-select {
+  width: 100%;
+}
+
+.comp-string-select-container .ss-trigger {
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding-bottom: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--dc-platinum);
   font-family: var(--dc-font);
-  font-size: 0.9rem;
-  font-weight: 700;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+  text-align: left;
+}
+
+.comp-string-select-container .ss-trigger:hover,
+.comp-string-select-container .ss-trigger:focus {
+  border-color: var(--dc-accent);
+}
+
+.comp-string-select-container .ss-trigger.ss-placeholder {
+  color: var(--dc-storm);
+}
+
+.comp-string-select-container .ss-dropdown {
+  background: var(--dc-bg);
+  border: none;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* String Injection Controls */
+.comp-inject-mode {
+  display: flex;
+  gap: 0;
+  margin-bottom: 12px;
+}
+
+.comp-inject-mode-btn {
+  font-family: var(--dc-font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  padding: 6px 16px;
+  border: 0.5px solid var(--dc-border);
+  background: transparent;
+  color: var(--dc-storm);
+  cursor: pointer;
+}
+
+.comp-inject-mode-btn.active {
+  background: var(--dc-active-bg);
+  color: var(--dc-active-text);
+  border-color: var(--dc-active-bg);
+}
+
+.comp-inject-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 16px 0;
+  background: transparent;
+  border: none;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 768px) {
+  .comp-inject-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.comp-inject-string {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.comp-inject-label {
+  font-size: 8px;
+  font-family: var(--dc-font-mono);
+  text-transform: uppercase;
+  color: var(--dc-platinum);
+  letter-spacing: 0.25em;
+}
+
+.comp-inject-sub-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.comp-inject-gauge {
+  font-family: var(--dc-font-mono);
+  font-size: 11px;
+  background: var(--dc-void-lift);
+  color: var(--dc-platinum);
+  border: 0.5px solid var(--dc-border);
+  border-radius: var(--dc-radius-sm);
+  padding: 4px 8px;
+  min-width: 80px;
+}
+
+.comp-inject-tension-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+
+.comp-inject-tension {
+  font-family: var(--dc-font-mono);
+  font-size: 13px;
+  width: 48px;
+  background: var(--dc-void-lift);
+  color: var(--dc-white);
+  border: 0.5px solid var(--dc-border);
+  border-radius: var(--dc-radius-sm);
+  padding: 4px 6px;
+  text-align: center;
+}
+
+.comp-inject-unit {
+  font-family: var(--dc-font-mono);
+  font-size: 10px;
+  color: var(--dc-storm);
+}
+
+.comp-inject-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.comp-inject-apply {
+  font-family: var(--dc-font-mono);
+  font-size: 9px;
+  font-weight: var(--dc-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  padding: 10px 24px;
+  border: 1px solid var(--dc-red);
+  background: transparent;
+  color: var(--dc-platinum);
+  border-radius: var(--dc-radius-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.comp-inject-apply:hover:not(:disabled) {
+  background: var(--dc-red);
+  color: var(--dc-white);
+}
+
+.comp-inject-apply:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.comp-inject-clear {
+  font-family: var(--dc-font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  padding: 10px 16px;
+  border: 0.5px solid var(--dc-border);
+  background: transparent;
+  color: var(--dc-storm);
+  border-radius: var(--dc-radius-sm);
+  cursor: pointer;
+}
+
+.comp-inject-clear:hover {
+  border-color: var(--dc-platinum);
+  color: var(--dc-platinum);
+}
+
+/* Dual-layer stat bars for before/after preview */
+.comp-stat-fill-base {
+  background: var(--dc-platinum);
+  opacity: 1;
+  position: absolute;
+  height: 2px;
+  top: -0.5px;
+  left: 0;
+  border-radius: 0;
+  transition: opacity 0.2s, width 0.3s ease;
+}
+
+.comp-stat-fill-preview {
+  background: var(--dc-red);
+  opacity: 0;
+  position: absolute;
+  height: 2px;
+  top: -0.5px;
+  left: 0;
+  border-radius: 0;
+  transition: opacity 0.2s, width 0.3s ease;
+}
+
+/* When preview is active - dim base, show preview */
+.comp-stat-track.has-preview .comp-stat-fill-base {
+  opacity: 0.3;
+}
+
+.comp-stat-track.has-preview .comp-stat-fill-preview {
+  opacity: 0.85;
+}
+
+/* Value display with before/after */
+.comp-stat-val-base {
+  color: var(--dc-storm);
+  font-size: 12px;
+}
+
+.comp-stat-val-arrow {
+  color: var(--dc-storm);
+  font-size: 10px;
+  margin: 0 4px;
+}
+
+.comp-stat-val-preview {
+  font-weight: var(--dc-weight-bold);
+  font-size: 14px;
+}
+
+.comp-stat-val-up {
+  color: var(--dc-platinum);
+}
+
+.comp-stat-val-down {
+  color: var(--dc-red);
+}
+
+.comp-stat-val-same {
+  color: var(--dc-storm);
+}
+
+.comp-section-title {
+  font-family: var(--dc-font-mono);
+  font-size: 10px;
+  font-weight: var(--dc-weight-semibold);
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
   color: var(--dc-white);
   margin: 0 0 var(--space-2) 0;
 }
 
 .comp-section-sub {
   font-family: var(--dc-font);
-  font-size: 0.75rem;
+  font-size: 11px;
   color: var(--dc-storm);
   margin: 0 0 var(--space-4) 0;
 }
@@ -6730,32 +7012,39 @@ textarea:focus-visible {
 
 .comp-stat-label {
   width: 100px;
-  font-family: var(--dc-font);
-  font-size: 0.75rem;
+  font-family: var(--dc-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
   color: var(--dc-storm);
   flex-shrink: 0;
 }
 
+/* Telemetry Stat Tracks - Stripped Brutalism */
 .comp-stat-track {
   flex: 1;
-  height: 6px;
-  background: var(--dc-void);
-  border-radius: 3px;
-  overflow: hidden;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 0;
+  position: relative;
+  margin-top: 8px;
 }
 
 .comp-stat-fill {
-  height: 100%;
+  height: 2px;
+  position: absolute;
+  top: -0.5px;
+  left: 0;
   background: var(--dc-platinum);
-  border-radius: 3px;
+  border-radius: 0;
   transition: width 0.4s var(--ease-out);
 }
 
 .comp-stat-val {
   width: 32px;
   font-family: var(--dc-font-mono);
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: var(--dc-weight-semibold);
   color: var(--dc-platinum);
   text-align: right;
 }
@@ -6767,33 +7056,39 @@ textarea:focus-visible {
   margin-bottom: var(--space-4);
 }
 
+/* Hardware Toggle Sort Tabs */
 .comp-sort-tabs {
   display: flex;
-  gap: var(--space-1);
+  gap: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .comp-sort-tab {
-  padding: 6px 12px;
   background: transparent;
-  border: 1px solid var(--dc-border);
-  border-radius: var(--dc-radius-sm);
+  border: none;
   color: var(--dc-storm);
-  font-family: var(--dc-font);
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-family: var(--dc-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.1em;
   cursor: pointer;
-  transition: all var(--dur-fast);
+  transition: color 0.2s;
+  padding: 0;
 }
 
 .comp-sort-tab:hover {
-  border-color: var(--dc-border-hover);
   color: var(--dc-platinum);
 }
 
 .comp-sort-tab.active {
-  background: var(--dc-active-bg);
-  border-color: var(--dc-active-bg);
-  color: var(--dc-active-text);
+  color: var(--dc-accent);
+  border-bottom: 2px solid var(--dc-accent);
+  margin-bottom: -9px;
+  padding-bottom: 7px;
 }
 
 .comp-build-grid {
@@ -6802,17 +7097,20 @@ textarea:focus-visible {
   gap: var(--space-4);
 }
 
+/* Build Card Brutalism - Bento Physics */
 .comp-build-card {
-  padding: var(--space-4);
-  background: var(--dc-void);
-  border: 1px solid var(--dc-border);
-  border-left: 3px solid var(--dc-platinum);
-  border-radius: var(--dc-radius-md);
-  transition: border-color var(--dur-fast);
+  background: var(--dc-bg);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border-radius: 0px;
+  transition: border-color 0.2s ease;
 }
 
 .comp-build-card:hover {
-  border-color: var(--dc-border-hover);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .comp-card-top {
@@ -6824,19 +7122,23 @@ textarea:focus-visible {
 
 .comp-card-archetype {
   font-family: var(--dc-font-mono);
-  font-size: 0.6rem;
+  font-size: 9px;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--dc-storm);
 }
 
 .comp-card-obs {
+  /* S-Rank Hardware Tag - Inline styles eradicated */
   font-family: var(--dc-font-mono);
-  font-size: 0.85rem;
-  font-weight: 700;
+  font-size: 1.5rem;
+  font-weight: var(--dc-weight-bold);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--dc-platinum);
   padding: 2px 8px;
-  border-radius: var(--dc-radius-sm);
+  border-radius: 2px;
+  background: transparent;
 }
 
 .comp-card-string {
@@ -6849,57 +7151,73 @@ textarea:focus-visible {
 }
 
 .comp-card-meta {
-  font-family: var(--dc-font);
-  font-size: 0.72rem;
+  font-family: var(--dc-font-mono);
+  font-size: 10px;
   color: var(--dc-storm);
   margin-bottom: var(--space-3);
 }
 
+/* Build Card Actions - Brutalist Hardware */
 .comp-card-actions {
   display: flex;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
+  gap: 0.5rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
 }
 
 .comp-card-btn {
-  flex: 1;
-  padding: 6px 0;
+  appearance: none;
   background: transparent;
-  border: 1px solid var(--dc-border);
-  border-radius: var(--dc-radius-sm);
-  color: var(--dc-storm);
-  font-family: var(--dc-font);
-  font-size: 0.7rem;
-  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--dc-platinum);
+  font-family: var(--dc-font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  padding: 0.5rem 1rem;
   cursor: pointer;
-  transition: all var(--dur-fast);
+  transition: all 0.2s ease;
+  flex: 1;
 }
 
 .comp-card-btn:hover {
   border-color: var(--dc-platinum);
-  color: var(--dc-platinum);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .comp-card-btn-primary {
-  background: var(--dc-platinum);
-  border-color: var(--dc-platinum);
-  color: var(--dc-void);
+  border-color: var(--dc-accent);
+  color: var(--dc-accent);
 }
 
 .comp-card-btn-primary:hover {
-  background: var(--dc-white);
-  border-color: var(--dc-white);
-  color: var(--dc-void);
+  background: var(--dc-accent);
+  color: var(--dc-bg);
 }
 
 .comp-card-stats-inline {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--dc-border);
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* Terminal Stat Strings - Killing the rounded pills */
+.comp-card-stat-term {
+  font-family: var(--dc-font-mono);
+  font-size: 10px;
+  color: var(--dc-storm);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.comp-card-stat-term b {
+  color: var(--dc-platinum);
+  font-weight: 600;
+}
+
+/* Legacy chip - deprecated but kept for compatibility */
 .comp-card-stat-chip {
   font-family: var(--dc-font-mono);
   font-size: 0.65rem;
@@ -6943,26 +7261,391 @@ textarea:focus-visible {
   margin-bottom: 2px;
 }
 
+/* ============================================
+   COMPENDIUM V2 — RACKET SHOWROOM
+   ============================================ */
+
+/* --- Pill Tab Bar --- */
+.comp-pill-bar {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  padding: var(--space-3);
+  background: var(--dc-void-lift);
+  border: 1px solid var(--dc-border);
+  border-radius: var(--dc-radius-lg);
+}
+
+.comp-pill {
+  padding: 8px 20px;
+  background: transparent;
+  border: 1px solid var(--dc-border);
+  border-radius: var(--dc-radius-sm);
+  color: var(--dc-storm);
+  font-family: var(--dc-font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  transition: all var(--dur-fast);
+}
+
+.comp-pill:hover {
+  border-color: var(--dc-border-hover);
+  color: var(--dc-platinum);
+}
+
+.comp-pill.active {
+  background: var(--dc-white);
+  border-color: var(--dc-white);
+  color: var(--dc-void);
+}
+
+/* --- Tab Panels --- */
+.comp-tab-panel {
+  height: 100%;
+}
+
+.comp-tab-panel.hidden {
+  display: none;
+}
+
+.comp-tab-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  text-align: center;
+  padding: var(--space-8);
+  background: var(--dc-void-lift);
+  border: 1px solid var(--dc-border);
+  border-radius: var(--dc-radius-lg);
+}
+
+.comp-tab-placeholder-icon {
+  font-size: 3rem;
+  margin-bottom: var(--space-4);
+  opacity: 0.5;
+}
+
+.comp-tab-placeholder h3 {
+  font-family: var(--dc-font);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--dc-white);
+  margin: 0 0 var(--space-2) 0;
+}
+
+.comp-tab-placeholder p {
+  font-family: var(--dc-font);
+  font-size: 0.85rem;
+  color: var(--dc-storm);
+  margin: 0;
+}
+
+/* --- Enriched Frame List --- */
+.comp-frame-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  border-bottom: 1px solid var(--dc-border);
+  border-radius: 0;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.comp-frame-item:hover {
+  background: var(--dc-void-lift);
+}
+
+.comp-frame-item.active {
+  background: var(--dc-void-lift);
+  border-left: 2px solid var(--dc-red);
+}
+
+.comp-frame-row-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.comp-frame-name {
+  font-family: var(--dc-font);
+  font-size: 13px;
+  font-weight: var(--dc-weight-semibold);
+  color: var(--dc-white);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.comp-frame-year {
+  font-family: var(--dc-font-mono);
+  font-size: 10px;
+  color: var(--dc-storm);
+  flex-shrink: 0;
+}
+
+.comp-frame-row-bot {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.comp-frame-identity {
+  font-family: var(--dc-font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--dc-storm);
+}
+
+.comp-frame-specs {
+  font-family: var(--dc-font-mono);
+  font-size: 10px;
+  color: var(--dc-platinum-dim);
+  flex-shrink: 0;
+}
+
+/* 1. The Hero Bento Container */
+.comp-hero {
+  position: relative;
+  width: 100%;
+  padding: 2.5rem;
+  background: rgba(26, 26, 26, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+}
+@media (min-width: 1024px) {
+  .comp-hero { padding: 3.5rem; }
+}
+
+/* 2. The Weight (Absolute Hardware Anchor) */
+.comp-hero-weight {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  text-align: right;
+}
+@media (min-width: 1024px) {
+  .comp-hero-weight { top: 2rem; right: 2rem; }
+}
+.comp-hero-weight-num {
+  font-family: var(--dc-font-mono, monospace);
+  font-size: 3rem;
+  font-weight: 600;
+  line-height: 0.85;
+  color: var(--dc-platinum, #DCDFE2);
+}
+
+/* 3. The Title & Trigger */
+.comp-hero-name {
+  font-size: 2.25rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: var(--dc-platinum, #DCDFE2);
+  margin: 0;
+  padding-right: 120px; /* Buffer for absolute weight */
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+@media (min-width: 1024px) {
+  .comp-hero-name { font-size: 3rem; }
+}
+.comp-hero-name .hud-trigger {
+  font-family: var(--dc-font-mono, monospace);
+  font-size: 2rem;
+  color: var(--dc-accent, #FF4500);
+  opacity: 0.5;
+}
+.comp-hero-name:hover .hud-trigger { opacity: 1; }
+
+/* 4. Terminal Meta String */
+.comp-hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+  font-size: 11px;
+}
+.comp-hero-year {
+  font-family: var(--dc-font-mono, monospace);
+  font-size: 11px;
+  color: var(--dc-platinum, #DCDFE2);
+}
+.comp-hero-divider {
+  font-family: var(--dc-font-mono, monospace);
+  font-size: 0.7rem;
+  color: var(--dc-accent, #FF4500);
+  opacity: 0.6;
+}
+.comp-hero-identity {
+  font-family: var(--dc-font-mono, monospace);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  color: var(--dc-storm, #5E666C);
+}
+
+/* 5. Notes / Description */
+.comp-hero-notes {
+  max-width: 65ch;
+  margin-top: 1.5rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--dc-storm, #5E666C);
+}
+
+/* 6. Spec Strip (The Grid Fix) */
+.comp-hero-specs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  width: 100%;
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+@media (min-width: 1024px) {
+  .comp-hero-specs { grid-template-columns: repeat(6, 1fr); }
+}
+.comp-hero-spec {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.comp-hero-spec-val {
+  font-family: var(--dc-font-mono);
+  font-size: 1.25rem;
+  font-weight: var(--dc-weight-bold);
+  color: var(--dc-platinum);
+}
+.comp-hero-spec-label {
+  font-family: var(--dc-font-mono);
+  font-size: 7px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--dc-storm);
+}
+
+/* 7. Console Output (The Logs) */
+.comp-hero-console {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  width: 100%;
+  margin-top: 2rem;
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+
+/* --- Grouped Stats --- */
+.comp-stats {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.comp-stat-group {
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--dc-border);
+}
+
+.comp-stat-group:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.comp-stat-group-title {
+  font-family: var(--dc-font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  color: var(--dc-storm);
+  color: var(--dc-storm);
+  margin: 0 0 var(--space-3) 0;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--dc-border);
+}
+
+/* --- Build Cards V2 --- */
+.comp-build-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.comp-build-card {
+  padding: var(--space-4);
+  background: var(--dc-void);
+  border: 1px solid var(--dc-border);
+  border-left: 3px solid var(--dc-platinum);
+  border-radius: var(--dc-radius-md);
+  transition: border-color var(--dur-fast);
+}
+
+.comp-build-card:hover {
+  border-color: var(--dc-border-hover);
+}
+
+.comp-build-featured {
+  grid-column: 1 / -1;
+  border: 1px solid var(--dc-border-active);
+  position: relative;
+}
+
+.comp-card-badge {
+  position: absolute;
+  top: -8px;
+  left: 16px;
+  font-family: var(--dc-font-mono);
+  font-size: 8px;
+  font-weight: var(--dc-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--dc-void);
+  background: var(--dc-red);
+  padding: 2px 8px;
+  border-radius: 2px;
+}
+
+.comp-card-reason {
+  font-size: 12px;
+  color: var(--dc-platinum-dim);
+  font-style: italic;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--dc-border);
+}
+
 @media (max-width: 1024px) {
-  .comp-layout {
-    grid-template-columns: 240px 1fr;
-  }
-  
   .comp-specs-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .comp-hero-specs {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
 @media (max-width: 768px) {
-  .comp-layout {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
-  }
-  
-  .comp-roster {
-    max-height: 40vh;
-  }
-  
   .comp-specs-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -6970,6 +7653,395 @@ textarea:focus-visible {
   .comp-build-grid {
     grid-template-columns: 1fr;
   }
+  
+  .comp-hero-specs {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .comp-pill-bar {
+    flex-wrap: wrap;
+  }
+  
+  .comp-pill {
+    flex: 1;
+    min-width: 80px;
+  }
+}
+
+/* ============================================
+   COMPENDIUM V3 — DIGICRAFT BENTO & HUD
+   ============================================ */
+
+/* --- Layout Reset --- */
+.comp-layout {
+  position: relative;
+  width: 100%;
+}
+
+.comp-main {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding-bottom: 96px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+
+/* --- Query HUD Overlay --- */
+/* 1. The Glass Overlay (Hidden by Default) */
+.comp-hud {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  /* Use --dc-void which is theme-aware (dark:#1A1A1A, light:#F0F2F4) */
+  background-color: var(--dc-void);
+  /* backdrop-filter only when active to prevent blur issues */
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 300ms ease, visibility 300ms ease;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+}
+@media (min-width: 1024px) {
+  .comp-hud { padding: 4rem; }
+}
+
+/* The Trigger State - backdrop-filter only when active */
+.comp-hud.active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* 2. The Command Input */
+.comp-hud-search {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid var(--dc-storm, #5E666C);
+  font-family: var(--dc-font-mono, monospace);
+  font-size: 2.5rem;
+  letter-spacing: -0.05em;
+  color: var(--dc-platinum, #DCDFE2);
+  padding-bottom: 1rem;
+  margin-bottom: 2rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+.comp-hud-search:focus {
+  border-color: var(--dc-accent, #FF4500);
+}
+
+/* Horizontal wrap filters */
+.comp-hud-filters {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+.comp-hud-filters select {
+  background: transparent;
+  border: 1px solid var(--dc-platinum-dim, #B0B5BA);
+  color: var(--dc-platinum);
+  font-family: var(--dc-font-mono);
+  font-size: 0.75rem;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+/* 3. The Grid Physics */
+.comp-hud-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 1rem; /* scrollbar buffer */
+}
+@media (min-width: 768px) {
+  .comp-hud-grid { grid-template-columns: repeat(4, 1fr); }
+}
+@media (min-width: 1024px) {
+  .comp-hud-grid { grid-template-columns: repeat(5, 1fr); }
+}
+
+/* 4. Grid Typographic Hierarchy (Elephant & Mouse) */
+.comp-frame-item {
+  background: transparent;
+  border: 1px solid var(--dc-platinum-dim, #B0B5BA);
+  padding: 1.25rem;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.5rem; /* Forces content to top and bottom */
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.comp-frame-item:hover { border-color: var(--dc-platinum, #DCDFE2); }
+.comp-frame-item.active { border-color: var(--dc-accent, #FF4500); }
+
+.comp-frame-row-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+.comp-frame-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--dc-platinum, #DCDFE2);
+}
+.comp-frame-year {
+  font-family: var(--dc-font-mono, monospace);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  color: var(--dc-platinum-dim, #B0B5BA);
+  margin-top: 3px;
+}
+.comp-frame-row-bot {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.comp-frame-identity {
+  font-family: var(--dc-font-mono, monospace);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--dc-accent, #FF4500);
+}
+.comp-frame-specs {
+  font-family: var(--dc-font-mono, monospace);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--dc-platinum, #DCDFE2);
+}
+
+/* 5. Close Button */
+.comp-hud-close {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: transparent;
+  border: none;
+  color: var(--dc-platinum-dim, #B0B5BA);
+  font-size: 2.5rem;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  z-index: 110;
+}
+
+.comp-hud-close:hover {
+  color: var(--dc-platinum);
+}
+
+/* 1. The Container Anchors */
+.comp-hero {
+  background: var(--dc-void, #1A1A1A);
+  border: none;
+  padding: 0;
+  position: relative;
+  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* 2. The Title & Meta (Left Anchor) */
+.comp-hero-name {
+  font-size: 3rem;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--dc-platinum, #DCDFE2);
+  margin: 0;
+  padding-right: 120px; /* Prevents overlap with weight */
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+@media (min-width: 1024px) { .comp-hero-name { font-size: 4rem; } }
+.comp-hero-name .hud-trigger {
+  font-size: 1.5rem;
+  color: var(--dc-red, #AF0000);
+  opacity: 0.5;
+}
+
+.comp-hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 1rem;
+  font-family: var(--dc-font-mono, monospace);
+  font-size: 11px;
+}
+.comp-hero-year { font-size: 11px; color: var(--dc-platinum, #DCDFE2); }
+.comp-hero-divider { font-size: 11px; color: var(--dc-accent, #FF4500); opacity: 0.6; }
+.comp-hero-identity { font-size: 11px; color: var(--dc-storm, #5E666C); text-transform: uppercase; letter-spacing: 0.15em; }
+
+.comp-hero-notes {
+  max-width: 650px;
+  margin-top: 1.5rem;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--dc-storm, #5E666C);
+}
+
+/* 3. The Weight (Absolute Hardware Anchor - CSS Injection) */
+.comp-hero-weight {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+@media (min-width: 1024px) { .comp-hero-weight { top: 2rem; right: 2rem; } }
+
+/* Inject 'STRUNG WGHT' label purely via CSS */
+.comp-hero-weight::before {
+  content: 'STRUNG WGHT';
+  font-family: var(--dc-font-mono, monospace);
+  font-size: 9px;
+  color: var(--dc-storm, #5E666C);
+  letter-spacing: 0.2em;
+  margin-bottom: 4px;
+}
+.comp-hero-weight-num {
+  font-family: var(--dc-font-mono, monospace);
+  font-size: 3rem;
+  font-weight: 600;
+  line-height: 0.85;
+  color: var(--dc-platinum, #DCDFE2);
+}
+/* Inject 'g' unit purely via CSS */
+.comp-hero-weight-num::after {
+  content: 'g';
+  font-size: 1.25rem;
+  color: var(--dc-storm, #5E666C);
+  margin-left: 4px;
+}
+
+/* 4. Telemetry Specs Strip (The Hierarchy Fix) */
+.comp-hero-specs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  width: 100%;
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+@media (min-width: 1024px) { .comp-hero-specs { grid-template-columns: repeat(6, 1fr); } }
+
+.comp-hero-spec {
+  display: flex;
+  flex-direction: column-reverse; /* Reverses HTML order so Label sits ON TOP of Value */
+  gap: 6px;
+}
+.comp-hero-spec-label {
+  font-family: var(--dc-font-mono, monospace);
+  font-size: 7px;
+  color: var(--dc-storm, #5E666C);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+.comp-hero-spec-val {
+  font-family: var(--dc-font-mono, monospace);
+  font-size: 1.25rem;
+  font-weight: var(--dc-weight-bold);
+  color: var(--dc-platinum, #DCDFE2);
+  line-height: 1;
+}
+
+/* 5. Console Output */
+.comp-hero-console {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  width: 100%;
+  margin-top: 2.5rem;
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+.comp-console-item {
+  font-family: var(--dc-font-mono, monospace);
+  font-size: 13px;
+  font-weight: var(--dc-weight-bold);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.comp-console-item.positive { color: var(--dc-platinum, #DCDFE2); }
+.comp-console-item.negative { color: var(--dc-red, #AF0000); }
+
+/* --- Telemetry Fixes (Stats) --- */
+.comp-stat-track {
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 0;
+  overflow: visible;
+}
+
+.comp-stat-fill {
+  height: 2px;
+  margin-top: -0.5px;
+  background: var(--dc-platinum);
+  border-radius: 0;
+  transition: width 0.4s var(--ease-out);
+}
+
+/* --- Build Cards Bento Physics --- */
+.comp-build-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .comp-build-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.comp-build-card {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+  padding: 24px;
+  border-radius: 0;
+  border-left: none !important;
+}
+
+/* Featured build with glowing border */
+.comp-build-featured {
+  grid-column: 1 / -1;
+  border-color: var(--dc-red);
+  box-shadow: 0 0 15px rgba(220, 38, 38, 0.1);
+  position: relative;
+}
+
+.comp-card-badge {
+  position: absolute;
+  top: -8px;
+  left: 16px;
+  background: var(--dc-red);
+  color: var(--dc-void);
+  padding: 2px 8px;
+  font-family: var(--dc-font-mono);
+  font-size: 10px;
+  font-weight: bold;
+  border-radius: 0;
 }
 
 /* ============================================

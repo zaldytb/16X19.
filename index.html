@@ -811,14 +811,20 @@
 
       <!-- ═══════════════ COMPENDIUM ═══════════════ -->
       <section class="workspace-mode hidden" id="mode-compendium" data-mode="compendium">
-        <div class="comp-layout">
-          <!-- Left: Frame Roster -->
-          <aside class="comp-roster" id="comp-roster">
-            <div class="comp-roster-header">
-              <h3 class="comp-roster-title">Frames</h3>
-            </div>
-            <input type="text" class="comp-search" id="comp-search" placeholder="Search frames...">
-            <div class="comp-filters">
+        <!-- Pill Tab Bar -->
+        <div class="comp-pill-bar">
+          <button class="comp-pill active" data-comp-tab="rackets" onclick="_compSwitchTab('rackets')">Rackets</button>
+          <button class="comp-pill" data-comp-tab="strings" onclick="_compSwitchTab('strings')">Strings</button>
+          <button class="comp-pill" data-comp-tab="leaderboard" onclick="_compSwitchTab('leaderboard')">Leaderboard</button>
+        </div>
+
+        <!-- Tab Content: Rackets -->
+        <div class="comp-tab-panel" id="comp-tab-rackets">
+          <!-- Query HUD Overlay -->
+          <div class="comp-hud" id="comp-hud">
+            <button class="comp-hud-close" onclick="_compToggleHud()">×</button>
+            <input type="text" class="comp-hud-search" id="comp-search" placeholder="Search frames...">
+            <div class="comp-hud-filters">
               <select id="comp-filter-brand" class="comp-filter-select"><option value="">All Brands</option></select>
               <select id="comp-filter-pattern" class="comp-filter-select">
                 <option value="">All Patterns</option>
@@ -849,15 +855,35 @@
                 <option value="tour">> 340g (Tour)</option>
               </select>
             </div>
-            <div class="comp-frame-list" id="comp-frame-list"></div>
-          </aside>
-
-          <!-- Right: Main Panel -->
-          <div class="comp-main" id="comp-main">
-            <div class="comp-empty">
-              <p class="comp-empty-title">Select a frame to explore</p>
-              <p class="comp-empty-sub">Browse the roster on the left to see frame details and top builds.</p>
+            <div class="comp-hud-grid" id="comp-frame-list"></div>
+          </div>
+          
+          <!-- Main Content (full-bleed) -->
+          <div class="comp-layout">
+            <div class="comp-main" id="comp-main">
+              <div class="comp-empty">
+                <p class="comp-empty-title">Select a frame</p>
+                <p class="comp-empty-sub">Click the frame name above to browse the racket database.</p>
+              </div>
             </div>
+          </div>
+        </div>
+
+        <!-- Tab Content: Strings (Placeholder) -->
+        <div class="comp-tab-panel hidden" id="comp-tab-strings">
+          <div class="comp-tab-placeholder">
+            <span class="comp-tab-placeholder-icon">🔧</span>
+            <h3>Coming Soon</h3>
+            <p>String compendium and playstyle leaderboard are in development.</p>
+          </div>
+        </div>
+
+        <!-- Tab Content: Leaderboard (Placeholder) -->
+        <div class="comp-tab-panel hidden" id="comp-tab-leaderboard">
+          <div class="comp-tab-placeholder">
+            <span class="comp-tab-placeholder-icon">🔧</span>
+            <h3>Coming Soon</h3>
+            <p>String compendium and playstyle leaderboard are in development.</p>
           </div>
         </div>
       </section>

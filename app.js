@@ -8129,6 +8129,77 @@ let _compSelectedRacquetId = null;
 let _compSortKey = 'score';
 let _compCurrentBuilds = []; // stores sorted builds for current frame (for index-based action handlers)
 
+// ============================================
+// COMPENDIUM V2 — RACKET SHOWROOM
+// ============================================
+
+// Tab switching for pill bar
+function _compSwitchTab(tab) {
+  // Update pill buttons
+  document.querySelectorAll('.comp-pill').forEach(pill => {
+    pill.classList.toggle('active', pill.dataset.compTab === tab);
+  });
+  
+  // Update tab panels
+  document.querySelectorAll('.comp-tab-panel').forEach(panel => {
+    panel.classList.add('hidden');
+  });
+  
+  const activePanel = document.getElementById('comp-tab-' + tab);
+  if (activePanel) {
+    activePanel.classList.remove('hidden');
+  }
+}
+
+// Toggle Query HUD overlay with scroll-lock
+function _compToggleHud() {
+  const hud = document.getElementById('comp-hud');
+  if (hud) {
+    hud.classList.toggle('active');
+    if (hud.classList.contains('active')) {
+      document.getElementById('comp-search').focus();
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  }
+}
+
+// Generate "Best for" and "Watch out" pills based on frame stats
+function _compGenerateHeroPills(frameStats, racquet) {
+  const bestFor = [];
+  const watchOut = [];
+  
+  // Console-style uppercase output for Digicraft bento aesthetic
+  if (frameStats.spin >= 65) bestFor.push('TOPSPIN BASELINERS');
+  if (frameStats.power >= 65) bestFor.push('FREE POWER SEEKERS');
+  if (frameStats.control >= 65) bestFor.push('FLAT HIT PRECISION');
+  if (frameStats.comfort >= 65) bestFor.push('ARM-FRIENDLY SESSIONS');
+  if (frameStats.maneuverability >= 65) bestFor.push('FAST SWING STYLES');
+  if (frameStats.stability >= 65) bestFor.push('HEAVY HITTERS');
+  if (frameStats.feel >= 65) bestFor.push('TOUCH PLAYERS');
+  
+  if (frameStats.control < 55) watchOut.push('LOWER CONTROL CEILING');
+  if (frameStats.comfort < 55) watchOut.push('HARSH ON ARM');
+  if (frameStats.power < 55) watchOut.push('LESS FREE POWER');
+  if (frameStats.stability < 55) watchOut.push('TWIST OFF-CENTER');
+  if (frameStats.maneuverability < 55) watchOut.push('DEMANDS FAST PREP');
+  if (racquet.strungWeight > 325) watchOut.push('HEAVY TECHNIQUE REQ');
+  if (racquet.strungWeight < 290) watchOut.push('LIGHT PLOW-THROUGH');
+  
+  return { bestFor, watchOut };
+}
+
+// Generate reason text for featured build card
+function _compGenerateBuildReason(build, frameStats) {
+  if (build.isHybrid && frameStats.spin >= 60) return 'Ranks high because this frame rewards snapback hybrids with shaped mains.';
+  if (build.stats.comfort >= 70) return 'Safer choice for arm comfort without sacrificing too much spin.';
+  if (build.stats.control >= 70) return 'Highest control ceiling for players who prioritize placement.';
+  if (build.stats.durability >= 80) return 'Longest lasting setup — great value for frequent players.';
+  if (build.stats.spin >= 75) return 'Maximum spin generation for heavy topspin game styles.';
+  return 'Best overall balance of performance metrics for this frame.';
+}
+
 function initCompendium() {
   // Populate brand filter
   const brandSel = document.getElementById('comp-filter-brand');
@@ -8202,16 +8273,29 @@ function _compRenderRoster() {
   const racquets = _compGetFilteredRacquets();
 
   list.innerHTML = racquets.map(r => {
-    const brand = _extractBrand(r.name);
     const isActive = r.id === _compSelectedRacquetId;
+    const specs = `${r.strungWeight}g · ${r.stiffness} RA · ${r.pattern}`;
     return `<button class="comp-frame-item${isActive ? ' active' : ''}" data-id="${r.id}" onclick="_compSelectFrame('${r.id}')">
-      <span class="comp-frame-name">${r.name}</span>
-      <span class="comp-frame-meta">${r.year} &middot; ${r.identity || r.pattern}</span>
+      <div class="comp-frame-row-top">
+        <span class="comp-frame-name">${r.name}</span>
+        <span class="comp-frame-year">${r.year}</span>
+      </div>
+      <div class="comp-frame-row-bot">
+        <span class="comp-frame-identity">${r.identity || r.pattern}</span>
+        <span class="comp-frame-specs">${specs}</span>
+      </div>
     </button>`;
   }).join('');
 }
 
 function _compSelectFrame(racquetId) {
+  // Auto-close HUD on selection
+  const hud = document.getElementById('comp-hud');
+  if (hud) {
+    hud.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+  
   _compSelectedRacquetId = racquetId;
   const racquet = RACQUETS.find(r => r.id === racquetId);
   if (!racquet) return;
@@ -8253,17 +8337,47 @@ function _compRenderMain(racquet) {
   });
   _compCurrentBuilds = sorted; // store for index-based action handlers
 
-  // Frame stat bars (skip durability and playability — always 50 for frame-only)
-  const frameStatKeys = ['spin', 'power', 'control', 'launch', 'feel', 'comfort', 'stability', 'forgiveness', 'maneuverability'];
-  const frameStatLabels = { spin: 'Spin', power: 'Power', control: 'Control', launch: 'Launch', feel: 'Feel', comfort: 'Comfort', stability: 'Stability', forgiveness: 'Forgiveness', maneuverability: 'Maneuverability' };
+  // Generate hero console output
+  const pills = _compGenerateHeroPills(frameBase, racquet);
+  const consoleHtml = [];
+  if (pills.bestFor.length > 0) {
+    consoleHtml.push(...pills.bestFor.map(p => `<span class="comp-console-item positive">[+] ${p}</span>`));
+  }
+  if (pills.watchOut.length > 0) {
+    consoleHtml.push(...pills.watchOut.map(p => `<span class="comp-console-item negative">[-] ${p}</span>`));
+  }
 
-  const barsHtml = frameStatKeys.map(k => {
-    const val = frameBase[k] != null ? Math.round(frameBase[k]) : 50;
-    const pct = Math.max(0, Math.min(100, val));
-    return `<div class="comp-stat-row">
-      <span class="comp-stat-label">${frameStatLabels[k]}</span>
-      <div class="comp-stat-track"><div class="comp-stat-fill" style="width:${pct}%;opacity:${0.4 + pct * 0.006}"></div></div>
-      <span class="comp-stat-val">${val}</span>
+  // Grouped stat bars
+  const statGroups = {
+    attack: ['spin', 'power', 'launch'],
+    defense: ['control', 'stability', 'forgiveness'],
+    touch: ['feel', 'comfort', 'maneuverability']
+  };
+  const frameStatLabels = { 
+    spin: 'Spin', power: 'Power', control: 'Control', launch: 'Launch', 
+    feel: 'Feel', comfort: 'Comfort', stability: 'Stability', 
+    forgiveness: 'Forgiveness', maneuverability: 'Maneuverability' 
+  };
+  const groupTitles = { attack: 'Attack', defense: 'Defense', touch: 'Touch' };
+
+  const statsHtml = Object.entries(statGroups).map(([group, keys]) => {
+    const rowsHtml = keys.map(k => {
+      const val = frameBase[k] != null ? Math.round(frameBase[k]) : 50;
+      const pct = Math.max(0, Math.min(100, val));
+      return `<div class="comp-stat-row" data-stat="${k}">
+        <span class="comp-stat-label">${frameStatLabels[k]}</span>
+        <div class="comp-stat-track" id="comp-track-${k}">
+          <div class="comp-stat-fill-base" id="comp-base-${k}" style="width:${pct}%"></div>
+          <div class="comp-stat-fill-preview" id="comp-preview-${k}" style="width:0%"></div>
+        </div>
+        <span class="comp-stat-val" id="comp-val-${k}">
+          <span class="comp-stat-val-base">${val}</span>
+        </span>
+      </div>`;
+    }).join('');
+    return `<div class="comp-stat-group">
+      <h4 class="comp-stat-group-title">${groupTitles[group]}</h4>
+      ${rowsHtml}
     </div>`;
   }).join('');
 
@@ -8280,40 +8394,444 @@ function _compRenderMain(racquet) {
     `<button class="comp-sort-tab${_compSortKey === s.key ? ' active' : ''}" onclick="_compSetSort('${s.key}')">${s.label}</button>`
   ).join('');
 
-  // Build cards
-  const cardsHtml = sorted.map((b, i) => _compRenderBuildCard(b, i, racquet)).join('');
+  // Build cards - pass frameBase for reason generation
+  const cardsHtml = sorted.map((b, i) => _compRenderBuildCard(b, i, racquet, frameBase)).join('');
 
   main.innerHTML = `
-    <div class="comp-identity">
-      <h2 class="comp-id-name">${racquet.name}</h2>
-      <div class="comp-id-meta">${racquet.year} &middot; <span class="comp-id-identity">${racquet.identity || ''}</span></div>
-      <div class="comp-specs-grid">
-        <div class="comp-spec"><span class="comp-spec-label">Weight</span><span class="comp-spec-val">${racquet.strungWeight}g</span></div>
-        <div class="comp-spec"><span class="comp-spec-label">Swingweight</span><span class="comp-spec-val">${racquet.swingweight}</span></div>
-        <div class="comp-spec"><span class="comp-spec-label">Stiffness</span><span class="comp-spec-val">${racquet.stiffness} RA</span></div>
-        <div class="comp-spec"><span class="comp-spec-label">Pattern</span><span class="comp-spec-val">${racquet.pattern}</span></div>
-        <div class="comp-spec"><span class="comp-spec-label">Balance</span><span class="comp-spec-val">${racquet.balancePts}</span></div>
-        <div class="comp-spec"><span class="comp-spec-label">Beam</span><span class="comp-spec-val">${beamStr}</span></div>
-        <div class="comp-spec"><span class="comp-spec-label">Head Size</span><span class="comp-spec-val">${racquet.headSize} sq in</span></div>
-        <div class="comp-spec"><span class="comp-spec-label">Tension Range</span><span class="comp-spec-val">${racquet.tensionRange[0]}&ndash;${racquet.tensionRange[1]} lbs</span></div>
+    <!-- Hero Block -->
+    <div class="comp-hero">
+      <div class="comp-hero-weight">
+        <span class="comp-hero-weight-num">${racquet.strungWeight}</span>
       </div>
-      ${racquet.notes ? `<p class="comp-id-notes">${racquet.notes}</p>` : ''}
+      
+      <h2 class="comp-hero-name" onclick="_compToggleHud()">
+        ${racquet.name}
+        <span class="hud-trigger">▼</span>
+      </h2>
+      
+      <div class="comp-hero-meta">
+        <span class="comp-hero-year">${racquet.year}</span>
+        <span class="comp-hero-divider">//</span>
+        <span class="comp-hero-identity">${racquet.identity || ''}</span>
+      </div>
+      
+      ${racquet.notes ? `<p class="comp-hero-notes">${racquet.notes}</p>` : ''}
+      
+      <div class="comp-hero-specs">
+        <div class="comp-hero-spec">
+          <span class="comp-hero-spec-val">${racquet.swingweight}</span>
+          <span class="comp-hero-spec-label">SWINGWEIGHT</span>
+        </div>
+        <div class="comp-hero-spec">
+          <span class="comp-hero-spec-val">${racquet.stiffness}</span>
+          <span class="comp-hero-spec-label">STIFFNESS</span>
+        </div>
+        <div class="comp-hero-spec">
+          <span class="comp-hero-spec-val">${racquet.pattern}</span>
+          <span class="comp-hero-spec-label">PATTERN</span>
+        </div>
+        <div class="comp-hero-spec">
+          <span class="comp-hero-spec-val">${racquet.headSize}</span>
+          <span class="comp-hero-spec-label">HEAD SIZE</span>
+        </div>
+        <div class="comp-hero-spec">
+          <span class="comp-hero-spec-val">${racquet.balancePts}</span>
+          <span class="comp-hero-spec-label">BALANCE</span>
+        </div>
+        <div class="comp-hero-spec">
+          <span class="comp-hero-spec-val">${racquet.tensionRange[0]}–${racquet.tensionRange[1]}</span>
+          <span class="comp-hero-spec-label">TENSION</span>
+        </div>
+      </div>
+
+      ${consoleHtml.length > 0 ? `<div class="comp-hero-console">${consoleHtml.join('')}</div>` : ''}
     </div>
 
+    <!-- Grouped Stats -->
     <div class="comp-section">
-      <h3 class="comp-section-title">Base frame profile</h3>
+      <h3 class="comp-section-title">//BASE FRAME PROFILE</h3>
       <p class="comp-section-sub">Frame-only characteristics before string influence</p>
-      <div class="comp-stat-bars">${barsHtml}</div>
+      
+      <!-- Stats First -->
+      <div class="comp-stats">${statsHtml}</div>
+      
+      <!-- String Matrix Injector Below -->
+      <h3 class="comp-section-title" style="margin-top: 2rem;">//STRING SELECTOR</h3>
+      <div class="comp-inject-mode">
+        <button class="comp-inject-mode-btn active" data-mode="fullbed" onclick="_compSetInjectMode('fullbed')">Full Bed</button>
+        <button class="comp-inject-mode-btn" data-mode="hybrid" onclick="_compSetInjectMode('hybrid')">Hybrid</button>
+      </div>
+      
+      <div class="comp-inject-row">
+        <!-- Mains Column -->
+        <div class="comp-inject-string" id="comp-mains-col">
+          <span class="comp-inject-label" id="comp-mains-label">// STRING</span>
+          <div id="comp-mains-select" class="comp-string-select-container"></div>
+          <div class="comp-inject-sub-row">
+            <select class="comp-inject-gauge" id="comp-mains-gauge">
+              <option value="">Gauge...</option>
+            </select>
+            <div class="comp-inject-tension-wrap">
+              <input type="number" class="comp-inject-tension" id="comp-mains-tension" value="52" min="30" max="70" step="1">
+              <span class="comp-inject-unit">lbs</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Crosses Column (hidden string selector in fullbed) -->
+        <div class="comp-inject-string" id="comp-crosses-col">
+          <span class="comp-inject-label" id="comp-crosses-label">// CROSSES</span>
+          <div id="comp-crosses-select" class="comp-string-select-container" style="display:none;"></div>
+          <div class="comp-inject-sub-row">
+            <select class="comp-inject-gauge" id="comp-crosses-gauge">
+              <option value="">Gauge...</option>
+            </select>
+            <div class="comp-inject-tension-wrap">
+              <input type="number" class="comp-inject-tension" id="comp-crosses-tension" value="50" min="30" max="70" step="1">
+              <span class="comp-inject-unit">lbs</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="comp-inject-actions">
+        <button class="comp-inject-apply" id="comp-inject-apply" disabled onclick="_compApplyInjection()">APPLY TO LOADOUT</button>
+        <button class="comp-inject-clear" onclick="_compClearInjection()">Clear</button>
+      </div>
     </div>
 
+    <!-- Top Builds -->
     <div class="comp-section">
       <div class="comp-builds-header">
-        <h3 class="comp-section-title">Top builds</h3>
+        <h3 class="comp-section-title">//TOP BUILDS</h3>
         <div class="comp-sort-tabs">${sortTabsHtml}</div>
       </div>
       <div class="comp-build-grid">${cardsHtml}</div>
     </div>
   `;
+  
+  // Initialize string matrix injector searchable selects
+  _compInitStringInjector(racquet);
+}
+
+// Global state for string injection
+let _compInjectState = {
+  racquet: null,
+  mainsId: '',
+  crossesId: '',
+  mode: 'fullbed',
+  baseStats: null
+};
+
+// Set injection mode (fullbed/hybrid)
+function _compSetInjectMode(mode) {
+  _compInjectState.mode = mode;
+  
+  // Update button states
+  document.querySelectorAll('.comp-inject-mode-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === mode);
+  });
+  
+  const crossesSelect = document.getElementById('comp-crosses-select');
+  const mainsLabel = document.getElementById('comp-mains-label');
+  const crossesLabel = document.getElementById('comp-crosses-label');
+  
+  if (mode === 'hybrid') {
+    // Hybrid: Show crosses string selector, update labels
+    if (crossesSelect) crossesSelect.style.display = 'block';
+    if (mainsLabel) mainsLabel.textContent = '// MAINS';
+    if (crossesLabel) crossesLabel.textContent = '// CROSSES';
+    
+    // If entering hybrid with no crosses selected, default to mains
+    if (!_compInjectState.crossesId && _compInjectState.mainsId) {
+      _compInjectState.crossesId = _compInjectState.mainsId;
+      // Update the crosses selector UI to show the mains string
+      const crossesContainer = document.getElementById('comp-crosses-select');
+      if (crossesContainer) {
+        const crossTrigger = crossesContainer.querySelector('.ss-trigger');
+        if (crossTrigger) {
+          const crossString = STRINGS.find(s => s.id === _compInjectState.mainsId);
+          if (crossString) {
+            crossTrigger.textContent = crossString.name;
+            crossTrigger.classList.remove('ss-placeholder');
+          }
+        }
+      }
+      // Sync crosses gauge dropdown too
+      _compPopulateGaugeDropdown('comp-crosses-gauge', _compInjectState.mainsId);
+    }
+  } else {
+    // Fullbed: Hide crosses string selector, update labels
+    if (crossesSelect) crossesSelect.style.display = 'none';
+    if (mainsLabel) mainsLabel.textContent = '// STRING';
+    if (crossesLabel) crossesLabel.textContent = '// CROSSES';
+    
+    // Sync crosses string ID with mains for preview calculation
+    if (_compInjectState.mainsId) {
+      _compInjectState.crossesId = _compInjectState.mainsId;
+    }
+  }
+  
+  // Re-compute preview immediately
+  _compPreviewStats();
+}
+
+// Initialize searchable selects for string matrix injector
+function _compInitStringInjector(racquet) {
+  _compInjectState.racquet = racquet;
+  _compInjectState.baseStats = calcFrameBase(racquet);
+  
+  const mainsContainer = document.getElementById('comp-mains-select');
+  const crossesContainer = document.getElementById('comp-crosses-select');
+  if (!mainsContainer) return;
+  
+  // Default tensions from racquet range
+  const midTension = Math.round((racquet.tensionRange[0] + racquet.tensionRange[1]) / 2);
+  document.getElementById('comp-mains-tension').value = midTension;
+  document.getElementById('comp-crosses-tension').value = midTension - 2;
+  
+  // Initialize mains selector
+  createSearchableSelect(mainsContainer, {
+    type: 'string',
+    placeholder: 'Select String...',
+    value: '',
+    onChange: (val) => {
+      _compInjectState.mainsId = val;
+      _compPopulateGaugeDropdown('comp-mains-gauge', val);
+      
+      // In fullbed mode, also populate crosses gauge options (same string)
+      if (_compInjectState.mode === 'fullbed' && val) {
+        _compInjectState.crossesId = val;
+        _compPopulateGaugeDropdown('comp-crosses-gauge', val);
+      }
+      
+      _compPreviewStats();
+    }
+  });
+  
+  // Initialize crosses selector
+  if (crossesContainer) {
+    createSearchableSelect(crossesContainer, {
+      type: 'string',
+      placeholder: 'Select Cross String...',
+      value: '',
+      onChange: (val) => {
+        _compInjectState.crossesId = val;
+        _compPopulateGaugeDropdown('comp-crosses-gauge', val);
+        _compPreviewStats();
+      }
+    });
+  }
+  
+  // Wire up tension and gauge inputs - all independent
+  ['comp-mains-tension', 'comp-crosses-tension', 'comp-mains-gauge', 'comp-crosses-gauge'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('change', _compPreviewStats);
+      el.addEventListener('input', _compPreviewStats);
+    }
+  });
+  
+  // Set initial mode state
+  _compSetInjectMode('fullbed');
+}
+
+// Populate gauge dropdown for a string
+function _compPopulateGaugeDropdown(selectId, stringId) {
+  const select = document.getElementById(selectId);
+  if (!select || !stringId) return;
+  
+  const string = STRINGS.find(s => s.id === stringId);
+  if (!string) return;
+  
+  const gauges = getGaugeOptions(string);
+  select.innerHTML = '<option value="">Gauge...</option>' + 
+    gauges.map(g => `<option value="${g}" ${Math.abs(g - string.gaugeNum) < 0.01 ? 'selected' : ''}>${GAUGE_LABELS[g] || g + 'mm'}</option>`).join('');
+}
+
+// Preview stats with string injection
+function _compPreviewStats() {
+  const { racquet, mainsId, crossesId, mode, baseStats } = _compInjectState;
+  if (!racquet || !mainsId) return _compClearPreview();
+  
+  const mainsString = STRINGS.find(s => s.id === mainsId);
+  if (!mainsString) return _compClearPreview();
+  
+  // Get effective crosses string
+  let crossesString = mainsString;
+  if (mode === 'hybrid' && crossesId) {
+    crossesString = STRINGS.find(s => s.id === crossesId) || mainsString;
+  }
+  
+  // Apply gauge modifiers
+  const mainsGauge = document.getElementById('comp-mains-gauge').value;
+  const crossesGauge = document.getElementById('comp-crosses-gauge').value;
+  const mainsWithGauge = mainsGauge ? applyGaugeModifier(mainsString, parseFloat(mainsGauge)) : mainsString;
+  const crossesWithGauge = crossesGauge ? applyGaugeModifier(crossesString, parseFloat(crossesGauge)) : crossesString;
+  
+  // Get tensions
+  const mainsTension = parseInt(document.getElementById('comp-mains-tension').value) || 52;
+  const crossesTension = parseInt(document.getElementById('comp-crosses-tension').value) || 50;
+  
+  const isHybrid = mode === 'hybrid';
+  
+  // Build config for predictSetup
+  const cfg = isHybrid ? {
+    isHybrid: true,
+    mains: mainsWithGauge,
+    crosses: crossesWithGauge,
+    mainsTension,
+    crossesTension
+  } : {
+    isHybrid: false,
+    string: mainsWithGauge,  // Fullbed uses single string
+    mainsTension,
+    crossesTension
+  };
+  
+  // Run prediction
+  const previewStats = predictSetup(racquet, cfg);
+  if (!previewStats) return;
+  
+  // Update stat bars with before/after
+  _compRenderPreviewBars(baseStats, previewStats);
+  
+  // Enable apply button
+  const applyBtn = document.getElementById('comp-inject-apply');
+  if (applyBtn) applyBtn.disabled = false;
+}
+
+// Render preview bars showing before/after
+function _compRenderPreviewBars(baseStats, previewStats) {
+  const statKeys = ['spin', 'power', 'control', 'launch', 'feel', 'comfort', 'stability', 'forgiveness', 'maneuverability'];
+  
+  statKeys.forEach(k => {
+    const baseVal = baseStats[k] != null ? Math.round(baseStats[k]) : 50;
+    const previewVal = previewStats[k] != null ? Math.round(previewStats[k]) : 50;
+    const basePct = Math.max(0, Math.min(100, baseVal));
+    const previewPct = Math.max(0, Math.min(100, previewVal));
+    
+    // Update base fill (dimmed)
+    const baseFill = document.getElementById(`comp-base-${k}`);
+    if (baseFill) baseFill.style.width = basePct + '%';
+    
+    // Update preview fill
+    const previewFill = document.getElementById(`comp-preview-${k}`);
+    if (previewFill) previewFill.style.width = previewPct + '%';
+    
+    // Update track to show has-preview
+    const track = document.getElementById(`comp-track-${k}`);
+    if (track) track.classList.add('has-preview');
+    
+    // Update value display
+    const valEl = document.getElementById(`comp-val-${k}`);
+    if (valEl) {
+      const diff = previewVal - baseVal;
+      let diffClass = 'comp-stat-val-same';
+      if (diff > 0) diffClass = 'comp-stat-val-up';
+      if (diff < 0) diffClass = 'comp-stat-val-down';
+      
+      valEl.innerHTML = `
+        <span class="comp-stat-val-base">${baseVal}</span>
+        <span class="comp-stat-val-arrow">→</span>
+        <span class="comp-stat-val-preview ${diffClass}">${previewVal}</span>
+      `;
+    }
+  });
+}
+
+// Clear preview and reset to base stats
+function _compClearPreview() {
+  const { baseStats } = _compInjectState;
+  if (!baseStats) return;
+  
+  const statKeys = ['spin', 'power', 'control', 'launch', 'feel', 'comfort', 'stability', 'forgiveness', 'maneuverability'];
+  
+  statKeys.forEach(k => {
+    const baseVal = baseStats[k] != null ? Math.round(baseStats[k]) : 50;
+    const basePct = Math.max(0, Math.min(100, baseVal));
+    
+    const baseFill = document.getElementById(`comp-base-${k}`);
+    if (baseFill) baseFill.style.width = basePct + '%';
+    
+    const previewFill = document.getElementById(`comp-preview-${k}`);
+    if (previewFill) previewFill.style.width = '0%';
+    
+    const track = document.getElementById(`comp-track-${k}`);
+    if (track) track.classList.remove('has-preview');
+    
+    const valEl = document.getElementById(`comp-val-${k}`);
+    if (valEl) valEl.innerHTML = `<span class="comp-stat-val-base">${baseVal}</span>`;
+  });
+  
+  // Disable apply button
+  const applyBtn = document.getElementById('comp-inject-apply');
+  if (applyBtn) applyBtn.disabled = true;
+}
+
+// Apply injection to create a new loadout
+function _compApplyInjection() {
+  const { racquet, mainsId, crossesId, mode } = _compInjectState;
+  if (!racquet || !mainsId) return;
+  
+  const mainsGauge = document.getElementById('comp-mains-gauge').value;
+  const crossesGauge = document.getElementById('comp-crosses-gauge').value;
+  const mainsTension = parseInt(document.getElementById('comp-mains-tension').value);
+  const crossesTension = parseInt(document.getElementById('comp-crosses-tension').value);
+  
+  const isHybrid = mode === 'hybrid';
+  // In fullbed mode, crosses uses same string as mains but can have different gauge/tension
+  const effectiveCrossesId = isHybrid && crossesId ? crossesId : mainsId;
+  
+  // Create loadout using the app's createLoadout function
+  // Note: For hybrid, we pass mainsId as stringId (2nd param) because createLoadout 
+  // validates that stringId exists even for hybrid. The hybrid logic uses opts.mainsId/crossesId.
+  const lo = createLoadout(racquet.id, mainsId, mainsTension, {
+    isHybrid,
+    mainsId,
+    crossesId: effectiveCrossesId,
+    crossesTension: crossesTension,
+    mainsGauge: mainsGauge || undefined,
+    crossesGauge: crossesGauge || undefined,
+    source: 'bible'
+  });
+  
+  if (lo) {
+    activateLoadout(lo);
+    switchMode('overview');
+  }
+}
+
+// Clear injection and reset all fields
+function _compClearInjection() {
+  _compInjectState.mainsId = '';
+  _compInjectState.crossesId = '';
+  
+  // Reset selectors
+  const mainsContainer = document.getElementById('comp-mains-select');
+  const crossesContainer = document.getElementById('comp-crosses-select');
+  if (mainsContainer) mainsContainer.innerHTML = '';
+  if (crossesContainer) crossesContainer.innerHTML = '';
+  
+  // Reset gauge dropdowns
+  const mainsGauge = document.getElementById('comp-mains-gauge');
+  const crossesGauge = document.getElementById('comp-crosses-gauge');
+  if (mainsGauge) mainsGauge.innerHTML = '<option value="">Gauge...</option>';
+  if (crossesGauge) crossesGauge.innerHTML = '<option value="">Gauge...</option>';
+  
+  // Reset tensions to frame midpoint
+  const { racquet } = _compInjectState;
+  if (racquet) {
+    const midTension = Math.round((racquet.tensionRange[0] + racquet.tensionRange[1]) / 2);
+    document.getElementById('comp-mains-tension').value = midTension;
+    document.getElementById('comp-crosses-tension').value = midTension - 2;
+  }
+  
+  // Clear preview
+  _compClearPreview();
+  
+  // Re-initialize selectors
+  if (racquet) _compInitStringInjector(racquet);
 }
 
 function _compGenerateTopBuilds(racquet, count) {
@@ -8424,35 +8942,45 @@ const _compArchetypeColors = {
   'Balanced': 'rgba(220, 223, 226, 0.5)'
 };
 
-function _compRenderBuildCard(build, index, racquet) {
+function _compRenderBuildCard(build, index, racquet, frameStats) {
   const s = build.stats;
   const obsStyle = getObsBadgeStyle(build.score);
-  const borderColor = _compArchetypeColors[build.archetype] || 'var(--dc-storm)';
   const isHybrid = build.type === 'hybrid';
   const stringLabel = isHybrid ? (build.label || build.string.name) : build.string.name;
   const metaLabel = isHybrid ? `Hybrid · M:${build.tension} / X:${build.crossesTension}` : `Full Bed · ${build.tension} lbs`;
+  const isFeatured = index === 0;
 
-  // Top 3 differentiated stats for inline display
+  // Top 3 differentiated stats for terminal display (Elephant & Mouse)
   const statEntries = [
-    { key: 'spin', label: 'Spin', val: Math.round(s.spin) },
-    { key: 'power', label: 'Pwr', val: Math.round(s.power) },
-    { key: 'control', label: 'Ctrl', val: Math.round(s.control) },
-    { key: 'comfort', label: 'Cmf', val: Math.round(s.comfort) },
-    { key: 'feel', label: 'Feel', val: Math.round(s.feel) },
-    { key: 'durability', label: 'Dur', val: Math.round(s.durability) }
+    { key: 'spin', label: 'SPIN', val: Math.round(s.spin) },
+    { key: 'power', label: 'PWR', val: Math.round(s.power) },
+    { key: 'control', label: 'CTRL', val: Math.round(s.control) },
+    { key: 'comfort', label: 'CMF', val: Math.round(s.comfort) },
+    { key: 'feel', label: 'FEEL', val: Math.round(s.feel) },
+    { key: 'durability', label: 'DUR', val: Math.round(s.durability) }
   ].sort((a, b) => b.val - a.val);
   const topStats = statEntries.slice(0, 3);
+  // Terminal string format: [SPIN <b>78</b>]
   const statsInline = topStats.map(st =>
-    `<span class="comp-card-stat-chip">${st.label} <b>${st.val}</b></span>`
+    `<span class="comp-card-stat-term">[${st.label} <b>${st.val}</b>]</span>`
   ).join('');
 
-  return `<div class="comp-build-card" style="border-left-color:${borderColor}">
+  // Featured card gets badge and reason text
+  const badgeHtml = isFeatured ? '<div class="comp-card-badge">BEST OVERALL</div>' : '';
+  const reasonHtml = isFeatured && frameStats ? 
+    `<div class="comp-card-reason">${_compGenerateBuildReason(build, frameStats)}</div>` : '';
+  const cardClass = isFeatured ? 'comp-build-card comp-build-featured' : 'comp-build-card';
+
+  // S-Rank hardware tag styling applied via CSS, inline styles eradicated
+  return `<div class="${cardClass}">
+    ${badgeHtml}
     <div class="comp-card-top">
       <span class="comp-card-archetype">${build.archetype}</span>
-      <span class="comp-card-obs" style="${obsStyle}">${build.score.toFixed(1)}</span>
+      <span class="comp-card-obs">${build.score.toFixed(1)}</span>
     </div>
     <div class="comp-card-string">${stringLabel}</div>
     <div class="comp-card-meta">${metaLabel}</div>
+    ${reasonHtml}
     <div class="comp-card-actions">
       <button class="comp-card-btn comp-card-btn-primary" onclick="_compAction('setActive',${index})">Set Active</button>
       <button class="comp-card-btn" onclick="_compAction('tune',${index})">Tune</button>

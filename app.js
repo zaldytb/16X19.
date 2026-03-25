@@ -1475,7 +1475,7 @@ function renderDockPanel() {
     if (nameEl) nameEl.textContent = activeLoadout.name || '\u2014';
     if (identEl) identEl.textContent = activeLoadout.identity || '';
     if (detailsEl) {
-      const frameName = racquet ? racquet.name : '\u2014';
+      const frameName = racquet ? racquet.name.replace(/\\s+\\d+g$/, '') : '\u2014';
       const strName = stringData ? stringData.name : (activeLoadout.isHybrid ? 'Hybrid' : '\u2014');
       const tension = 'M:' + activeLoadout.mainsTension + ' / X:' + activeLoadout.crossesTension;
       detailsEl.textContent = frameName + ' \u00B7 ' + strName + ' \u00B7 ' + tension;
@@ -1646,7 +1646,7 @@ function _renderDockPanelBible(container) {
   } else {
     // Has loadout — show current build summary + action links
     const racquet = RACQUETS.find(r => r.id === activeLoadout.frameId);
-    const frameName = racquet ? racquet.name : '—';
+    const frameName = racquet ? racquet.name.replace(/\\s+\\d+g$/, '') : '—';
     const obs = activeLoadout.obs ? activeLoadout.obs.toFixed(1) : '—';
 
     let stringName = '—';
@@ -1795,7 +1795,7 @@ function _renderDockPanelCompare(container) {
     comparisonSlots.forEach((slot, i) => {
       const color = SLOT_COLORS[i];
       const racquet = RACQUETS.find(r => r.id === slot.racquetId);
-      const frameName = racquet ? racquet.name : 'Not set';
+      const frameName = racquet ? racquet.name.replace(/\\s+\\d+g$/, '') : 'Not set';
 
       let stringName = '—';
       if (slot.isHybrid) {
@@ -1967,7 +1967,7 @@ function _renderDockPanelOptimize(container) {
   container.innerHTML = `
     <div class="dock-ctx-current">
       <div class="dock-ctx-label">Optimizing from</div>
-      <div class="dock-ctx-current-name">${racquet ? racquet.name : '—'}</div>
+      <div class="dock-ctx-current-name">${racquet ? racquet.name.replace(/\\s+\\d+g$/, '') : '—'}</div>
       <div class="dock-ctx-current-detail">${stringName} · ${tensionLabel}</div>
       <div class="dock-ctx-current-obs">OBS ${obs}</div>
     </div>
@@ -3414,7 +3414,7 @@ function showFrameSpecs(racquet) {
   }
   el.classList.remove('hidden');
   el.innerHTML = `
-    <div class="frame-spec-item"><span class="frame-spec-label">Weight</span><span class="frame-spec-value">${racquet.strungWeight}g</span></div>
+    <div class="frame-spec-item"><span class="frame-spec-label">STRUNG WGHT</span><span class="frame-spec-value">${racquet.strungWeight}g</span></div>
     <div class="frame-spec-item"><span class="frame-spec-label">SW</span><span class="frame-spec-value">${racquet.swingweight}</span></div>
     <div class="frame-spec-item"><span class="frame-spec-label">Stiffness</span><span class="frame-spec-value">${racquet.stiffness} RA</span></div>
     <div class="frame-spec-item"><span class="frame-spec-label">Pattern</span><span class="frame-spec-value">${racquet.pattern}</span></div>
@@ -3594,7 +3594,7 @@ function renderOverviewHero(racquet, stringConfig, stats, identity) {
           <div class="hero-archetype">${identity.archetype}</div>
           <div class="hero-desc">${identity.description}</div>
           <div class="hero-terminal">
-            <span class="hero-terminal-value">${racquet.name}</span><span class="hero-terminal-sep">//</span><span class="hero-terminal-value">${stringName}</span><span class="hero-terminal-sep">//</span><span class="hero-terminal-value">${tensionLabel}</span>
+            <span class="hero-terminal-value">${racquet.name.replace(/\\s+\\d+g$/, '')}</span><span class="hero-terminal-sep">//</span><span class="hero-terminal-value">${stringName}</span><span class="hero-terminal-sep">//</span><span class="hero-terminal-value">${tensionLabel}</span>
           </div>
         </div>
       </div>
@@ -3602,14 +3602,14 @@ function renderOverviewHero(racquet, stringConfig, stats, identity) {
       <div class="mt-2 pt-6 border-t border-dc-storm/20">
         <div class="flex gap-3">
           <button 
-            class="flex-1 bg-transparent border border-dc-storm/40 text-dc-platinum font-mono text-[10px] font-bold uppercase tracking-widest py-3 px-4 hover:border-dc-platinum hover:bg-dc-platinum/5 transition-colors flex items-center justify-center gap-2"
+            class="flex-1 bg-transparent border border-dc-storm/40 text-dc-platinum font-mono text-[12px] font-bold uppercase tracking-widest py-3 px-4 hover:border-dc-platinum hover:bg-dc-platinum/5 transition-colors flex items-center justify-center gap-2"
             onclick="switchMode('compendium')"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
             //BACK TO BIBLE
           </button>
           <button 
-            class="flex-1 bg-dc-accent text-dc-void font-mono text-[10px] font-bold uppercase tracking-widest py-3 px-4 hover:bg-dc-accent/90 transition-colors flex items-center justify-center gap-2"
+            class="flex-1 bg-dc-accent text-dc-void font-mono text-[12px] font-bold uppercase tracking-widest py-3 px-4 hover:bg-dc-accent/90 transition-colors flex items-center justify-center gap-2"
             onclick="switchMode('tune')"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v10"/><path d="M21 12h-6m-6 0H1"/></svg>
@@ -3828,7 +3828,7 @@ function renderOCFoundation(racquet, stringConfig, stats) {
   el.innerHTML = `
     <div class="oc-foundation-group">
       <span class="oc-foundation-group-title">[FRAME]</span>
-      <span class="oc-foundation-group-values">WGHT ${racquet.strungWeight}g ${sep} SW ${racquet.swingweight} ${sep} RA ${racquet.stiffness} ${sep} PAT ${racquet.pattern}</span>
+      <span class="oc-foundation-group-values">WGHT ${racquet.strungWeight - 13}g unstrung ${sep} SW ${racquet.swingweight} ${sep} RA ${racquet.stiffness} ${sep} PAT ${racquet.pattern}</span>
     </div>
     <div class="oc-foundation-group">
       <span class="oc-foundation-group-title">[STRNG]</span>
@@ -4994,6 +4994,7 @@ function renderCompareMatrix() {
 }
 
 // ============================================
+// ============================================
 // LEADERBOARD v2 — "What's the best racket for X?"
 // ============================================
 // Simple UX: pick a stat → see ranked frames at their best string pairing
@@ -5008,6 +5009,23 @@ let _lbv2State = {
   statKey:     'obs',     // which stat (or 'obs') to rank by
   filterType:  'both',    // 'both' | 'full' | 'hybrid'
   viewMode:    'builds',  // 'builds' | 'frames' | 'strings'
+  // Frame-specific filters (applies to Frames tab only)
+  frameFilters: {
+    brand:     '',
+    pattern:   '',
+    headSize:  '',
+    weight:    '',
+    stiffness: '',
+    year:      '',
+  },
+  // String-specific filters (applies to Strings tab only)
+  stringFilters: {
+    brand:     '',   // e.g. 'Babolat', 'Solinco', 'Luxilon'
+    material:  '',   // e.g. 'Polyester', 'Natural Gut'
+    shape:     '',   // e.g. 'Round', 'Pentagon', 'Hexagonal'
+    gauge:     '',   // 'thin' | 'mid' | 'thick'
+    stiffness: '',   // 'soft' | 'medium' | 'stiff'
+  },
   results:     null,
   loading:     false,
   initialized: false,
@@ -5016,15 +5034,15 @@ let _lbv2State = {
 // ── Stat options shown to the user ───────────────────────────────────────────
 
 const LB_STATS = [
-  { key: 'obs',            label: 'Best Overall',  icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>', desc: 'Highest total build score' },
-  { key: 'spin',           label: 'Most Spin',     icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="m16.2 7.8 2.9-2.9"/><path d="M18 12h4"/><path d="m16.2 16.2 2.9 2.9"/><path d="M12 18v4"/><path d="m4.9 19.1 2.9-2.9"/><path d="M2 12h4"/><path d="m4.9 4.9 2.9 2.9"/></svg>', desc: 'Maximum topspin potential' },
-  { key: 'power',          label: 'Most Power',    icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>', desc: 'Hardest hitting setups'    },
-  { key: 'control',        label: 'Most Control',  icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/></svg>', desc: 'Precision & placement'     },
-  { key: 'comfort',        label: 'Most Comfort',  icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>', desc: 'Arm-friendly, low vibration'},
-  { key: 'feel',           label: 'Best Feel',     icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>', desc: 'Touch & ball connection'   },
-  { key: 'maneuverability',label: 'Most Maneuverable', icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>', desc: 'Fast swing, reactive' },
-  { key: 'stability',      label: 'Most Stable',   icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg>', desc: 'Plow-through, twist resist'},
-  { key: 'durability',     label: 'Most Durable',  icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>', desc: 'Long-lasting strings'      },
+  { key: 'obs',            label: 'Best Overall',  icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>', desc: 'Highest total build score' },
+  { key: 'spin',           label: 'Most Spin',     icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="m16.2 7.8 2.9-2.9"/><path d="M18 12h4"/><path d="m16.2 16.2 2.9 2.9"/><path d="M12 18v4"/><path d="m4.9 19.1 2.9-2.9"/><path d="M2 12h4"/><path d="m4.9 4.9 2.9 2.9"/></svg>', desc: 'Maximum topspin potential' },
+  { key: 'power',          label: 'Most Power',    icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>', desc: 'Hardest hitting setups'    },
+  { key: 'control',        label: 'Most Control',  icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/></svg>', desc: 'Precision & placement'     },
+  { key: 'comfort',        label: 'Most Comfort',  icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>', desc: 'Arm-friendly, low vibration'},
+  { key: 'feel',           label: 'Best Feel',     icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>', desc: 'Touch & ball connection'   },
+  { key: 'maneuverability',label: 'Most Maneuverable', icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>', desc: 'Fast swing, reactive' },
+  { key: 'stability',      label: 'Most Stable',   icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg>', desc: 'Plow-through, twist resist'},
+  { key: 'durability',     label: 'Most Durable',  icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>', desc: 'Long-lasting strings'      },
 ];
 
 // ── Entry point ───────────────────────────────────────────────────────────────
@@ -5043,7 +5061,7 @@ function _buildShellHTML() {
   const statPills = LB_STATS.map(s => {
     const active = s.key === _lbv2State.statKey;
     return `<button
-      class="lb2-stat-pill flex items-center gap-2 px-4 py-2.5 border font-mono text-[10px] font-bold uppercase tracking-[0.12em] transition-all duration-150 cursor-pointer whitespace-nowrap ${
+      class="lb2-stat-pill flex items-center gap-2 px-4 py-2.5 border font-mono text-[12px] font-bold uppercase tracking-[0.12em] transition-all duration-150 cursor-pointer whitespace-nowrap ${
         active
           ? 'border-dc-accent text-dc-accent bg-dc-accent/5'
           : 'border-dc-storm/40 text-dc-storm hover:border-dc-storm hover:text-dc-platinum'
@@ -5064,7 +5082,7 @@ function _buildShellHTML() {
   ].map(({ v, l }) => {
     const active = v === _lbv2State.filterType;
     return `<button
-      class="px-3 py-1.5 border font-mono text-[9px] font-bold uppercase tracking-[0.1em] transition-all duration-150 cursor-pointer ${
+      class="px-3 py-1.5 border font-mono text-[13px] font-bold uppercase tracking-[0.1em] transition-all duration-150 cursor-pointer ${
         active
           ? 'border-dc-accent text-dc-accent bg-dc-accent/5'
           : 'border-dc-storm/40 text-dc-storm hover:border-dc-storm hover:text-dc-platinum'
@@ -5088,13 +5106,130 @@ function _buildShellHTML() {
       }"
       onclick="_lbv2SetView('${v}')"
     >
-      <span class="text-[10px] font-bold uppercase tracking-[0.12em]">${l}</span>
-      <span class="text-[8px] tracking-[0.08em] opacity-60">${sub}</span>
+      <span class="text-[12px] font-bold uppercase tracking-[0.12em]">${l}</span>
+      <span class="text-[10px] tracking-[0.08em] opacity-60">${sub}</span>
     </button>`;
   }).join('');
 
   // Type filter only relevant for builds tab
   const showTypeFilter = _lbv2State.viewMode === 'builds';
+
+  // Frame filters — only shown on frames tab
+  const showFrameFilters = _lbv2State.viewMode === 'frames';
+  const ff = _lbv2State.frameFilters;
+
+  // Derive brand list dynamically from RACQUETS
+  const brands = typeof RACQUETS !== 'undefined'
+    ? [...new Set(RACQUETS.map(r => r.name.split(' ')[0]))].sort()
+    : ['Babolat','Head','Wilson','Yonex','Tecnifibre','Dunlop','Prince','Volkl','Diadem','Solinco','ProKennex'];
+
+  const sel = (id, val, opts, placeholder) =>
+    `<select
+      id="${id}"
+      class="bg-dc-void-deep border border-dc-storm/40 text-dc-platinum font-mono text-[13px] px-2 py-1.5 cursor-pointer hover:border-dc-storm focus:border-dc-accent transition-colors outline-none"
+      onchange="_lbv2SetFrameFilter('${id.replace('lb2-ff-','')}')"
+    >
+      <option value="" class="bg-dc-void-deep text-dc-platinum">${placeholder}</option>
+      ${opts.map(o => `<option value="${o.v}" ${val === o.v ? 'selected' : ''} class="bg-dc-void-deep text-dc-platinum">${o.l}</option>`).join('')}
+    </select>`;
+
+  const frameFilterRow = showFrameFilters ? `
+    <div class="flex items-center gap-2 flex-wrap">
+      <span class="font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-dc-storm shrink-0">Filter</span>
+      ${sel('lb2-ff-brand', ff.brand, brands.map(b => ({ v: b, l: b })), 'All brands')}
+      ${sel('lb2-ff-pattern', ff.pattern, [
+        { v: '16x19', l: '16x19' },
+        { v: '16x20', l: '16x20' },
+        { v: '16x18', l: '16x18' },
+        { v: '18x20', l: '18x20' },
+        { v: '18x19', l: '18x19' },
+      ], 'All patterns')}
+      ${sel('lb2-ff-headSize', ff.headSize, [
+        { v: '95',   l: '≤95 sq in' },
+        { v: '97',   l: '97 sq in' },
+        { v: '98',   l: '98 sq in' },
+        { v: '99',   l: '99 sq in' },
+        { v: '100',  l: '100 sq in' },
+        { v: '102+', l: '102+ sq in' },
+      ], 'All head sizes')}
+      ${sel('lb2-ff-weight', ff.weight, [
+        { v: 'ultralight', l: '< 285g' },
+        { v: 'light',      l: '285–305g' },
+        { v: 'medium',     l: '305–320g' },
+        { v: 'heavy',      l: '320–340g' },
+        { v: 'tour',       l: '> 340g' },
+      ], 'All weights')}
+      ${sel('lb2-ff-stiffness', ff.stiffness, [
+        { v: 'soft',   l: 'Soft (≤59 RA)' },
+        { v: 'medium', l: 'Medium (60–65)' },
+        { v: 'stiff',  l: 'Stiff (66+)' },
+      ], 'All stiffness')}
+      ${sel('lb2-ff-year', ff.year, [
+        { v: '2026',  l: '2026' },
+        { v: '2025',  l: '2025' },
+        { v: '2024',  l: '2024' },
+        { v: 'older', l: '≤2023' },
+      ], 'All years')}
+      ${Object.values(ff).some(v => v !== '') ? `
+        <button
+          class="font-mono text-[13px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-storm/30 text-dc-storm/60 hover:border-dc-red hover:text-dc-red transition-colors"
+          onclick="_lbv2ClearFrameFilters()"
+        >Clear</button>` : ''}
+    </div>` : '';
+
+  // String filters — only shown on strings tab
+  const showStringFilters = _lbv2State.viewMode === 'strings';
+  const sf = _lbv2State.stringFilters;
+
+  const stringBrands = typeof STRINGS !== 'undefined'
+    ? [...new Set(STRINGS.map(s => s.name.split(' ')[0]))].sort()
+    : ['Babolat','Solinco','Luxilon','Head','Tecnifibre','Wilson','Yonex','Volkl','Dunlop','Toroline','Grapplesnake','ReString','Diadem'];
+
+  const ssel = (id, val, opts, placeholder) =>
+    `<select
+      id="${id}"
+      class="bg-dc-void-deep border border-dc-storm/40 text-dc-platinum font-mono text-[13px] px-2 py-1.5 cursor-pointer hover:border-dc-storm focus:border-dc-accent transition-colors outline-none"
+      onchange="_lbv2SetStringFilter('${id.replace('lb2-sf-','')}')"
+    >
+      <option value="" class="bg-dc-void-deep text-dc-platinum">${placeholder}</option>
+      ${opts.map(o => `<option value="${o.v}" ${val === o.v ? 'selected' : ''} class="bg-dc-void-deep text-dc-platinum">${o.l}</option>`).join('')}
+    </select>`;
+
+  const stringFilterRow = showStringFilters ? `
+    <div class="flex items-center gap-2 flex-wrap">
+      <span class="font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-dc-storm shrink-0">Filter</span>
+      ${ssel('lb2-sf-brand', sf.brand, stringBrands.map(b => ({ v: b, l: b })), 'All brands')}
+      ${ssel('lb2-sf-material', sf.material, [
+        { v: 'Polyester',              l: 'Polyester' },
+        { v: 'Co-Polyester (elastic)', l: 'Co-Poly (elastic)' },
+        { v: 'Natural Gut',            l: 'Natural Gut' },
+        { v: 'Multifilament',          l: 'Multifilament' },
+        { v: 'Synthetic Gut',          l: 'Synthetic Gut' },
+      ], 'All materials')}
+      ${ssel('lb2-sf-shape', sf.shape, [
+        { v: 'round',      l: 'Round' },
+        { v: 'pentagon',   l: 'Pentagon' },
+        { v: 'hexagonal',  l: 'Hexagonal' },
+        { v: 'octagonal',  l: 'Octagonal' },
+        { v: 'square',     l: 'Square' },
+        { v: 'textured',   l: 'Textured / Rough' },
+      ], 'All shapes')}
+      ${ssel('lb2-sf-gauge', sf.gauge, [
+        { v: 'thin',  l: 'Thin (≤1.20mm)' },
+        { v: 'mid',   l: 'Mid (1.21–1.27mm)' },
+        { v: 'thick', l: 'Thick (≥1.28mm)' },
+      ], 'All gauges')}
+      ${ssel('lb2-sf-stiffness', sf.stiffness, [
+        { v: 'soft',   l: 'Soft (< 180 lb/in)' },
+        { v: 'medium', l: 'Medium (180–215)' },
+        { v: 'stiff',  l: 'Stiff (> 215)' },
+      ], 'All stiffness')}
+      ${Object.values(sf).some(v => v !== '') ? `
+        <button
+          class="font-mono text-[13px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-storm/30 text-dc-storm/60 hover:border-dc-red hover:text-dc-red transition-colors"
+          onclick="_lbv2ClearStringFilters()"
+        >Clear</button>` : ''}
+    </div>` : '';
 
   return `
     <div class="flex flex-col min-h-full">
@@ -5109,7 +5244,7 @@ function _buildShellHTML() {
 
         <!-- Primary question -->
         <div class="flex items-baseline gap-3">
-          <span class="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-dc-storm shrink-0">Show me</span>
+          <span class="font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-dc-storm shrink-0">Show me</span>
           <div class="flex gap-2 flex-wrap" id="lb2-stat-pills">
             ${statPills}
           </div>
@@ -5118,15 +5253,23 @@ function _buildShellHTML() {
         <!-- Secondary filter (builds tab only) -->
         ${showTypeFilter ? `
         <div class="flex items-center gap-3">
-          <span class="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-dc-storm shrink-0">Setup type</span>
+          <span class="font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-dc-storm shrink-0">Setup type</span>
           <div class="flex gap-1.5">
             ${typePills}
           </div>
-          <span class="font-mono text-[9px] text-dc-storm/50 ml-auto" id="lb2-count"></span>
-        </div>` : `
+          <span class="font-mono text-[13px] text-dc-storm/50 ml-auto" id="lb2-count"></span>
+        </div>` : ''}
+
+        <!-- Frame filters (frames tab only) -->
+        ${frameFilterRow}
+
+        <!-- String filters (strings tab only) -->
+        ${stringFilterRow}
+
+        ${!showTypeFilter ? `
         <div class="flex justify-end">
-          <span class="font-mono text-[9px] text-dc-storm/50" id="lb2-count"></span>
-        </div>`}
+          <span class="font-mono text-[13px] text-dc-storm/50" id="lb2-count"></span>
+        </div>` : ''}
 
       </div>
 
@@ -5134,7 +5277,7 @@ function _buildShellHTML() {
       <div class="flex-1" id="lb2-results">
         <div class="flex flex-col items-center justify-center py-16 gap-4">
           <div class="w-7 h-7 border-2 border-dc-storm/30 border-t-dc-accent rounded-full animate-spin"></div>
-          <span class="font-mono text-[10px] uppercase tracking-[0.15em] text-dc-storm">Computing…</span>
+          <span class="font-mono text-[12px] uppercase tracking-[0.15em] text-dc-storm">Computing…</span>
         </div>
       </div>
 
@@ -5184,7 +5327,44 @@ function _lbv2SetView(viewMode) {
   _runLbv2();
 }
 
-// ── Main runner ─────────────────────────────────────────────────────────────--
+function _lbv2SetFrameFilter(key) {
+  const el = document.getElementById('lb2-ff-' + key);
+  if (!el) return;
+  _lbv2State.frameFilters[key] = el.value;
+  _lbv2State.results = null;
+  // Re-render shell to update Clear button visibility, then run
+  const panel = document.getElementById('comp-tab-leaderboard');
+  if (panel) panel.innerHTML = _buildShellHTML();
+  _runLbv2();
+}
+
+function _lbv2ClearFrameFilters() {
+  _lbv2State.frameFilters = { brand: '', pattern: '', headSize: '', weight: '', stiffness: '', year: '' };
+  _lbv2State.results = null;
+  const panel = document.getElementById('comp-tab-leaderboard');
+  if (panel) panel.innerHTML = _buildShellHTML();
+  _runLbv2();
+}
+
+function _lbv2SetStringFilter(key) {
+  const el = document.getElementById('lb2-sf-' + key);
+  if (!el) return;
+  _lbv2State.stringFilters[key] = el.value;
+  _lbv2State.results = null;
+  const panel = document.getElementById('comp-tab-leaderboard');
+  if (panel) panel.innerHTML = _buildShellHTML();
+  _runLbv2();
+}
+
+function _lbv2ClearStringFilters() {
+  _lbv2State.stringFilters = { brand: '', material: '', shape: '', gauge: '', stiffness: '' };
+  _lbv2State.results = null;
+  const panel = document.getElementById('comp-tab-leaderboard');
+  if (panel) panel.innerHTML = _buildShellHTML();
+  _runLbv2();
+}
+
+// ── Main runner ───────────────────────────────────────────────────────────────
 
 function _runLbv2() {
   const resultsEl = document.getElementById('lb2-results');
@@ -5194,7 +5374,7 @@ function _runLbv2() {
   resultsEl.innerHTML = `
     <div class="flex flex-col items-center justify-center py-16 gap-4">
       <div class="w-7 h-7 border-2 border-dc-storm/30 border-t-dc-accent rounded-full animate-spin"></div>
-      <span class="font-mono text-[10px] uppercase tracking-[0.15em] text-dc-storm">
+      <span class="font-mono text-[12px] uppercase tracking-[0.15em] text-dc-storm">
         Computing ${statMeta?.label || ''}…
       </span>
     </div>`;
@@ -5223,7 +5403,7 @@ function _runLbv2() {
       }
     } catch (err) {
       if (resultsEl) resultsEl.innerHTML = `
-        <div class="flex items-center justify-center py-16 font-mono text-[11px] text-dc-red/70">
+        <div class="flex items-center justify-center py-16 font-mono text-[13px] text-dc-red/70">
           Error: ${err.message}
         </div>`;
       console.error('Leaderboard error:', err);
@@ -5374,7 +5554,7 @@ function _renderLbv2Results(results) {
 
   if (!results || results.length === 0) {
     resultsEl.innerHTML = `
-      <div class="flex items-center justify-center py-16 font-mono text-[11px] text-dc-storm">
+      <div class="flex items-center justify-center py-16 font-mono text-[13px] text-dc-storm">
         No results — try a different filter.
       </div>`;
     return;
@@ -5396,8 +5576,8 @@ function _renderLbv2Results(results) {
       : `${entry.tension} lbs`;
 
     const typeTag = entry.type === 'hybrid'
-      ? `<span class="font-mono text-[8px] font-bold px-1.5 py-0.5 border border-emerald-500/30 text-emerald-400 bg-emerald-400/5">H</span>`
-      : `<span class="font-mono text-[8px] font-bold px-1.5 py-0.5 border border-dc-storm/30 text-dc-storm">F</span>`;
+      ? `<span class="font-mono text-[10px] font-bold px-1.5 py-0.5 border border-emerald-500/30 text-emerald-400 bg-emerald-400/5">H</span>`
+      : `<span class="font-mono text-[10px] font-bold px-1.5 py-0.5 border border-dc-storm/30 text-dc-storm">F</span>`;
 
     // Top 3 stats for this entry
     const topStats = ['spin', 'power', 'control', 'comfort', 'feel', 'stability']
@@ -5406,7 +5586,7 @@ function _renderLbv2Results(results) {
       .slice(0, 3)
       .map(({ k, v }) => {
         const high = v >= 70;
-        return `<span class="font-mono text-[8px] font-bold px-1.5 py-0.5 border ${
+        return `<span class="font-mono text-[10px] font-bold px-1.5 py-0.5 border ${
           high
             ? 'border-emerald-500/25 text-emerald-400 bg-emerald-400/5'
             : 'border-dc-storm/20 text-dc-storm'
@@ -5434,7 +5614,7 @@ function _renderLbv2Results(results) {
       }">
         <!-- Rank -->
         <td class="px-4 py-3 w-10 text-center">
-          <span class="font-mono text-[11px] font-bold ${isFeatured ? 'text-dc-accent' : 'text-dc-storm/60'}">${rank}</span>
+          <span class="font-mono text-[13px] font-bold ${isFeatured ? 'text-dc-accent' : 'text-dc-storm/60'}">${rank}</span>
         </td>
 
         <!-- Type -->
@@ -5443,30 +5623,30 @@ function _renderLbv2Results(results) {
         <!-- Frame + String -->
         <td class="px-3 py-3 min-w-[160px]">
           <div class="font-sans text-[12px] font-semibold text-dc-platinum leading-tight" title="${entry.frameLabel}">${frameName}</div>
-          <div class="font-mono text-[9px] text-dc-storm mt-0.5" title="${entry.stringLabel}">${stringName}</div>
+          <div class="font-mono text-[13px] text-dc-storm mt-0.5" title="${entry.stringLabel}">${stringName}</div>
         </td>
 
         <!-- Tension -->
         <td class="px-3 py-3 w-24">
-          <span class="font-mono text-[10px] text-dc-storm/70">${tensionLabel}</span>
+          <span class="font-mono text-[12px] text-dc-storm/70">${tensionLabel}</span>
         </td>
 
         <!-- Primary stat (the ranked one) -->
         <td class="px-3 py-3 w-20 text-right">
-          <span class="font-mono text-[18px] font-bold leading-none ${isFeatured ? 'text-dc-accent' : 'text-dc-white'}">${rankValDisplay}</span>
-          <div class="font-mono text-[7px] uppercase tracking-[0.15em] text-dc-storm mt-0.5 text-right">${statLabel}</div>
+          <span class="font-mono text-[20px] font-bold leading-none ${isFeatured ? 'text-dc-accent' : 'text-dc-white'}">${rankValDisplay}</span>
+          <div class="font-mono text-[9px] uppercase tracking-[0.15em] text-dc-storm mt-0.5 text-right">${statLabel}</div>
         </td>
 
         <!-- OBS (always shown) -->
         ${!isObs ? `
         <td class="px-3 py-3 w-16 text-right">
           <span class="font-mono text-[12px] font-semibold" style="color:${getObsScoreColor(entry.obs)}">${entry.obs}</span>
-          <div class="font-mono text-[7px] uppercase tracking-[0.15em] text-dc-storm mt-0.5 text-right">OBS</div>
+          <div class="font-mono text-[9px] uppercase tracking-[0.15em] text-dc-storm mt-0.5 text-right">OBS</div>
         </td>` : `<td class="w-4"></td>`}
 
         <!-- Archetype -->
         <td class="px-3 py-3 hidden md:table-cell">
-          <span class="font-mono text-[9px] text-dc-storm/70 leading-tight">${archetype}</span>
+          <span class="font-mono text-[13px] text-dc-storm/70 leading-tight">${archetype}</span>
         </td>
 
         <!-- Top stats -->
@@ -5478,11 +5658,11 @@ function _renderLbv2Results(results) {
         <td class="px-3 py-3 w-24">
           <div class="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
-              class="font-mono text-[8px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-void transition-colors"
+              class="font-mono text-[10px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-void transition-colors"
               onclick="_lbv2View('${entry.racquet.id}','${stringId}',${entry.tension},'${entry.type}','${mainsId}','${crossesId}',${entry.crossesTension})"
             >View</button>
             <button
-              class="font-mono text-[8px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-storm/40 text-dc-storm hover:border-dc-storm hover:text-dc-platinum transition-colors"
+              class="font-mono text-[10px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-storm/40 text-dc-storm hover:border-dc-storm hover:text-dc-platinum transition-colors"
               onclick="_lbv2Compare('${entry.racquet.id}','${stringId}',${entry.tension},'${entry.type}','${mainsId}','${crossesId}',${entry.crossesTension})"
             >Cmp</button>
           </div>
@@ -5495,14 +5675,14 @@ function _renderLbv2Results(results) {
       <table class="w-full border-collapse">
         <thead>
           <tr class="border-b border-dc-storm/20">
-            <th class="px-4 py-2.5 text-left font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-dc-storm/60 w-10">#</th>
+            <th class="px-4 py-2.5 text-left font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-dc-storm/60 w-10">#</th>
             <th class="px-2 py-2.5 w-8"></th>
-            <th class="px-3 py-2.5 text-left font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-dc-storm/60">Frame / String</th>
-            <th class="px-3 py-2.5 text-left font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-dc-storm/60">Tension</th>
-            <th class="px-3 py-2.5 text-right font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-dc-accent">${statLabel}</th>
-            ${!isObs ? `<th class="px-3 py-2.5 text-right font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-dc-storm/60">OBS</th>` : `<th class="w-4"></th>`}
-            <th class="px-3 py-2.5 text-left font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-dc-storm/60 hidden md:table-cell">Identity</th>
-            <th class="px-3 py-2.5 text-left font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-dc-storm/60 hidden lg:table-cell">Stats</th>
+            <th class="px-3 py-2.5 text-left font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-dc-storm/60">Frame / String</th>
+            <th class="px-3 py-2.5 text-left font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-dc-storm/60">Tension</th>
+            <th class="px-3 py-2.5 text-right font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-dc-accent">${statLabel}</th>
+            ${!isObs ? `<th class="px-3 py-2.5 text-right font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-dc-storm/60">OBS</th>` : `<th class="w-4"></th>`}
+            <th class="px-3 py-2.5 text-left font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-dc-storm/60 hidden md:table-cell">Identity</th>
+            <th class="px-3 py-2.5 text-left font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-dc-storm/60 hidden lg:table-cell">Stats</th>
             <th class="w-24"></th>
           </tr>
         </thead>
@@ -5510,13 +5690,316 @@ function _renderLbv2Results(results) {
       </table>
     </div>
     <div class="px-5 py-3 border-t border-dc-storm/10 flex justify-between items-center">
-      <span class="font-mono text-[9px] text-dc-storm/50">${results.length} builds scored · best setup per frame×string at optimal tension</span>
-      <span class="font-mono text-[9px] text-dc-storm/50">${statMeta.icon} ${statMeta.desc}</span>
+      <span class="font-mono text-[13px] text-dc-storm/50">${results.length} builds scored · best setup per frame×string at optimal tension</span>
+      <span class="font-mono text-[13px] text-dc-storm/50">${statMeta.icon} ${statMeta.desc}</span>
     </div>
   `;
 }
 
-// ── Action handlers ───────────────────────────────────────────────────────────
+// ── Frames-only computation ───────────────────────────────────────────────────
+// Ranks frames by their base physics stats — no string, no tension.
+// Uses calcFrameBase() directly. Stable sort, all 263 frames.
+
+function _computeLbv2Frames() {
+  const statKey = _lbv2State.statKey;
+  const ff      = _lbv2State.frameFilters;
+
+  // Apply filters
+  const filtered = RACQUETS.filter(function(r) {
+    if (ff.brand && !r.name.startsWith(ff.brand)) return false;
+    if (ff.pattern && r.pattern !== ff.pattern) return false;
+    if (ff.headSize) {
+      if (ff.headSize === '102+' && r.headSize < 102) return false;
+      if (ff.headSize !== '102+' && r.headSize !== parseInt(ff.headSize)) return false;
+    }
+    if (ff.weight) {
+      const w = r.strungWeight;
+      if (ff.weight === 'ultralight' && w >= 285) return false;
+      if (ff.weight === 'light'      && (w < 285 || w >= 305)) return false;
+      if (ff.weight === 'medium'     && (w < 305 || w >= 320)) return false;
+      if (ff.weight === 'heavy'      && (w < 320 || w >= 340)) return false;
+      if (ff.weight === 'tour'       && w < 340) return false;
+    }
+    if (ff.stiffness) {
+      const ra = r.stiffness;
+      if (ff.stiffness === 'soft'   && ra > 59) return false;
+      if (ff.stiffness === 'medium' && (ra < 60 || ra > 65)) return false;
+      if (ff.stiffness === 'stiff'  && ra < 66) return false;
+    }
+    if (ff.year) {
+      if (ff.year === 'older' && r.year > 2023) return false;
+      if (ff.year !== 'older' && r.year !== parseInt(ff.year)) return false;
+    }
+    return true;
+  });
+
+  return filtered.map(function(racquet) {
+    const frameBase = calcFrameBase(racquet);
+    const frameObs = statKey === 'obs'
+      ? Math.round((
+          frameBase.spin * 0.15 +
+          frameBase.power * 0.12 +
+          frameBase.control * 0.18 +
+          frameBase.comfort * 0.12 +
+          frameBase.feel * 0.10 +
+          frameBase.stability * 0.12 +
+          frameBase.forgiveness * 0.08 +
+          frameBase.maneuverability * 0.08 +
+          frameBase.launch * 0.05
+        ))
+      : null;
+
+    const rankVal = statKey === 'obs' ? frameObs : Math.round(frameBase[statKey] || 0);
+
+    return { racquet, frameBase, rankVal, statKey, frameLabel: racquet.name };
+  })
+  .filter(function(e) { return e.rankVal != null; })
+  .sort(function(a, b) { return b.rankVal - a.rankVal; })
+  .slice(0, 60);
+}
+
+function _renderLbv2Frames(results) {
+  const resultsEl = document.getElementById('lb2-results');
+  if (!resultsEl) return;
+
+  if (!results || results.length === 0) {
+    resultsEl.innerHTML = `<div class="flex items-center justify-center py-16 font-mono text-[13px] text-dc-storm">No results.</div>`;
+    return;
+  }
+
+  const statMeta  = LB_STATS.find(s => s.key === _lbv2State.statKey) || LB_STATS[0];
+  const isObs     = _lbv2State.statKey === 'obs';
+  const statLabel = isObs ? 'Score' : statMeta.label.replace('Most ', '').replace('Best ', '');
+
+  // Secondary stats to always show for context
+  const contextStats = ['spin', 'power', 'control', 'comfort', 'stability', 'maneuverability']
+    .filter(k => k !== _lbv2State.statKey)
+    .slice(0, 4);
+
+  const rows = results.slice(0, 50).map(function(entry, i) {
+    const rank       = i + 1;
+    const isFeatured = rank === 1;
+    const fb         = entry.frameBase;
+
+    const specChips = contextStats.map(function(k) {
+      const v    = Math.round(fb[k] || 0);
+      const high = v >= 68;
+      return `<span class="font-mono text-[10px] font-bold px-1.5 py-0.5 border ${
+        high
+          ? 'border-emerald-500/25 text-emerald-400 bg-emerald-400/5'
+          : 'border-dc-storm/20 text-dc-storm'
+      }">${k.slice(0,3).toUpperCase()} ${v}</span>`;
+    }).join('');
+
+    const frameName = entry.frameLabel.length > 36
+      ? entry.frameLabel.slice(0, 36) + '…'
+      : entry.frameLabel;
+
+    const r = entry.racquet;
+    const unstrungWeight = r.strungWeight - 13;
+    const specLine = `${unstrungWeight}g unstrung · SW ${r.swingweight} · ${r.stiffness} RA · ${r.pattern} · ${r.headSize} sq in`;
+
+    return `
+      <tr class="group border-b border-dc-storm/10 transition-colors hover:bg-dc-void-lift/50 ${isFeatured ? 'bg-dc-accent/[0.03]' : ''}">
+        <td class="px-4 py-3 w-10 text-center">
+          <span class="font-mono text-[13px] font-bold ${isFeatured ? 'text-dc-accent' : 'text-dc-storm/60'}">${rank}</span>
+        </td>
+        <td class="px-3 py-3 min-w-[200px]">
+          <div class="font-sans text-[12px] font-semibold text-dc-platinum leading-tight">${frameName}</div>
+          <div class="font-mono text-[13px] text-dc-storm/60 mt-0.5">${specLine}</div>
+        </td>
+        <td class="px-3 py-3 w-20 text-right">
+          <span class="font-mono text-[20px] font-bold leading-none ${isFeatured ? 'text-dc-accent' : 'text-dc-white'}">${entry.rankVal}</span>
+          <div class="font-mono text-[9px] uppercase tracking-[0.15em] text-dc-storm mt-0.5 text-right">${statLabel}</div>
+        </td>
+        <td class="px-3 py-3 hidden md:table-cell">
+          <div class="flex gap-1.5 flex-wrap">${specChips}</div>
+        </td>
+        <td class="px-3 py-3 w-20">
+          <div class="opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              class="font-mono text-[10px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-void transition-colors"
+              onclick="_lbv2ViewFrame('${r.id}')"
+            >View</button>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+
+  resultsEl.innerHTML = `
+    <div class="overflow-x-auto">
+      <table class="w-full border-collapse">
+        <thead>
+          <tr class="border-b border-dc-storm/20">
+            <th class="px-4 py-2.5 text-left font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-dc-storm/60 w-10">#</th>
+            <th class="px-3 py-2.5 text-left font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-dc-storm/60">Frame</th>
+            <th class="px-3 py-2.5 text-right font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-dc-accent">${statLabel}</th>
+            <th class="px-3 py-2.5 text-left font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-dc-storm/60 hidden md:table-cell">Stats</th>
+            <th class="w-20"></th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div class="px-5 py-3 border-t border-dc-storm/10 flex justify-between items-center">
+      <span class="font-mono text-[13px] text-dc-storm/50">${results.length} frames · base physics, no string interaction</span>
+      <span class="font-mono text-[13px] text-dc-storm/50">${statMeta.icon} ${statMeta.desc}</span>
+    </div>
+  `;
+}
+
+// ── Strings-only computation ──────────────────────────────────────────────────
+// Ranks strings by their intrinsic profile — no frame, no tension.
+// Uses calcBaseStringProfile() which maps twScore + physical props to stats.
+
+function _computeLbv2Strings() {
+  const statKey = _lbv2State.statKey;
+  const sf      = _lbv2State.stringFilters;
+
+  // Apply filters
+  const filtered = STRINGS.filter(function(s) {
+    if (sf.brand && !s.name.startsWith(sf.brand)) return false;
+    if (sf.material && s.material !== sf.material) return false;
+    if (sf.shape) {
+      const shape = (s.shape || '').toLowerCase();
+      if (!shape.includes(sf.shape)) return false;
+    }
+    if (sf.gauge) {
+      const g = s.gaugeNum || 1.25;
+      if (sf.gauge === 'thin'  && g > 1.20) return false;
+      if (sf.gauge === 'mid'   && (g <= 1.20 || g >= 1.28)) return false;
+      if (sf.gauge === 'thick' && g < 1.28) return false;
+    }
+    if (sf.stiffness) {
+      const st = s.stiffness || 200;
+      if (sf.stiffness === 'soft'   && st >= 180) return false;
+      if (sf.stiffness === 'medium' && (st < 180 || st > 215)) return false;
+      if (sf.stiffness === 'stiff'  && st <= 215) return false;
+    }
+    return true;
+  });
+
+  return filtered.map(function(str) {
+    const profile = calcBaseStringProfile(str);
+
+    const strObs = statKey === 'obs'
+      ? Math.round(
+          profile.spin        * 0.15 +
+          profile.power       * 0.12 +
+          profile.control     * 0.18 +
+          profile.comfort     * 0.13 +
+          profile.feel        * 0.12 +
+          profile.durability  * 0.15 +
+          profile.playability * 0.15
+        )
+      : null;
+
+    const rankVal = statKey === 'obs' ? strObs : Math.round(profile[statKey] || str.twScore?.[statKey] || 0);
+
+    return { string: str, profile, rankVal, statKey };
+  })
+  .filter(function(e) { return e.rankVal != null && e.rankVal > 0; })
+  .sort(function(a, b) { return b.rankVal - a.rankVal; })
+  .slice(0, 60);
+}
+
+function _renderLbv2Strings(results) {
+  const resultsEl = document.getElementById('lb2-results');
+  if (!resultsEl) return;
+
+  if (!results || results.length === 0) {
+    resultsEl.innerHTML = `<div class="flex items-center justify-center py-16 font-mono text-[13px] text-dc-storm">No results.</div>`;
+    return;
+  }
+
+  const statMeta  = LB_STATS.find(s => s.key === _lbv2State.statKey) || LB_STATS[0];
+  const isObs     = _lbv2State.statKey === 'obs';
+  const statLabel = isObs ? 'Score' : statMeta.label.replace('Most ', '').replace('Best ', '');
+
+  const contextStats = ['spin', 'power', 'control', 'comfort', 'feel', 'durability', 'playability']
+    .filter(k => k !== _lbv2State.statKey)
+    .slice(0, 4);
+
+  const rows = results.slice(0, 50).map(function(entry, i) {
+    const rank       = i + 1;
+    const isFeatured = rank === 1;
+    const s          = entry.string;
+    const p          = entry.profile;
+
+    const matTag = (function() {
+      const m = (s.material || '').toLowerCase();
+      if (m.includes('natural gut')) return `<span class="font-mono text-[10px] font-bold px-1.5 py-0.5 border border-amber-500/30 text-amber-400 bg-amber-400/5">GUT</span>`;
+      if (m.includes('multifilament')) return `<span class="font-mono text-[10px] font-bold px-1.5 py-0.5 border border-sky-500/30 text-sky-400 bg-sky-400/5">MULTI</span>`;
+      if (m.includes('co-polyester')) return `<span class="font-mono text-[10px] font-bold px-1.5 py-0.5 border border-purple-500/25 text-purple-400 bg-purple-400/5">CO-POLY</span>`;
+      if (m.includes('synthetic')) return `<span class="font-mono text-[10px] font-bold px-1.5 py-0.5 border border-dc-storm/30 text-dc-storm">SYN GUT</span>`;
+      return `<span class="font-mono text-[10px] font-bold px-1.5 py-0.5 border border-dc-storm/30 text-dc-storm">POLY</span>`;
+    })();
+
+    const statChips = contextStats.map(function(k) {
+      const v    = Math.round(p[k] || 0);
+      const high = v >= 68;
+      return `<span class="font-mono text-[10px] font-bold px-1.5 py-0.5 border ${
+        high
+          ? 'border-emerald-500/25 text-emerald-400 bg-emerald-400/5'
+          : 'border-dc-storm/20 text-dc-storm'
+      }">${k.slice(0,3).toUpperCase()} ${v}</span>`;
+    }).join('');
+
+    const specLine = `${s.gauge} · ${s.shape} · ${Math.round(s.stiffness)} lb/in`;
+
+    return `
+      <tr class="group border-b border-dc-storm/10 transition-colors hover:bg-dc-void-lift/50 ${isFeatured ? 'bg-dc-accent/[0.03]' : ''}">
+        <td class="px-4 py-3 w-10 text-center">
+          <span class="font-mono text-[13px] font-bold ${isFeatured ? 'text-dc-accent' : 'text-dc-storm/60'}">${rank}</span>
+        </td>
+        <td class="px-3 py-3 min-w-[180px]">
+          <div class="flex items-center gap-2">
+            <span class="font-sans text-[12px] font-semibold text-dc-platinum leading-tight">${s.name}</span>
+            ${matTag}
+          </div>
+          <div class="font-mono text-[13px] text-dc-storm/60 mt-0.5">${specLine}</div>
+        </td>
+        <td class="px-3 py-3 w-20 text-right">
+          <span class="font-mono text-[20px] font-bold leading-none ${isFeatured ? 'text-dc-accent' : 'text-dc-white'}">${entry.rankVal}</span>
+          <div class="font-mono text-[9px] uppercase tracking-[0.15em] text-dc-storm mt-0.5 text-right">${statLabel}</div>
+        </td>
+        <td class="px-3 py-3 hidden md:table-cell">
+          <div class="flex gap-1.5 flex-wrap">${statChips}</div>
+        </td>
+        <td class="px-3 py-3 w-20">
+          <div class="opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              class="font-mono text-[10px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-void transition-colors"
+              onclick="_lbv2ViewString('${s.id}')"
+            >View</button>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+
+  resultsEl.innerHTML = `
+    <div class="overflow-x-auto">
+      <table class="w-full border-collapse">
+        <thead>
+          <tr class="border-b border-dc-storm/20">
+            <th class="px-4 py-2.5 text-left font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-dc-storm/60 w-10">#</th>
+            <th class="px-3 py-2.5 text-left font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-dc-storm/60">String</th>
+            <th class="px-3 py-2.5 text-right font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-dc-accent">${statLabel}</th>
+            <th class="px-3 py-2.5 text-left font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-dc-storm/60 hidden md:table-cell">Stats</th>
+            <th class="w-20"></th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div class="px-5 py-3 border-t border-dc-storm/10 flex justify-between items-center">
+      <span class="font-mono text-[13px] text-dc-storm/50">${results.length} strings · intrinsic profile, no frame interaction</span>
+      <span class="font-mono text-[13px] text-dc-storm/50">${statMeta.icon} ${statMeta.desc}</span>
+    </div>
+  `;
+}
+
+
 
 function _lbv2View(racquetId, stringId, tension, type, mainsId, crossesId, crossesTension) {
   const opts = { source: 'leaderboard' };
@@ -5528,6 +6011,22 @@ function _lbv2View(racquetId, stringId, tension, type, mainsId, crossesId, cross
   }
   const lo = createLoadout(racquetId, type === 'hybrid' ? mainsId : stringId, tension, opts);
   if (lo) { activateLoadout(lo); switchMode('overview'); }
+}
+
+function _lbv2ViewFrame(racquetId) {
+  // Navigate to Racket Bible and select the frame
+  if (!_compendiumInitialized) {
+    initCompendium();
+    _compendiumInitialized = true;
+  }
+  _compSelectFrame(racquetId);
+  _compSwitchTab('rackets');
+}
+
+function _lbv2ViewString(stringId) {
+  // Navigate to String Compendium and select the string
+  _compSwitchTab('strings');
+  setTimeout(function() { _stringSelectString(stringId); }, 120);
 }
 
 function _lbv2Compare(racquetId, stringId, tension, type, mainsId, crossesId, crossesTension) {
@@ -5568,283 +6067,6 @@ function _lbv2Compare(racquetId, stringId, tension, type, mainsId, crossesId, cr
   renderCompareVerdict();
   renderCompareMatrix();
   try { updateComparisonRadar(); } catch(e) {}
-}
-
-function _lbv2ViewFrame(racquetId) {
-  // Navigate to Racket Bible and select the frame
-  if (!_compendiumInitialized) {
-    initCompendium();
-    _compendiumInitialized = true;
-  }
-  _compSelectFrame(racquetId);
-  _compSwitchTab('rackets');
-}
-
-function _lbv2ViewString(stringId) {
-  // Navigate to String Compendium and select the string
-  _compSwitchTab('strings');
-  setTimeout(function() { _stringSelectString(stringId); }, 120);
-}
-
-// ── Frames-only computation ───────────────────────────────────────────────────
-// Ranks frames by their base physics stats — no string, no tension.
-// Uses calcFrameBase() directly. Stable sort, all 263 frames.
-
-function _computeLbv2Frames() {
-  const statKey = _lbv2State.statKey;
-
-  return RACQUETS.map(function(racquet) {
-    const frameBase = calcFrameBase(racquet);
-    // OBS for frames-only: average of key frame stats (no string interaction)
-    const frameObs = statKey === 'obs'
-      ? Math.round((
-          frameBase.spin * 0.15 +
-          frameBase.power * 0.12 +
-          frameBase.control * 0.18 +
-          frameBase.comfort * 0.12 +
-          frameBase.feel * 0.10 +
-          frameBase.stability * 0.12 +
-          frameBase.forgiveness * 0.08 +
-          frameBase.maneuverability * 0.08 +
-          frameBase.launch * 0.05
-        ))
-      : null;
-
-    const rankVal = statKey === 'obs' ? frameObs : Math.round(frameBase[statKey] || 0);
-
-    return {
-      racquet,
-      frameBase,
-      rankVal,
-      statKey,
-      frameLabel: racquet.name,
-    };
-  })
-  .filter(function(e) { return e.rankVal != null; })
-  .sort(function(a, b) { return b.rankVal - a.rankVal; })
-  .slice(0, 60);
-}
-
-function _renderLbv2Frames(results) {
-  const resultsEl = document.getElementById('lb2-results');
-  if (!resultsEl) return;
-
-  if (!results || results.length === 0) {
-    resultsEl.innerHTML = `<div class="flex items-center justify-center py-16 font-mono text-[11px] text-dc-storm">No results.</div>`;
-    return;
-  }
-
-  const statMeta  = LB_STATS.find(s => s.key === _lbv2State.statKey) || LB_STATS[0];
-  const isObs     = _lbv2State.statKey === 'obs';
-  const statLabel = isObs ? 'Score' : statMeta.label.replace('Most ', '').replace('Best ', '');
-
-  // Secondary stats to always show for context
-  const contextStats = ['spin', 'power', 'control', 'comfort', 'stability', 'maneuverability']
-    .filter(k => k !== _lbv2State.statKey)
-    .slice(0, 4);
-
-  const rows = results.slice(0, 50).map(function(entry, i) {
-    const rank       = i + 1;
-    const isFeatured = rank === 1;
-    const fb         = entry.frameBase;
-
-    const specChips = contextStats.map(function(k) {
-      const v    = Math.round(fb[k] || 0);
-      const high = v >= 68;
-      return `<span class="font-mono text-[8px] font-bold px-1.5 py-0.5 border ${
-        high
-          ? 'border-emerald-500/25 text-emerald-400 bg-emerald-400/5'
-          : 'border-dc-storm/20 text-dc-storm'
-      }">${k.slice(0,3).toUpperCase()} ${v}</span>`;
-    }).join('');
-
-    const frameName = entry.frameLabel.length > 36
-      ? entry.frameLabel.slice(0, 36) + '…'
-      : entry.frameLabel;
-
-    const r = entry.racquet;
-    const specLine = `${r.strungWeight}g · SW ${r.swingweight} · ${r.stiffness} RA · ${r.pattern} · ${r.headSize} sq in`;
-
-    return `
-      <tr class="group border-b border-dc-storm/10 transition-colors hover:bg-dc-void-lift/50 ${isFeatured ? 'bg-dc-accent/[0.03]' : ''}">
-        <td class="px-4 py-3 w-10 text-center">
-          <span class="font-mono text-[11px] font-bold ${isFeatured ? 'text-dc-accent' : 'text-dc-storm/60'}">${rank}</span>
-        </td>
-        <td class="px-3 py-3 min-w-[200px]">
-          <div class="font-sans text-[12px] font-semibold text-dc-platinum leading-tight">${frameName}</div>
-          <div class="font-mono text-[9px] text-dc-storm/60 mt-0.5">${specLine}</div>
-        </td>
-        <td class="px-3 py-3 w-20 text-right">
-          <span class="font-mono text-[18px] font-bold leading-none ${isFeatured ? 'text-dc-accent' : 'text-dc-white'}">${entry.rankVal}</span>
-          <div class="font-mono text-[7px] uppercase tracking-[0.15em] text-dc-storm mt-0.5 text-right">${statLabel}</div>
-        </td>
-        <td class="px-3 py-3 hidden md:table-cell">
-          <div class="flex gap-1.5 flex-wrap">${specChips}</div>
-        </td>
-        <td class="px-3 py-3 w-20">
-          <div class="opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              class="font-mono text-[8px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-void transition-colors"
-              onclick="_lbv2ViewFrame('${r.id}')"
-            >View</button>
-          </div>
-        </td>
-      </tr>`;
-  }).join('');
-
-  resultsEl.innerHTML = `
-    <div class="overflow-x-auto">
-      <table class="w-full border-collapse">
-        <thead>
-          <tr class="border-b border-dc-storm/20">
-            <th class="px-4 py-2.5 text-left font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-dc-storm/60 w-10">#</th>
-            <th class="px-3 py-2.5 text-left font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-dc-storm/60">Frame</th>
-            <th class="px-3 py-2.5 text-right font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-dc-accent">${statLabel}</th>
-            <th class="px-3 py-2.5 text-left font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-dc-storm/60 hidden md:table-cell">Stats</th>
-            <th class="w-20"></th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
-    <div class="px-5 py-3 border-t border-dc-storm/10 flex justify-between items-center">
-      <span class="font-mono text-[9px] text-dc-storm/50">${results.length} frames · base physics, no string interaction</span>
-      <span class="font-mono text-[9px] text-dc-storm/50">${statMeta.icon} ${statMeta.desc}</span>
-    </div>
-  `;
-}
-
-// ── Strings-only computation ──────────────────────────────────────────────────
-// Ranks strings by their intrinsic profile — no frame, no tension.
-// Uses calcBaseStringProfile() which maps twScore + physical props to stats.
-
-function _computeLbv2Strings() {
-  const statKey = _lbv2State.statKey;
-
-  return STRINGS.map(function(str) {
-    const profile = calcBaseStringProfile(str);
-
-    // OBS for strings: weighted profile composite
-    const strObs = statKey === 'obs'
-      ? Math.round(
-          profile.spin     * 0.15 +
-          profile.power    * 0.12 +
-          profile.control  * 0.18 +
-          profile.comfort  * 0.13 +
-          profile.feel     * 0.12 +
-          profile.durability   * 0.15 +
-          profile.playability  * 0.15
-        )
-      : null;
-
-    const rankVal = statKey === 'obs' ? strObs : Math.round(profile[statKey] || str.twScore?.[statKey] || 0);
-
-    return {
-      string:  str,
-      profile,
-      rankVal,
-      statKey,
-    };
-  })
-  .filter(function(e) { return e.rankVal != null && e.rankVal > 0; })
-  .sort(function(a, b) { return b.rankVal - a.rankVal; })
-  .slice(0, 60);
-}
-
-function _renderLbv2Strings(results) {
-  const resultsEl = document.getElementById('lb2-results');
-  if (!resultsEl) return;
-
-  if (!results || results.length === 0) {
-    resultsEl.innerHTML = `<div class="flex items-center justify-center py-16 font-mono text-[11px] text-dc-storm">No results.</div>`;
-    return;
-  }
-
-  const statMeta  = LB_STATS.find(s => s.key === _lbv2State.statKey) || LB_STATS[0];
-  const isObs     = _lbv2State.statKey === 'obs';
-  const statLabel = isObs ? 'Score' : statMeta.label.replace('Most ', '').replace('Best ', '');
-
-  const contextStats = ['spin', 'power', 'control', 'comfort', 'feel', 'durability', 'playability']
-    .filter(k => k !== _lbv2State.statKey)
-    .slice(0, 4);
-
-  const rows = results.slice(0, 50).map(function(entry, i) {
-    const rank       = i + 1;
-    const isFeatured = rank === 1;
-    const s          = entry.string;
-    const p          = entry.profile;
-
-    const matTag = (function() {
-      const m = (s.material || '').toLowerCase();
-      if (m.includes('natural gut')) return `<span class="font-mono text-[8px] font-bold px-1.5 py-0.5 border border-amber-500/30 text-amber-400 bg-amber-400/5">GUT</span>`;
-      if (m.includes('multifilament')) return `<span class="font-mono text-[8px] font-bold px-1.5 py-0.5 border border-sky-500/30 text-sky-400 bg-sky-400/5">MULTI</span>`;
-      if (m.includes('co-polyester')) return `<span class="font-mono text-[8px] font-bold px-1.5 py-0.5 border border-purple-500/25 text-purple-400 bg-purple-400/5">CO-POLY</span>`;
-      if (m.includes('synthetic')) return `<span class="font-mono text-[8px] font-bold px-1.5 py-0.5 border border-dc-storm/30 text-dc-storm">SYN GUT</span>`;
-      return `<span class="font-mono text-[8px] font-bold px-1.5 py-0.5 border border-dc-storm/30 text-dc-storm">POLY</span>`;
-    })();
-
-    const statChips = contextStats.map(function(k) {
-      const v    = Math.round(p[k] || 0);
-      const high = v >= 68;
-      return `<span class="font-mono text-[8px] font-bold px-1.5 py-0.5 border ${
-        high
-          ? 'border-emerald-500/25 text-emerald-400 bg-emerald-400/5'
-          : 'border-dc-storm/20 text-dc-storm'
-      }">${k.slice(0,3).toUpperCase()} ${v}</span>`;
-    }).join('');
-
-    const specLine = `${s.gauge} · ${s.shape} · ${Math.round(s.stiffness)} lb/in`;
-
-    return `
-      <tr class="group border-b border-dc-storm/10 transition-colors hover:bg-dc-void-lift/50 ${isFeatured ? 'bg-dc-accent/[0.03]' : ''}">
-        <td class="px-4 py-3 w-10 text-center">
-          <span class="font-mono text-[11px] font-bold ${isFeatured ? 'text-dc-accent' : 'text-dc-storm/60'}">${rank}</span>
-        </td>
-        <td class="px-3 py-3 min-w-[180px]">
-          <div class="flex items-center gap-2">
-            <span class="font-sans text-[12px] font-semibold text-dc-platinum leading-tight">${s.name}</span>
-            ${matTag}
-          </div>
-          <div class="font-mono text-[9px] text-dc-storm/60 mt-0.5">${specLine}</div>
-        </td>
-        <td class="px-3 py-3 w-20 text-right">
-          <span class="font-mono text-[18px] font-bold leading-none ${isFeatured ? 'text-dc-accent' : 'text-dc-white'}">${entry.rankVal}</span>
-          <div class="font-mono text-[7px] uppercase tracking-[0.15em] text-dc-storm mt-0.5 text-right">${statLabel}</div>
-        </td>
-        <td class="px-3 py-3 hidden md:table-cell">
-          <div class="flex gap-1.5 flex-wrap">${statChips}</div>
-        </td>
-        <td class="px-3 py-3 w-20">
-          <div class="opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              class="font-mono text-[8px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-void transition-colors"
-              onclick="_lbv2ViewString('${s.id}')"
-            >View</button>
-          </div>
-        </td>
-      </tr>`;
-  }).join('');
-
-  resultsEl.innerHTML = `
-    <div class="overflow-x-auto">
-      <table class="w-full border-collapse">
-        <thead>
-          <tr class="border-b border-dc-storm/20">
-            <th class="px-4 py-2.5 text-left font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-dc-storm/60 w-10">#</th>
-            <th class="px-3 py-2.5 text-left font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-dc-storm/60">String</th>
-            <th class="px-3 py-2.5 text-right font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-dc-accent">${statLabel}</th>
-            <th class="px-3 py-2.5 text-left font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-dc-storm/60 hidden md:table-cell">Stats</th>
-            <th class="w-20"></th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
-    <div class="px-5 py-3 border-t border-dc-storm/10 flex justify-between items-center">
-      <span class="font-mono text-[9px] text-dc-storm/50">${results.length} strings · intrinsic profile, no frame interaction</span>
-      <span class="font-mono text-[9px] text-dc-storm/50">${statMeta.icon} ${statMeta.desc}</span>
-    </div>
-  `;
 }
 
 // ============================================
@@ -7418,7 +7640,7 @@ function renderRecommendedBuilds(setup) {
         </div>
       </div>
     </div>
-    <p class="recs-footnote">Composite score across all 11 stats at optimal tension for <strong>${racquet.name}</strong>. Delta is vs your current build.</p>
+    <p class="recs-footnote">Composite score across all 11 stats at optimal tension for <strong>${racquet.name.replace(/\\s+\\d+g$/, '')}</strong>. Delta is vs your current build.</p>
   `;
 
   // Show "Try a Different String" section
@@ -9270,9 +9492,9 @@ function _stringRenderRoster() {
         <span class="text-base font-semibold leading-tight tracking-tight text-dc-void dark:text-dc-platinum">${s.name}</span>
       </div>
       <div class="flex flex-col gap-1">
-        <span class="font-mono text-[8px] uppercase tracking-[0.15em] text-dc-accent">${archetype}</span>
-        <span class="font-mono text-[10px] text-dc-storm">${s.material} // ${s.shape}</span>
-        <span class="font-mono text-[11px] font-semibold text-dc-void dark:text-dc-platinum">${Math.round(s.stiffness)} lb/in</span>
+        <span class="font-mono text-[10px] uppercase tracking-[0.15em] text-dc-accent">${archetype}</span>
+        <span class="font-mono text-[12px] text-dc-storm">${s.material} // ${s.shape}</span>
+        <span class="font-mono text-[13px] font-semibold text-dc-void dark:text-dc-platinum">${Math.round(s.stiffness)} lb/in</span>
       </div>
     </button>`;
   }).join('');
@@ -9357,7 +9579,7 @@ function _stringRenderBatteryBars(string) {
   let html = '<div class="flex flex-col gap-6">';
   groups.forEach(g => {
     html += `<div class="flex flex-col">
-      <h4 class="font-mono text-[9px] text-dc-storm uppercase tracking-[0.2em] border-b border-dc-border pb-2 mb-3">${g.title}</h4>
+      <h4 class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em] border-b border-dc-border pb-2 mb-3">${g.title}</h4>
       <div class="flex flex-col gap-2.5">`;
     
     g.stats.forEach(s => {
@@ -9376,9 +9598,9 @@ function _stringRenderBatteryBars(string) {
 
       html += `
         <div class="flex items-center gap-4 group">
-          <span class="font-mono text-[9px] text-dc-storm group-hover:text-dc-platinum transition-colors uppercase tracking-[0.15em] w-28">${s.label}</span>
+          <span class="font-mono text-[13px] text-dc-storm group-hover:text-dc-platinum transition-colors uppercase tracking-[0.15em] w-28">${s.label}</span>
           ${batteryHtml}
-          <span class="font-mono text-[11px] font-bold text-dc-void dark:text-dc-platinum w-8 text-right">${Math.round(s.val)}</span>
+          <span class="font-mono text-[13px] font-bold text-dc-void dark:text-dc-platinum w-8 text-right">${Math.round(s.val)}</span>
         </div>`;
     });
     html += `</div></div>`;
@@ -9452,11 +9674,11 @@ function _stringRenderMain(string) {
     const archetype = _stringGetArchetype(s);
     return `<div class="bg-transparent border border-dc-border hover:border-dc-storm p-4 flex flex-col cursor-pointer transition-colors group" onclick="_stringSelectString('${s.id}')">
       <div class="flex justify-between items-start mb-2">
-        <span class="font-mono text-[8px] text-dc-storm uppercase tracking-widest group-hover:text-dc-platinum transition-colors">${archetype}</span>
-        <span class="font-mono text-lg font-bold text-dc-void dark:text-dc-platinum">${s.twScore.spin || 0}<span class="text-[9px] text-dc-storm ml-1">SPIN</span></span>
+        <span class="font-mono text-[10px] text-dc-storm uppercase tracking-widest group-hover:text-dc-platinum transition-colors">${archetype}</span>
+        <span class="font-mono text-lg font-bold text-dc-void dark:text-dc-platinum">${s.twScore.spin || 0}<span class="text-[13px] text-dc-storm ml-1">SPIN</span></span>
       </div>
       <div class="text-sm font-semibold text-dc-void dark:text-dc-platinum mb-1">${s.name}</div>
-      <div class="font-mono text-[9px] text-dc-storm">${s.material} // ${s.shape}</div>
+      <div class="font-mono text-[13px] text-dc-storm">${s.material} // ${s.shape}</div>
     </div>`;
   }).join('');
   
@@ -9464,11 +9686,11 @@ function _stringRenderMain(string) {
   const framesHtml = bestFrames.map(f => {
     return `<div class="bg-transparent border border-dc-border hover:border-dc-storm p-4 flex flex-col cursor-pointer transition-colors group" onclick="_compSelectFrame('${f.racquet.id}'); _compSwitchTab('rackets');">
       <div class="flex justify-between items-start mb-2">
-        <span class="font-mono text-[8px] text-dc-storm uppercase tracking-widest group-hover:text-dc-platinum transition-colors">${f.racquet.identity}</span>
+        <span class="font-mono text-[10px] text-dc-storm uppercase tracking-widest group-hover:text-dc-platinum transition-colors">${f.racquet.identity}</span>
         <span class="font-mono text-lg font-bold text-dc-accent">${f.obs.toFixed(1)}</span>
       </div>
-      <div class="text-sm font-semibold text-dc-void dark:text-dc-platinum mb-1">${f.racquet.name}</div>
-      <div class="font-mono text-[9px] text-dc-storm">${f.racquet.pattern} // ${f.racquet.strungWeight}g</div>
+      <div class="text-sm font-semibold text-dc-void dark:text-dc-platinum mb-1">${f.racquet.name.replace(/\\s+\\d+g$/, '')}</div>
+      <div class="font-mono text-[13px] text-dc-storm">${f.racquet.pattern} // ${f.racquet.strungWeight - 13}g unstrung</div>
     </div>`;
   }).join('');
   
@@ -9489,7 +9711,7 @@ function _stringRenderMain(string) {
     <div class="relative flex flex-col items-start mb-8">
       
       <div class="absolute top-6 right-6 md:top-8 md:right-8 flex flex-col items-end">
-        <span class="font-mono text-[9px] text-dc-storm tracking-[0.2em] mb-1">TWU SCORE</span>
+        <span class="font-mono text-[13px] text-dc-storm tracking-[0.2em] mb-1">TWU SCORE</span>
         <span class="font-mono text-5xl font-semibold leading-[0.85] text-dc-void dark:text-dc-platinum">
           ${twuComposite}
         </span>
@@ -9500,9 +9722,9 @@ function _stringRenderMain(string) {
         <span class="text-2xl text-dc-red opacity-50 group-hover:opacity-100 transition-opacity">▼</span>
       </h2>
       
-      <div class="flex items-center gap-2 mt-4 font-mono text-[11px] flex-wrap">
+      <div class="flex items-center gap-2 mt-4 font-mono text-[13px] flex-wrap">
         <span class="text-dc-void dark:text-dc-platinum">${string.material.toUpperCase()}</span>
-        <span class="text-dc-accent opacity-60 text-[11px]">//</span>
+        <span class="text-dc-accent opacity-60 text-[13px]">//</span>
         <span class="text-dc-storm uppercase tracking-[0.15em]">${string.shape}</span>
       </div>
       
@@ -9511,19 +9733,19 @@ function _stringRenderMain(string) {
       <div class="grid grid-cols-2 md:grid-cols-4 gap-8 w-full mt-12 pt-8 border-t border-dc-border">
         <div class="flex flex-col-reverse gap-1.5">
           <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${Math.round(string.stiffness)}</span>
-          <span class="font-mono text-[7px] text-dc-storm tracking-[0.3em] uppercase">STIFFNESS (lb/in)</span>
+          <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">STIFFNESS (lb/in)</span>
         </div>
         <div class="flex flex-col-reverse gap-1.5">
           <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${string.spinPotential || '—'}</span>
-          <span class="font-mono text-[7px] text-dc-storm tracking-[0.3em] uppercase">SPIN POTENTIAL</span>
+          <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">SPIN POTENTIAL</span>
         </div>
         <div class="flex flex-col-reverse gap-1.5">
           <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${string.tensionLoss || '—'}%</span>
-          <span class="font-mono text-[7px] text-dc-storm tracking-[0.3em] uppercase">TENSION LOSS</span>
+          <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">TENSION LOSS</span>
         </div>
         <div class="flex flex-col-reverse gap-1.5">
           <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${string.stiffness > 200 ? 'High' : string.stiffness > 180 ? 'Med' : 'Low'}</span>
-          <span class="font-mono text-[7px] text-dc-storm tracking-[0.3em] uppercase">SNAPBACK</span>
+          <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">SNAPBACK</span>
         </div>
       </div>
 
@@ -9541,24 +9763,24 @@ function _stringRenderMain(string) {
     <div class="bg-transparent border border-dc-storm/30 p-5 md:p-6 mb-10 flex flex-col gap-5">
       
       <div class="flex justify-between items-center border-b border-dc-storm/30 pb-3 mb-1">
-        <span class="font-mono text-[11px] text-dc-accent uppercase tracking-[0.2em]">//FRAME INJECTION</span>
+        <span class="font-mono text-[13px] text-dc-accent uppercase tracking-[0.2em]">//FRAME INJECTION</span>
         <div class="flex gap-4">
-          <button class="string-mod-mode-btn text-dc-accent border-dc-accent border-b-2 pb-1 font-mono text-[10px] uppercase tracking-widest hover:text-dc-platinum transition-colors" data-mode="fullbed" onclick="_stringSetModMode('fullbed')">Full Bed</button>
-          <button class="string-mod-mode-btn text-dc-storm border-transparent border-b-2 pb-1 font-mono text-[10px] uppercase tracking-widest hover:text-dc-platinum transition-colors" data-mode="hybrid" onclick="_stringSetModMode('hybrid')">Hybrid</button>
+          <button class="string-mod-mode-btn text-dc-accent border-dc-accent border-b-2 pb-1 font-mono text-[12px] uppercase tracking-widest hover:text-dc-platinum transition-colors" data-mode="fullbed" onclick="_stringSetModMode('fullbed')">Full Bed</button>
+          <button class="string-mod-mode-btn text-dc-storm border-transparent border-b-2 pb-1 font-mono text-[12px] uppercase tracking-widest hover:text-dc-platinum transition-colors" data-mode="hybrid" onclick="_stringSetModMode('hybrid')">Hybrid</button>
         </div>
       </div>
       
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Frame Selector -->
         <div class="flex flex-col gap-3">
-          <span class="font-mono text-[9px] text-dc-storm uppercase tracking-[0.2em]">// SELECT FRAME</span>
+          <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">// SELECT FRAME</span>
           <div id="string-mod-frame" data-placeholder="Select Frame..."></div>
-          <p class="text-[10px] text-dc-storm italic">Required: Choose a frame to inject this string into</p>
+          <p class="text-[12px] text-dc-storm italic">Required: Choose a frame to inject this string into</p>
         </div>
         
         <!-- OBS Preview -->
         <div class="flex flex-col gap-3">
-          <span class="font-mono text-[9px] text-dc-storm uppercase tracking-[0.2em]">// PROJECTED OBS</span>
+          <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">// PROJECTED OBS</span>
           <div id="string-mod-obs" class="flex items-center">
             <span class="font-mono text-4xl font-bold text-dc-storm">—</span>
           </div>
@@ -9569,7 +9791,7 @@ function _stringRenderMain(string) {
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Mains String -->
         <div class="flex flex-col gap-3">
-          <span class="font-mono text-[9px] text-dc-storm uppercase tracking-[0.2em]">// MAINS STRING</span>
+          <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">// MAINS STRING</span>
           <div id="string-mod-mains-name" class="font-mono text-sm text-dc-void dark:text-dc-platinum py-2 border-b border-dc-storm/30">
             Select a string first
           </div>
@@ -9577,7 +9799,7 @@ function _stringRenderMain(string) {
         
         <!-- Crosses String (only visible in hybrid mode) -->
         <div class="flex flex-col gap-3" id="string-mod-crosses-string-col" style="display:none;">
-          <span class="font-mono text-[9px] text-dc-storm uppercase tracking-[0.2em]">// CROSSES STRING</span>
+          <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">// CROSSES STRING</span>
           <div id="string-mod-crosses-string" data-placeholder="Same as mains..."></div>
         </div>
       </div>
@@ -9585,14 +9807,14 @@ function _stringRenderMain(string) {
       <!-- Gauge Selector (for mains, crosses uses default or mains gauge) -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="flex flex-col gap-3">
-          <span class="font-mono text-[9px] text-dc-storm uppercase tracking-[0.2em]">// MAINS GAUGE</span>
+          <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">// MAINS GAUGE</span>
           <select id="string-mod-gauge" class="appearance-none bg-dc-white dark:bg-dc-void border-b border-dc-storm/50 text-dc-void dark:text-dc-platinum font-mono text-sm py-2 px-2 outline-none focus:border-dc-accent transition-colors cursor-pointer" onchange="_stringOnGaugeChange(this.value)">
             <option value="">Default</option>
           </select>
         </div>
         
         <div class="flex flex-col gap-3" id="string-mod-crosses-gauge-col" style="display:none;">
-          <span class="font-mono text-[9px] text-dc-storm uppercase tracking-[0.2em]">// CROSSES GAUGE</span>
+          <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">// CROSSES GAUGE</span>
           <select id="string-mod-crosses-gauge" class="appearance-none bg-dc-white dark:bg-dc-void border-b border-dc-storm/50 text-dc-void dark:text-dc-platinum font-mono text-sm py-2 px-2 outline-none focus:border-dc-accent transition-colors cursor-pointer" onchange="_stringOnCrossesGaugeChange(this.value)">
             <option value="">Same as mains</option>
           </select>
@@ -9602,37 +9824,37 @@ function _stringRenderMain(string) {
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
         <!-- Mains Tension -->
         <div class="flex flex-col gap-3" id="string-mod-mains-col">
-          <span class="font-mono text-[9px] text-dc-storm uppercase tracking-[0.2em]">// MAINS TENSION</span>
+          <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">// MAINS TENSION</span>
           <input type="number" id="string-mod-mains-tension" class="bg-transparent border-b border-dc-storm/50 text-dc-void dark:text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors" value="52" min="30" max="70" step="1" oninput="_stringOnTensionChange('mains', this.value)">
         </div>
         
         <!-- Crosses Tension (always visible, but label changes) -->
         <div class="flex flex-col gap-3" id="string-mod-crosses-col">
-          <span class="font-mono text-[9px] text-dc-storm uppercase tracking-[0.2em]" id="string-mod-crosses-label">// CROSSES TENSION</span>
+          <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]" id="string-mod-crosses-label">// CROSSES TENSION</span>
           <input type="number" id="string-mod-crosses-tension" class="bg-transparent border-b border-dc-storm/50 text-dc-void dark:text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors" value="50" min="30" max="70" step="1" oninput="_stringOnTensionChange('crosses', this.value)">
         </div>
       </div>
       
       <!-- Live Preview Stats -->
       <div class="border-t border-dc-storm/30 pt-4 mt-2">
-        <h4 class="font-mono text-[9px] text-dc-storm uppercase tracking-[0.2em] mb-4">// LIVE PREVIEW</h4>
+        <h4 class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em] mb-4">// LIVE PREVIEW</h4>
         <div class="flex flex-col gap-2.5">
           ${['spin', 'power', 'control', 'feel', 'comfort'].map(stat => `
             <div class="flex items-center gap-4 group" data-stat="${stat}">
-              <span class="font-mono text-[9px] text-dc-storm group-hover:text-dc-platinum transition-colors uppercase tracking-[0.15em] w-20">${stat}</span>
+              <span class="font-mono text-[13px] text-dc-storm group-hover:text-dc-platinum transition-colors uppercase tracking-[0.15em] w-20">${stat}</span>
               <div class="flex flex-1 gap-[2px] h-1.5 items-center" id="string-track-${stat}">
                 ${Array(25).fill(0).map((_, i) => `<div class="flex-1 h-full rounded-[1px] bg-black/10 dark:bg-white/10"></div>`).join('')}
               </div>
-              <span class="font-mono text-[11px] font-bold text-dc-void dark:text-dc-platinum w-16 text-right" id="string-val-${stat}">—</span>
+              <span class="font-mono text-[13px] font-bold text-dc-void dark:text-dc-platinum w-16 text-right" id="string-val-${stat}">—</span>
             </div>
           `).join('')}
         </div>
       </div>
 
       <div class="flex gap-2 mt-2">
-        <button class="flex-1 font-mono text-[10px] uppercase tracking-widest px-4 py-2 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-void transition-colors disabled:opacity-30 disabled:cursor-not-allowed" id="string-mod-add" disabled onclick="_stringAddToLoadout()">Add to Loadout</button>
-        <button class="flex-1 font-mono text-[10px] uppercase tracking-widest px-4 py-2 border border-dc-platinum text-dc-void dark:text-dc-platinum hover:bg-dc-platinum hover:text-dc-void dark:hover:text-dc-void transition-colors disabled:opacity-30 disabled:cursor-not-allowed" id="string-mod-activate" disabled onclick="_stringSetActiveLoadout()">Set Active</button>
-        <button class="font-mono text-[10px] uppercase tracking-widest px-4 py-2 border border-dc-storm/50 text-dc-storm hover:bg-dc-storm/10 hover:text-dc-void dark:hover:text-dc-platinum hover:border-dc-storm transition-colors" onclick="_stringClearPreview()">Clear</button>
+        <button class="flex-1 font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-void transition-colors disabled:opacity-30 disabled:cursor-not-allowed" id="string-mod-add" disabled onclick="_stringAddToLoadout()">Add to Loadout</button>
+        <button class="flex-1 font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-platinum text-dc-void dark:text-dc-platinum hover:bg-dc-platinum hover:text-dc-void dark:hover:text-dc-void transition-colors disabled:opacity-30 disabled:cursor-not-allowed" id="string-mod-activate" disabled onclick="_stringSetActiveLoadout()">Set Active</button>
+        <button class="font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-storm/50 text-dc-storm hover:bg-dc-storm/10 hover:text-dc-void dark:hover:text-dc-platinum hover:border-dc-storm transition-colors" onclick="_stringClearPreview()">Clear</button>
       </div>
     </div>
 
@@ -10185,19 +10407,19 @@ function _compRenderRoster() {
 
   list.innerHTML = racquets.map(r => {
     const isActive = r.id === _compSelectedRacquetId;
-    const specs = `${r.strungWeight}g · ${r.stiffness} RA · ${r.pattern}`;
+    const specs = `${r.strungWeight - 13}g unstrung · ${r.stiffness} RA · ${r.pattern}`;
     const baseClasses = "bg-transparent border text-left flex flex-col justify-between gap-6 transition-all duration-200 cursor-pointer p-5";
     const borderClasses = isActive 
       ? "border-dc-accent" 
       : "border-dc-platinum-dim hover:border-dc-platinum";
     return `<button class="${baseClasses} ${borderClasses}" data-id="${r.id}" onclick="_compSelectFrame('${r.id}')">
       <div class="flex justify-between items-start gap-2">
-        <span class="text-lg font-semibold leading-tight tracking-tight text-dc-void dark:text-dc-platinum">${r.name}</span>
-        <span class="font-mono text-[9px] tracking-[0.15em] text-dc-platinum-dim mt-1">${r.year}</span>
+        <span class="text-lg font-semibold leading-tight tracking-tight text-dc-void dark:text-dc-platinum">${r.name.replace(/\\s+\\d+g$/, '')}</span>
+        <span class="font-mono text-[13px] tracking-[0.15em] text-dc-platinum-dim mt-1">${r.year}</span>
       </div>
       <div class="flex flex-col gap-1">
-        <span class="font-mono text-[9px] uppercase tracking-[0.15em] text-dc-accent">${r.identity || r.pattern}</span>
-        <span class="font-mono text-[11px] font-semibold text-dc-void dark:text-dc-platinum">${specs}</span>
+        <span class="font-mono text-[13px] uppercase tracking-[0.15em] text-dc-accent">${r.identity || r.pattern}</span>
+        <span class="font-mono text-[13px] font-semibold text-dc-void dark:text-dc-platinum">${specs}</span>
       </div>
     </button>`;
   }).join('');
@@ -10270,7 +10492,7 @@ function _compRenderMain(racquet) {
 
   statGroups.forEach(g => {
     statsHtml += `<div class="flex flex-col">
-      <h4 class="font-mono text-[9px] text-dc-storm uppercase tracking-[0.2em] border-b border-dc-border pb-2 mb-3">${g.title}</h4>
+      <h4 class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em] border-b border-dc-border pb-2 mb-3">${g.title}</h4>
       <div class="flex flex-col gap-2.5">`;
     
     g.stats.forEach(s => {
@@ -10293,9 +10515,9 @@ function _compRenderMain(racquet) {
 
       statsHtml += `
         <div class="flex items-center gap-4 group" data-stat="${s.id}">
-          <span class="font-mono text-[9px] text-dc-storm group-hover:text-dc-platinum transition-colors uppercase tracking-[0.15em] w-28">${s.label}</span>
+          <span class="font-mono text-[13px] text-dc-storm group-hover:text-dc-platinum transition-colors uppercase tracking-[0.15em] w-28">${s.label}</span>
           ${batteryHtml}
-          <span class="font-mono text-[11px] font-bold text-dc-void dark:text-dc-platinum w-8 text-right" id="comp-val-${s.id}">${val}</span>
+          <span class="font-mono text-[13px] font-bold text-dc-void dark:text-dc-platinum w-8 text-right" id="comp-val-${s.id}">${val}</span>
         </div>`;
     });
     statsHtml += `</div></div>`;
@@ -10313,7 +10535,7 @@ function _compRenderMain(racquet) {
   ];
   const sortTabsHtml = sortOptions.map(s => {
     const isActive = _compSortKey === s.key;
-    const baseClasses = "font-mono text-[10px] uppercase tracking-[0.1em] pb-2 transition-colors";
+    const baseClasses = "font-mono text-[12px] uppercase tracking-[0.1em] pb-2 transition-colors";
     const activeClasses = isActive 
       ? "text-dc-accent border-b-2 border-dc-accent -mb-[9px] pb-[7px]" 
       : "text-dc-storm hover:text-dc-platinum";
@@ -10328,20 +10550,20 @@ function _compRenderMain(racquet) {
     <div class="relative flex flex-col items-start mb-8">
       
       <div class="absolute top-6 right-6 md:top-8 md:right-8 flex flex-col items-end">
-        <span class="font-mono text-[9px] text-dc-storm tracking-[0.2em] mb-1">STRUNG WGHT</span>
+        <span class="font-mono text-[13px] text-dc-storm tracking-[0.2em] mb-1">STRUNG WGHT</span>
         <span class="font-mono text-5xl font-semibold leading-[0.85] text-dc-void dark:text-dc-platinum">
           ${racquet.strungWeight}<span class="text-xl text-dc-storm ml-1">g</span>
         </span>
       </div>
       
       <h2 class="text-5xl md:text-[4rem] font-semibold tracking-tight text-dc-void dark:text-dc-platinum leading-none mb-0 pr-[120px] flex items-center gap-3 cursor-pointer group" onclick="_compToggleHud()">
-        ${racquet.name}
+        ${racquet.name.replace(/\s+\d+g$/, ' ' + (Math.round((racquet.strungWeight - 13) / 5) * 5) + 'g')}
         <span class="text-2xl text-dc-red opacity-50 group-hover:opacity-100 transition-opacity">▼</span>
       </h2>
       
-      <div class="flex items-center gap-2 mt-4 font-mono text-[11px] flex-wrap">
+      <div class="flex items-center gap-2 mt-4 font-mono text-[13px] flex-wrap">
         <span class="text-dc-void dark:text-dc-platinum">${racquet.year}</span>
-        <span class="text-dc-accent opacity-60 text-[11px]">//</span>
+        <span class="text-dc-accent opacity-60 text-[13px]">//</span>
         <span class="text-dc-storm uppercase tracking-[0.15em]">${racquet.identity || ''}</span>
       </div>
       
@@ -10350,27 +10572,27 @@ function _compRenderMain(racquet) {
       <div class="grid grid-cols-3 md:grid-cols-6 gap-8 w-full mt-12 pt-8 border-t border-dc-border">
         <div class="flex flex-col-reverse gap-1.5">
           <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${racquet.swingweight}</span>
-          <span class="font-mono text-[7px] text-dc-storm tracking-[0.3em] uppercase">SWINGWEIGHT</span>
+          <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">SWINGWEIGHT</span>
         </div>
         <div class="flex flex-col-reverse gap-1.5">
           <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${racquet.stiffness}</span>
-          <span class="font-mono text-[7px] text-dc-storm tracking-[0.3em] uppercase">STIFFNESS</span>
+          <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">STIFFNESS</span>
         </div>
         <div class="flex flex-col-reverse gap-1.5">
           <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${racquet.pattern}</span>
-          <span class="font-mono text-[7px] text-dc-storm tracking-[0.3em] uppercase">PATTERN</span>
+          <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">PATTERN</span>
         </div>
         <div class="flex flex-col-reverse gap-1.5">
           <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${racquet.headSize}</span>
-          <span class="font-mono text-[7px] text-dc-storm tracking-[0.3em] uppercase">HEAD SIZE</span>
+          <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">HEAD SIZE</span>
         </div>
         <div class="flex flex-col-reverse gap-1.5">
           <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${racquet.balancePts}</span>
-          <span class="font-mono text-[7px] text-dc-storm tracking-[0.3em] uppercase">BALANCE</span>
+          <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">BALANCE</span>
         </div>
         <div class="flex flex-col-reverse gap-1.5">
           <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${racquet.tensionRange[0]}–${racquet.tensionRange[1]}</span>
-          <span class="font-mono text-[7px] text-dc-storm tracking-[0.3em] uppercase">TENSION</span>
+          <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">TENSION</span>
         </div>
       </div>
 
@@ -10381,17 +10603,17 @@ function _compRenderMain(racquet) {
     <div class="bg-transparent border border-dc-storm/30 p-5 md:p-6 mb-10 flex flex-col gap-5">
       
       <div class="flex justify-between items-center border-b border-dc-storm/30 pb-3 mb-1">
-        <span class="font-mono text-[11px] text-dc-accent uppercase tracking-[0.2em]">//STRING MODULATOR</span>
+        <span class="font-mono text-[13px] text-dc-accent uppercase tracking-[0.2em]">//STRING MODULATOR</span>
         <div class="flex gap-4">
-          <button class="comp-inject-mode-btn text-dc-accent border-dc-accent border-b-2 pb-1 font-mono text-[10px] uppercase tracking-widest hover:text-dc-platinum transition-colors" data-mode="fullbed" onclick="_compSetInjectMode('fullbed')">Full Bed</button>
-          <button class="comp-inject-mode-btn text-dc-storm border-transparent border-b-2 pb-1 font-mono text-[10px] uppercase tracking-widest hover:text-dc-platinum transition-colors" data-mode="hybrid" onclick="_compSetInjectMode('hybrid')">Hybrid</button>
+          <button class="comp-inject-mode-btn text-dc-accent border-dc-accent border-b-2 pb-1 font-mono text-[12px] uppercase tracking-widest hover:text-dc-platinum transition-colors" data-mode="fullbed" onclick="_compSetInjectMode('fullbed')">Full Bed</button>
+          <button class="comp-inject-mode-btn text-dc-storm border-transparent border-b-2 pb-1 font-mono text-[12px] uppercase tracking-widest hover:text-dc-platinum transition-colors" data-mode="hybrid" onclick="_compSetInjectMode('hybrid')">Hybrid</button>
         </div>
       </div>
       
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
         <!-- Mains Column -->
         <div class="flex flex-col gap-3" id="comp-mains-col">
-          <span class="font-mono text-[9px] text-dc-storm uppercase tracking-[0.2em]" id="comp-mains-label">// STRING</span>
+          <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]" id="comp-mains-label">// STRING</span>
           <div id="comp-mains-select" class="comp-string-select-container"></div>
           <div class="grid grid-cols-2 gap-4">
             <select class="appearance-none bg-transparent border-b border-dc-storm/50 text-dc-void dark:text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%2712%27%20height=%2712%27%20viewBox=%270%200%2024%2024%27%20fill=%27none%27%20stroke=%27%235E666C%27%20stroke-width=%272%27%20stroke-linecap=%27round%27%20stroke-linejoin=%27round%27%3E%3Cpolyline%20points=%276%209%2012%2015%2018%209%27%3E%3C/polyline%3E%3C/svg%3E')] bg-no-repeat bg-right pr-5 cursor-pointer" id="comp-mains-gauge">
@@ -10403,7 +10625,7 @@ function _compRenderMain(racquet) {
         
         <!-- Crosses Column (hidden string selector in fullbed) -->
         <div class="flex flex-col gap-3" id="comp-crosses-col">
-          <span class="font-mono text-[9px] text-dc-storm uppercase tracking-[0.2em]" id="comp-crosses-label">// CROSSES</span>
+          <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]" id="comp-crosses-label">// CROSSES</span>
           <div id="comp-crosses-select" class="comp-string-select-container" style="display:none;"></div>
           <div class="grid grid-cols-2 gap-4">
             <select class="appearance-none bg-transparent border-b border-dc-storm/50 text-dc-void dark:text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%2712%27%20height=%2712%27%20viewBox=%270%200%2024%2024%27%20fill=%27none%27%20stroke=%27%235E666C%27%20stroke-width=%272%27%20stroke-linecap=%27round%27%20stroke-linejoin=%27round%27%3E%3Cpolyline%20points=%276%209%2012%2015%2018%209%27%3E%3C/polyline%3E%3C/svg%3E')] bg-no-repeat bg-right pr-5 cursor-pointer" id="comp-crosses-gauge">
@@ -10415,8 +10637,8 @@ function _compRenderMain(racquet) {
       </div>
 
       <div class="flex gap-2 mt-2">
-        <button class="flex-1 font-mono text-[10px] uppercase tracking-widest px-4 py-2 border border-dc-storm/50 text-dc-void dark:text-dc-platinum hover:bg-dc-storm/20 hover:border-dc-storm transition-colors disabled:opacity-30 disabled:cursor-not-allowed" id="comp-inject-apply" disabled onclick="_compApplyInjection()">Apply</button>
-        <button class="font-mono text-[10px] uppercase tracking-widest px-4 py-2 border border-dc-storm/50 text-dc-storm hover:bg-dc-storm/10 hover:text-dc-void dark:hover:text-dc-platinum hover:border-dc-storm transition-colors" onclick="_compClearInjection()">Clear</button>
+        <button class="flex-1 font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-storm/50 text-dc-void dark:text-dc-platinum hover:bg-dc-storm/20 hover:border-dc-storm transition-colors disabled:opacity-30 disabled:cursor-not-allowed" id="comp-inject-apply" disabled onclick="_compApplyInjection()">Apply</button>
+        <button class="font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-storm/50 text-dc-storm hover:bg-dc-storm/10 hover:text-dc-void dark:hover:text-dc-platinum hover:border-dc-storm transition-colors" onclick="_compClearInjection()">Clear</button>
       </div>
     </div>
 
@@ -10905,7 +11127,7 @@ function _compRenderBuildCard(build, index, racquet, frameStats) {
 
   // Scaled down badge
   const badgeHtml = isFeatured 
-    ? `<div class="absolute -top-[1px] -left-[1px] bg-dc-accent text-dc-void font-mono text-[8px] font-bold uppercase tracking-widest px-2 py-0.5">BEST OVERALL</div>` 
+    ? `<div class="absolute -top-[1px] -left-[1px] bg-dc-accent text-dc-void font-mono text-[10px] font-bold uppercase tracking-widest px-2 py-0.5">BEST OVERALL</div>` 
     : '';
 
   // Tighter margins for reason
@@ -10930,7 +11152,7 @@ function _compRenderBuildCard(build, index, racquet, frameStats) {
   ].sort((a, b) => b.val - a.val).slice(0, 3);
 
   const statsHtml = statEntries.map(st => 
-    `<span class="font-mono text-[9px] text-dc-storm tracking-widest">[${st.key} <b class="text-xs text-dc-void dark:text-dc-platinum font-semibold ml-0.5">${st.val}</b>]</span>`
+    `<span class="font-mono text-[13px] text-dc-storm tracking-widest">[${st.key} <b class="text-xs text-dc-void dark:text-dc-platinum font-semibold ml-0.5">${st.val}</b>]</span>`
   ).join('');
 
   return `
@@ -10938,19 +11160,19 @@ function _compRenderBuildCard(build, index, racquet, frameStats) {
       ${badgeHtml}
       
       <div class="flex justify-between items-start my-1.5">
-        <span class="font-mono text-[9px] text-dc-storm uppercase tracking-[0.2em]">${build.archetype}</span>
+        <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">${build.archetype}</span>
         <span class="font-mono text-4xl md:text-5xl font-semibold text-dc-void dark:text-dc-platinum leading-[0.8] tracking-tighter">${build.score.toFixed(1)}</span>
       </div>
 
       <div class="text-base font-semibold text-dc-void dark:text-dc-platinum tracking-tight mb-0.5 pr-12 leading-tight">${stringLabel}</div>
-      <div class="font-mono text-[10px] text-dc-storm mb-4">${metaLabel}</div>
+      <div class="font-mono text-[12px] text-dc-storm mb-4">${metaLabel}</div>
 
       ${reasonHtml}
 
       <div class="grid grid-cols-3 gap-2 mt-auto mb-4">
-        <button class="bg-transparent border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-void font-mono text-[9px] uppercase tracking-widest py-1.5 transition-colors text-center" onclick="_compAction('setActive', ${index})">Set Active</button>
-        <button class="bg-transparent border border-dc-storm/50 dark:border-dc-storm/30 text-dc-storm hover:border-dc-storm hover:bg-dc-storm/10 hover:text-dc-void dark:hover:text-dc-platinum font-mono text-[9px] uppercase tracking-widest py-1.5 transition-colors text-center" onclick="_compAction('tune', ${index})">Tune</button>
-        <button class="bg-transparent border border-dc-storm/50 dark:border-dc-storm/30 text-dc-storm hover:border-dc-storm hover:bg-dc-storm/10 hover:text-dc-void dark:hover:text-dc-platinum font-mono text-[9px] uppercase tracking-widest py-1.5 transition-colors text-center" onclick="_compAction('save', ${index}, event)">Save</button>
+        <button class="bg-transparent border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-void font-mono text-[13px] uppercase tracking-widest py-1.5 transition-colors text-center" onclick="_compAction('setActive', ${index})">Set Active</button>
+        <button class="bg-transparent border border-dc-storm/50 dark:border-dc-storm/30 text-dc-storm hover:border-dc-storm hover:bg-dc-storm/10 hover:text-dc-void dark:hover:text-dc-platinum font-mono text-[13px] uppercase tracking-widest py-1.5 transition-colors text-center" onclick="_compAction('tune', ${index})">Tune</button>
+        <button class="bg-transparent border border-dc-storm/50 dark:border-dc-storm/30 text-dc-storm hover:border-dc-storm hover:bg-dc-storm/10 hover:text-dc-void dark:hover:text-dc-platinum font-mono text-[13px] uppercase tracking-widest py-1.5 transition-colors text-center" onclick="_compAction('save', ${index}, event)">Save</button>
       </div>
 
       <div class="flex flex-wrap gap-3 pt-3 border-t border-dc-storm/30 dark:border-dc-storm/20">
@@ -11165,7 +11387,7 @@ function _fmbRenderFrameCard(fr, idx) {
     <div class="fmb-frame-card-header">
       <div class="fmb-frame-rank">#${idx + 1}</div>
       <div class="fmb-frame-info">
-        <div class="fmb-frame-name">${r.name}</div>
+        <div class="fmb-frame-name">${r.name.replace(/\\s+\\d+g$/, '')}</div>
         <div class="fmb-frame-meta">${r.year} &middot; ${r.identity || ''} &middot; ${r.stiffness} RA &middot; ${r.pattern}</div>
       </div>
     </div>

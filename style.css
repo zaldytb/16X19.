@@ -6188,6 +6188,30 @@ body {
   background-image: radial-gradient(rgba(0,0,0,0.03) 1px, transparent 0);
 }
 
+/* Light mode: Bible/Compendium card fixes */
+[data-theme="light"] .comp-card-archetype {
+  color: var(--dc-platinum, #1A1A1A);
+}
+[data-theme="light"] .comp-card-badge {
+  color: var(--dc-platinum, #1A1A1A);
+  background: var(--dc-platinum, #1A1A1A);
+}
+[data-theme="light"] .comp-modulator-title {
+  color: var(--dc-platinum, #1A1A1A);
+}
+
+/* Light mode: Active sort tab - red */
+[data-theme="light"] .comp-sort-tab.active {
+  color: var(--dc-red, #AF0000);
+  border-bottom: 2px solid var(--dc-red, #AF0000);
+}
+
+/* Light mode: Featured card badge - red background */
+[data-theme="light"] .comp-build-featured .comp-card-badge {
+  background: var(--dc-red, #AF0000);
+  color: var(--dc-white, #F0F2F4);
+}
+
 [data-theme="light"] .nav-tab:hover {
   background: rgba(0,0,0,0.04);
 }
@@ -7091,130 +7115,145 @@ textarea:focus-visible {
   padding-bottom: 7px;
 }
 
+/* 1. Grid & Base Card Physics */
 .comp-build-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: var(--space-4);
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
 }
+@media (min-width: 768px) { .comp-build-grid { grid-template-columns: repeat(2, 1fr); } }
 
-/* Build Card Brutalism - Bento Physics */
 .comp-build-card {
-  background: var(--dc-bg);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  background: transparent;
+  border: 1px solid var(--dc-storm, #5E666C);
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  border-radius: 0px;
   transition: border-color 0.2s ease;
 }
-
 .comp-build-card:hover {
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--dc-platinum, #DCDFE2);
 }
 
-.comp-card-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-2);
+/* 2. The Featured Override */
+.comp-build-featured {
+  grid-column: 1 / -1;
+  border-color: var(--dc-accent, #FF4500);
+  background: linear-gradient(180deg, rgba(255, 69, 0, 0.03) 0%, transparent 100%);
 }
-
-.comp-card-archetype {
-  font-family: var(--dc-font-mono);
+.comp-card-badge {
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  background: var(--dc-accent, #FF4500);
+  color: var(--dc-void, #1A1A1A);
+  font-family: var(--dc-font-mono, monospace);
   font-size: 9px;
   font-weight: 700;
-  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--dc-storm);
+  letter-spacing: 0.15em;
+  padding: 4px 10px;
 }
 
+/* 3. Typographic Hierarchy */
+.comp-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+  margin-top: 0.5rem; /* Buffer for the top badge */
+}
+.comp-card-archetype {
+  font-family: var(--dc-font-mono, monospace);
+  font-size: 10px;
+  color: var(--dc-accent, #FF4500);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
 .comp-card-obs {
-  /* S-Rank Hardware Tag - Inline styles eradicated */
-  font-family: var(--dc-font-mono);
-  font-size: 1.5rem;
-  font-weight: var(--dc-weight-bold);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: var(--dc-platinum);
-  padding: 2px 8px;
-  border-radius: 2px;
-  background: transparent;
+  font-family: var(--dc-font-mono, monospace);
+  font-size: 3rem;
+  font-weight: 600;
+  line-height: 0.8;
+  color: var(--dc-platinum, #DCDFE2);
+  letter-spacing: -0.04em;
 }
 
 .comp-card-string {
-  font-family: var(--dc-font);
-  font-size: 0.85rem;
+  font-size: 1.25rem;
   font-weight: 600;
-  color: var(--dc-platinum);
-  line-height: 1.4;
-  margin-bottom: var(--space-1);
+  color: var(--dc-platinum, #DCDFE2);
+  margin-bottom: 0.25rem;
+  line-height: 1.2;
+  padding-right: 60px; /* Prevents overlap with massive OBS score */
 }
-
 .comp-card-meta {
-  font-family: var(--dc-font-mono);
-  font-size: 10px;
-  color: var(--dc-storm);
-  margin-bottom: var(--space-3);
+  font-family: var(--dc-font-mono, monospace);
+  font-size: 11px;
+  color: var(--dc-storm, #5E666C);
+  margin-bottom: 1.5rem;
 }
 
-/* Build Card Actions - Brutalist Hardware */
+.comp-card-reason {
+  font-size: 0.875rem;
+  color: var(--dc-platinum, #DCDFE2);
+  margin-bottom: 1.5rem;
+  padding-left: 12px;
+  border-left: 2px solid var(--dc-storm, #5E666C);
+  opacity: 0.9;
+}
+
+/* 4. Tactical Action Buttons */
 .comp-card-actions {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 1rem;
-  margin-bottom: 1rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 1.5rem;
+  margin-top: auto; /* Pushes buttons to bottom before stats */
 }
-
 .comp-card-btn {
-  appearance: none;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--dc-platinum);
-  font-family: var(--dc-font-mono);
+  border: 1px solid var(--dc-storm, #5E666C);
+  color: var(--dc-platinum, #DCDFE2);
+  font-family: var(--dc-font-mono, monospace);
   font-size: 9px;
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  padding: 0.5rem 1rem;
+  padding: 0.6rem 0;
   cursor: pointer;
   transition: all 0.2s ease;
-  flex: 1;
+  text-align: center;
 }
-
 .comp-card-btn:hover {
-  border-color: var(--dc-platinum);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--dc-platinum, #DCDFE2);
+  color: var(--dc-void, #1A1A1A);
 }
-
 .comp-card-btn-primary {
-  border-color: var(--dc-accent);
-  color: var(--dc-accent);
+  border-color: var(--dc-accent, #FF4500);
+  color: var(--dc-accent, #FF4500);
 }
-
 .comp-card-btn-primary:hover {
-  background: var(--dc-accent);
-  color: var(--dc-bg);
+  background: var(--dc-accent, #FF4500);
+  color: var(--dc-void, #1A1A1A);
 }
 
+/* 5. Hardware Stat Strip */
 .comp-card-stats-inline {
   display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
+  gap: 16px;
   padding-top: 1rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
-
-/* Terminal Stat Strings - Killing the rounded pills */
 .comp-card-stat-term {
-  font-family: var(--dc-font-mono);
+  font-family: var(--dc-font-mono, monospace);
   font-size: 10px;
-  color: var(--dc-storm);
-  text-transform: uppercase;
+  color: var(--dc-storm, #5E666C);
   letter-spacing: 0.1em;
 }
-
 .comp-card-stat-term b {
-  color: var(--dc-platinum);
-  font-weight: 600;
+  color: var(--dc-platinum, #DCDFE2);
+  font-size: 11px;
 }
 
 /* Legacy chip - deprecated but kept for compatibility */
@@ -7227,6 +7266,101 @@ textarea:focus-visible {
 .comp-card-stat-chip b {
   color: var(--dc-platinum);
   font-weight: 600;
+}
+
+/* ============================================
+   STRING MODULATOR PANEL
+   ============================================ */
+
+/* 1. The Modulator Bento Box */
+.comp-modulator-panel {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--dc-storm, #5E666C);
+  padding: 2rem;
+  margin-bottom: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* 2. Section Header & Toggle Array */
+.comp-modulator-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 1rem;
+  margin-bottom: 0.5rem;
+}
+.comp-modulator-title {
+  font-family: var(--dc-font-mono, monospace);
+  font-size: 11px;
+  color: var(--dc-accent, #FF4500);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+/* 3. Input Grid Configuration */
+.comp-modulator-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+@media (min-width: 768px) {
+  .comp-modulator-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* 4. Form Elements (Kill Native OS Styles) */
+.comp-modulator-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.comp-modulator-label {
+  font-family: var(--dc-font-mono, monospace);
+  font-size: 9px;
+  color: var(--dc-storm, #5E666C);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+.comp-modulator-input, .comp-modulator-select {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--dc-storm, #5E666C);
+  color: var(--dc-platinum, #DCDFE2);
+  font-family: var(--dc-font-mono, monospace);
+  font-size: 14px;
+  padding: 0.5rem 0;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+.comp-modulator-select {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235E666C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0 center;
+  background-size: 12px;
+  padding-right: 20px;
+}
+.comp-modulator-input:focus, .comp-modulator-select:focus {
+  border-color: var(--dc-accent, #FF4500);
+}
+
+/* Sub-controls (Gauge & Tension horizontal row) */
+.comp-modulator-subgrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* 5. Action Buttons Footer */
+.comp-modulator-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 1rem;
+  margin-top: 1rem;
 }
 
 .comp-presets-empty {
@@ -7586,54 +7720,7 @@ textarea:focus-visible {
 }
 
 /* --- Build Cards V2 --- */
-.comp-build-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-}
 
-.comp-build-card {
-  padding: var(--space-4);
-  background: var(--dc-void);
-  border: 1px solid var(--dc-border);
-  border-left: 3px solid var(--dc-platinum);
-  border-radius: var(--dc-radius-md);
-  transition: border-color var(--dur-fast);
-}
-
-.comp-build-card:hover {
-  border-color: var(--dc-border-hover);
-}
-
-.comp-build-featured {
-  grid-column: 1 / -1;
-  border: 1px solid var(--dc-border-active);
-  position: relative;
-}
-
-.comp-card-badge {
-  position: absolute;
-  top: -8px;
-  left: 16px;
-  font-family: var(--dc-font-mono);
-  font-size: 8px;
-  font-weight: var(--dc-weight-semibold);
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-  color: var(--dc-void);
-  background: var(--dc-red);
-  padding: 2px 8px;
-  border-radius: 2px;
-}
-
-.comp-card-reason {
-  font-size: 12px;
-  color: var(--dc-platinum-dim);
-  font-style: italic;
-  margin-top: 6px;
-  padding-top: 6px;
-  border-top: 1px solid var(--dc-border);
-}
 
 @media (max-width: 1024px) {
   .comp-specs-grid {
@@ -8003,46 +8090,7 @@ textarea:focus-visible {
 }
 
 /* --- Build Cards Bento Physics --- */
-.comp-build-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-}
 
-@media (max-width: 768px) {
-  .comp-build-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.comp-build-card {
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.2);
-  padding: 24px;
-  border-radius: 0;
-  border-left: none !important;
-}
-
-/* Featured build with glowing border */
-.comp-build-featured {
-  grid-column: 1 / -1;
-  border-color: var(--dc-red);
-  box-shadow: 0 0 15px rgba(220, 38, 38, 0.1);
-  position: relative;
-}
-
-.comp-card-badge {
-  position: absolute;
-  top: -8px;
-  left: 16px;
-  background: var(--dc-red);
-  color: var(--dc-void);
-  padding: 2px 8px;
-  font-family: var(--dc-font-mono);
-  font-size: 10px;
-  font-weight: bold;
-  border-radius: 0;
-}
 
 /* ============================================
    OPTIMIZER PAGE STYLES
@@ -9007,67 +9055,7 @@ textarea:focus-visible {
   }
 }
 
-/* ============================================
-   BIBLE BUILD CARD BUTTONS & CHIPS (Fixes)
-   ============================================ */
 
-/* Comp card buttons - refined Digicraft style */
-.comp-card-actions {
-  display: flex;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
-}
-
-.comp-card-btn {
-  flex: 1;
-  padding: 6px 0;
-  background: transparent;
-  border: 1px solid var(--dc-storm);
-  border-radius: var(--dc-radius-sm);
-  color: var(--dc-storm);
-  font-family: var(--dc-font-mono);
-  font-size: 0.6rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all var(--dur-fast);
-}
-
-.comp-card-btn:hover {
-  border-color: var(--dc-platinum);
-  color: var(--dc-platinum);
-}
-
-.comp-card-btn-primary {
-  border-color: var(--dc-platinum);
-  color: var(--dc-platinum);
-}
-
-.comp-card-btn-primary:hover {
-  background: var(--dc-platinum);
-  color: var(--dc-void);
-}
-
-/* Comp card stat chips - refined */
-.comp-card-stats-inline {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--dc-border);
-}
-
-.comp-card-stat-chip {
-  font-family: var(--dc-font-mono);
-  font-size: 0.65rem;
-  color: var(--dc-storm);
-}
-
-.comp-card-stat-chip b {
-  color: var(--dc-platinum);
-  font-weight: 600;
-}
 
 /* ============================================
    WHAT TO TRY NEXT (WTTN) CHIPS - Monochrome Fix

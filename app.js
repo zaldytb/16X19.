@@ -8447,6 +8447,48 @@ function _compRenderMain(racquet) {
       ${consoleHtml.length > 0 ? `<div class="comp-hero-console">${consoleHtml.join('')}</div>` : ''}
     </div>
 
+    <!-- String Modulator Panel -->
+    <div class="comp-modulator-panel">
+      <div class="comp-modulator-header">
+        <span class="comp-modulator-title">//STRING MODULATOR</span>
+        <div class="comp-inject-mode">
+          <button class="comp-inject-mode-btn active" data-mode="fullbed" onclick="_compSetInjectMode('fullbed')">Full Bed</button>
+          <button class="comp-inject-mode-btn" data-mode="hybrid" onclick="_compSetInjectMode('hybrid')">Hybrid</button>
+        </div>
+      </div>
+      
+      <div class="comp-modulator-grid">
+        <!-- Mains Column -->
+        <div class="comp-modulator-group" id="comp-mains-col">
+          <span class="comp-modulator-label" id="comp-mains-label">// STRING</span>
+          <div id="comp-mains-select" class="comp-string-select-container"></div>
+          <div class="comp-modulator-subgrid">
+            <select class="comp-modulator-select" id="comp-mains-gauge">
+              <option value="">Gauge...</option>
+            </select>
+            <input type="number" class="comp-modulator-input" id="comp-mains-tension" value="52" min="30" max="70" step="1">
+          </div>
+        </div>
+        
+        <!-- Crosses Column (hidden string selector in fullbed) -->
+        <div class="comp-modulator-group" id="comp-crosses-col">
+          <span class="comp-modulator-label" id="comp-crosses-label">// CROSSES</span>
+          <div id="comp-crosses-select" class="comp-string-select-container" style="display:none;"></div>
+          <div class="comp-modulator-subgrid">
+            <select class="comp-modulator-select" id="comp-crosses-gauge">
+              <option value="">Gauge...</option>
+            </select>
+            <input type="number" class="comp-modulator-input" id="comp-crosses-tension" value="50" min="30" max="70" step="1">
+          </div>
+        </div>
+      </div>
+      
+      <div class="comp-modulator-actions">
+        <button class="comp-card-btn comp-card-btn-primary" id="comp-inject-apply" disabled onclick="_compApplyInjection()">Apply</button>
+        <button class="comp-card-btn" onclick="_compClearInjection()">Clear</button>
+      </div>
+    </div>
+
     <!-- Grouped Stats -->
     <div class="comp-section">
       <h3 class="comp-section-title">//BASE FRAME PROFILE</h3>
@@ -8454,50 +8496,6 @@ function _compRenderMain(racquet) {
       
       <!-- Stats First -->
       <div class="comp-stats">${statsHtml}</div>
-      
-      <!-- String Matrix Injector Below -->
-      <h3 class="comp-section-title" style="margin-top: 2rem;">//STRING SELECTOR</h3>
-      <div class="comp-inject-mode">
-        <button class="comp-inject-mode-btn active" data-mode="fullbed" onclick="_compSetInjectMode('fullbed')">Full Bed</button>
-        <button class="comp-inject-mode-btn" data-mode="hybrid" onclick="_compSetInjectMode('hybrid')">Hybrid</button>
-      </div>
-      
-      <div class="comp-inject-row">
-        <!-- Mains Column -->
-        <div class="comp-inject-string" id="comp-mains-col">
-          <span class="comp-inject-label" id="comp-mains-label">// STRING</span>
-          <div id="comp-mains-select" class="comp-string-select-container"></div>
-          <div class="comp-inject-sub-row">
-            <select class="comp-inject-gauge" id="comp-mains-gauge">
-              <option value="">Gauge...</option>
-            </select>
-            <div class="comp-inject-tension-wrap">
-              <input type="number" class="comp-inject-tension" id="comp-mains-tension" value="52" min="30" max="70" step="1">
-              <span class="comp-inject-unit">lbs</span>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Crosses Column (hidden string selector in fullbed) -->
-        <div class="comp-inject-string" id="comp-crosses-col">
-          <span class="comp-inject-label" id="comp-crosses-label">// CROSSES</span>
-          <div id="comp-crosses-select" class="comp-string-select-container" style="display:none;"></div>
-          <div class="comp-inject-sub-row">
-            <select class="comp-inject-gauge" id="comp-crosses-gauge">
-              <option value="">Gauge...</option>
-            </select>
-            <div class="comp-inject-tension-wrap">
-              <input type="number" class="comp-inject-tension" id="comp-crosses-tension" value="50" min="30" max="70" step="1">
-              <span class="comp-inject-unit">lbs</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="comp-inject-actions">
-        <button class="comp-inject-apply" id="comp-inject-apply" disabled onclick="_compApplyInjection()">APPLY TO LOADOUT</button>
-        <button class="comp-inject-clear" onclick="_compClearInjection()">Clear</button>
-      </div>
     </div>
 
     <!-- Top Builds -->

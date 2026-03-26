@@ -4740,67 +4740,150 @@ function renderDeltaVsBaseline() {
     }
   }
 
-  // Generate segmented battery bars for each stat
-  const renderBatteryBar = (value, isExplored = false) => {
-    const segments = 20; // Number of segments in the battery bar
-    let segmentsHtml = '';
-    const filledCount = Math.round((value / 100) * segments);
-    
-    for (let i = 0; i < segments; i++) {
-      let segClass = '';
-      if (i < filledCount) {
-        // Determine if this is a "high" value segment (70+)
-        const segValue = (i / segments) * 100;
-        segClass = segValue >= 70 ? 'high' : 'filled';
-      } else {
-        segClass = 'empty';
-      }
-      segmentsHtml += `<div class="stat-bar-segment ${segClass}"></div>`;
-    }
-    
-    return segmentsHtml;
-  };
-
-  container.innerHTML = `
-    <div class="delta-header-row">
-      <span class="delta-baseline-label">${baseLabel}</span>
-      <span class="delta-explored-label">${exploreLabel}</span>
-    </div>
-    <div class="delta-stats-grid">
-      ${deltaKeys.map((key, i) => {
-        const diff = Math.round(explored[key] - base[key]);
-        const cls = diff > 0 ? 'delta-positive' : diff < 0 ? 'delta-negative' : 'delta-neutral';
-        const sign = diff > 0 ? '+' : '';
-        return `
-          <div class="delta-stat-row">
-            <span class="delta-stat-label">${deltaLabels[i]}</span>
-            <div class="stat-bar-track" data-baseline="${base[key]}" data-explored="${explored[key]}" data-key="${key}">
-              ${renderBatteryBar(explored[key])}
-            </div>
-            <span class="delta-stat-diff ${cls}">${isAtBaseline ? '—' : `${sign}${diff}`}</span>
-          </div>
-        `;
-      }).join('')}
-    </div>
-  `;
+  // Check if this is first render or update
+  const isFirstRender = !container.querySelector('.delta-stats-grid');
   
-  // Animate the battery bars
-  requestAnimationFrame(() => {
+  if (isFirstRender) {
+    // Initial render - create the DOM structure
+    const renderBatteryBar = (value) => {
+      const segments = 20;
+      let segmentsHtml = '';
+      const filledCount = Math.round((value / 100) * segments);
+      
+      for (let i = 0; i < segments; i++) {
+        let segClass = '';
+        if (i < filledCount) {
+          const segValue = (i / segments) * 100;
+          segClass = segValue >= 70 ? 'high' : 'filled';
+        } else {
+          segClass = 'empty';
+        }
+        segmentsHtml += `<div class="stat-bar-segment ${segClass}"></div>`;
+      }
+      
+      return segmentsHtml;
+    };
+
+    container.innerHTML = `
+      <div class="delta-header-row">
+        <span class="delta-baseline-label">${baseLabel}</span>
+        <span class="delta-explored-label" id="delta-explored-label">${exploreLabel}</span>
+      </div>
+      <div class="delta-stats-grid">
+        ${deltaKeys.map((key, i) => {
+          const diff = Math.round(explored[key] - base[key]);
+          const cls = diff > 0 ? 'delta-positive' : diff < 0 ? 'delta-negative' : 'delta-neutral';
+          const sign = diff > 0 ? '+' : '';
+          return `
+            <div class="delta-stat-row" data-stat="${key}">
+              <span class="delta-stat-label">${deltaLabels[i]}</span>
+              <div class="stat-bar-track" id="delta-track-${key}" data-baseline="${base[key]}" data-explored="${explored[key]}">
+                ${renderBatteryBar(explored[key])}
+              </div>
+              <span class="delta-stat-diff ${cls}" id="delta-diff-${key}">${isAtBaseline ? '—' : `${sign}${diff}`}</span>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+    
+    // Animate the battery bars on first render
     requestAnimationFrame(() => {
-      container.querySelectorAll('.stat-bar-track').forEach((track, idx) => {
-        const exploredValue = parseFloat(track.dataset.explored);
-        const segments = track.querySelectorAll('.stat-bar-segment');
-        const filledCount = Math.round((exploredValue / 100) * segments.length);
-        
-        segments.forEach((seg, i) => {
-          setTimeout(() => {
-            if (i < filledCount) {
-              seg.classList.add('active');
-            }
-          }, idx * 40 + i * 15);
+      requestAnimationFrame(() => {
+        container.querySelectorAll('.stat-bar-track').forEach((track, idx) => {
+          const exploredValue = parseFloat(track.dataset.explored);
+          const segments = track.querySelectorAll('.stat-bar-segment');
+          const filledCount = Math.round((exploredValue / 100) * segments.length);
+          
+          segments.forEach((seg, i) => {
+            setTimeout(() => {
+              if (i < filledCount) {
+                seg.classList.add('active');
+              }
+            }, idx * 40 + i * 15);
+          });
         });
       });
     });
+  } else {
+    // Update existing DOM - dynamic update like racket bible
+    _updateDeltaBatteryBars(base, explored, isAtBaseline);
+    
+    // Update labels
+    const exploreLabelEl = document.getElementById('delta-explored-label');
+    if (exploreLabelEl) exploreLabelEl.textContent = exploreLabel;
+  }
+}
+
+// Update delta battery bars dynamically (like racket bible comp-track)
+function _updateDeltaBatteryBars(baseStats, exploredStats, isAtBaseline) {
+  const deltaKeys = ['control', 'power', 'comfort', 'spin', 'launch', 'feel', 'playability'];
+  const segments = 20;
+  
+  deltaKeys.forEach(key => {
+    const baseVal = Math.round(baseStats[key]);
+    const exploredVal = Math.round(exploredStats[key]);
+    const diff = exploredVal - baseVal;
+    
+    const track = document.getElementById(`delta-track-${key}`);
+    const diffEl = document.getElementById(`delta-diff-${key}`);
+    if (!track) return;
+    
+    const baseFilled = Math.round((baseVal / 100) * segments);
+    const exploredFilled = Math.round((exploredVal / 100) * segments);
+    
+    // Rebuild segments with before/after visualization
+    let segmentsHtml = '';
+    for (let i = 0; i < segments; i++) {
+      let segClass = 'empty';
+      
+      if (isAtBaseline) {
+        // At baseline - show base value only
+        if (i < baseFilled) {
+          const segValue = (i / segments) * 100;
+          segClass = segValue >= 70 ? 'high active' : 'filled active';
+        }
+      } else {
+        // Exploring - show comparison
+        if (exploredVal > baseVal) {
+          // Increased - base in normal, increase in accent
+          if (i < baseFilled) {
+            const segValue = (i / segments) * 100;
+            segClass = segValue >= 70 ? 'high active' : 'filled active';
+          } else if (i < exploredFilled) {
+            segClass = 'high active'; // Increased portion in accent
+          }
+        } else if (exploredVal < baseVal) {
+          // Decreased - explored in darker/reduced, base remainder
+          if (i < exploredFilled) {
+            const segValue = (i / segments) * 100;
+            segClass = segValue >= 70 ? 'high active' : 'filled active';
+          } else if (i < baseFilled) {
+            segClass = 'empty'; // Lost portion
+          }
+        } else {
+          // Same - show base
+          if (i < baseFilled) {
+            const segValue = (i / segments) * 100;
+            segClass = segValue >= 70 ? 'high active' : 'filled active';
+          }
+        }
+      }
+      
+      segmentsHtml += `<div class="stat-bar-segment ${segClass}"></div>`;
+    }
+    
+    track.innerHTML = segmentsHtml;
+    track.dataset.baseline = baseVal;
+    track.dataset.explored = exploredVal;
+    
+    // Update diff label
+    if (diffEl) {
+      const cls = diff > 0 ? 'delta-positive' : diff < 0 ? 'delta-negative' : 'delta-neutral';
+      const sign = diff > 0 ? '+' : '';
+      diffEl.className = `delta-stat-diff ${cls}`;
+      diffEl.textContent = isAtBaseline ? '—' : `${sign}${diff}`;
+    }
   });
 }
 

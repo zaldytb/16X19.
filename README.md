@@ -4,22 +4,59 @@
 
 Physics-based tennis equipment prediction tool. Calculates composite performance scores across 11 attributes by modeling frame physics, string properties, tension effects, and hybrid interactions.
 
-Zero dependencies. No build step. Three files: `index.html`, `app.js`, `style.css` + `data.js` (generated). Tailwind CSS via CDN with custom Digicraft theme.
+Vite + ES Modules + Tailwind CSS. Deploys to GitHub Pages and Vercel.
 
 ## Quick Start
 
-Open `index.html` in any browser. That's it.
+```bash
+npm install
+npm run dev      # Development server
+npm run build    # Production build
+```
 
 ## Architecture
 
-### Prediction Engine (app.js)
+### Modular ES6 Structure
 
-4-layer pipeline: Frame Physics → String Profile → Tension Modifier → Hybrid Interaction
+```
+src/
+├── engine/              # Prediction engine (pure functions)
+│   ├── constants.js     # GAUGE_OPTIONS, STAT_KEYS, OBS_TIERS, etc.
+│   ├── frame-physics.js # calcFrameBase, normalizeRawSpecs
+│   ├── string-profile.js # calcBaseStringProfile, gauge modifiers
+│   ├── tension.js       # calcTensionModifier, tension context
+│   ├── hybrid.js        # calcHybridInteraction
+│   ├── composite.js     # predictSetup, computeCompositeScore
+│   └── index.js         # barrel exports
+│
+├── state/               # State management
+│   ├── loadout.js       # CRUD for loadouts
+│   ├── setup-sync.js    # getCurrentSetup, state sync
+│   └── presets.js       # Top builds generation
+│
+├── ui/                  # UI components
+│   ├── components/      # Reusable components
+│   │   └── searchable-select.js
+│   ├── pages/           # Page modules
+│   │   └── leaderboard.js
+│   ├── theme.js         # Dark/light mode
+│   └── nav.js           # Navigation helpers
+│
+├── data/                # Data loading
+│   └── loader.js        # RACQUETS, STRINGS imports
+│
+└── utils/               # Utilities
+    └── share.js         # URL encoding, export/import
+```
 
-- **L0** `calcFrameBase()` — normalizes raw specs, derives 9 attributes, applies technology bonuses
-- **L1** `calcBaseStringProfile()` + `calcStringFrameMod()` — string scoring with frame coupling
-- **L2** `calcTensionModifier()` — pattern-aware tension effects
-- **L3** `calcHybridInteraction()` — mains/crosses pairing bonuses
+### Prediction Engine (4-Layer Pipeline)
+
+| Layer | Function | Description |
+|-------|----------|-------------|
+| L0 | `calcFrameBase()` | Normalizes raw specs, derives 9 attributes |
+| L1 | `calcBaseStringProfile()` + `calcStringFrameMod()` | String scoring with frame coupling |
+| L2 | `calcTensionModifier()` | Pattern-aware tension effects |
+| L3 | `calcHybridInteraction()` | Mains/crosses pairing bonuses |
 
 Composite score (OBS) maps to a 10-tier ranking system.
 
@@ -29,7 +66,7 @@ Composite score (OBS) maps to a 10-tier ranking system.
 
 **String Compendium** (`comp-tab-strings`): Mirror architecture to Racket Bible. Browse strings by material, shape, stiffness. Hero shows TWU composite score. String Telemetry displays intrinsic characteristics. **Frame Injection** modulator — select frame, configure gauge/tension, preview how string affects frame stats. Supports hybrid configurations with independent crosses string selection.
 
-### Data Layer
+## Data Layer
 
 Equipment data lives in `pipeline/data/` as JSON files. The browser loads `data.js` which is generated from these files.
 
@@ -99,15 +136,21 @@ npm run enrich:twu-strings -- --input pipeline/data/twu-strings-raw-YYYY-MM-DD.c
 | `npm run scrape:twu` | Scrape TWU racquet database |
 | `npm run scrape:twu-strings` | Scrape TWU string database |
 | `npm run enrich:twu` | Enrich scraped frame CSV |
-| `npm run enrich:twu-strings` | Enrich scraped string CSV (if script exists) |
 
 ### File structure
 
 ```
 ├── index.html              ← app shell
-├── app.js                  ← engine + UI (~9,800 lines)
+├── app.js                  ← main app (~10,700 lines, imports from src/)
+├── src/
+│   ├── engine/             ← prediction engine (extracted)
+│   ├── state/              ← state management
+│   ├── ui/                 ← UI components
+│   ├── data/               ← data loading
+│   └── utils/              ← utilities
 ├── style.css               ← Digicraft design system (Tailwind + custom)
 ├── data.js                 ← generated from pipeline (never edit)
+├── vite.config.js          ← Vite configuration
 ├── package.json
 │
 ├── pipeline/
@@ -131,21 +174,43 @@ npm run enrich:twu-strings -- --input pipeline/data/twu-strings-raw-YYYY-MM-DD.c
 │   │   ├── enrich-twu-csv.js   ← frame enrichment + filtering
 │   │   └── enrich-twu-strings.js ← string enrichment + filtering
 │   └── engine/
-│       └── core.js             ← portable engine (22 functions, Node.js)
+│       └── core.js             ← portable engine (Node.js)
 │
-└── tools/
-    ├── frame-editor.html       ← visual batch frame editor
-    └── twu-import.html         ← AI-assisted TWU data extraction
+├── tools/
+│   ├── frame-editor.html       ← visual batch frame editor
+│   └── twu-import.html         ← AI-assisted TWU data extraction
+│
+└── .github/workflows/
+    └── deploy.yml              ← GitHub Pages auto-deployment
 ```
 
 ### Key principles
 
 - `pipeline/data/*.json` is the source of truth
 - `data.js` is generated — never edit directly
-- `app.js` contains only engine + UI — no equipment data
+- `app.js` imports engine from `src/engine/` — no inline engine code
 - The engine is deterministic — same inputs always produce same outputs
 - Canary tests guard against regression on every export
 - Setup syncing ensures consistency across all pages (see below)
+
+## Deployment
+
+### GitHub Pages (Primary)
+
+Pushes to `main` auto-deploy via GitHub Actions:
+
+```bash
+git push origin main
+```
+
+Check status: https://github.com/zaldytb/loadout-lab/actions
+
+Live at: https://zaldytb.github.io/loadout-lab/
+
+### Vercel (Mirror)
+
+Also deploys to Vercel on every push:
+https://loadout-lab.vercel.app
 
 ## Setup Syncing
 

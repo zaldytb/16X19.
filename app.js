@@ -42,7 +42,7 @@ import {
 } from './src/engine/composite.js';
 import { calcHybridInteraction } from './src/engine/hybrid.js';
 import { loadSavedLoadouts, persistSavedLoadouts, setActiveLoadout as _stateSetActiveLoadout, setSavedLoadouts as _stateSetSavedLoadouts, getSetupFromLoadout } from './src/state/loadout.js';
-import { getActiveLoadout, setActiveLoadout, getSavedLoadouts, setSavedLoadouts, addSavedLoadout, removeSavedLoadout, updateSavedLoadout } from './src/state/store.js';
+import { getActiveLoadout, setActiveLoadout, getSavedLoadouts, setSavedLoadouts, addSavedLoadout, removeSavedLoadout, updateSavedLoadout, subscribe } from './src/state/store.js';
 import { createSearchableSelect, ssInstances, _initQaSearchable } from './src/ui/components/searchable-select.js';
 import { 
   encodeLoadoutToURL, 

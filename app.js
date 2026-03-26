@@ -1029,26 +1029,30 @@ function saveLoadout(loadout) {
   if (!loadout) return;
   const copy = Object.assign({}, loadout);
   delete copy._dirty; // runtime state, don't persist
-  const existing = savedLoadouts.findIndex(l => l.id === copy.id);
+  const sls = getSavedLoadouts();
+  const existing = sls.findIndex(l => l.id === copy.id);
   if (existing >= 0) {
-    savedLoadouts[existing] = copy;
+    updateSavedLoadout(copy.id, copy);
   } else {
-    savedLoadouts.push(copy);
+    addSavedLoadout(copy);
   }
-  _stateSetSavedLoadouts(savedLoadouts);
+  // Also update legacy state module
+  _stateSetSavedLoadouts(getSavedLoadouts());
   persistSavedLoadouts();
   renderDockPanel();
 }
 
 function removeLoadout(loadoutId) {
-  savedLoadouts = savedLoadouts.filter(l => l.id !== loadoutId);
-  _stateSetSavedLoadouts(savedLoadouts);
+  removeSavedLoadout(loadoutId);
+  // Also update legacy state module
+  _stateSetSavedLoadouts(getSavedLoadouts());
   persistSavedLoadouts();
   renderDockPanel();
 }
 
 function switchToLoadout(loadoutId) {
-  const lo = savedLoadouts.find(l => l.id === loadoutId);
+  const sls = getSavedLoadouts();
+  const lo = sls.find(l => l.id === loadoutId);
   if (lo) {
     const copy = Object.assign({}, lo);
     copy._dirty = false; // fresh switch, no unsaved changes
@@ -1287,10 +1291,12 @@ function renderMobileLoadoutPills() {
   var container = document.getElementById('mobile-loadout-pills');
   if (!container) return;
   if (window.innerWidth > 1024) { container.innerHTML = ''; return; }
-  if (!savedLoadouts || savedLoadouts.length === 0) { container.innerHTML = ''; return; }
+  const sls = getSavedLoadouts();
+  const al = getActiveLoadout();
+  if (!sls || sls.length === 0) { container.innerHTML = ''; return; }
 
-  container.innerHTML = savedLoadouts.map(function(lo) {
-    var isActive = activeLoadout && activeLoadout.id === lo.id;
+  container.innerHTML = sls.map(function(lo) {
+    var isActive = al && al.id === lo.id;
     var name = (lo.name || 'Loadout').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     var obs = lo.obs ? lo.obs.toFixed(1) : '\u2014';
     var cls = isActive
@@ -2049,23 +2055,25 @@ function confirmRemoveLoadout(loadoutId) {
 
 // Dock action handlers
 function saveActiveLoadout() {
-  if (!activeLoadout) return;
-  activeLoadout._dirty = false;
-  saveLoadout(activeLoadout);
+  const al = getActiveLoadout();
+  if (!al) return;
+  al._dirty = false;
+  saveLoadout(al);
 }
 
 function duplicateActiveLoadout() {
-  if (!activeLoadout) return;
-  var dupe = Object.assign({}, activeLoadout, {
+  const al = getActiveLoadout();
+  if (!al) return;
+  var dupe = Object.assign({}, al, {
     id: 'lo-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
-    name: activeLoadout.name + ' (copy)'
+    name: al.name + ' (copy)'
   });
   saveLoadout(dupe);
   activateLoadout(dupe);
 }
 
 function resetActiveLoadout() {
-  activeLoadout = null;
+  setActiveLoadout(null);
   _stateSetActiveLoadout(null);
 
   // Clear tune sandbox state

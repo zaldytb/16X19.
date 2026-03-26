@@ -1,23 +1,24 @@
 // src/state/loadout.ts
-// Loadout state management — pure functions and data operations
+// Loadout state management — delegates to centralized store
+// This module is kept for backward compat; new code should import from './store.js'
 
 import { RACQUETS, STRINGS } from '../data/loader.js';
 import type { Racquet, StringData, Loadout, StringConfig } from '../engine/types.js';
 import { applyGaugeModifier } from '../engine/string-profile.js';
 import { predictSetup, computeCompositeScore, generateIdentity } from '../engine/composite.js';
 import { buildTensionContext } from '../engine/tension.js';
+import {
+  getActiveLoadout as _getActiveLoadout,
+  getSavedLoadouts as _getSavedLoadouts,
+  setActiveLoadout as _setActiveLoadout,
+  setSavedLoadouts as _setSavedLoadouts,
+  addSavedLoadout as _addSavedLoadout,
+  removeSavedLoadout as _removeSavedLoadout,
+  updateSavedLoadout as _updateSavedLoadout
+} from './store.js';
 
-// In-memory state (mirrors app.js state)
-let activeLoadout: Loadout | null = null;
-let savedLoadouts: Loadout[] = [];
-
-// Getter functions
-export function getActiveLoadout(): Loadout | null { return activeLoadout; }
-export function getSavedLoadouts(): Loadout[] { return savedLoadouts; }
-
-// Setter functions
-export function setActiveLoadout(loadout: Loadout | null): void { activeLoadout = loadout; }
-export function setSavedLoadouts(loadouts: Loadout[]): void { savedLoadouts = loadouts; }
+// Re-export store functions (backward compat)
+export { getActiveLoadout, getSavedLoadouts, setActiveLoadout, setSavedLoadouts } from './store.js';
 
 // Persistence helper
 const _store = (function(): Storage | null { 
@@ -108,7 +109,7 @@ export function createLoadout(
  */
 export function persistSavedLoadouts(): void {
   try {
-    if (_store) _store.setItem('tll-loadouts', JSON.stringify(savedLoadouts));
+    if (_store) _store.setItem('tll-loadouts', JSON.stringify(_getSavedLoadouts()));
   } catch(e) {}
 }
 
@@ -134,11 +135,12 @@ export function saveLoadout(loadout: Loadout): void {
   if (!loadout) return;
   const copy: Loadout = Object.assign({}, loadout);
   delete (copy as Partial<Loadout>)._dirty;
-  const existing = savedLoadouts.findIndex(l => l.id === copy.id);
+  const sls = _getSavedLoadouts();
+  const existing = sls.findIndex(l => l.id === copy.id);
   if (existing >= 0) {
-    savedLoadouts[existing] = copy;
+    _updateSavedLoadout(copy.id, copy);
   } else {
-    savedLoadouts.push(copy);
+    _addSavedLoadout(copy);
   }
   persistSavedLoadouts();
 }
@@ -147,7 +149,7 @@ export function saveLoadout(loadout: Loadout): void {
  * Remove a loadout by ID
  */
 export function removeLoadout(loadoutId: string): void {
-  savedLoadouts = savedLoadouts.filter(l => l.id !== loadoutId);
+  _removeSavedLoadout(loadoutId);
   persistSavedLoadouts();
 }
 
@@ -155,7 +157,8 @@ export function removeLoadout(loadoutId: string): void {
  * Switch to a saved loadout by ID
  */
 export function switchToLoadout(loadoutId: string): Loadout | null {
-  const lo = savedLoadouts.find(l => l.id === loadoutId);
+  const sls = _getSavedLoadouts();
+  const lo = sls.find(l => l.id === loadoutId);
   if (lo) {
     const copy: Loadout = Object.assign({}, lo);
     copy._dirty = false;
@@ -204,7 +207,7 @@ export function getSetupFromLoadout(loadout: Loadout | null): SetupFromLoadoutRe
  * Export loadouts to JSON string
  */
 export function exportLoadouts(): string {
-  return JSON.stringify(savedLoadouts, null, 2);
+  return JSON.stringify(_getSavedLoadouts(), null, 2);
 }
 
 /**
@@ -217,13 +220,14 @@ export function importLoadouts(jsonString: string): number {
     if (!Array.isArray(parsed)) return 0;
     
     let imported = 0;
+    const sls = _getSavedLoadouts();
     parsed.forEach((lo: Loadout) => {
       if (lo && lo.id && lo.frameId) {
-        const existing = savedLoadouts.findIndex(l => l.id === lo.id);
+        const existing = sls.findIndex((l: Loadout) => l.id === lo.id);
         if (existing >= 0) {
-          savedLoadouts[existing] = lo;
+          _updateSavedLoadout(lo.id, lo);
         } else {
-          savedLoadouts.push(lo);
+          _addSavedLoadout(lo);
         }
         imported++;
       }
@@ -235,6 +239,3 @@ export function importLoadouts(jsonString: string): number {
     return 0;
   }
 }
-
-// Initialize savedLoadouts from storage
-savedLoadouts = loadSavedLoadouts();

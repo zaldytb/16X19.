@@ -1,7 +1,7 @@
 // src/state/setup-sync.ts
 // Setup synchronization between active loadout and editor DOM
 
-import { getActiveLoadout } from './loadout.js';
+import { getActiveLoadout } from './store.js';
 import type { Loadout, Racquet, StringData, StringConfig } from '../engine/types.js';
 import { RACQUETS, STRINGS } from '../data/loader.js';
 import { applyGaugeModifier } from '../engine/string-profile.js';

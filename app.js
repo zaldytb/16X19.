@@ -4740,6 +4740,27 @@ function renderDeltaVsBaseline() {
     }
   }
 
+  // Generate segmented battery bars for each stat
+  const renderBatteryBar = (value, isExplored = false) => {
+    const segments = 20; // Number of segments in the battery bar
+    let segmentsHtml = '';
+    const filledCount = Math.round((value / 100) * segments);
+    
+    for (let i = 0; i < segments; i++) {
+      let segClass = '';
+      if (i < filledCount) {
+        // Determine if this is a "high" value segment (70+)
+        const segValue = (i / segments) * 100;
+        segClass = segValue >= 70 ? 'high' : 'filled';
+      } else {
+        segClass = 'empty';
+      }
+      segmentsHtml += `<div class="stat-bar-segment ${segClass}"></div>`;
+    }
+    
+    return segmentsHtml;
+  };
+
   container.innerHTML = `
     <div class="delta-header-row">
       <span class="delta-baseline-label">${baseLabel}</span>
@@ -4753,9 +4774,8 @@ function renderDeltaVsBaseline() {
         return `
           <div class="delta-stat-row">
             <span class="delta-stat-label">${deltaLabels[i]}</span>
-            <div class="delta-stat-bar-track">
-              <div class="delta-stat-bar-baseline" style="width:${base[key]}%"></div>
-              ${!isAtBaseline ? `<div class="delta-stat-bar-explored ${cls}" style="width:${explored[key]}%"></div>` : ''}
+            <div class="stat-bar-track" data-baseline="${base[key]}" data-explored="${explored[key]}" data-key="${key}">
+              ${renderBatteryBar(explored[key])}
             </div>
             <span class="delta-stat-diff ${cls}">${isAtBaseline ? '—' : `${sign}${diff}`}</span>
           </div>
@@ -4763,6 +4783,25 @@ function renderDeltaVsBaseline() {
       }).join('')}
     </div>
   `;
+  
+  // Animate the battery bars
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      container.querySelectorAll('.stat-bar-track').forEach((track, idx) => {
+        const exploredValue = parseFloat(track.dataset.explored);
+        const segments = track.querySelectorAll('.stat-bar-segment');
+        const filledCount = Math.round((exploredValue / 100) * segments.length);
+        
+        segments.forEach((seg, i) => {
+          setTimeout(() => {
+            if (i < filledCount) {
+              seg.classList.add('active');
+            }
+          }, idx * 40 + i * 15);
+        });
+      });
+    });
+  });
 }
 
 // ============================================

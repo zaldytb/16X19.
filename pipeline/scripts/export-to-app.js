@@ -37,6 +37,9 @@ function main() {
     `const STRINGS = ${JSON.stringify(STRINGS, null, 2)};`,
     '',
     `const FRAME_META = ${JSON.stringify(FRAME_META, null, 2)};`,
+    '',
+    '// ES Module exports',
+    'export { RACQUETS, STRINGS, FRAME_META };',
     ''
   ].join('\n');
 

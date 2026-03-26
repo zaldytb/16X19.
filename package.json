@@ -4,6 +4,9 @@
   "description": "A physics-based tennis equipment analysis tool. Pick a racquet, string, and tension — the engine predicts how your setup will play across nine attributes (power, spin, control, comfort, feel, stability, forgiveness, launch, maneuverability).",
   "main": "app.js",
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "extract": "node pipeline/scripts/extract.js",
     "validate": "node pipeline/scripts/validate.js",
     "export": "node pipeline/scripts/export-to-app.js",
@@ -27,6 +30,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "json5": "^2.2.3"
+    "@tailwindcss/vite": "^4.2.2",
+    "json5": "^2.2.3",
+    "tailwindcss": "^4.2.2"
+  },
+  "devDependencies": {
+    "vite": "^8.0.3"
   }
 }

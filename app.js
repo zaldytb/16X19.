@@ -3,6 +3,8 @@
 // PREDICTION ENGINE
 // ============================================
 
+import { RACQUETS, STRINGS, FRAME_META } from './data.js';
+
 function clamp(val, min = 0, max = 100) {
   return Math.max(min, Math.min(max, Math.round(val)));
 }
@@ -6115,6 +6117,15 @@ function setHybridMode(isHybrid) {
   if (hybridConfig) hybridConfig.classList.toggle('hidden', !isHybrid);
 }
 
+// Global editor change handler
+function _onEditorChange() {
+  if (activeLoadout) {
+    commitEditorToLoadout();
+  } else {
+    renderDashboard();
+  }
+}
+
 // Fix 3: Handle Full Bed <-> Hybrid toggle with confirmation and pre-populate
 function _handleHybridToggle(toHybrid) {
   const currentlyHybrid = $('#btn-hybrid').classList.contains('active');
@@ -8027,7 +8038,13 @@ function toggleTheme() {
 // EVENT LISTENERS
 // ============================================
 
+let _initCalled = false;
+
 function init() {
+  // Prevent duplicate event listener attachment
+  if (_initCalled) return;
+  _initCalled = true;
+  
   // Populate searchable dropdowns (onChange callbacks handle dashboard re-render)
   populateRacquetDropdown($('#select-racquet'));
   populateStringDropdown($('#select-string-full'));
@@ -8035,13 +8052,6 @@ function init() {
   populateStringDropdown($('#select-string-crosses'));
 
   // Tension inputs — route through commitEditorToLoadout when active loadout exists
-  function _onEditorChange() {
-    if (activeLoadout) {
-      commitEditorToLoadout();
-    } else {
-      renderDashboard();
-    }
-  }
   $('#input-tension-full-mains').addEventListener('input', _onEditorChange);
   $('#input-tension-full-crosses').addEventListener('input', _onEditorChange);
   $('#input-tension-mains').addEventListener('input', _onEditorChange);
@@ -11837,21 +11847,31 @@ function _renderCreateForm(title, showCancel) {
 }
 
 function _cfToggleMode(btn) {
-  var container = btn.closest('.dock-cf-body') ? btn.closest('.dock-cf-body').parentElement : btn.closest('[class*="border"]');
+  var container = btn.closest('.dock-cf-form');
   if (!container) return;
-  var isHybrid = btn.dataset.cfMode === 'hybrid';
-  var body = container.querySelector('.dock-cf-body');
-  if (body) body.dataset.cfHybrid = isHybrid ? 'true' : 'false';
-
+  
+  var mode = btn.dataset.cfMode;
+  var isHybrid = mode === 'hybrid';
+  
   var fullSection = container.querySelector('.dock-cf-fullbed');
   var hybridSection = container.querySelector('.dock-cf-hybrid');
-  if (fullSection) fullSection.classList.toggle('hidden', isHybrid);
-  if (hybridSection) hybridSection.classList.toggle('hidden', !isHybrid);
+  
+  // Toggle visibility - no data transfer, no clearing
+  if (fullSection) {
+    if (isHybrid) fullSection.classList.add('hidden');
+    else fullSection.classList.remove('hidden');
+  }
+  if (hybridSection) {
+    if (isHybrid) hybridSection.classList.remove('hidden');
+    else hybridSection.classList.add('hidden');
+  }
 
+  // Update button styles only
   container.querySelectorAll('.dock-cf-toggle-btn').forEach(function(b) {
-    var active = b === btn;
-    b.style.background = active ? 'var(--dc-platinum)' : 'transparent';
-    b.style.color = active ? 'var(--dc-void)' : 'var(--dc-storm)';
+    var isTarget = b.dataset.cfMode === mode;
+    b.classList.toggle('active', isTarget);
+    b.style.background = isTarget ? 'var(--dc-platinum)' : 'transparent';
+    b.style.color = isTarget ? 'var(--dc-void)' : 'var(--dc-storm)';
   });
 }
 
@@ -11873,8 +11893,9 @@ function _cfBuildLoadout() {
   var form = document.querySelector('.dock-cf-form');
   if (!form) return null;
 
-  var body = form.querySelector('.dock-cf-body');
-  var isHybrid = body && body.dataset.cfHybrid === 'true';
+  // Check which section is currently visible
+  var hybridSection = form.querySelector('.dock-cf-hybrid');
+  var isHybrid = hybridSection && !hybridSection.classList.contains('hidden');
 
   if (isHybrid) {
     var frameId = document.getElementById('dock-cf-h-frame').value;
@@ -11928,8 +11949,9 @@ function _cfHighlightMissingFields() {
   var form = document.querySelector('.dock-cf-form');
   if (!form) return;
 
-  var body = form.querySelector('.dock-cf-body');
-  var isHybrid = body && body.dataset.cfHybrid === 'true';
+  // Check which section is currently visible
+  var hybridSection = form.querySelector('.dock-cf-hybrid');
+  var isHybrid = hybridSection && !hybridSection.classList.contains('hidden');
 
   // Clear previous errors first
   _cfClearFieldErrors();
@@ -12480,7 +12502,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function _renderCreateFormTailwind(title, showCancel) {
   return (
-    '<div class="border border-[var(--dc-border)] bg-[var(--dc-void-deep)] p-4 flex flex-col gap-3">' +
+    '<div class="dock-cf-form border border-[var(--dc-border)] bg-[var(--dc-void-deep)] p-4 flex flex-col gap-3">' +
       '<div class="flex items-center justify-between border-b border-[var(--dc-border)] pb-3">' +
         '<span class="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--dc-platinum)]">' + title + '</span>' +
         (showCancel ? '<a class="font-mono text-[9px] uppercase tracking-widest text-[var(--dc-storm)] hover:text-[var(--dc-platinum)] cursor-pointer transition-colors" href="#" onclick="_hideNewLoadoutForm(); return false;">Cancel</a>' : '') +
@@ -12546,3 +12568,157 @@ function _cfTensionHtml(label, inputId, defaultVal) {
 // ─────────────────────────────────────────────
 // setHybridMode(isHybrid)
 // ─────────────────────────────────────────────
+// ES Module exports
+export {
+  // Re-export data for other modules
+  RACQUETS,
+  STRINGS,
+  FRAME_META,
+  
+  // Core data and prediction
+  predictSetup,
+  generateIdentity,
+  calcFrameBase,
+  calcBaseStringProfile,
+  calcStringFrameMod,
+  calcTensionModifier,
+  calcHybridInteraction,
+  
+  // Loadout management
+  createLoadout,
+  activateLoadout,
+  getCurrentSetup,
+  saveActiveLoadout,
+  resetActiveLoadout,
+  shareActiveLoadout,
+  exportLoadouts,
+  importLoadouts,
+  confirmRemoveLoadout,
+  removeLoadout,
+  
+  // UI Components
+  createSearchableSelect,
+  ssInstances,
+  switchMode,
+  switchToLoadout,
+  toggleTheme,
+  setHybridMode,
+  toggleDockCollapse,
+  toggleMobileDock,
+  
+  // Scoring and context
+  computeCompositeScore,
+  buildTensionContext,
+  getObsScoreColor,
+  
+  // Initialization functions
+  init,
+  initLeaderboard,
+  initTuneMode,
+  initOptimize,
+  initCompendium,
+  
+  // State variables accessed externally
+  comparisonSlots,
+  _compendiumInitialized,
+  
+  // Helper functions used by leaderboard
+  _compSelectFrame,
+  _compSwitchTab,
+  
+  // Landing search
+  _initLandingSearch,
+  
+  // Racket Bible / Compendium functions
+  _compToggleHud,
+  _compAction,
+  _compApplyInjection,
+  _compSetInjectMode,
+  _compClearInjection,
+  _compSetSort,
+  _stringToggleHud,
+  _stringSelectString,
+  _stringSetModMode,
+  _stringAddToLoadout,
+  _stringSetActiveLoadout,
+  _stringClearPreview,
+  
+  // Create flow functions
+  _cfToggleMode,
+  _cfActivate,
+  _cfSave,
+  _showNewLoadoutForm,
+  _hideNewLoadoutForm,
+  _renderCreateFormTailwind,
+  _cfFieldHtml,
+  _cfTensionHtml,
+  
+  // Tune mode functions
+  tuneSandboxCommit,
+  onTuneSliderInput,
+  _onEditorChange,
+  
+  // Compare functions
+  addComparisonSlot,
+  removeComparisonSlot,
+  renderComparisonSlots,
+  renderCompareSummaries,
+  renderCompareVerdict,
+  renderCompareMatrix,
+  updateComparisonRadar,
+  closeCompareEditors,
+  _refreshCompareSlot,
+  _toggleCompareCardEditor,
+  
+  // Optimize functions
+  _toggleOptMS,
+  runOptimizer,
+  _optApplyTensionFilter,
+  
+  // Leaderboard v2 functions
+  _lbv2SetStat,
+  _lbv2SetFilter,
+  _lbv2SetView,
+  _lbv2ClearFrameFilters,
+  _lbv2ClearStringFilters,
+  _lbv2View,
+  _lbv2ViewFrame,
+  _lbv2ViewString,
+  _lbv2Compare,
+  
+  // Apply/Save functions
+  _applyWttnBuild,
+  _saveWttnBuild,
+  _applyRecBuild,
+  _saveRecBuild,
+  
+  // Quiz functions
+  openFindMyBuild,
+  closeFindMyBuild,
+  fmbBack,
+  fmbNext,
+  _fmbSearchDirection,
+  
+  // Utility functions
+  clamp,
+  lerp,
+  norm,
+  getPatternOpenness,
+  getAvgBeam,
+  getMaxBeam,
+  getMinBeam,
+  isVariableBeam,
+  applyGaugeModifier,
+  getGaugeOptions,
+  compressScore,
+  _applyGaugeSelection,
+  
+  // Theme and responsive
+  handleResponsiveHeader,
+  _initDockCollapse,
+  
+  // Dock functions
+  _dockCompareEdit,
+  _dockCompareRemove,
+  _dockCompareQuickAdd,
+};

@@ -9,6 +9,24 @@
 //             buildTensionContext, generateIdentity, getObsScoreColor,
 //             createLoadout, activateLoadout, switchMode
 
+import {
+  RACQUETS,
+  STRINGS,
+  predictSetup,
+  computeCompositeScore,
+  buildTensionContext,
+  generateIdentity,
+  getObsScoreColor,
+  createLoadout,
+  activateLoadout,
+  switchMode,
+  calcFrameBase,
+  calcBaseStringProfile,
+} from './app.js';
+
+// Local state for compendium tracking (avoids circular import issues)
+let _lbv2CompendiumInitialized = false;
+
 let _lbv2State = {
   statKey:     'obs',     // which stat (or 'obs') to rank by
   filterType:  'both',    // 'both' | 'full' | 'hybrid'
@@ -1018,12 +1036,13 @@ function _lbv2View(racquetId, stringId, tension, type, mainsId, crossesId, cross
 
 function _lbv2ViewFrame(racquetId) {
   // Navigate to Racket Bible and select the frame
-  if (!_compendiumInitialized) {
+  if (!_lbv2CompendiumInitialized) {
     initCompendium();
-    _compendiumInitialized = true;
+    _lbv2CompendiumInitialized = true;
   }
-  _compSelectFrame(racquetId);
-  _compSwitchTab('rackets');
+  // Access these from window since they're attached for backward compatibility
+  if (window._compSelectFrame) window._compSelectFrame(racquetId);
+  if (window._compSwitchTab) window._compSwitchTab('rackets');
 }
 
 function _lbv2ViewString(stringId) {
@@ -1071,3 +1090,20 @@ function _lbv2Compare(racquetId, stringId, tension, type, mainsId, crossesId, cr
   renderCompareMatrix();
   try { updateComparisonRadar(); } catch(e) {}
 }
+
+
+// ES Module exports
+export {
+  initLeaderboard,
+  _lbv2SetStat,
+  _lbv2SetFilter,
+  _lbv2SetView,
+  _lbv2SetFrameFilter,
+  _lbv2ClearFrameFilters,
+  _lbv2SetStringFilter,
+  _lbv2ClearStringFilters,
+  _lbv2View,
+  _lbv2ViewFrame,
+  _lbv2ViewString,
+  _lbv2Compare,
+};

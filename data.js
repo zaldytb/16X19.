@@ -1,7 +1,7 @@
 const RACQUETS = [
   {
     "id": "babolat-pure-aero-100-2023",
-    "name": "Babolat Pure Aero 100 305g",
+    "name": "Babolat Pure Aero 100 318g",
     "year": 2023,
     "headSize": 100,
     "length": 27,
@@ -29,7 +29,7 @@ const RACQUETS = [
   },
   {
     "id": "head-speed-mp-2024",
-    "name": "Head Speed MP 302g",
+    "name": "Head Speed MP 315g",
     "year": 2024,
     "headSize": 100,
     "length": 27,
@@ -57,7 +57,7 @@ const RACQUETS = [
   },
   {
     "id": "head-speed-mp-legend-2025",
-    "name": "Head Speed MP Legend 305g",
+    "name": "Head Speed MP Legend 318g",
     "year": 2025,
     "headSize": 100,
     "length": 27,
@@ -85,7 +85,7 @@ const RACQUETS = [
   },
   {
     "id": "head-speed-pro-legend-2025",
-    "name": "Head Speed Pro Legend 313g",
+    "name": "Head Speed Pro Legend 326g",
     "year": 2025,
     "headSize": 100,
     "length": 27,
@@ -113,7 +113,7 @@ const RACQUETS = [
   },
   {
     "id": "head-speed-pro-2024",
-    "name": "Head Speed Pro 312g",
+    "name": "Head Speed Pro 325g",
     "year": 2024,
     "headSize": 100,
     "length": 27,
@@ -141,7 +141,7 @@ const RACQUETS = [
   },
   {
     "id": "wilson-blade-98-v8",
-    "name": "Wilson Blade 98 v8 307g",
+    "name": "Wilson Blade 98 v8 320g",
     "year": 2024,
     "headSize": 98,
     "length": 27,
@@ -169,7 +169,7 @@ const RACQUETS = [
   },
   {
     "id": "babolat-pure-drive-2024",
-    "name": "Babolat Pure Drive 309g",
+    "name": "Babolat Pure Drive 322g",
     "year": 2024,
     "headSize": 100,
     "length": 27,
@@ -197,7 +197,7 @@ const RACQUETS = [
   },
   {
     "id": "yonex-ezone-100-2024",
-    "name": "Yonex EZONE 100 302g",
+    "name": "Yonex EZONE 100 315g",
     "year": 2024,
     "headSize": 100,
     "length": 27,
@@ -225,7 +225,7 @@ const RACQUETS = [
   },
   {
     "id": "wilson-pro-staff-97-v14",
-    "name": "Wilson Pro Staff 97 v14 312g",
+    "name": "Wilson Pro Staff 97 v14 325g",
     "year": 2024,
     "headSize": 97,
     "length": 27,
@@ -253,7 +253,7 @@ const RACQUETS = [
   },
   {
     "id": "babolat-pure-aero-98-2026",
-    "name": "Babolat Pure Aero 98 310g",
+    "name": "Babolat Pure Aero 98 323g",
     "year": 2026,
     "headSize": 98,
     "length": 27,
@@ -281,7 +281,7 @@ const RACQUETS = [
   },
   {
     "id": "babolat-pure-aero-100-2026",
-    "name": "Babolat Pure Aero 100 Gen9 305g",
+    "name": "Babolat Pure Aero 100 Gen9 318g",
     "year": 2026,
     "headSize": 100,
     "length": 27,
@@ -309,7 +309,7 @@ const RACQUETS = [
   },
   {
     "id": "babolat-pure-aero-team-2026",
-    "name": "Babolat Pure Aero Team Gen9 288g",
+    "name": "Babolat Pure Aero Team Gen9 301g",
     "year": 2026,
     "headSize": 100,
     "length": 27,
@@ -337,7 +337,7 @@ const RACQUETS = [
   },
   {
     "id": "head-speed-mp-2026",
-    "name": "Head Speed MP 305g",
+    "name": "Head Speed MP 318g",
     "year": 2026,
     "headSize": 100,
     "length": 27,
@@ -365,7 +365,7 @@ const RACQUETS = [
   },
   {
     "id": "head-speed-pro-2026",
-    "name": "Head Speed Pro 313g",
+    "name": "Head Speed Pro 326g",
     "year": 2026,
     "headSize": 100,
     "length": 27,
@@ -393,7 +393,7 @@ const RACQUETS = [
   },
   {
     "id": "head-speed-mp-l-2026",
-    "name": "Head Speed MP L 282g",
+    "name": "Head Speed MP L 295g",
     "year": 2026,
     "headSize": 100,
     "length": 27,
@@ -421,7 +421,7 @@ const RACQUETS = [
   },
   {
     "id": "yonex-muse-98-2026",
-    "name": "Yonex Muse 98 310g",
+    "name": "Yonex Muse 98 323g",
     "year": 2026,
     "headSize": 98,
     "length": 27,
@@ -449,7 +449,7 @@ const RACQUETS = [
   },
   {
     "id": "yonex-muse-100-2026",
-    "name": "Yonex Muse 100 299g",
+    "name": "Yonex Muse 100 312g",
     "year": 2026,
     "headSize": 100,
     "length": 27,
@@ -477,7 +477,7 @@ const RACQUETS = [
   },
   {
     "id": "yonex-vcore-100-2023",
-    "name": "Yonex VCORE 100 307g",
+    "name": "Yonex VCORE 100 320g",
     "year": 2023,
     "headSize": 100,
     "length": 27,
@@ -505,7 +505,7 @@ const RACQUETS = [
   },
   {
     "id": "head-gravity-pro-2025",
-    "name": "Head Gravity Pro 319g",
+    "name": "Head Gravity Pro 332g",
     "year": 2025,
     "headSize": 100,
     "length": 27,
@@ -533,7 +533,7 @@ const RACQUETS = [
   },
   {
     "id": "head-gravity-tour-2025",
-    "name": "Head Gravity Tour 310g",
+    "name": "Head Gravity Tour 323g",
     "year": 2025,
     "headSize": 98,
     "length": 27,
@@ -561,7 +561,7 @@ const RACQUETS = [
   },
   {
     "id": "head-gravity-mp-2025",
-    "name": "Head Gravity MP 299g",
+    "name": "Head Gravity MP 312g",
     "year": 2025,
     "headSize": 100,
     "length": 27,
@@ -589,7 +589,7 @@ const RACQUETS = [
   },
   {
     "id": "wilson-shift-99-2025",
-    "name": "Wilson Shift 99 305g",
+    "name": "Wilson Shift 99 318g",
     "year": 2025,
     "headSize": 99,
     "length": 27,
@@ -617,7 +617,7 @@ const RACQUETS = [
   },
   {
     "id": "wilson-shift-99l-2025",
-    "name": "Wilson Shift 99 L 288g",
+    "name": "Wilson Shift 99 L 301g",
     "year": 2025,
     "headSize": 99,
     "length": 27,
@@ -645,7 +645,7 @@ const RACQUETS = [
   },
   {
     "id": "wilson-rf01-pro-2025",
-    "name": "Wilson RF01 Pro 324g",
+    "name": "Wilson RF01 Pro 337g",
     "year": 2025,
     "headSize": 98,
     "length": 27,
@@ -673,7 +673,7 @@ const RACQUETS = [
   },
   {
     "id": "wilson-rf01-2025",
-    "name": "Wilson RF01 305g",
+    "name": "Wilson RF01 318g",
     "year": 2025,
     "headSize": 98,
     "length": 27,
@@ -701,7 +701,7 @@ const RACQUETS = [
   },
   {
     "id": "babolat-pure-strike-97-2025",
-    "name": "Babolat Pure Strike 97 319g",
+    "name": "Babolat Pure Strike 97 332g",
     "year": 2025,
     "headSize": 97,
     "length": 27,
@@ -729,7 +729,7 @@ const RACQUETS = [
   },
   {
     "id": "babolat-pure-strike-98-16x19-2025",
-    "name": "Babolat Pure Strike 98 16x19 310g",
+    "name": "Babolat Pure Strike 98 16x19 323g",
     "year": 2025,
     "headSize": 98,
     "length": 27,
@@ -757,7 +757,7 @@ const RACQUETS = [
   },
   {
     "id": "babolat-pure-strike-98-18x20-2025",
-    "name": "Babolat Pure Strike 98 18x20 310g",
+    "name": "Babolat Pure Strike 98 18x20 323g",
     "year": 2025,
     "headSize": 98,
     "length": 27,
@@ -785,7 +785,7 @@ const RACQUETS = [
   },
   {
     "id": "babolat-pure-strike-100-16x19-2025",
-    "name": "Babolat Pure Strike 100 16x19 305g",
+    "name": "Babolat Pure Strike 100 16x19 318g",
     "year": 2025,
     "headSize": 100,
     "length": 27,
@@ -813,7 +813,7 @@ const RACQUETS = [
   },
   {
     "id": "solinco-whiteout-v2-290-2025",
-    "name": "Solinco Whiteout v2 290 290g",
+    "name": "Solinco Whiteout v2 290 303g",
     "year": 2025,
     "headSize": 98,
     "length": 27,
@@ -841,7 +841,7 @@ const RACQUETS = [
   },
   {
     "id": "solinco-whiteout-v2-305-2025",
-    "name": "Solinco Whiteout v2 305 310g",
+    "name": "Solinco Whiteout v2 305 323g",
     "year": 2025,
     "headSize": 98,
     "length": 27,
@@ -869,7 +869,7 @@ const RACQUETS = [
   },
   {
     "id": "solinco-blackout-v2-300-2025",
-    "name": "Solinco Blackout v2 300 307g",
+    "name": "Solinco Blackout v2 300 320g",
     "year": 2025,
     "headSize": 100,
     "length": 27,
@@ -897,7 +897,7 @@ const RACQUETS = [
   },
   {
     "id": "solinco-blackout-v2-285-2025",
-    "name": "Solinco Blackout v2 285 288g",
+    "name": "Solinco Blackout v2 285 301g",
     "year": 2025,
     "headSize": 100,
     "length": 27,
@@ -925,7 +925,7 @@ const RACQUETS = [
   },
   {
     "id": "head-speed-tour-2026",
-    "name": "Head Speed Tour 310g",
+    "name": "Head Speed Tour 323g",
     "year": 2026,
     "headSize": 97,
     "length": 27,
@@ -953,7 +953,7 @@ const RACQUETS = [
   },
   {
     "id": "head-speed-elite-2026",
-    "name": "Head Speed Elite 276g",
+    "name": "Head Speed Elite 289g",
     "year": 2026,
     "headSize": 100,
     "length": 27,
@@ -981,7 +981,7 @@ const RACQUETS = [
   },
   {
     "id": "head-speed-team-2026",
-    "name": "Head Speed Team 270g",
+    "name": "Head Speed Team 283g",
     "year": 2026,
     "headSize": 105,
     "length": 27,
@@ -1009,7 +1009,7 @@ const RACQUETS = [
   },
   {
     "id": "head-speed-mp-ul-2026",
-    "name": "Head Speed MP UL 265g",
+    "name": "Head Speed MP UL 278g",
     "year": 2026,
     "headSize": 100,
     "length": 27,
@@ -1037,7 +1037,7 @@ const RACQUETS = [
   },
   {
     "id": "head-boom-pro-2026",
-    "name": "Head Boom Pro 313g",
+    "name": "Head Boom Pro 326g",
     "year": 2026,
     "headSize": 98,
     "length": 27,
@@ -1065,7 +1065,7 @@ const RACQUETS = [
   },
   {
     "id": "head-boom-mp-2026",
-    "name": "Head Boom MP 299g",
+    "name": "Head Boom MP 312g",
     "year": 2026,
     "headSize": 100,
     "length": 27,
@@ -1093,7 +1093,7 @@ const RACQUETS = [
   },
   {
     "id": "head-boom-mp-l-2026",
-    "name": "Head Boom MP L 276g",
+    "name": "Head Boom MP L 289g",
     "year": 2026,
     "headSize": 100,
     "length": 27,
@@ -1121,7 +1121,7 @@ const RACQUETS = [
   },
   {
     "id": "head-boom-mp-ul-2026",
-    "name": "Head Boom MP UL 256g",
+    "name": "Head Boom MP UL 269g",
     "year": 2026,
     "headSize": 100,
     "length": 27,
@@ -1149,7 +1149,7 @@ const RACQUETS = [
   },
   {
     "id": "head-boom-team-2026",
-    "name": "Head Boom Team 262g",
+    "name": "Head Boom Team 275g",
     "year": 2026,
     "headSize": 107,
     "length": 27,
@@ -1177,7 +1177,7 @@ const RACQUETS = [
   },
   {
     "id": "head-boom-elite-2026",
-    "name": "Head Boom Elite 270g",
+    "name": "Head Boom Elite 283g",
     "year": 2026,
     "headSize": 107,
     "length": 27,
@@ -1205,7 +1205,7 @@ const RACQUETS = [
   },
   {
     "id": "head-radical-pro-2025",
-    "name": "Head Radical Pro 319g",
+    "name": "Head Radical Pro 332g",
     "year": 2025,
     "headSize": 98,
     "length": 27,
@@ -1233,7 +1233,7 @@ const RACQUETS = [
   },
   {
     "id": "head-radical-mp-2025",
-    "name": "Head Radical MP 305g",
+    "name": "Head Radical MP 318g",
     "year": 2025,
     "headSize": 98,
     "length": 27,
@@ -1261,7 +1261,7 @@ const RACQUETS = [
   },
   {
     "id": "head-radical-team-2025",
-    "name": "Head Radical Team 282g",
+    "name": "Head Radical Team 295g",
     "year": 2025,
     "headSize": 102,
     "length": 27,
@@ -1289,7 +1289,7 @@ const RACQUETS = [
   },
   {
     "id": "head-radical-team-l-2025",
-    "name": "Head Radical Team L 265g",
+    "name": "Head Radical Team L 278g",
     "year": 2025,
     "headSize": 102,
     "length": 27,
@@ -1317,7 +1317,7 @@ const RACQUETS = [
   },
   {
     "id": "head-extreme-pro-2024",
-    "name": "Head Extreme Pro 310g",
+    "name": "Head Extreme Pro 323g",
     "year": 2024,
     "headSize": 98,
     "length": 27,
@@ -1345,7 +1345,7 @@ const RACQUETS = [
   },
   {
     "id": "head-extreme-mp-2024",
-    "name": "Head Extreme MP 305g",
+    "name": "Head Extreme MP 318g",
     "year": 2024,
     "headSize": 100,
     "length": 27,
@@ -1373,7 +1373,7 @@ const RACQUETS = [
   },
   {
     "id": "head-extreme-team-2024",
-    "name": "Head Extreme Team 265g",
+    "name": "Head Extreme Team 278g",
     "year": 2024,
     "headSize": 105,
     "length": 27,
@@ -1401,7 +1401,7 @@ const RACQUETS = [
   },
   {
     "id": "head-extreme-mp-l-2024",
-    "name": "Head Extreme MP L 282g",
+    "name": "Head Extreme MP L 295g",
     "year": 2024,
     "headSize": 100,
     "length": 27,
@@ -1429,7 +1429,7 @@ const RACQUETS = [
   },
   {
     "id": "head-gravity-team-2025",
-    "name": "Head Gravity Team 270g",
+    "name": "Head Gravity Team 283g",
     "year": 2025,
     "headSize": 104,
     "length": 27,
@@ -1457,7 +1457,7 @@ const RACQUETS = [
   },
   {
     "id": "head-gravity-team-l-2025",
-    "name": "Head Gravity Team L 270g",
+    "name": "Head Gravity Team L 283g",
     "year": 2025,
     "headSize": 104,
     "length": 27,
@@ -1485,7 +1485,7 @@ const RACQUETS = [
   },
   {
     "id": "head-prestige-pro-2023",
-    "name": "Head Prestige Pro 324g",
+    "name": "Head Prestige Pro 337g",
     "year": 2023,
     "headSize": 98,
     "length": 27,
@@ -1513,7 +1513,7 @@ const RACQUETS = [
   },
   {
     "id": "head-prestige-tour-2023",
-    "name": "Head Prestige Tour 319g",
+    "name": "Head Prestige Tour 332g",
     "year": 2023,
     "headSize": 95,
     "length": 27,
@@ -1541,7 +1541,7 @@ const RACQUETS = [
   },
   {
     "id": "head-prestige-mp-2023",
-    "name": "Head Prestige MP 313g",
+    "name": "Head Prestige MP 326g",
     "year": 2023,
     "headSize": 99,
     "length": 27,
@@ -1569,7 +1569,7 @@ const RACQUETS = [
   },
   {
     "id": "head-prestige-mp-l-2023",
-    "name": "Head Prestige MP L 305g",
+    "name": "Head Prestige MP L 318g",
     "year": 2023,
     "headSize": 99,
     "length": 27,
@@ -1597,7 +1597,7 @@ const RACQUETS = [
   },
   {
     "id": "head-prestige-team-2023",
-    "name": "Head Prestige Team 287g",
+    "name": "Head Prestige Team 300g",
     "year": 2023,
     "headSize": 99,
     "length": 27,
@@ -1625,7 +1625,7 @@ const RACQUETS = [
   },
   {
     "id": "babolat-pure-aero-super-lite-2026",
-    "name": "Babolat Pure Aero Super Lite 256g",
+    "name": "Babolat Pure Aero Super Lite 269g",
     "year": 2026,
     "headSize": 100,
     "length": 27,
@@ -1653,7 +1653,7 @@ const RACQUETS = [
   },
   {
     "id": "babolat-pure-aero-team-2023",
-    "name": "Babolat Pure Aero Team 288g",
+    "name": "Babolat Pure Aero Team 301g",
     "year": 2023,
     "headSize": 100,
     "length": 27,
@@ -1681,7 +1681,7 @@ const RACQUETS = [
   },
   {
     "id": "babolat-pure-aero-lite-2023",
-    "name": "Babolat Pure Aero Lite 270g",
+    "name": "Babolat Pure Aero Lite 283g",
     "year": 2023,
     "headSize": 100,
     "length": 27,
@@ -1709,7 +1709,7 @@ const RACQUETS = [
   },
   {
     "id": "babolat-pure-aero-rafa-2023",
-    "name": "Babolat Pure Aero Rafa 290g",
+    "name": "Babolat Pure Aero Rafa 303g",
     "year": 2023,
     "headSize": 100,
     "length": 27,
@@ -1737,7 +1737,7 @@ const RACQUETS = [
   },
   {
     "id": "babolat-pure-aero-rafa-origin-2023",
-    "name": "Babolat Pure Aero Rafa Origin 324g",
+    "name": "Babolat Pure Aero Rafa Origin 337g",
     "year": 2023,
     "headSize": 100,
     "length": 27,
@@ -1765,7 +1765,7 @@ const RACQUETS = [
   },
   {
     "id": "babolat-pure-drive-2021",
-    "name": "Babolat Pure Drive 305g",
+    "name": "Babolat Pure Drive 318g",
     "year": 2021,
     "headSize": 100,
     "length": 27,
@@ -1793,7 +1793,7 @@ const RACQUETS = [
   },
   {
     "id": "babolat-pure-drive-team-2021",
-    "name": "Babolat Pure Drive Team 289g",
+    "name": "Babolat Pure Drive Team 302g",
     "year": 2021,
     "headSize": 100,
     "length": 27,
@@ -1821,7 +1821,7 @@ const RACQUETS = [
   },
   {
     "id": "babolat-pure-drive-lite-2021",
-    "name": "Babolat Pure Drive Lite 270g",
+    "name": "Babolat Pure Drive Lite 283g",
     "year": 2021,
     "headSize": 100,
     "length": 27,
@@ -1849,7 +1849,7 @@ const RACQUETS = [
   },
   {
     "id": "babolat-pure-strike-team-2025",
-    "name": "Babolat Pure Strike Team 290g",
+    "name": "Babolat Pure Strike Team 303g",
     "year": 2025,
     "headSize": 100,
     "length": 27,
@@ -1877,7 +1877,7 @@ const RACQUETS = [
   },
   {
     "id": "tecnifibre-tfight-iso-305",
-    "name": "Tecnifibre TFight ISO 305 307g",
+    "name": "Tecnifibre TFight ISO 305 320g",
     "year": 2022,
     "headSize": 98,
     "length": 27,
@@ -1905,7 +1905,7 @@ const RACQUETS = [
   },
   {
     "id": "tecnifibre-tfight-305s",
-    "name": "Tecnifibre TFight 305S 307g",
+    "name": "Tecnifibre TFight 305S 320g",
     "year": 2025,
     "headSize": 98,
     "length": 27,
@@ -1933,7 +1933,7 @@ const RACQUETS = [
   },
   {
     "id": "tecnifibre-tfight-iso-300",
-    "name": "Tecnifibre TFight ISO 300 305g",
+    "name": "Tecnifibre TFight ISO 300 318g",
     "year": 2023,
     "headSize": 98,
     "length": 27,
@@ -1961,7 +1961,7 @@ const RACQUETS = [
   },
   {
     "id": "tecnifibre-tfight-iso-285",
-    "name": "Tecnifibre TFight ISO 285 285g",
+    "name": "Tecnifibre TFight ISO 285 298g",
     "year": 2025,
     "headSize": 100,
     "length": 27,
@@ -1989,7 +1989,7 @@ const RACQUETS = [
   },
   {
     "id": "tecnifibre-tfight-iso-270",
-    "name": "Tecnifibre TFight ISO 270 270g",
+    "name": "Tecnifibre TFight ISO 270 283g",
     "year": 2025,
     "headSize": 100,
     "length": 27,
@@ -2017,7 +2017,7 @@ const RACQUETS = [
   },
   {
     "id": "tecnifibre-tfight-iso-255",
-    "name": "Tecnifibre TFight ISO 255 256g",
+    "name": "Tecnifibre TFight ISO 255 269g",
     "year": 2025,
     "headSize": 100,
     "length": 27,
@@ -2045,7 +2045,7 @@ const RACQUETS = [
   },
   {
     "id": "tecnifibre-tf40-305-18x20",
-    "name": "Tecnifibre TF40 305 18x20 310g",
+    "name": "Tecnifibre TF40 305 18x20 323g",
     "year": 2022,
     "headSize": 98,
     "length": 27,
@@ -2073,7 +2073,7 @@ const RACQUETS = [
   },
   {
     "id": "tecnifibre-tf40-305-16x19",
-    "name": "Tecnifibre TF40 305 16x19 307g",
+    "name": "Tecnifibre TF40 305 16x19 320g",
     "year": 2024,
     "headSize": 98,
     "length": 27,
@@ -2101,7 +2101,7 @@ const RACQUETS = [
   },
   {
     "id": "tecnifibre-tf40-315-16x19",
-    "name": "Tecnifibre TF40 315 16x19 319g",
+    "name": "Tecnifibre TF40 315 16x19 332g",
     "year": 2024,
     "headSize": 98,
     "length": 27,
@@ -2129,7 +2129,7 @@ const RACQUETS = [
   },
   {
     "id": "tecnifibre-tf40-290",
-    "name": "Tecnifibre TF40 290 290g",
+    "name": "Tecnifibre TF40 290 303g",
     "year": 2024,
     "headSize": 98,
     "length": 27,
@@ -2157,7 +2157,7 @@ const RACQUETS = [
   },
   {
     "id": "tecnifibre-tempo-298-iga",
-    "name": "Tecnifibre Tempo 298 Iga 299g",
+    "name": "Tecnifibre Tempo 298 Iga 312g",
     "year": 2022,
     "headSize": 98,
     "length": 27,
@@ -2185,7 +2185,7 @@ const RACQUETS = [
   },
   {
     "id": "yonex-ezone-98-2024",
-    "name": "Yonex EZONE 98 310g",
+    "name": "Yonex EZONE 98 323g",
     "year": 2024,
     "headSize": 98,
     "length": 27,
@@ -2213,7 +2213,7 @@ const RACQUETS = [
   },
   {
     "id": "yonex-ezone-98l-2024",
-    "name": "Yonex EZONE 98L 287g",
+    "name": "Yonex EZONE 98L 300g",
     "year": 2024,
     "headSize": 98,
     "length": 27,
@@ -2241,7 +2241,7 @@ const RACQUETS = [
   },
   {
     "id": "yonex-ezone-100l-2024",
-    "name": "Yonex EZONE 100L 288g",
+    "name": "Yonex EZONE 100L 301g",
     "year": 2024,
     "headSize": 100,
     "length": 27,
@@ -2269,7 +2269,7 @@ const RACQUETS = [
   },
   {
     "id": "yonex-vcore-95-2026",
-    "name": "Yonex VCORE 95 313g",
+    "name": "Yonex VCORE 95 326g",
     "year": 2026,
     "headSize": 95,
     "length": 27,
@@ -2297,7 +2297,7 @@ const RACQUETS = [
   },
   {
     "id": "yonex-vcore-98-2026",
-    "name": "Yonex VCORE 98 310g",
+    "name": "Yonex VCORE 98 323g",
     "year": 2026,
     "headSize": 98,
     "length": 27,
@@ -2325,7 +2325,7 @@ const RACQUETS = [
   },
   {
     "id": "yonex-vcore-98l-2026",
-    "name": "Yonex VCORE 98L 290g",
+    "name": "Yonex VCORE 98L 303g",
     "year": 2026,
     "headSize": 98,
     "length": 27,
@@ -2353,7 +2353,7 @@ const RACQUETS = [
   },
   {
     "id": "yonex-vcore-100-2026",
-    "name": "Yonex VCORE 100 305g",
+    "name": "Yonex VCORE 100 318g",
     "year": 2026,
     "headSize": 100,
     "length": 27,
@@ -2381,7 +2381,7 @@ const RACQUETS = [
   },
   {
     "id": "yonex-vcore-100l-2026",
-    "name": "Yonex VCORE 100L 282g",
+    "name": "Yonex VCORE 100L 295g",
     "year": 2026,
     "headSize": 100,
     "length": 27,
@@ -2409,7 +2409,7 @@ const RACQUETS = [
   },
   {
     "id": "yonex-percept-97-2023",
-    "name": "Yonex Percept 97 313g",
+    "name": "Yonex Percept 97 326g",
     "year": 2023,
     "headSize": 97,
     "length": 27,
@@ -2437,7 +2437,7 @@ const RACQUETS = [
   },
   {
     "id": "yonex-percept-97h-2023",
-    "name": "Yonex Percept 97H 333g",
+    "name": "Yonex Percept 97H 346g",
     "year": 2023,
     "headSize": 97,
     "length": 27,
@@ -2465,7 +2465,7 @@ const RACQUETS = [
   },
   {
     "id": "yonex-percept-100-2023",
-    "name": "Yonex Percept 100 302g",
+    "name": "Yonex Percept 100 315g",
     "year": 2023,
     "headSize": 100,
     "length": 27,
@@ -2493,7 +2493,7 @@ const RACQUETS = [
   },
   {
     "id": "yonex-percept-100d-2023",
-    "name": "Yonex Percept 100D 307g",
+    "name": "Yonex Percept 100D 320g",
     "year": 2023,
     "headSize": 100,
     "length": 27,
@@ -2521,7 +2521,7 @@ const RACQUETS = [
   },
   {
     "id": "yonex-percept-104-2023",
-    "name": "Yonex Percept 104 285g",
+    "name": "Yonex Percept 104 298g",
     "year": 2023,
     "headSize": 104,
     "length": 27,
@@ -2549,7 +2549,7 @@ const RACQUETS = [
   },
   {
     "id": "yonex-regna-98-2024",
-    "name": "Yonex Regna 98 313g",
+    "name": "Yonex Regna 98 326g",
     "year": 2024,
     "headSize": 98,
     "length": 27,
@@ -2577,7 +2577,7 @@ const RACQUETS = [
   },
   {
     "id": "wilson-pro-staff-97l-v14",
-    "name": "Wilson Pro Staff 97L v14 293g",
+    "name": "Wilson Pro Staff 97L v14 306g",
     "year": 2024,
     "headSize": 97,
     "length": 27,
@@ -2605,7 +2605,7 @@ const RACQUETS = [
   },
   {
     "id": "wilson-pro-staff-97ul-v14",
-    "name": "Wilson Pro Staff 97UL v14 272g",
+    "name": "Wilson Pro Staff 97UL v14 285g",
     "year": 2024,
     "headSize": 97,
     "length": 27,
@@ -2633,7 +2633,7 @@ const RACQUETS = [
   },
   {
     "id": "wilson-pro-staff-team-v14",
-    "name": "Wilson Pro Staff Team v14 283g",
+    "name": "Wilson Pro Staff Team v14 296g",
     "year": 2024,
     "headSize": 100,
     "length": 27,
@@ -2661,7 +2661,7 @@ const RACQUETS = [
   },
   {
     "id": "wilson-blade-98-16x19-v9",
-    "name": "Wilson Blade 98 16x19 v9 310g",
+    "name": "Wilson Blade 98 16x19 v9 323g",
     "year": 2024,
     "headSize": 98,
     "length": 27,
@@ -2689,7 +2689,7 @@ const RACQUETS = [
   },
   {
     "id": "wilson-blade-98-18x20-v9",
-    "name": "Wilson Blade 98 18x20 v9 310g",
+    "name": "Wilson Blade 98 18x20 v9 323g",
     "year": 2024,
     "headSize": 98,
     "length": 27,
@@ -2717,7 +2717,7 @@ const RACQUETS = [
   },
   {
     "id": "wilson-blade-100-v9",
-    "name": "Wilson Blade 100 v9 305g",
+    "name": "Wilson Blade 100 v9 318g",
     "year": 2024,
     "headSize": 100,
     "length": 27,
@@ -2745,7 +2745,7 @@ const RACQUETS = [
   },
   {
     "id": "wilson-blade-100l-v9",
-    "name": "Wilson Blade 100L v9 288g",
+    "name": "Wilson Blade 100L v9 301g",
     "year": 2024,
     "headSize": 100,
     "length": 27,
@@ -2773,7 +2773,7 @@ const RACQUETS = [
   },
   {
     "id": "wilson-blade-100ul-v9",
-    "name": "Wilson Blade 100UL v9 270g",
+    "name": "Wilson Blade 100UL v9 283g",
     "year": 2024,
     "headSize": 100,
     "length": 27,
@@ -2801,7 +2801,7 @@ const RACQUETS = [
   },
   {
     "id": "wilson-blade-101l-v9",
-    "name": "Wilson Blade 101L v9 276g",
+    "name": "Wilson Blade 101L v9 289g",
     "year": 2024,
     "headSize": 101,
     "length": 27,
@@ -2829,7 +2829,7 @@ const RACQUETS = [
   },
   {
     "id": "wilson-blade-104-v9",
-    "name": "Wilson Blade 104 v9 293g",
+    "name": "Wilson Blade 104 v9 306g",
     "year": 2024,
     "headSize": 104,
     "length": 27,
@@ -2857,7 +2857,7 @@ const RACQUETS = [
   },
   {
     "id": "wilson-shift-99-pro-v1",
-    "name": "Wilson Shift 99 Pro v1 319g",
+    "name": "Wilson Shift 99 Pro v1 332g",
     "year": 2025,
     "headSize": 99,
     "length": 27,
@@ -2885,7 +2885,7 @@ const RACQUETS = [
   },
   {
     "id": "wilson-clash-98-v2",
-    "name": "Wilson Clash 98 v2 313g",
+    "name": "Wilson Clash 98 v2 326g",
     "year": 2024,
     "headSize": 98,
     "length": 27,
@@ -2913,7 +2913,7 @@ const RACQUETS = [
   },
   {
     "id": "wilson-clash-100-v2",
-    "name": "Wilson Clash 100 v2 299g",
+    "name": "Wilson Clash 100 v2 312g",
     "year": 2024,
     "headSize": 100,
     "length": 27,
@@ -2941,7 +2941,7 @@ const RACQUETS = [
   },
   {
     "id": "wilson-clash-100-pro-v2",
-    "name": "Wilson Clash 100 Pro v2 313g",
+    "name": "Wilson Clash 100 Pro v2 326g",
     "year": 2024,
     "headSize": 100,
     "length": 27,
@@ -2969,7 +2969,7 @@ const RACQUETS = [
   },
   {
     "id": "wilson-clash-100l-v2",
-    "name": "Wilson Clash 100L v2 283g",
+    "name": "Wilson Clash 100L v2 296g",
     "year": 2024,
     "headSize": 100,
     "length": 27,
@@ -2997,7 +2997,7 @@ const RACQUETS = [
   },
   {
     "id": "wilson-clash-100ul-v2",
-    "name": "Wilson Clash 100UL v2 268g",
+    "name": "Wilson Clash 100UL v2 281g",
     "year": 2024,
     "headSize": 100,
     "length": 27,
@@ -3025,7 +3025,7 @@ const RACQUETS = [
   },
   {
     "id": "wilson-clash-108-v2",
-    "name": "Wilson Clash 108 v2 282g",
+    "name": "Wilson Clash 108 v2 295g",
     "year": 2024,
     "headSize": 108,
     "length": 27,
@@ -3053,7 +3053,7 @@ const RACQUETS = [
   },
   {
     "id": "wilson-ultra-100-v4",
-    "name": "Wilson Ultra 100 v4 305g",
+    "name": "Wilson Ultra 100 v4 318g",
     "year": 2023,
     "headSize": 100,
     "length": 27,
@@ -3081,7 +3081,7 @@ const RACQUETS = [
   },
   {
     "id": "wilson-ultra-100l-v4",
-    "name": "Wilson Ultra 100L v4 283g",
+    "name": "Wilson Ultra 100L v4 296g",
     "year": 2023,
     "headSize": 100,
     "length": 27,
@@ -3109,7 +3109,7 @@ const RACQUETS = [
   },
   {
     "id": "wilson-ultra-108-v4",
-    "name": "Wilson Ultra 108 v4 270g",
+    "name": "Wilson Ultra 108 v4 283g",
     "year": 2023,
     "headSize": 108,
     "length": 27,
@@ -3137,7 +3137,7 @@ const RACQUETS = [
   },
   {
     "id": "wilson-ultra-pro-97-v4",
-    "name": "Wilson Ultra Pro 97 v4 310g",
+    "name": "Wilson Ultra Pro 97 v4 323g",
     "year": 2023,
     "headSize": 97,
     "length": 27,
@@ -3165,7 +3165,7 @@ const RACQUETS = [
   },
   {
     "id": "diadem-elevate-98-v3",
-    "name": "Diadem Elevate 98 v3 313g",
+    "name": "Diadem Elevate 98 v3 326g",
     "year": 2023,
     "headSize": 98,
     "length": 27,
@@ -3193,7 +3193,7 @@ const RACQUETS = [
   },
   {
     "id": "diadem-elevate-98-v3-tour",
-    "name": "Diadem Elevate 98 v3 Tour 309g",
+    "name": "Diadem Elevate 98 v3 Tour 322g",
     "year": 2023,
     "headSize": 98,
     "length": 27,
@@ -3221,7 +3221,7 @@ const RACQUETS = [
   },
   {
     "id": "diadem-elevate-98-v3-lite",
-    "name": "Diadem Elevate 98 v3 Lite 294g",
+    "name": "Diadem Elevate 98 v3 Lite 307g",
     "year": 2023,
     "headSize": 98,
     "length": 27,
@@ -3249,7 +3249,7 @@ const RACQUETS = [
   },
   {
     "id": "diadem-nova-100",
-    "name": "Diadem Nova 100 304g",
+    "name": "Diadem Nova 100 317g",
     "year": 2024,
     "headSize": 100,
     "length": 27,
@@ -3277,7 +3277,7 @@ const RACQUETS = [
   },
   {
     "id": "diadem-nova-100-lite",
-    "name": "Diadem Nova 100 Lite 289g",
+    "name": "Diadem Nova 100 Lite 302g",
     "year": 2020,
     "headSize": 100,
     "length": 27,
@@ -3305,7 +3305,7 @@ const RACQUETS = [
   },
   {
     "id": "volkl-v8-pro-2023",
-    "name": "Volkl V8 Pro 305g",
+    "name": "Volkl V8 Pro 318g",
     "year": 2023,
     "headSize": 100,
     "length": 27,
@@ -3333,7 +3333,7 @@ const RACQUETS = [
   },
   {
     "id": "volkl-vcell-8-300",
-    "name": "Volkl V-Cell 8 300 299g",
+    "name": "Volkl V-Cell 8 300 312g",
     "year": 2020,
     "headSize": 100,
     "length": 27,
@@ -3361,7 +3361,7 @@ const RACQUETS = [
   },
   {
     "id": "volkl-vcell-8-285",
-    "name": "Volkl V-Cell 8 285 287g",
+    "name": "Volkl V-Cell 8 285 300g",
     "year": 2019,
     "headSize": 100,
     "length": 27,
@@ -3389,7 +3389,7 @@ const RACQUETS = [
   },
   {
     "id": "dunlop-fx-500-2023",
-    "name": "Dunlop FX 500 307g",
+    "name": "Dunlop FX 500 320g",
     "year": 2023,
     "headSize": 100,
     "length": 27,
@@ -3417,7 +3417,7 @@ const RACQUETS = [
   },
   {
     "id": "dunlop-fx-500-ls-2023",
-    "name": "Dunlop FX 500 LS 288g",
+    "name": "Dunlop FX 500 LS 301g",
     "year": 2023,
     "headSize": 100,
     "length": 27,
@@ -3445,7 +3445,7 @@ const RACQUETS = [
   },
   {
     "id": "dunlop-fx-500-lite-2023",
-    "name": "Dunlop FX 500 Lite 270g",
+    "name": "Dunlop FX 500 Lite 283g",
     "year": 2023,
     "headSize": 100,
     "length": 27,
@@ -3473,7 +3473,7 @@ const RACQUETS = [
   },
   {
     "id": "dunlop-cx-200-tour-16x19-2024",
-    "name": "Dunlop CX 200 Tour 16x19 313g",
+    "name": "Dunlop CX 200 Tour 16x19 326g",
     "year": 2024,
     "headSize": 95,
     "length": 27,
@@ -3501,7 +3501,7 @@ const RACQUETS = [
   },
   {
     "id": "dunlop-cx-200-2024",
-    "name": "Dunlop CX 200 307g",
+    "name": "Dunlop CX 200 320g",
     "year": 2024,
     "headSize": 98,
     "length": 27,
@@ -3529,7 +3529,7 @@ const RACQUETS = [
   },
   {
     "id": "dunlop-cx-200-ls-2024",
-    "name": "Dunlop CX 200 LS 290g",
+    "name": "Dunlop CX 200 LS 303g",
     "year": 2024,
     "headSize": 98,
     "length": 27,
@@ -3557,7 +3557,7 @@ const RACQUETS = [
   },
   {
     "id": "dunlop-sx-300-2022",
-    "name": "Dunlop SX 300 305g",
+    "name": "Dunlop SX 300 318g",
     "year": 2022,
     "headSize": 100,
     "length": 27,
@@ -3585,7 +3585,7 @@ const RACQUETS = [
   },
   {
     "id": "dunlop-sx-300-tour-2022",
-    "name": "Dunlop SX 300 Tour 310g",
+    "name": "Dunlop SX 300 Tour 323g",
     "year": 2022,
     "headSize": 98,
     "length": 27,
@@ -9958,3 +9958,6 @@ const FRAME_META = {
     "genBonus": 0
   }
 };
+
+// ES Module exports
+export { RACQUETS, STRINGS, FRAME_META };

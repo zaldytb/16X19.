@@ -1,21 +1,21 @@
-// src/utils/helpers.js
+// src/utils/helpers.ts
 // Small shared utilities
 
 /**
  * Debounce function calls
  */
-export function debounce(fn, delay) {
-  let timer;
-  return function(...args) {
+export function debounce<T extends (...args: unknown[]) => void>(fn: T, delay: number): (...args: Parameters<T>) => void {
+  let timer: ReturnType<typeof setTimeout>;
+  return function(...args: Parameters<T>): void {
     clearTimeout(timer);
-    timer = setTimeout(() => fn.apply(this, args), delay);
+    timer = setTimeout(() => fn(...args), delay);
   };
 }
 
 /**
  * Format number with specified precision
  */
-export function formatNumber(num, decimals = 1) {
+export function formatNumber(num: number | null | undefined, decimals = 1): string {
   if (num === null || num === undefined || isNaN(num)) return '-';
   return (+num).toFixed(decimals);
 }
@@ -23,25 +23,25 @@ export function formatNumber(num, decimals = 1) {
 /**
  * Deep clone an object
  */
-export function deepClone(obj) {
+export function deepClone<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj));
 }
 
 /**
  * Generate a unique ID
  */
-export function generateId(prefix = 'id') {
+export function generateId(prefix = 'id'): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
 }
 
 /**
  * Throttle function calls
  */
-export function throttle(fn, limit) {
-  let inThrottle;
-  return function(...args) {
+export function throttle<T extends (...args: unknown[]) => void>(fn: T, limit: number): (...args: Parameters<T>) => void {
+  let inThrottle: boolean;
+  return function(...args: Parameters<T>): void {
     if (!inThrottle) {
-      fn.apply(this, args);
+      fn(...args);
       inThrottle = true;
       setTimeout(() => inThrottle = false, limit);
     }
@@ -51,7 +51,7 @@ export function throttle(fn, limit) {
 /**
  * Simple hash function for strings
  */
-export function hashString(str) {
+export function hashString(str: string): number {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);

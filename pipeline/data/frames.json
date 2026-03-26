@@ -10558,5 +10558,125 @@
       "dateAdded": "2026-03-26",
       "confidence": "high"
     }
+  },
+  {
+    "id": "yonex-muse-100l-2026",
+    "name": "Yonex Muse 100L 295g",
+    "year": 2026,
+    "headSize": 100,
+    "length": 27,
+    "strungWeight": 295,
+    "balance": 33.5,
+    "balancePts": "1 pt HL",
+    "swingweight": 285,
+    "stiffness": 58,
+    "beamWidth": [
+      24.5,
+      24.5,
+      18
+    ],
+    "pattern": "16x18",
+    "powerLevel": "Medium",
+    "strokeStyle": "Medium",
+    "swingSpeed": "Medium-Fast",
+    "tensionRange": [
+      45,
+      60
+    ],
+    "frameProfile": "Isometric head with Energy Flow Shaft (18mm throat) + Uniform Impact Grommets. Lightweight version for easy handling.",
+    "identity": "Light Comfort",
+    "notes": "Lighter Muse variant (280g unstrung) for players prioritizing fast head speed. Same Synchro Frame tech as heavier models. 18mm Energy Flow Shaft delivers unique feel. 58 RA for enhanced comfort.",
+    "brand": "Yonex",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 3,
+      "spinTech": 1,
+      "genBonus": 2
+    },
+    "_provenance": {
+      "source": "Yonex official specs normalized to current DB standards",
+      "dateAdded": "2026-03-26",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "yonex-muse-100sl-2026",
+    "name": "Yonex Muse 100SL 280g",
+    "year": 2026,
+    "headSize": 100,
+    "length": 27,
+    "strungWeight": 280,
+    "balance": 34,
+    "balancePts": "0.5 pt HH",
+    "swingweight": 270,
+    "stiffness": 59,
+    "beamWidth": [
+      24.5,
+      24.5,
+      18
+    ],
+    "pattern": "16x18",
+    "powerLevel": "Medium-High",
+    "strokeStyle": "Compact-Medium",
+    "swingSpeed": "Fast",
+    "tensionRange": [
+      45,
+      60
+    ],
+    "frameProfile": "Isometric head with Energy Flow Shaft (18mm throat). Ultra-light for maximum maneuverability.",
+    "identity": "Ultra Light",
+    "notes": "Super lightweight Muse (265g unstrung) for doubles players, juniors transitioning to adult frames, or those with very slow swing speeds. Slightly head-heavy balance compensates for low weight. 59 RA maintains comfort.",
+    "brand": "Yonex",
+    "_meta": {
+      "aeroBonus": 0.5,
+      "comfortTech": 3,
+      "spinTech": 0.5,
+      "genBonus": 2
+    },
+    "_provenance": {
+      "source": "Yonex official specs normalized to current DB standards",
+      "dateAdded": "2026-03-26",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "yonex-muse-107-2026",
+    "name": "Yonex Muse 107 295g",
+    "year": 2026,
+    "headSize": 107,
+    "length": 27,
+    "strungWeight": 295,
+    "balance": 34.29,
+    "balancePts": "Even",
+    "swingweight": 295,
+    "stiffness": 56,
+    "beamWidth": [
+      25,
+      25,
+      18
+    ],
+    "pattern": "16x18",
+    "powerLevel": "Medium-High",
+    "strokeStyle": "Compact",
+    "swingSpeed": "Slow-Medium",
+    "tensionRange": [
+      45,
+      60
+    ],
+    "frameProfile": "Oversized Isometric head with Energy Flow Shaft (18mm throat). Maximum forgiveness and comfort.",
+    "identity": "Oversized Comfort",
+    "notes": "Oversized Muse (107 sq in) for maximum forgiveness. Largest sweet spot in lineup. Even balance compensates for light weight. 56 RA is extremely soft — ideal for arm issues or beginners. 25mm beam adds stability to large head.",
+    "brand": "Yonex",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 3.5,
+      "spinTech": 0.5,
+      "genBonus": 2
+    },
+    "_provenance": {
+      "source": "Yonex official specs normalized to current DB standards",
+      "dateAdded": "2026-03-26",
+      "confidence": "high"
+    }
   }
 ]

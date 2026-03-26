@@ -15,3 +15,5 @@ pipeline/import/
 # Electron builder output
 tools/frame-gui/dist/
 *.backup
+
+.vercel

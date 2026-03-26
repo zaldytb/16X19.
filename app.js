@@ -10457,7 +10457,72 @@ function _compareQuickAdd() {
   if (prompt) prompt.remove();
 }
 
+function _runDigicraftBootSequence() {
+  const loader = document.getElementById('dc-boot-loader');
+  const batteryTrack = document.getElementById('dc-boot-battery');
+  const pctText = document.getElementById('dc-boot-pct');
+  const logsContainer = document.getElementById('dc-boot-logs');
+
+  if (!loader) return;
+
+  const totalSegments = 10;
+  let segments = [];
+  for (let i = 0; i < totalSegments; i++) {
+    const seg = document.createElement('div');
+    seg.className = "flex-1 bg-black/10 dark:bg-white/5 transition-colors duration-75";
+    batteryTrack.appendChild(seg);
+    segments.push(seg);
+  }
+
+  const logs = [
+    "> Waking prediction engine...",
+    "> Fetching frame telemetry...",
+    "> Calibrating tension modifiers...",
+    "> Matrix sync complete."
+  ];
+
+  let currentLog = 0;
+  let progress = 0;
+
+  const bootInterval = setInterval(() => {
+    progress += Math.floor(Math.random() * 15) + 5;
+    if (progress >= 100) progress = 100;
+
+    pctText.innerText = progress + "%";
+
+    const segmentsToFill = Math.floor((progress / 100) * totalSegments);
+    for (let i = 0; i < totalSegments; i++) {
+      if (i < segmentsToFill) {
+        segments[i].classList.remove('bg-black/10', 'dark:bg-white/5');
+        segments[i].classList.add('bg-dc-accent', 'dark:bg-dc-platinum');
+      }
+    }
+
+    if (progress > 20 && currentLog === 0) pushLog();
+    if (progress > 50 && currentLog === 1) pushLog();
+    if (progress > 80 && currentLog === 2) pushLog();
+    if (progress === 100 && currentLog === 3) pushLog();
+
+    if (progress === 100) {
+      clearInterval(bootInterval);
+      setTimeout(() => {
+        loader.classList.add('opacity-0');
+        setTimeout(() => loader.remove(), 700);
+      }, 400);
+    }
+  }, 80);
+
+  function pushLog() {
+    const logSpan = document.createElement('span');
+    logSpan.className = "text-dc-storm";
+    logSpan.innerText = logs[currentLog];
+    logsContainer.appendChild(logSpan);
+    currentLog++;
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  _runDigicraftBootSequence();
   init();
   handleResponsiveHeader();
   _initDockCollapse();

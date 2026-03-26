@@ -1,4 +1,4 @@
-// src/state/index.js
+// src/state/index.ts
 // State management public API
 
 export {

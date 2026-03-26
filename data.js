@@ -7228,6 +7228,34 @@ const RACQUETS = [
     "frameProfile": "22.5/22.5/22.5mm beam, 16x19 pattern",
     "identity": "Control Precision",
     "notes": "TWU data. Heaviest RS - tour level control."
+  },
+  {
+    "id": "head-squared-2026",
+    "name": "HEAD Squared 2026",
+    "year": 2026,
+    "headSize": 100,
+    "length": 27,
+    "strungWeight": 312,
+    "balance": 30,
+    "balancePts": "11 pts HL",
+    "swingweight": 296,
+    "stiffness": 61,
+    "beamWidth": [
+      23,
+      25,
+      24
+    ],
+    "pattern": "16x18",
+    "tensionRange": [
+      48,
+      62
+    ],
+    "powerLevel": "Medium",
+    "strokeStyle": "Medium",
+    "swingSpeed": "Medium-Fast",
+    "frameProfile": "Dual Tube technology with foam-filled inner tube for maximum comfort",
+    "identity": "Comfort Cannon",
+    "notes": "Most head-light racquet HEAD has ever produced. Dual Tube construction: T800S carbon fiber outer tube for power/stability, foam-filled inner tube for comfort. Square-shaped string bed grid for consistent hitting sensation. Direct competitor to Wilson Clash."
   }
 ];
 
@@ -9956,6 +9984,12 @@ const FRAME_META = {
     "comfortTech": 0,
     "spinTech": 0,
     "genBonus": 0
+  },
+  "head-squared-2026": {
+    "aeroBonus": 1.5,
+    "comfortTech": 3,
+    "spinTech": 1,
+    "genBonus": 2
   }
 };
 

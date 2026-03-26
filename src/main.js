@@ -7,6 +7,9 @@ import '../style.css';
 // Import all app functionality
 import * as App from '../app.js';
 
+// Import state store for window bridge
+import { getActiveLoadout, getSavedLoadouts, setActiveLoadout, setSavedLoadouts } from './state/store.js';
+
 // Import leaderboard section
 import * as Leaderboard from './ui/pages/leaderboard.js';
 
@@ -16,6 +19,24 @@ Object.entries(App).forEach(([key, val]) => {
   if (typeof val === 'function' || typeof val === 'object') {
     window[key] = val;
   }
+});
+
+// Bridge: expose state store functions to window
+window.getActiveLoadout = getActiveLoadout;
+window.getSavedLoadouts = getSavedLoadouts;
+window.setActiveLoadout = setActiveLoadout;
+window.setSavedLoadouts = setSavedLoadouts;
+
+// Backward-compatible shims for inline HTML handlers that reference activeLoadout/savedLoadouts directly
+Object.defineProperty(window, 'activeLoadout', {
+  get: () => getActiveLoadout(),
+  set: (v) => setActiveLoadout(v),
+  configurable: true
+});
+Object.defineProperty(window, 'savedLoadouts', {
+  get: () => getSavedLoadouts(),
+  set: (v) => setSavedLoadouts(v),
+  configurable: true
 });
 
 // Bridge leaderboard exports to window (needed for inline HTML handlers)

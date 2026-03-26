@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="./assets/terminal-square-svgrepo-com-Bl1faqHh.svg">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <!-- Tailwind CSS CDN -->
 <script src="https://cdn.tailwindcss.com"></script>
@@ -50,36 +51,48 @@
     }
   }
 </script>
-  <script type="module" crossorigin src="./assets/index-BgOxBw_U.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-l17bvUwU.css">
+  <script type="module" crossorigin src="./assets/index-H0m_6cYQ.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-BNYqel0b.css">
 </head>
 <body>
+
+  <!-- Digicraft Boot Loader -->
+  <div id="dc-boot-loader" class="fixed inset-0 z-[999] bg-dc-void flex flex-col items-center justify-center p-6 transition-opacity duration-700 ease-in-out">
+    <div class="w-full max-w-md bg-transparent border border-dc-border p-8 md:p-12 relative flex flex-col gap-8 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+      <!-- Targeting reticle corners -->
+      <div class="absolute top-0 left-0 w-2 h-2 border-t border-l border-dc-platinum"></div>
+      <div class="absolute top-0 right-0 w-2 h-2 border-t border-r border-dc-platinum"></div>
+      <div class="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-dc-platinum"></div>
+      <div class="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-dc-platinum"></div>
+      <!-- Header -->
+      <div class="flex justify-between items-start">
+        <div class="flex flex-col">
+          <span class="font-mono text-[9px] text-dc-accent uppercase tracking-[0.2em] animate-pulse">// SYSTEM_BOOT</span>
+          <h1 class="text-4xl md:text-5xl font-semibold text-dc-platinum tracking-tighter leading-none mt-2">LOADOUT</h1>
+        </div>
+        <span class="font-mono text-[9px] text-dc-storm tracking-[0.2em]">v2.4.0</span>
+      </div>
+      <!-- Progress battery -->
+      <div class="flex flex-col gap-2.5">
+        <div class="flex justify-between items-end font-mono text-[9px] tracking-widest uppercase">
+          <span class="text-dc-storm">Engine Initialization</span>
+          <span class="text-dc-platinum font-bold text-xs" id="dc-boot-pct">0%</span>
+        </div>
+        <div class="flex gap-[2px] h-1.5 w-full" id="dc-boot-battery"></div>
+      </div>
+      <!-- Terminal log -->
+      <div class="flex flex-col gap-1.5 font-mono text-[9px] tracking-[0.15em] text-dc-storm mt-2 h-14 overflow-hidden" id="dc-boot-logs"></div>
+    </div>
+  </div>
+
   <!-- Persistent App Shell -->
   <main class="app-shell">
     <!-- Header — spans full shell width -->
     <header class="site-header">
       <div class="header-dock-region">
         <div class="logo-group">
-          <svg class="logo-svg" width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Tennis Loadout Lab Logo">
-            <circle cx="24" cy="24" r="18" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
-            <circle cx="24" cy="24" r="18" stroke="url(#grad-cyan)" stroke-width="1.5"/>
-            <path d="M12 14C16 20 16 28 12 34" stroke="url(#grad-green)" stroke-width="1.2" fill="none"/>
-            <path d="M36 14C32 20 32 28 36 34" stroke="url(#grad-green)" stroke-width="1.2" fill="none"/>
-            <line x1="24" y1="4" x2="24" y2="14" stroke="url(#grad-cyan)" stroke-width="1" opacity="0.6"/>
-            <line x1="24" y1="34" x2="24" y2="44" stroke="url(#grad-cyan)" stroke-width="1" opacity="0.6"/>
-            <line x1="4" y1="24" x2="14" y2="24" stroke="url(#grad-cyan)" stroke-width="1" opacity="0.6"/>
-            <line x1="34" y1="24" x2="44" y2="24" stroke="url(#grad-cyan)" stroke-width="1" opacity="0.6"/>
-            <circle cx="24" cy="24" r="2" fill="#0EA5E9"/>
-            <defs>
-              <linearGradient id="grad-cyan" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#0EA5E9"/>
-                <stop offset="100%" stop-color="#0EA5E9" stop-opacity="0.4"/>
-              </linearGradient>
-              <linearGradient id="grad-green" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#38BDF8"/>
-                <stop offset="100%" stop-color="#38BDF8" stop-opacity="0.3"/>
-              </linearGradient>
-            </defs>
+          <svg class="logo-svg" width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Tennis Loadout Lab Logo">
+            <path d="M7 15L10 12L7 9M13 15H17M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
           <div class="logo-text">
             <h1 class="site-title">TENNIS LOADOUT LAB</h1>
@@ -344,24 +357,58 @@
       <section class="workspace-mode" id="mode-overview" data-mode="overview">
         <!-- Mobile saved loadout switcher pills (rendered by renderMobileLoadoutPills) -->
         <div id="mobile-loadout-pills" class="mobile-loadout-pills"></div>
-        <div id="empty-state" class="empty-state landing-search">
-          <div class="landing-hero">
-            <h2 class="landing-title">What racket are you stringing?</h2>
-            <div class="landing-search-wrap">
-              <svg class="landing-search-icon" width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="7.5" cy="7.5" r="5.5" stroke="currentColor" stroke-width="1.5"/><line x1="11.5" y1="11.5" x2="16" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-              <input type="text" class="landing-search-input" id="landing-search" placeholder="Search any racket to start…" autocomplete="off">
-              <div class="landing-search-dropdown hidden" id="landing-search-dropdown"></div>
+        <div id="empty-state" class="flex flex-col items-center justify-center min-h-[75vh] w-full px-4 md:px-8">
+          <div class="w-full max-w-4xl flex flex-col gap-12 relative">
+
+            <!-- Header -->
+            <div class="flex flex-col gap-2">
+              <span class="font-mono text-[10px] text-dc-accent uppercase tracking-[0.2em] flex items-center gap-2">
+                <span class="w-2 h-2 bg-dc-accent animate-pulse"></span> AWAITING TELEMETRY
+              </span>
+              <h2 class="text-5xl md:text-6xl font-semibold tracking-tighter text-dc-platinum leading-none">Initialize Loadout.</h2>
             </div>
-            <p class="landing-search-hint">Try: Pure Aero 98, Blade 98, Ezone 100, Prestige Pro</p>
+
+            <!-- Search Input -->
+            <div class="relative w-full group">
+              <div class="flex items-center bg-transparent border border-dc-border focus-within:border-dc-accent transition-colors">
+                <div class="pl-6 text-dc-storm group-focus-within:text-dc-accent transition-colors">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </div>
+                <input type="text" class="w-full bg-transparent border-none text-2xl md:text-3xl font-mono text-dc-platinum placeholder:text-dc-storm/40 py-6 px-6 outline-none" id="landing-search" placeholder="Enter frame designation..." autocomplete="off">
+              </div>
+              <div class="hidden absolute top-full left-0 w-full bg-dc-void border border-dc-border mt-2 z-50 shadow-2xl max-h-96 overflow-y-auto" id="landing-search-dropdown"></div>
+              <div class="flex gap-4 mt-4 font-mono text-[9px] text-dc-storm uppercase tracking-widest">
+                <span>Targets:</span>
+                <span class="text-dc-platinum hover:text-dc-accent cursor-pointer transition-colors" onclick="document.getElementById('landing-search').value='Pure Aero 98'; document.getElementById('landing-search').dispatchEvent(new Event('input'))">Pure Aero 98</span>
+                <span class="text-dc-platinum hover:text-dc-accent cursor-pointer transition-colors" onclick="document.getElementById('landing-search').value='Blade 98'; document.getElementById('landing-search').dispatchEvent(new Event('input'))">Blade 98</span>
+                <span class="text-dc-platinum hover:text-dc-accent cursor-pointer transition-colors" onclick="document.getElementById('landing-search').value='Ezone 100'; document.getElementById('landing-search').dispatchEvent(new Event('input'))">Ezone 100</span>
+              </div>
+            </div>
+
+            <!-- Divider -->
+            <div class="flex items-center gap-4 w-full opacity-60">
+              <div class="h-[1px] bg-dc-border flex-1"></div>
+              <span class="font-mono text-[9px] text-dc-storm uppercase tracking-[0.3em]">OR RUN DIAGNOSTIC</span>
+              <div class="h-[1px] bg-dc-border flex-1"></div>
+            </div>
+
+            <!-- Find My Build CTA -->
+            <button class="group w-full flex flex-col md:flex-row items-start md:items-center justify-between gap-6 p-8 bg-transparent border border-dc-border hover:border-dc-platinum transition-all cursor-pointer text-left" id="fmb-cta" onclick="openFindMyBuild()">
+              <div class="flex items-start gap-6">
+                <div class="mt-1 w-10 h-10 border border-dc-storm group-hover:border-dc-platinum flex items-center justify-center text-dc-storm group-hover:text-dc-void group-hover:bg-dc-platinum transition-colors">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                </div>
+                <div class="flex flex-col gap-2">
+                  <span class="text-2xl font-semibold text-dc-platinum tracking-tight group-hover:translate-x-1 transition-transform">Find My Build Algorithm</span>
+                  <span class="font-mono text-[11px] text-dc-storm uppercase tracking-widest">Execute 5-step player profile calibration</span>
+                </div>
+              </div>
+              <div class="text-dc-storm group-hover:text-dc-platinum transition-colors md:group-hover:translate-x-2 duration-300 hidden md:block">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </div>
+            </button>
+
           </div>
-          <div class="landing-divider">
-            <span>or</span>
-          </div>
-          <button class="landing-quiz-btn" id="fmb-cta" onclick="openFindMyBuild()">
-            <svg width="18" height="18" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5"/><circle cx="11" cy="11" r="3" stroke="currentColor" stroke-width="1.5"/><circle cx="11" cy="11" r="1" fill="currentColor"/></svg>
-            <span class="landing-quiz-text">Find My Build</span>
-            <span class="landing-quiz-sub">— answer 5 quick questions if you don't know where to start</span>
-          </button>
         </div>
 
         <!-- Find My Build Wizard -->

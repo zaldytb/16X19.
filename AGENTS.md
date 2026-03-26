@@ -58,13 +58,15 @@ tailwind.config = {
 | Build Cards | `app.js` `_compRenderBuildCard()` | Full Tailwind, compact scale |
 | Build Card Grid | `app.js` `_compRenderMain()` | `grid grid-cols-1 md:grid-cols-2 gap-6` |
 | Hero Block | `app.js` `_compRenderMain()` | Full Tailwind with dark mode |
-| String Modulator | `app.js` `_compRenderMain()` | Full Tailwind, hybrid toggle |
-| Stat Groups | `app.js` `_compRenderMain()` | Battery bars with preview |
+| String Modulator | `app.js` `_compRenderMain()` | Full Tailwind, hybrid toggle, real-time preview |
+| Stat Groups | `app.js` `_compRenderMain()` | Battery bars with before/after preview |
 | Sort Tabs | `app.js` `_compRenderMain()` | Tailwind with active states |
 | HUD Filters | `app.js` `_compRenderRoster()` | Full Tailwind overlay |
 | Console Output | `app.js` `_compRenderMain()` | Tailwind typography |
 | String Compendium | `app.js` `_stringRenderMain()` | Full Tailwind mirror of Racket Bible |
-| Frame Injection | `app.js` `_stringRenderMain()` | String-first modulator with hybrid |
+| Frame Injection | `app.js` `_stringRenderMain()` | String-first modulator with hybrid support |
+| Base Score Display | `app.js` `_compRenderMain()` | Frame-only OBS with delta indicator |
+| Searchable Selects | `app.js` `createSearchableSelect()` | Custom dropdown component with Tailwind |
 
 ### ⏳ Still in Vanilla CSS (`style.css`)
 | Component | CSS Classes | Migration Complexity |
@@ -156,6 +158,28 @@ const cardClasses = isFeatured
   transition-colors text-center">Tune</button>
 ```
 
+### 6. Searchable Select Component
+Custom dropdown component using Tailwind:
+```javascript
+// Store instance for programmatic access
+ssInstances['my-select'] = createSearchableSelect(container, {
+  type: 'string',  // 'racquet' | 'string' | 'custom'
+  placeholder: 'Select...',
+  value: initialValue,
+  onChange: (val) => { /* update state */ }
+});
+
+// Later: programmatically set value
+ssInstances['my-select'].setValue(newValue);
+```
+
+**Key classes:**
+- `.ss-trigger` — dropdown button
+- `.ss-dropdown` — options container
+- `.ss-option` — individual option
+- `.ss-selected` — selected state
+- `.ss-highlighted` — keyboard navigation highlight
+
 ---
 
 ## Common Pitfalls
@@ -164,6 +188,8 @@ const cardClasses = isFeatured
 2. **Dark Mode Detection**: Requires `data-theme="dark"` on `<html>`, not body or class-based
 3. **Color Contrast**: `dc-void` is near-black, `dc-platinum` is light gray - easy to mix up
 4. **Legacy CSS**: Check `style.css` before adding new Tailwind classes to avoid conflicts
+5. **State Sync**: When using `createSearchableSelect`, store the instance in `ssInstances` to enable programmatic updates via `setValue()`
+6. **Component Re-init**: Clear `ssInstances` entries before re-initializing to prevent stale state
 
 ---
 
@@ -214,6 +240,9 @@ When modifying UI components:
 - [ ] Verify featured cards span full width in grid
 - [ ] Test string hybrid mode toggle
 - [ ] Verify frame injection preview updates correctly
+- [ ] Test searchable select dropdowns (keyboard nav, search, selection)
+- [ ] Verify setValue() API updates UI correctly
+- [ ] Test mode switching preserves state correctly
 
 ---
 

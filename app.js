@@ -2152,12 +2152,6 @@ function addLoadoutToCompare(loadoutId) {
   }
 }
 
-// Legacy alias for backward compat
-// Legacy alias for backward compat — routes through the canonical path
-function setActiveLoadout(loadoutData) {
-  activateLoadout(loadoutData);
-}
-
 function renderDockState() {
   renderDockPanel();
 }

@@ -1331,15 +1331,24 @@ function _dockContextActions(actions) {
 }
 
 // --- Guidance Message Helper ---
-function _dockGuidance(icon, title, body) {
+function _dockGuidance(iconSvg, title, body) {
   return (
     '<div class="border border-[var(--dc-border)] bg-[var(--dc-void-deep)] p-4 flex flex-col items-center text-center gap-2">' +
-      '<div class="text-2xl">' + icon + '</div>' +
+      '<div class="w-8 h-8 flex items-center justify-center text-dc-platinum">' + iconSvg + '</div>' +
       '<div class="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-[var(--dc-platinum)]">' + title + '</div>' +
       '<div class="font-sans text-[11px] text-[var(--dc-storm)] leading-relaxed">' + body + '</div>' +
     '</div>'
   );
 }
+
+// --- Icon SVGs for dock guidance ---
+const _dockIcons = {
+  racket: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7" ry="4"/><path d="M12 10v10"/><path d="M9 20h6"/></svg>',
+  tune: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6m4.22-13.22l-4.24 4.24m-4.24 4.24l4.24 4.24M23 12h-6m-6 0H1m18.22 4.22l-4.24-4.24m-4.24-4.24l-4.24 4.24"/></svg>',
+  compare: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="7" height="16" rx="1"/><rect x="13" y="4" width="7" height="16" rx="1"/></svg>',
+  optimize: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>',
+  reference: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>'
+};
 
 // --- Editor Control Relocation ---
 // Moves the .dock-editor-body div between the <details> wrapper and the context panel.
@@ -1399,7 +1408,7 @@ function _renderDockPanelBible(container) {
   if (!activeLoadout) {
     // No loadout — onboarding guidance
     container.innerHTML = _dockGuidance(
-      '🎾',
+      _dockIcons.racket,
       'Getting started',
       'Browse frames on the right. Each one shows its top string pairings ranked by OBS (overall build score).<br><br>Tap <strong>Set Active</strong> on any build card to load it — then you can tune tension, compare builds, and explore alternatives.'
     );
@@ -1473,7 +1482,7 @@ function _renderDockPanelTune(container) {
     _dockReturnEditorHome();
     const editorSection = document.getElementById('dock-editor-section');
     if (editorSection) editorSection.style.display = 'none';
-    container.innerHTML = _dockGuidance('🎸', 'No build loaded',
+    container.innerHTML = _dockGuidance(_dockIcons.tune, 'No build loaded',
       'Load a build from Overview or the Racket Bible to start tuning.');
     return;
   }
@@ -1631,7 +1640,7 @@ function _renderDockPanelCompare(container) {
 
   // Empty state
   if (comparisonSlots.length === 0 && savedLoadouts.length === 0 && !activeLoadout) {
-    html = _dockGuidance('⚖️', 'Nothing to compare yet',
+    html = _dockGuidance(_dockIcons.compare, 'Nothing to compare yet',
       'Set a build active from the Racket Bible, then come back here.');
   }
 
@@ -1698,7 +1707,7 @@ function _renderDockPanelOptimize(container) {
 
   if (!activeLoadout) {
     container.innerHTML = _dockGuidance(
-      '📊',
+      _dockIcons.optimize,
       'No build to optimize from',
       'Load a build first — the optimizer finds better string pairings for your current frame.'
     ) + _dockContextActions([
@@ -1753,7 +1762,7 @@ function _renderDockPanelReference(container) {
   }
 
   container.innerHTML = _dockGuidance(
-    '📖',
+    _dockIcons.reference,
     'Reference',
     "You're reading how the prediction engine works."
   ) + _dockContextActions(actions);

@@ -1144,59 +1144,60 @@ function __getSetupFromLoadout_OLD(loadout) {
 }
 
 function commitEditorToLoadout() {
-  if (!activeLoadout) return;
+  const al = getActiveLoadout();
+  if (!al) return;
 
   const isHybrid = $('#btn-hybrid').classList.contains('active');
-  const racquetId = ssInstances['select-racquet']?.getValue() || activeLoadout.frameId;
+  const racquetId = ssInstances['select-racquet']?.getValue() || al.frameId;
 
   if (isHybrid) {
-    activeLoadout.isHybrid = true;
-    activeLoadout.mainsId = ssInstances['select-string-mains']?.getValue() || activeLoadout.mainsId;
-    activeLoadout.crossesId = ssInstances['select-string-crosses']?.getValue() || activeLoadout.crossesId;
-    activeLoadout.mainsTension = parseInt($('#input-tension-mains').value) || activeLoadout.mainsTension;
-    activeLoadout.crossesTension = parseInt($('#input-tension-crosses').value) || activeLoadout.crossesTension;
+    al.isHybrid = true;
+    al.mainsId = ssInstances['select-string-mains']?.getValue() || al.mainsId;
+    al.crossesId = ssInstances['select-string-crosses']?.getValue() || al.crossesId;
+    al.mainsTension = parseInt($('#input-tension-mains').value) || al.mainsTension;
+    al.crossesTension = parseInt($('#input-tension-crosses').value) || al.crossesTension;
     const gm = document.getElementById('gauge-select-mains');
     const gx = document.getElementById('gauge-select-crosses');
-    activeLoadout.mainsGauge = (gm && gm.value) ? parseFloat(gm.value) : null;
-    activeLoadout.crossesGauge = (gx && gx.value) ? parseFloat(gx.value) : null;
-    activeLoadout.stringId = null;
-    activeLoadout.gauge = null;
+    al.mainsGauge = (gm && gm.value) ? parseFloat(gm.value) : null;
+    al.crossesGauge = (gx && gx.value) ? parseFloat(gx.value) : null;
+    al.stringId = null;
+    al.gauge = null;
   } else {
-    activeLoadout.isHybrid = false;
-    activeLoadout.stringId = ssInstances['select-string-full']?.getValue() || activeLoadout.stringId;
-    activeLoadout.mainsTension = parseInt($('#input-tension-full-mains').value) || activeLoadout.mainsTension;
-    activeLoadout.crossesTension = parseInt($('#input-tension-full-crosses').value) || activeLoadout.crossesTension;
+    al.isHybrid = false;
+    al.stringId = ssInstances['select-string-full']?.getValue() || al.stringId;
+    al.mainsTension = parseInt($('#input-tension-full-mains').value) || al.mainsTension;
+    al.crossesTension = parseInt($('#input-tension-full-crosses').value) || al.crossesTension;
     const gf = document.getElementById('gauge-select-full');
-    activeLoadout.gauge = (gf && gf.value) ? parseFloat(gf.value) : null;
-    activeLoadout.mainsId = null;
-    activeLoadout.crossesId = null;
-    activeLoadout.mainsGauge = null;
-    activeLoadout.crossesGauge = null;
+    al.gauge = (gf && gf.value) ? parseFloat(gf.value) : null;
+    al.mainsId = null;
+    al.crossesId = null;
+    al.mainsGauge = null;
+    al.crossesGauge = null;
   }
 
-  activeLoadout.frameId = racquetId;
+  al.frameId = racquetId;
 
   // Recompute derived fields from the loadout (not from DOM)
-  const setup = getSetupFromLoadout(activeLoadout);
+  const setup = getSetupFromLoadout(al);
   if (setup) {
     const stats = predictSetup(setup.racquet, setup.stringConfig);
     if (stats) {
       const tCtx = buildTensionContext(setup.stringConfig, setup.racquet);
-      activeLoadout.stats = stats;
-      activeLoadout.obs = +(computeCompositeScore(stats, tCtx)).toFixed(1);
-      activeLoadout.identity = (generateIdentity(stats, setup.racquet, setup.stringConfig)?.name) || '';
+      al.stats = stats;
+      al.obs = +(computeCompositeScore(stats, tCtx)).toFixed(1);
+      al.identity = (generateIdentity(stats, setup.racquet, setup.stringConfig)?.name) || '';
     }
 
     // Update name
-    if (!activeLoadout.isHybrid && setup.stringConfig.string) {
-      activeLoadout.name = setup.stringConfig.string.name + ' on ' + setup.racquet.name;
-    } else if (activeLoadout.isHybrid && setup.stringConfig.mains && setup.stringConfig.crosses) {
-      activeLoadout.name = setup.stringConfig.mains.name + ' / ' + setup.stringConfig.crosses.name + ' on ' + setup.racquet.name;
+    if (!al.isHybrid && setup.stringConfig.string) {
+      al.name = setup.stringConfig.string.name + ' on ' + setup.racquet.name;
+    } else if (al.isHybrid && setup.stringConfig.mains && setup.stringConfig.crosses) {
+      al.name = setup.stringConfig.mains.name + ' / ' + setup.stringConfig.crosses.name + ' on ' + setup.racquet.name;
     }
   }
 
   // Mark dirty if this loadout has a saved counterpart
-  activeLoadout._dirty = savedLoadouts.some(l => l.id === activeLoadout.id);
+  al._dirty = getSavedLoadouts().some(l => l.id === al.id);
 
   renderDockPanel();
   renderDashboard();

@@ -1,16 +1,62 @@
 # Tennis Loadout Lab — Agent Documentation
 
 ## Project Overview
-Physics-based tennis equipment analysis tool. Vanilla JS + Tailwind CSS (CDN mode, no build step).
+
+Physics-based tennis equipment analysis tool. Vanilla JS + Vite + Tailwind CSS. The prediction engine (`src/engine/`) is fully TypeScript with strict mode; everything else (`app.js`, `src/state/`, `src/ui/`, `src/utils/`) is plain JS.
+
+**Build:** `npm run dev` / `npm run build` (Vite)
+**Type check:** `npm run typecheck` (engine only — zero errors required)
+**Deploy:** push to `main` → GitHub Actions → GitHub Pages
+
+---
+
+## TypeScript Engine
+
+`src/engine/` is strict TypeScript (`noImplicitAny`, `strictNullChecks`). All other files are plain JS — `checkJs: false` means they are NOT type-checked.
+
+### File Map
+
+| File | Purpose |
+|------|---------|
+| `types.ts` | All domain interfaces — edit here when adding fields |
+| `constants.ts` | Config constants (OBS_TIERS, GAUGE_OPTIONS, STAT_KEYS, etc.) |
+| `frame-physics.ts` | `calcFrameBase`, `normalizeRawSpecs`, math helpers |
+| `string-profile.ts` | `calcBaseStringProfile`, `calcStringFrameMod`, `applyGaugeModifier` |
+| `tension.ts` | `calcTensionModifier`, `buildTensionContext` |
+| `hybrid.ts` | `calcHybridInteraction` |
+| `composite.ts` | `predictSetup`, `computeCompositeScore`, `generateIdentity`, `classifySetup` |
+| `index.ts` | Barrel re-exports (public API) |
+
+### Key Types
+
+```typescript
+// Discriminated union — TypeScript narrows on isHybrid
+type StringConfig = HybridStringConfig | FullbedStringConfig;
+
+// predictSetup input + output
+function predictSetup(racquet: Racquet, stringConfig: StringConfig): SetupStats
+
+// SetupStats extends SetupAttributes (11 numeric attrs) + optional debug bag
+interface SetupStats extends SetupAttributes { _debug?: SetupDebug }
+```
+
+### Rules for Engine Work
+
+1. **No logic changes** — only type changes. If TS complains about logic, fix the type.
+2. **No runtime guards** — types are compile-time only; don't add `instanceof` / `typeof` checks.
+3. **`[key: string]: unknown`** on `Racquet` and `StringData` is intentional — data.js has extra fields.
+4. **`moduleResolution: "bundler"`** — `.js` import paths in `.ts` files resolve to `.ts` automatically.
+5. **Canary check** — after any engine change run `npm run canary`. Zero tolerance for OBS drift.
 
 ---
 
 ## Tailwind CSS Implementation State
 
-### Configuration (`index.html` lines 13-51)
+### Configuration (`index.html` lines ~13–51)
+
 ```javascript
 tailwind.config = {
-  darkMode: ['selector', '[data-theme="dark"]'],  // Data-attribute based
+  darkMode: ['selector', '[data-theme="dark"]'],
   theme: {
     extend: {
       colors: {
@@ -41,7 +87,7 @@ tailwind.config = {
 
 ### Dark Mode Strategy
 - **Selector**: `[data-theme="dark"]` on `<html>` element
-- **Toggle**: `toggleTheme()` in `app.js` (line ~6819)
+- **Toggle**: `toggleTheme()` in `app.js`
 - **Implementation**: Use `dark:` prefix for conditional styling
   ```html
   <!-- Light = dark text, Dark = light text -->
@@ -66,7 +112,7 @@ tailwind.config = {
 | String Compendium | `app.js` `_stringRenderMain()` | Full Tailwind mirror of Racket Bible |
 | Frame Injection | `app.js` `_stringRenderMain()` | String-first modulator with hybrid support |
 | Base Score Display | `app.js` `_compRenderMain()` | Frame-only OBS with delta indicator |
-| Searchable Selects | `app.js` `createSearchableSelect()` | Custom dropdown component with Tailwind |
+| Searchable Selects | `src/ui/components/searchable-select.js` | Extracted component, Tailwind-styled |
 
 ### ⏳ Still in Vanilla CSS (`style.css`)
 | Component | CSS Classes | Migration Complexity |
@@ -137,7 +183,7 @@ Always use `dc-*` colors, never hardcode:
 `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">${cards}</div>`
 
 // Individual card (featured spans full width)
-const cardClasses = isFeatured 
+const cardClasses = isFeatured
   ? "... col-span-full"  // Full width
   : "...";               // Normal grid cell
 ```
@@ -145,21 +191,21 @@ const cardClasses = isFeatured
 ### 5. Button Pattern
 ```javascript
 // Primary (Set Active)
-<button class="bg-transparent border border-dc-accent text-dc-accent 
-  hover:bg-dc-accent hover:text-dc-void 
-  font-mono text-[9px] uppercase tracking-widest py-1.5 
+<button class="bg-transparent border border-dc-accent text-dc-accent
+  hover:bg-dc-accent hover:text-dc-void
+  font-mono text-[9px] uppercase tracking-widest py-1.5
   transition-colors text-center">Set Active</button>
 
 // Secondary (Tune/Save)
-<button class="bg-transparent border border-dc-storm/50 dark:border-dc-storm/30 
-  text-dc-storm hover:border-dc-storm hover:bg-dc-storm/10 
-  hover:text-dc-void dark:hover:text-dc-platinum 
-  font-mono text-[9px] uppercase tracking-widest py-1.5 
+<button class="bg-transparent border border-dc-storm/50 dark:border-dc-storm/30
+  text-dc-storm hover:border-dc-storm hover:bg-dc-storm/10
+  hover:text-dc-void dark:hover:text-dc-platinum
+  font-mono text-[9px] uppercase tracking-widest py-1.5
   transition-colors text-center">Tune</button>
 ```
 
 ### 6. Searchable Select Component
-Custom dropdown component using Tailwind:
+Extracted to `src/ui/components/searchable-select.js` and imported via `src/main.js`:
 ```javascript
 // Store instance for programmatic access
 ssInstances['my-select'] = createSearchableSelect(container, {
@@ -186,10 +232,11 @@ ssInstances['my-select'].setValue(newValue);
 
 1. **Tailwind CDN Limitations**: No JIT mode, all utilities must be in class strings at parse time
 2. **Dark Mode Detection**: Requires `data-theme="dark"` on `<html>`, not body or class-based
-3. **Color Contrast**: `dc-void` is near-black, `dc-platinum` is light gray - easy to mix up
+3. **Color Contrast**: `dc-void` is near-black, `dc-platinum` is light gray — easy to mix up
 4. **Legacy CSS**: Check `style.css` before adding new Tailwind classes to avoid conflicts
 5. **State Sync**: When using `createSearchableSelect`, store the instance in `ssInstances` to enable programmatic updates via `setValue()`
 6. **Component Re-init**: Clear `ssInstances` entries before re-initializing to prevent stale state
+7. **Engine edits**: `src/engine/` is TypeScript strict — run `npm run typecheck` after any change; run `npm run canary` to confirm OBS outputs are unchanged
 
 ---
 
@@ -219,7 +266,7 @@ The String Compendium mirrors the Racket Bible but with String-first exploration
 let _stringSelectedId = null;
 let _stringInjectState = {
   frameId: '', stringId: '', mode: 'fullbed' | 'hybrid',
-  mainsGauge: '', crossesGauge: '', 
+  mainsGauge: '', crossesGauge: '',
   mainsTension: 52, crossesTension: 50
 };
 ```
@@ -244,6 +291,11 @@ When modifying UI components:
 - [ ] Verify setValue() API updates UI correctly
 - [ ] Test mode switching preserves state correctly
 
+When modifying the engine (`src/engine/`):
+- [ ] `npm run typecheck` — zero errors
+- [ ] `npm run canary` — all 5 pass, 0.0 OBS diff
+- [ ] No logic changes — types only
+
 ---
 
 ## Setup Syncing Across App
@@ -256,7 +308,7 @@ The app maintains consistency between the active loadout and all pages through `
 Active Loadout (source of truth)
     ↓ getCurrentSetup()
 ├── Overview Page — renders active build dashboard
-├── Tune Page — initializes with current racquet + strings  
+├── Tune Page — initializes with current racquet + strings
 ├── Compare Page — uses active loadout as baseline
 ├── Optimize Page — suggests improvements from current setup
 └── Racket Bible — syncs on entry via _compSyncWithActiveLoadout()

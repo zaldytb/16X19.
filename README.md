@@ -10,40 +10,42 @@ Vite + ES Modules + Tailwind CSS. Deploys to GitHub Pages and Vercel.
 
 ```bash
 npm install
-npm run dev      # Development server
-npm run build    # Production build
+npm run dev        # Development server
+npm run build      # Production build
+npm run typecheck  # TypeScript type check (engine only)
 ```
 
 ## Architecture
 
-### Modular ES6 Structure
+### Source Layout
 
 ```
 src/
-├── engine/              # Prediction engine (pure functions)
-│   ├── constants.js     # GAUGE_OPTIONS, STAT_KEYS, OBS_TIERS, etc.
-│   ├── frame-physics.js # calcFrameBase, normalizeRawSpecs
-│   ├── string-profile.js # calcBaseStringProfile, gauge modifiers
-│   ├── tension.js       # calcTensionModifier, tension context
-│   ├── hybrid.js        # calcHybridInteraction
-│   ├── composite.js     # predictSetup, computeCompositeScore
-│   └── index.js         # barrel exports
+├── engine/              # Prediction engine — TypeScript, strict mode
+│   ├── types.ts         # All domain interfaces and type aliases
+│   ├── constants.ts     # GAUGE_OPTIONS, STAT_KEYS, OBS_TIERS, etc.
+│   ├── frame-physics.ts # calcFrameBase, normalizeRawSpecs
+│   ├── string-profile.ts# calcBaseStringProfile, gauge modifiers
+│   ├── tension.ts       # calcTensionModifier, buildTensionContext
+│   ├── hybrid.ts        # calcHybridInteraction
+│   ├── composite.ts     # predictSetup, computeCompositeScore, generateIdentity
+│   └── index.ts         # barrel exports
 │
-├── state/               # State management
+├── state/               # State management (JS)
 │   ├── loadout.js       # CRUD for loadouts
 │   ├── setup-sync.js    # getCurrentSetup, state sync
 │   └── presets.js       # Top builds generation
 │
-├── ui/                  # UI components
-│   ├── components/      # Reusable components
+├── ui/                  # UI components (JS)
+│   ├── components/
 │   │   └── searchable-select.js
-│   ├── pages/           # Page modules
+│   ├── pages/
 │   │   └── leaderboard.js
 │   ├── theme.js         # Dark/light mode
 │   └── nav.js           # Navigation helpers
 │
 ├── data/                # Data loading
-│   └── loader.js        # RACQUETS, STRINGS imports
+│   └── loader.js        # RACQUETS, STRINGS, FRAME_META imports
 │
 └── utils/               # Utilities
     └── share.js         # URL encoding, export/import
@@ -53,12 +55,29 @@ src/
 
 | Layer | Function | Description |
 |-------|----------|-------------|
-| L0 | `calcFrameBase()` | Normalizes raw specs, derives 9 attributes |
-| L1 | `calcBaseStringProfile()` + `calcStringFrameMod()` | String scoring with frame coupling |
-| L2 | `calcTensionModifier()` | Pattern-aware tension effects |
-| L3 | `calcHybridInteraction()` | Mains/crosses pairing bonuses |
+| L0 | `calcFrameBase()` | Normalizes raw specs → 11 attribute scores via weighted linear models + sigmoid compression |
+| L1 | `calcBaseStringProfile()` + `calcStringFrameMod()` | String scoring (TWU data) + frame coupling deltas |
+| L2 | `calcTensionModifier()` | Pattern-aware tension effects (open/dense/standard) |
+| L3 | `calcHybridInteraction()` | Mains/crosses material pairing bonuses |
 
-Composite score (OBS) maps to a 10-tier ranking system.
+Composite score (OBS) maps to a 10-tier ranking system ("Delete This" → "Max Aura"). All engine functions are pure — same inputs always produce identical outputs. 5 canary tests guard against regression on every export.
+
+### TypeScript Engine
+
+`src/engine/` is fully TypeScript with `strict: true`. Key types in `types.ts`:
+
+| Type | Description |
+|------|-------------|
+| `Racquet` | Frame data shape (matches data.js fields — note: `swingweight` lowercase) |
+| `StringData` | String entry with `twScore: TwScore`, gauge, material, shape |
+| `StringConfig` | Discriminated union — `HybridStringConfig \| FullbedStringConfig` |
+| `SetupAttributes` | 11 numeric attributes (spin, power, control, …) |
+| `SetupStats` | `SetupAttributes + _debug?` — return type of `predictSetup` |
+| `FrameBaseScores` | 11-attr output of `calcFrameBase` |
+| `StringProfileScores` | 7-attr output of `calcBaseStringProfile` |
+| `TensionContext` | Context object for OBS sanity penalty calculation |
+
+`moduleResolution: "bundler"` lets `.js` imports in `.ts` files resolve to `.ts` — no import path changes needed. `app.js` and all other `src/` files remain plain JS.
 
 ### Bible & Compendium Pages
 
@@ -78,7 +97,7 @@ Equipment data lives in `pipeline/data/` as JSON files. The browser loads `data.
 
 "Digicraft Brutalism" — monochrome base (#1A1A1A void, #DCDFE2 platinum, #5E666C storm) with #FF4500 accent orange for data visualization. Inter + JetBrains Mono typography. Halftone grain textures. No drop shadows.
 
-**Tailwind CSS v3** (CDN) with custom config:
+**Tailwind CSS** (CDN, inline config in `index.html`):
 - Dark mode: `[data-theme="dark"]` selector
 - Custom colors: `dc-void`, `dc-platinum`, `dc-storm`, `dc-accent`, `dc-red`
 - Typography: Elephant (hero: 4.5rem), Obs (2.5-3.5rem), Mouse (9px labels)
@@ -130,6 +149,7 @@ npm run enrich:twu-strings -- --input pipeline/data/twu-strings-raw-YYYY-MM-DD.c
 | `npm run export:verify` | Regenerate + canary regression test |
 | `npm run canary` | Run 5 regression canaries |
 | `npm run canary:baseline` | Re-record canary expected values |
+| `npm run typecheck` | TypeScript type check (engine only, zero errors) |
 | `npm run estimate` | Show string estimation accuracy stats |
 | `npm run calibrate` | Re-fit string estimation coefficients |
 | `npm run pipeline` | Full validate + export + verify |
@@ -140,18 +160,29 @@ npm run enrich:twu-strings -- --input pipeline/data/twu-strings-raw-YYYY-MM-DD.c
 ### File structure
 
 ```
-├── index.html              ← app shell
+├── index.html              ← app shell (Tailwind CDN config inline)
 ├── app.js                  ← main app (~10,700 lines, imports from src/)
-├── src/
-│   ├── engine/             ← prediction engine (extracted)
-│   ├── state/              ← state management
-│   ├── ui/                 ← UI components
-│   ├── data/               ← data loading
-│   └── utils/              ← utilities
 ├── style.css               ← Digicraft design system (Tailwind + custom)
 ├── data.js                 ← generated from pipeline (never edit)
 ├── vite.config.js          ← Vite configuration
+├── tsconfig.json           ← TypeScript config (engine only, strict)
 ├── package.json
+│
+├── src/
+│   ├── main.js             ← Vite entry point, bridges engine to window
+│   ├── engine/             ← prediction engine (TypeScript, strict mode)
+│   │   ├── types.ts        ← domain interfaces
+│   │   ├── constants.ts
+│   │   ├── frame-physics.ts
+│   │   ├── string-profile.ts
+│   │   ├── tension.ts
+│   │   ├── hybrid.ts
+│   │   ├── composite.ts
+│   │   └── index.ts
+│   ├── state/              ← state management (JS)
+│   ├── ui/                 ← UI components (JS)
+│   ├── data/               ← data loading (JS)
+│   └── utils/              ← utilities (JS)
 │
 ├── pipeline/
 │   ├── data/
@@ -159,22 +190,21 @@ npm run enrich:twu-strings -- --input pipeline/data/twu-strings-raw-YYYY-MM-DD.c
 │   │   ├── strings.json        ← string database (source of truth)
 │   │   └── canaries.json       ← regression test definitions
 │   ├── schemas/
-│   │   ├── frame.schema.json   ← validation schema
-│   │   └── string.schema.json  ← validation schema
+│   │   ├── frame.schema.json
+│   │   └── string.schema.json
 │   ├── scripts/
-│   │   ├── validate.js         ← schema + range validation
-│   │   ├── estimate.js         ← string property estimation (OLS-fitted)
-│   │   ├── calibrate.js        ← re-fit estimation coefficients
-│   │   ├── ingest.js           ← add entries (interactive + CSV batch)
-│   │   ├── canary-test.js      ← regression canary runner
-│   │   ├── export-to-app.js    ← JSON → data.js generator
-│   │   ├── extract.js          ← one-time migration (DO NOT RE-RUN)
-│   │   ├── scrape-twu.js       ← TWU racquet scraper
-│   │   ├── scrape-twu-strings.js ← TWU string scraper
-│   │   ├── enrich-twu-csv.js   ← frame enrichment + filtering
-│   │   └── enrich-twu-strings.js ← string enrichment + filtering
+│   │   ├── validate.js
+│   │   ├── estimate.js
+│   │   ├── calibrate.js
+│   │   ├── ingest.js
+│   │   ├── canary-test.js
+│   │   ├── export-to-app.js
+│   │   ├── scrape-twu.js
+│   │   ├── scrape-twu-strings.js
+│   │   ├── enrich-twu-csv.js
+│   │   └── enrich-twu-strings.js
 │   └── engine/
-│       └── core.js             ← portable engine (Node.js)
+│       └── core.js             ← portable engine copy (Node.js, used by pipeline)
 │
 ├── tools/
 │   ├── frame-editor.html       ← visual batch frame editor

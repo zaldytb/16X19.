@@ -31,23 +31,13 @@ npm install
 
 ## Running the App
 
-No build step is required. Open `index.html` directly in your browser:
+The app is built with Vite. Use the dev server for local development:
 
 ```bash
-open index.html          # macOS
-xdg-open index.html      # Linux
-start index.html         # Windows
+npm run dev
 ```
 
-Or serve it over a local static server:
-
-```bash
-npx serve .
-# or
-python3 -m http.server 8080
-```
-
-Then visit `http://localhost:8080` (or whatever port your server prints).
+Vite starts a local server (typically `http://localhost:5173`) and opens the browser automatically. Hot module replacement is active — changes to source files reload instantly.
 
 ---
 
@@ -227,8 +217,8 @@ This runs validation → export → canary regression tests in one step. If ever
 ## Quick-Reference Cheat Sheet
 
 ```bash
-# Run the app
-open index.html
+# Run the app (dev server)
+npm run dev
 
 # Add a racquet (interactive)
 npm run ingest:frame

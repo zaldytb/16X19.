@@ -10049,9 +10049,23 @@ function _stringOnFrameChange(frameId) {
       
       // Calculate base stats
       _stringModState.baseStats = calcFrameBase(racquet);
+      
+      // Store base OBS for delta calculation
+      const fb = _stringModState.baseStats;
+      window._compBaseObs = Math.round(
+        fb.spin * 0.15 +
+        fb.power * 0.12 +
+        fb.control * 0.18 +
+        fb.comfort * 0.12 +
+        fb.feel * 0.10 +
+        fb.stability * 0.12 +
+        fb.forgiveness * 0.08 +
+        fb.maneuverability * 0.08
+      );
     }
   } else {
     _stringModState.baseStats = null;
+    window._compBaseObs = null;
   }
   
   _stringUpdatePreview();
@@ -10133,6 +10147,34 @@ function _stringUpdatePreview() {
   const obsEl = document.getElementById('string-mod-obs');
   if (obsEl) {
     obsEl.innerHTML = `<span class="font-mono text-4xl font-bold text-dc-accent">${obs.toFixed(1)}</span>`;
+  }
+  
+  // Update delta display on racket page (if visible)
+  const baseObs = window._compBaseObs || Math.round(
+    baseStats.spin * 0.15 +
+    baseStats.power * 0.12 +
+    baseStats.control * 0.18 +
+    baseStats.comfort * 0.12 +
+    baseStats.feel * 0.10 +
+    baseStats.stability * 0.12 +
+    baseStats.forgiveness * 0.08 +
+    baseStats.maneuverability * 0.08
+  );
+  const delta = Math.round((obs - baseObs) * 10) / 10;
+  
+  // Update delta on racket page (if visible)
+  const main = document.getElementById('comp-main');
+  let deltaEl = document.getElementById('comp-string-delta');
+  let deltaValEl = document.getElementById('comp-string-delta-value');
+  if (!deltaEl && main) {
+    deltaEl = main.querySelector('#comp-string-delta');
+    deltaValEl = main.querySelector('#comp-string-delta-value');
+  }
+  if (deltaEl && deltaValEl && delta > 0) {
+    deltaValEl.textContent = delta;
+    deltaEl.classList.remove('opacity-0');
+  } else if (deltaEl) {
+    deltaEl.classList.add('opacity-0');
   }
 }
 
@@ -10217,6 +10259,10 @@ function _stringClearPreview() {
   // Clear OBS display
   const obsEl = document.getElementById('string-mod-obs');
   if (obsEl) obsEl.innerHTML = '<span class="font-mono text-4xl font-bold text-dc-storm">—</span>';
+  
+  // Hide delta display on racket page
+  const deltaEl = document.getElementById('comp-string-delta');
+  if (deltaEl) deltaEl.classList.add('opacity-0');
 }
 
 function _stringAddToLoadout() {
@@ -10371,8 +10417,11 @@ function initCompendium() {
   document.getElementById('comp-filter-headsize').addEventListener('change', _compRenderRoster);
   document.getElementById('comp-filter-weight').addEventListener('change', _compRenderRoster);
 
-  // Auto-select first frame
-  if (RACQUETS.length > 0) {
+  // Auto-select active racket from loadout, or first frame as fallback
+  const setup = getCurrentSetup();
+  if (setup && setup.racquet) {
+    _compSelectFrame(setup.racquet.id);
+  } else if (RACQUETS.length > 0) {
     _compSelectFrame(RACQUETS[0].id);
   }
 }
@@ -10478,6 +10527,10 @@ function _compRenderMain(racquet) {
   const main = document.getElementById('comp-main');
   const frameBase = calcFrameBase(racquet);
   const beamStr = Array.isArray(racquet.beamWidth) ? racquet.beamWidth.join('/') + 'mm' : racquet.beamWidth + 'mm';
+  
+  // Sync _stringModState so String Modulator has baseStats for delta calculation
+  _stringModState.frameId = racquet.id;
+  _stringModState.baseStats = frameBase;
 
   // Generate or cache top builds
   if (!_compendiumBuildCache[racquet.id]) {
@@ -10566,10 +10619,31 @@ function _compRenderMain(racquet) {
     <div class="relative flex flex-col items-start mb-8">
       
       <div class="absolute top-6 right-6 md:top-8 md:right-8 flex flex-col items-end">
-        <span class="font-mono text-[13px] text-dc-storm tracking-[0.2em] mb-1">STRUNG WGHT</span>
+        <span class="font-mono text-[13px] text-dc-storm tracking-[0.2em] mb-1">BASE SCORE</span>
         <span class="font-mono text-5xl font-semibold leading-[0.85] text-dc-void dark:text-dc-platinum">
-          ${racquet.strungWeight}<span class="text-xl text-dc-storm ml-1">g</span>
+          ${(function() {
+            const fb = calcFrameBase(racquet);
+            const baseObs = Math.round(
+              fb.spin * 0.15 +
+              fb.power * 0.12 +
+              fb.control * 0.18 +
+              fb.comfort * 0.12 +
+              fb.feel * 0.10 +
+              fb.stability * 0.12 +
+              fb.forgiveness * 0.08 +
+              fb.maneuverability * 0.08
+            );
+            // Store baseObs globally for delta calculation
+            window._compBaseObs = baseObs;
+            return baseObs;
+          })()}<span class="text-xl text-dc-storm ml-1">OBS</span>
         </span>
+        <!-- String injection delta - updated by string modulator -->
+        <div id="comp-string-delta" class="flex items-center gap-1 mt-1 opacity-0 transition-opacity duration-200">
+          <span class="font-mono text-lg font-bold text-dc-red">+</span>
+          <span class="font-mono text-lg font-bold text-dc-red" id="comp-string-delta-value">0</span>
+          <span class="font-mono text-xs text-dc-storm/60 ml-0.5">OBS</span>
+        </div>
       </div>
       
       <h2 class="text-5xl md:text-[4rem] font-semibold tracking-tight text-dc-void dark:text-dc-platinum leading-none mb-0 pr-[120px] flex items-center gap-3 cursor-pointer group" onclick="_compToggleHud()">
@@ -10687,10 +10761,8 @@ let _compInjectState = {
   baseStats: null
 };
 
-// Set injection mode (fullbed/hybrid)
-function _compSetInjectMode(mode) {
-  _compInjectState.mode = mode;
-  
+// Update mode UI only (for initialization - doesn't modify state)
+function _compUpdateInjectModeUI(mode) {
   // Update button states - Tailwind class injection
   document.querySelectorAll('.comp-inject-mode-btn').forEach(btn => {
     const isActive = btn.dataset.mode === mode;
@@ -10715,34 +10787,43 @@ function _compSetInjectMode(mode) {
     if (crossesSelect) crossesSelect.style.display = 'block';
     if (mainsLabel) mainsLabel.textContent = '// MAINS';
     if (crossesLabel) crossesLabel.textContent = '// CROSSES';
-    
-    // If entering hybrid with no crosses selected, default to mains
-    if (!_compInjectState.crossesId && _compInjectState.mainsId) {
-      _compInjectState.crossesId = _compInjectState.mainsId;
-      // Update the crosses selector UI to show the mains string
-      const crossesContainer = document.getElementById('comp-crosses-select');
-      if (crossesContainer) {
-        const crossTrigger = crossesContainer.querySelector('.ss-trigger');
-        if (crossTrigger) {
-          const crossString = STRINGS.find(s => s.id === _compInjectState.mainsId);
-          if (crossString) {
-            crossTrigger.textContent = crossString.name;
-            crossTrigger.classList.remove('ss-placeholder');
-          }
-        }
-      }
-      // Sync crosses gauge dropdown too
-      _compPopulateGaugeDropdown('comp-crosses-gauge', _compInjectState.mainsId);
-    }
   } else {
     // Fullbed: Hide crosses string selector, update labels
     if (crossesSelect) crossesSelect.style.display = 'none';
     if (mainsLabel) mainsLabel.textContent = '// STRING';
     if (crossesLabel) crossesLabel.textContent = '// CROSSES';
-    
-    // Sync crosses string ID with mains for preview calculation
+  }
+}
+
+// Set injection mode (fullbed/hybrid) - for user clicks, modifies state
+function _compSetInjectMode(mode) {
+  _compInjectState.mode = mode;
+  
+  // Update UI
+  _compUpdateInjectModeUI(mode);
+  
+  if (mode === 'hybrid') {
+    // If entering hybrid with no crosses selected, default to mains
+    if (!_compInjectState.crossesId && _compInjectState.mainsId) {
+      _compInjectState.crossesId = _compInjectState.mainsId;
+      // Update the crosses selector UI using the stored instance
+      const crossesInstance = ssInstances['comp-crosses-select'];
+      if (crossesInstance) {
+        crossesInstance.setValue(_compInjectState.mainsId);
+      }
+      // Sync crosses gauge dropdown too
+      _compPopulateGaugeDropdown('comp-crosses-gauge', _compInjectState.mainsId);
+    }
+  } else {
+    // Fullbed: Sync crosses string ID with mains for preview calculation
     if (_compInjectState.mainsId) {
       _compInjectState.crossesId = _compInjectState.mainsId;
+      // Update crosses selector to match mains
+      const crossesInstance = ssInstances['comp-crosses-select'];
+      if (crossesInstance) {
+        crossesInstance.setValue(_compInjectState.mainsId);
+      }
+      _compPopulateGaugeDropdown('comp-crosses-gauge', _compInjectState.mainsId);
     }
   }
   
@@ -10759,16 +10840,65 @@ function _compInitStringInjector(racquet) {
   const crossesContainer = document.getElementById('comp-crosses-select');
   if (!mainsContainer) return;
   
-  // Default tensions from racquet range
-  const midTension = Math.round((racquet.tensionRange[0] + racquet.tensionRange[1]) / 2);
-  document.getElementById('comp-mains-tension').value = midTension;
-  document.getElementById('comp-crosses-tension').value = midTension - 2;
+  // Clear containers to prevent duplicate initialization issues
+  mainsContainer.innerHTML = '';
+  if (crossesContainer) crossesContainer.innerHTML = '';
   
-  // Initialize mains selector
-  createSearchableSelect(mainsContainer, {
+  // Get active loadout to check if we're viewing the same racket
+  const setup = getCurrentSetup();
+  const isViewingActiveRacket = setup?.racquet?.id === racquet.id;
+  
+  // Only load strings from loadout if viewing the active racket
+  // Otherwise, start fresh (user is exploring a different racket)
+  let isHybrid, mainsId, crossesId, mainsTension, crossesTension;
+  
+  if (isViewingActiveRacket && setup?.stringConfig) {
+    isHybrid = setup.stringConfig.isHybrid || false;
+    mainsId = isHybrid ? setup.stringConfig.mains?.id : setup.stringConfig.string?.id;
+    crossesId = isHybrid ? setup.stringConfig.crosses?.id : setup.stringConfig.string?.id;
+    mainsTension = setup.stringConfig.mainsTension;
+    crossesTension = setup.stringConfig.crossesTension;
+  } else {
+    // Fresh start for new racket exploration
+    isHybrid = false;
+    mainsId = '';
+    crossesId = '';
+  }
+  
+  // Default tensions from racket range if not set
+  const midTension = Math.round((racquet.tensionRange[0] + racquet.tensionRange[1]) / 2);
+  if (!mainsTension) mainsTension = midTension;
+  if (!crossesTension) crossesTension = midTension - 2;
+  
+  // Set initial mode
+  _compInjectState.mode = isHybrid ? 'hybrid' : 'fullbed';
+  _compInjectState.mainsId = mainsId || '';
+  _compInjectState.crossesId = crossesId || mainsId || '';
+  
+  // Ensure crossesId defaults to mainsId in hybrid mode if not set
+  const effectiveCrossesId = crossesId || mainsId || '';
+  
+  // Sync _stringModState for delta calculation consistency
+  _stringModState.frameId = racquet.id;
+  _stringModState.baseStats = calcFrameBase(racquet);
+  _stringModState.mode = isHybrid ? 'hybrid' : 'fullbed';
+  _stringModState.stringId = mainsId || '';
+  _stringModState.crossesId = effectiveCrossesId;
+  _stringModState.mainsTension = mainsTension;
+  _stringModState.crossesTension = crossesTension;
+  
+  // Also ensure _compInjectState.crossesId matches the effective value
+  _compInjectState.crossesId = effectiveCrossesId;
+  
+  // Set tensions from loadout or defaults
+  document.getElementById('comp-mains-tension').value = mainsTension;
+  document.getElementById('comp-crosses-tension').value = crossesTension;
+  
+  // Initialize mains selector with loadout value
+  ssInstances['comp-mains-select'] = createSearchableSelect(mainsContainer, {
     type: 'string',
     placeholder: 'Select String...',
-    value: '',
+    value: mainsId || '',
     onChange: (val) => {
       _compInjectState.mainsId = val;
       _compPopulateGaugeDropdown('comp-mains-gauge', val);
@@ -10783,12 +10913,13 @@ function _compInitStringInjector(racquet) {
     }
   });
   
-  // Initialize crosses selector
+  // Initialize crosses selector with loadout value
   if (crossesContainer) {
-    createSearchableSelect(crossesContainer, {
+    ssInstances['comp-crosses-select'] = createSearchableSelect(crossesContainer, {
       type: 'string',
       placeholder: 'Select Cross String...',
-      value: '',
+      value: effectiveCrossesId,
+      id: 'comp-crosses-select-trigger',
       onChange: (val) => {
         _compInjectState.crossesId = val;
         _compPopulateGaugeDropdown('comp-crosses-gauge', val);
@@ -10806,8 +10937,22 @@ function _compInitStringInjector(racquet) {
     }
   });
   
-  // Set initial mode state
-  _compSetInjectMode('fullbed');
+  // Set initial mode UI but DON'T let it override our state
+  _compUpdateInjectModeUI(isHybrid ? 'hybrid' : 'fullbed');
+  
+  // Trigger initial preview with loadout values (if any)
+  if (mainsId) {
+    _compPopulateGaugeDropdown('comp-mains-gauge', mainsId);
+    if (isHybrid && effectiveCrossesId) {
+      _compPopulateGaugeDropdown('comp-crosses-gauge', effectiveCrossesId);
+    } else if (!isHybrid && mainsId) {
+      _compPopulateGaugeDropdown('comp-crosses-gauge', mainsId);
+    }
+    _compPreviewStats();
+  } else {
+    // For fresh racket exploration, clear stat bars to base frame values
+    _compClearPreview();
+  }
 }
 
 // Populate gauge dropdown for a string
@@ -10869,6 +11014,36 @@ function _compPreviewStats() {
   
   // Update stat bars with before/after
   _compRenderPreviewBars(baseStats, previewStats);
+  
+  // Calculate and update OBS delta display
+  const tCtx = buildTensionContext(cfg, racquet);
+  const obs = computeCompositeScore(previewStats, tCtx);
+  const baseObs = window._compBaseObs || Math.round(
+    baseStats.spin * 0.15 +
+    baseStats.power * 0.12 +
+    baseStats.control * 0.18 +
+    baseStats.comfort * 0.12 +
+    baseStats.feel * 0.10 +
+    baseStats.stability * 0.12 +
+    baseStats.forgiveness * 0.08 +
+    baseStats.maneuverability * 0.08
+  );
+  const delta = Math.round((obs - baseObs) * 10) / 10;
+  
+  // Update delta on racket page
+  const main = document.getElementById('comp-main');
+  let deltaEl = document.getElementById('comp-string-delta');
+  let deltaValEl = document.getElementById('comp-string-delta-value');
+  if (!deltaEl && main) {
+    deltaEl = main.querySelector('#comp-string-delta');
+    deltaValEl = main.querySelector('#comp-string-delta-value');
+  }
+  if (deltaEl && deltaValEl && delta > 0) {
+    deltaValEl.textContent = delta;
+    deltaEl.classList.remove('opacity-0');
+  } else if (deltaEl) {
+    deltaEl.classList.add('opacity-0');
+  }
   
   // Enable apply button
   const applyBtn = document.getElementById('comp-inject-apply');
@@ -10958,6 +11133,10 @@ function _compClearPreview() {
   // Disable apply button
   const applyBtn = document.getElementById('comp-inject-apply');
   if (applyBtn) applyBtn.disabled = true;
+  
+  // Hide delta display
+  const deltaEl = document.getElementById('comp-string-delta');
+  if (deltaEl) deltaEl.classList.add('opacity-0');
 }
 
 // Apply injection to create a new loadout
@@ -10997,6 +11176,10 @@ function _compApplyInjection() {
 function _compClearInjection() {
   _compInjectState.mainsId = '';
   _compInjectState.crossesId = '';
+  
+  // Clear stored selector instances
+  delete ssInstances['comp-mains-select'];
+  delete ssInstances['comp-crosses-select'];
   
   // Reset selectors
   const mainsContainer = document.getElementById('comp-mains-select');

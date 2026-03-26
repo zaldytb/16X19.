@@ -1428,6 +1428,7 @@ function commitEditorToLoadout() {
 
   renderDockPanel();
   renderDashboard();
+  refreshTuneIfActive();
 }
 
 function renderDockPanel() {
@@ -6336,7 +6337,7 @@ function initTuneMode(setup) {
   tuneState.exploredTension = tuneState.baselineTension;
   tuneState.originalTension = tuneState.baselineTension;
 
-  // Configure slider range from racquet
+  // Configure slider range from racquet (allows exploring beyond optimal window)
   const sliderMin = Math.max(racquet.tensionRange[0] - 5, 30);
   const sliderMax = Math.min(racquet.tensionRange[1] + 5, 75);
   const slider = $('#tune-slider');
@@ -6351,10 +6352,10 @@ function initTuneMode(setup) {
   // Hybrid toggle
   renderTuneHybridToggle(stringConfig);
 
-  // Run full sweep
+  // Run full sweep (generates data for optimal window calculation)
   runTensionSweep(setup);
 
-  // Calculate optimal window
+  // Calculate optimal window based on racket + string combo
   calculateOptimalWindow(setup);
 
   // Render all modules
@@ -6463,18 +6464,18 @@ function renderOptimalBuildWindow(sMin, sMax) {
   const anchorStats = tuneState.sweepData.find(d => d.tension === w.anchor)?.stats;
   if (!anchorStats) return;
 
-  // Use slider range as the scale (matches the tension explorer above)
-  var scaleMin = sMin || w.low;
-  var scaleMax = sMax || w.high;
+  // Use full slider range as scale (allows exploring deviations from optimal)
+  var scaleMin = sMin || w.low - 10;
+  var scaleMax = sMax || w.high + 10;
   var scaleRange = scaleMax - scaleMin;
   if (scaleRange <= 0) scaleRange = 1;
 
-  // Optimal window fill position within slider scale
+  // Optimal window fill position within full range
   var fillLeft = ((w.low - scaleMin) / scaleRange) * 100;
   var fillRight = ((w.high - scaleMin) / scaleRange) * 100;
   var fillWidth = fillRight - fillLeft;
 
-  // Anchor dot position within slider scale
+  // Anchor dot position within full range
   var anchorPct = ((w.anchor - scaleMin) / scaleRange) * 100;
   anchorPct = Math.max(2, Math.min(98, anchorPct));
 
@@ -7139,7 +7140,6 @@ function renderOverallBuildScore(setup, animate) {
       <span class="${rankClass}">${tier.label}</span>
     </div>
     ${batteryHTML}
-    <p class="obs-subtitle">Overall Build Score · rank ladder</p>
   `;
 
   // OBS counting animation (skip during slider drag)

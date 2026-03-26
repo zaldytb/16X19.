@@ -522,37 +522,37 @@
 
       <!-- Mode: Tune -->
       <section class="workspace-mode hidden" id="mode-tune" data-mode="tune">
-        <div class="tune-workspace">
-          <div class="tune-workspace-header">
-            <div class="tune-header-left">
-              <h2 class="tune-title">Tension tuning</h2>
-              <p class="tune-subtitle" id="tune-subtitle">— Select a setup to begin tuning</p>
+        <div class="p-6">
+          <div class="flex items-start justify-between mb-6 pb-4 border-b border-dc-border">
+            <div class="flex flex-col gap-1">
+              <h2 class="font-mono text-[11px] font-bold tracking-[0.2em] text-dc-white uppercase">Tension tuning</h2>
+              <p class="text-[13px] text-dc-storm font-normal leading-tight" id="tune-subtitle">— Select a setup to begin tuning</p>
             </div>
           </div>
 
           <!-- Empty state when no setup -->
-          <div class="tune-empty" id="tune-empty">
+          <div class="text-center py-16 text-dc-storm text-sm" id="tune-empty">
             <p>Configure a frame and string, then explore tension tradeoffs.</p>
           </div>
 
           <!-- Active tune panels -->
-          <div class="tune-panels hidden" id="tune-panels">
+          <div class="flex flex-col gap-5 hidden" id="tune-panels">
             <!-- Zone 1: OBS + Slider (always visible, side by side) -->
-            <div class="tune-zone tune-zone-1">
-              <div class="tune-card tune-card-obs" id="tune-card-obs">
-                <div class="tune-card-header">
-                  <h3 class="tune-card-title">Build score</h3>
+            <div class="mb-4 grid grid-cols-1 md:grid-cols-[1fr_1.6fr] gap-4 items-stretch">
+              <div class="tune-card bg-dc-void-lift border border-dc-border rounded-lg hover:border-dc-storm transition-colors duration-200" id="tune-card-obs">
+                <div class="flex items-center px-0.5 py-4 border-b border-dc-border">
+                  <h3 class="tune-card-title font-mono text-[11px] font-bold tracking-[0.15em] text-dc-white uppercase">Build score</h3>
                 </div>
-                <div class="obs-content" id="obs-content"></div>
+                <div class="obs-content px-0.5" id="obs-content"></div>
                 <button class="tune-apply-btn hidden" id="tune-apply-btn" onclick="tuneSandboxCommit()">Apply changes</button>
                 <div class="optimal-content" id="optimal-content"></div>
               </div>
-              <div class="tune-card tune-card-slider" id="tune-card-slider">
-                <div class="tune-card-header">
-                  <h3 class="tune-card-title">Tension explorer</h3>
+              <div class="tune-card bg-dc-void-lift border border-dc-border rounded-lg hover:border-dc-storm transition-colors duration-200" id="tune-card-slider">
+                <div class="flex items-center justify-between px-0.5 py-4 border-b border-dc-border">
+                  <h3 class="tune-card-title font-mono text-[11px] font-bold tracking-[0.15em] text-dc-white uppercase">Tension explorer</h3>
                   <div class="tune-hybrid-toggle" id="tune-hybrid-toggle"></div>
                 </div>
-                <div class="slider-content" id="slider-content">
+                <div class="slider-content px-0.5" id="slider-content">
                   <div class="slider-track-wrapper">
                     <div class="slider-labels">
                       <span class="slider-label-min" id="slider-label-min">40</span>
@@ -574,55 +574,55 @@
             </div>
 
             <!-- Zone 2: Chart + Delta/WTTN -->
-            <div class="tune-zone tune-zone-2">
-              <div class="tune-card tune-card-chart" id="tune-card-chart">
-                <div class="tune-card-header">
-                  <h3 class="tune-card-title">Response across tension</h3>
+            <div class="mb-4">
+              <div class="tune-card bg-dc-void-lift border border-dc-border rounded-lg hover:border-dc-storm transition-colors duration-200 mb-4" id="tune-card-chart">
+                <div class="flex items-center px-0.5 py-4 border-b border-dc-border">
+                  <h3 class="tune-card-title font-mono text-[11px] font-bold tracking-[0.15em] text-dc-white uppercase">Response across tension</h3>
                 </div>
-                <div class="sweep-chart-container">
+                <div class="sweep-chart-container px-0.5">
                   <canvas id="sweep-chart"></canvas>
                 </div>
               </div>
-              <div class="tune-zone-2-row">
-                <div class="tune-card tune-card-delta" id="tune-card-delta">
-                  <div class="tune-card-header">
-                    <h3 class="tune-card-title">Delta vs baseline</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="tune-card bg-dc-void-lift border border-dc-border rounded-lg hover:border-dc-storm transition-colors duration-200" id="tune-card-delta">
+                  <div class="flex items-center px-0.5 py-4 border-b border-dc-border">
+                    <h3 class="tune-card-title font-mono text-[11px] font-bold tracking-[0.15em] text-dc-white uppercase">Delta vs baseline</h3>
                   </div>
-                  <div class="delta-content" id="delta-content"></div>
+                  <div class="delta-content px-0.5" id="delta-content"></div>
                 </div>
-                <div class="tune-card tune-card-wttn" id="tune-card-wttn">
-                  <div class="tune-card-header">
-                    <h3 class="tune-card-title">What to try next</h3>
+                <div class="tune-card bg-dc-void-lift border border-dc-border rounded-lg hover:border-dc-storm transition-colors duration-200" id="tune-card-wttn">
+                  <div class="flex items-center px-3 py-4 border-b border-dc-border">
+                    <h3 class="tune-card-title font-mono text-[11px] font-bold tracking-[0.15em] text-dc-white uppercase">What to try next</h3>
                   </div>
-                  <div class="wttn-content" id="wttn-content"></div>
+                  <div class="wttn-content px-3 overflow-x-auto" id="wttn-content"></div>
                 </div>
               </div>
             </div>
 
             <!-- Zone 3: Collapsed depth -->
-            <details class="tune-details" id="tune-details-recs">
-              <summary class="tune-details-summary">
-                <svg class="details-chevron" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <details class="bg-dc-void-lift border border-dc-border rounded-lg shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] overflow-hidden mb-4" id="tune-details-recs">
+              <summary class="flex items-center gap-3 px-0.5 py-4 cursor-pointer font-mono text-[11px] font-semibold text-dc-platinum tracking-[0.1em] uppercase select-none hover:text-dc-white transition-colors duration-200 list-none [&::-webkit-details-marker]:hidden">
+                <svg class="w-3.5 h-3.5" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 Recommended builds
               </summary>
-              <div class="tune-card tune-card-recs" id="tune-card-recs">
-                <div class="recs-content" id="recs-content"></div>
+              <div class="tune-card border-0 rounded-none shadow-none" id="tune-card-recs">
+                <div class="recs-content px-0.5" id="recs-content"></div>
               </div>
             </details>
 
-            <details class="tune-details" id="tune-details-gauge">
-              <summary class="tune-details-summary">
-                <svg class="details-chevron" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <details class="bg-dc-void-lift border border-dc-border rounded-lg shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] overflow-hidden mb-4" id="tune-details-gauge">
+              <summary class="flex items-center gap-3 px-0.5 py-4 cursor-pointer font-mono text-[11px] font-semibold text-dc-platinum tracking-[0.1em] uppercase select-none hover:text-dc-white transition-colors duration-200 list-none [&::-webkit-details-marker]:hidden">
+                <svg class="w-3.5 h-3.5" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 Gauge explorer
               </summary>
-              <div class="tune-card tune-card-gauge" id="tune-card-gauge">
-                <div class="gauge-explore-content" id="gauge-explore-content"></div>
+              <div class="tune-card border-0 rounded-none shadow-none" id="tune-card-gauge">
+                <div class="gauge-explore-content px-0.5" id="gauge-explore-content"></div>
               </div>
             </details>
 
-            <div class="tune-row tune-row-explore hidden" id="tune-row-explore">
-              <div class="tune-card tune-card-explore" id="tune-card-explore">
-                <div class="explore-content" id="explore-content"></div>
+            <div class="hidden" id="tune-row-explore">
+              <div class="tune-card bg-dc-void-lift border border-dc-border rounded-lg hover:border-dc-storm transition-colors duration-200" id="tune-card-explore">
+                <div class="explore-content px-0.5" id="explore-content"></div>
               </div>
             </div>
           </div>

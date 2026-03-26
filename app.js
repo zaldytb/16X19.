@@ -6398,20 +6398,23 @@ function init() {
   document.getElementById('mode-howitworks')?.classList.add('hidden');
   // Overview stays visible as the default landing page
 
-  // Load saved loadouts from storage
-  savedLoadouts = loadSavedLoadouts();
-  _stateSetSavedLoadouts(savedLoadouts);
+  // Load saved loadouts from storage via store
+  const storedLoadouts = loadSavedLoadouts();
+  setSavedLoadouts(storedLoadouts);
+  _stateSetSavedLoadouts(storedLoadouts);
   
   // Restore active loadout from storage (if exists and not a shared build)
   try {
     const activeId = _store ? _store.getItem('tll-active-loadout-id') : null;
-    if (activeId && savedLoadouts.length > 0) {
-      const saved = savedLoadouts.find(l => l.id === activeId);
+    const sls = getSavedLoadouts();
+    if (activeId && sls.length > 0) {
+      const saved = sls.find(l => l.id === activeId);
       if (saved) {
-        activeLoadout = Object.assign({}, saved);
-        activeLoadout._dirty = false;
-        _stateSetActiveLoadout(activeLoadout);
-        hydrateDock(activeLoadout);
+        const al = Object.assign({}, saved);
+        al._dirty = false;
+        setActiveLoadout(al);
+        _stateSetActiveLoadout(al);
+        hydrateDock(al);
       }
     }
   } catch(e) {}

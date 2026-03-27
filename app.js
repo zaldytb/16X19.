@@ -45,6 +45,7 @@ import { loadSavedLoadouts, persistSavedLoadouts, setActiveLoadout as _stateSetA
 import { getActiveLoadout, setActiveLoadout, getSavedLoadouts, setSavedLoadouts, addSavedLoadout, removeSavedLoadout, updateSavedLoadout, subscribe } from './src/state/store.js';
 import { createSearchableSelect, ssInstances, _initQaSearchable } from './src/ui/components/searchable-select.js';
 import { renderMyLoadouts, confirmRemoveLoadout } from './src/ui/pages/my-loadouts.js';
+import { _dockContextActions, _dockGuidance, _dockIcons, _dockReturnEditorHome, _dockRelocateEditorToContext, _dockClearNonEditor } from './src/ui/components/dock-panel.js';
 import { 
   encodeLoadoutToURL, 
   decodeLoadoutFromURL, 
@@ -1348,81 +1349,6 @@ function renderDockContextPanel() {
     case 'optimize':   _renderDockPanelOptimize(container); break;
     case 'howitworks': _renderDockPanelReference(container); break;
     default:           _renderDockPanelOverview(container); break;
-  }
-}
-
-// --- Context Action Links Helper ---
-function _dockContextActions(actions) {
-  if (!actions || actions.length === 0) return '';
-  return '<div class="dock-ctx-actions">' +
-    actions.map(function(a) {
-      return '<a class="dock-ctx-action" onclick="' + a.onclick + '">' + a.label + '</a>';
-    }).join('') +
-  '</div>';
-}
-
-// --- Guidance Message Helper ---
-function _dockGuidance(iconSvg, title, body) {
-  return (
-    '<div class="border border-[var(--dc-border)] bg-[var(--dc-void-deep)] p-4 flex flex-col items-center text-center gap-2">' +
-      '<div class="w-8 h-8 flex items-center justify-center text-dc-platinum">' + iconSvg + '</div>' +
-      '<div class="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-[var(--dc-platinum)]">' + title + '</div>' +
-      '<div class="font-sans text-[11px] text-[var(--dc-storm)] leading-relaxed">' + body + '</div>' +
-    '</div>'
-  );
-}
-
-// --- Icon SVGs for dock guidance ---
-const _dockIcons = {
-  racket: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7" ry="4"/><path d="M12 10v10"/><path d="M9 20h6"/></svg>',
-  tune: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6m4.22-13.22l-4.24 4.24m-4.24 4.24l4.24 4.24M23 12h-6m-6 0H1m18.22 4.22l-4.24-4.24m-4.24-4.24l-4.24 4.24"/></svg>',
-  compare: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="7" height="16" rx="1"/><rect x="13" y="4" width="7" height="16" rx="1"/></svg>',
-  optimize: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>',
-  reference: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>'
-};
-
-// --- Editor Control Relocation ---
-// Moves the .dock-editor-body div between the <details> wrapper and the context panel.
-// Searchable select instances survive because we move DOM nodes, not rebuild.
-
-function _dockReturnEditorHome() {
-  const editorBody = document.querySelector('.dock-editor-body');
-  const editorSection = document.getElementById('dock-editor-section');
-  if (!editorBody || !editorSection) return;
-
-  // Only return if it's currently outside its home
-  if (editorBody.parentElement !== editorSection) {
-    editorSection.appendChild(editorBody);
-  }
-  editorSection.style.display = '';
-}
-
-function _dockRelocateEditorToContext(container) {
-  const editorBody = document.querySelector('.dock-editor-body');
-  const editorSection = document.getElementById('dock-editor-section');
-  if (!editorBody) return false;
-
-  // Move editor body into context panel
-  container.appendChild(editorBody);
-
-  // Hide the empty <details> shell
-  if (editorSection) editorSection.style.display = 'none';
-  return true;
-}
-
-// Safely clear a container without destroying the editor body if it's inside
-function _dockClearNonEditor(container) {
-  const editorBody = container.querySelector('.dock-editor-body');
-  // Remove all children except the editor body
-  while (container.firstChild) {
-    if (container.firstChild === editorBody) break;
-    container.removeChild(container.firstChild);
-  }
-  // Remove children after the editor body too
-  if (editorBody) {
-    while (editorBody.nextSibling) {
-      container.removeChild(editorBody.nextSibling);
-    }
   }
 }
 

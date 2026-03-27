@@ -506,9 +506,11 @@ export function renderFitProfile(fitProfile: {
   const grid = document.getElementById('fit-grid');
   if (!grid) return;
 
-  const bestFor = fitProfile.bestFor.join(', ');
-  const watchOut = fitProfile.watchOut.length > 0 && !fitProfile.watchOut[0].toLowerCase().includes('no major')
-    ? fitProfile.watchOut.join(', ')
+  const bestForList = Array.isArray(fitProfile.bestFor) ? fitProfile.bestFor : [];
+  const watchOutList = Array.isArray(fitProfile.watchOut) ? fitProfile.watchOut : [];
+  const bestFor = bestForList.join(', ');
+  const watchOut = watchOutList.length > 0 && !watchOutList[0].toLowerCase().includes('no major')
+    ? watchOutList.join(', ')
     : '';
   const tension = fitProfile.tensionRec || '';
 

@@ -56,6 +56,28 @@ export interface FrameSpecItem {
   value: string;
 }
 
+function formatBeamWidth(beamWidth: unknown): string {
+  if (Array.isArray(beamWidth) && beamWidth.length > 0) {
+    return beamWidth.join('/');
+  }
+  if (typeof beamWidth === 'number' && Number.isFinite(beamWidth)) {
+    return String(beamWidth);
+  }
+  return '—';
+}
+
+function formatTensionRange(tensionRange: unknown): string {
+  if (
+    Array.isArray(tensionRange) &&
+    tensionRange.length >= 2 &&
+    typeof tensionRange[0] === 'number' &&
+    typeof tensionRange[1] === 'number'
+  ) {
+    return `${tensionRange[0]}-${tensionRange[1]} lbs`;
+  }
+  return '—';
+}
+
 export function getFrameSpecs(racquet: Racquet): FrameSpecItem[] {
   // balancePts may exist on racquet from data.js
   const balancePts = (racquet as unknown as Record<string, string>).balancePts || `${racquet.balance}mm`;
@@ -67,8 +89,8 @@ export function getFrameSpecs(racquet: Racquet): FrameSpecItem[] {
     { label: 'Pattern', value: racquet.pattern },
     { label: 'Head', value: `${racquet.headSize} sq in` },
     { label: 'Balance', value: balancePts },
-    { label: 'Beam', value: racquet.beamWidth.join('/') },
-    { label: 'Tension', value: `${racquet.tensionRange[0]}-${racquet.tensionRange[1]} lbs` },
+    { label: 'Beam', value: formatBeamWidth(racquet.beamWidth) },
+    { label: 'Tension', value: formatTensionRange(racquet.tensionRange) },
   ];
 }
 

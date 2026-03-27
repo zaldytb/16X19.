@@ -143,12 +143,13 @@ export function calcStringFrameMod(stringData: StringData): StringFrameMod {
 // The base string data is the "reference" measurement (at its own gaugeNum).
 // Moving to a different gauge shifts stiffness, spin, durability, etc.
 export function applyGaugeModifier(stringData: StringData, selectedGauge: number): StringData {
-  if (!selectedGauge || selectedGauge === stringData.gaugeNum) {
+  const numericGauge = typeof selectedGauge === 'number' ? selectedGauge : Number(selectedGauge);
+  if (!Number.isFinite(numericGauge) || numericGauge === stringData.gaugeNum) {
     return stringData; // No change needed — using reference gauge
   }
 
   const refGauge = stringData.gaugeNum;  // e.g. 1.30
-  const delta = selectedGauge - refGauge; // negative = thinner, positive = thicker
+  const delta = numericGauge - refGauge; // negative = thinner, positive = thicker
   // Steps of 0.05mm (each step = one standard gauge jump)
   const steps = delta / 0.05;
 
@@ -176,8 +177,8 @@ export function applyGaugeModifier(stringData: StringData, selectedGauge: number
   // Return a new object with all original properties + gauge adjustments
   return {
     ...stringData,
-    gaugeNum: selectedGauge,
-    gauge: (GAUGE_LABELS as Record<number, string>)[selectedGauge] || `${selectedGauge.toFixed(2)}mm`,
+    gaugeNum: numericGauge,
+    gauge: (GAUGE_LABELS as Record<number, string>)[numericGauge] || `${numericGauge.toFixed(2)}mm`,
     stiffness: Math.max(80, newStiffness),
     tensionLoss: Math.max(5, Math.min(60, newTensionLoss)),
     spinPotential: Math.max(3, Math.min(10, newSpinPot)),

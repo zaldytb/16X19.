@@ -16,6 +16,11 @@ const sourceLabels: Record<string, string> = {
   import: 'Imp'
 };
 
+function getNumericObs(value: unknown): number {
+  const numeric = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(numeric) ? numeric : 0;
+}
+
 /**
  * Render the My Loadouts list in the dock
  */
@@ -40,7 +45,8 @@ export function renderMyLoadouts(): void {
     const frameName = racquet ? racquet.name : '\u2014';
     const stringName = getLoadoutStringName(lo);
     const srcLabel = sourceLabels[lo.source || ''] || '';
-    const obsColor = getObsScoreColor(lo.obs || 0);
+    const obsValue = getNumericObs(lo.obs);
+    const obsColor = getObsScoreColor(obsValue);
     const activeBorderClass = isActive
       ? 'border-l-2 border-l-[var(--dc-accent)] bg-[var(--dc-void-lift)]'
       : 'border-l-2 border-l-transparent hover:bg-[var(--dc-void-lift)]';
@@ -51,7 +57,7 @@ export function renderMyLoadouts(): void {
         '<div class="flex items-center gap-2.5 flex-1 min-w-0 px-3 py-2.5 cursor-pointer" onclick="switchToLoadout(\'' + lo.id + '\')">' +
           // OBS box
           '<div class="w-9 h-9 shrink-0 border border-[var(--dc-border)] flex items-center justify-center">' +
-            '<span class="font-mono text-[11px] font-bold" style="color:' + obsColor + '">' + (lo.obs ? lo.obs.toFixed(1) : '\u2014') + '</span>' +
+            '<span class="font-mono text-[11px] font-bold" style="color:' + obsColor + '">' + (obsValue > 0 ? obsValue.toFixed(1) : '\u2014') + '</span>' +
           '</div>' +
           // Info
           '<div class="flex-1 min-w-0">' +

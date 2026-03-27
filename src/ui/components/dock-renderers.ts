@@ -23,6 +23,11 @@ declare const comparisonSlots: Array<{
 declare const SLOT_COLORS: Array<{ border: string; label: string; cssClass: string }>;
 declare const currentMode: string;
 
+function getNumericObs(value: unknown): number {
+  const numeric = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(numeric) ? numeric : 0;
+}
+
 /**
  * Render the dock panel with active loadout info
  */
@@ -42,7 +47,7 @@ export function renderDockPanel(): void {
     // OBS value + color
     const obsVal = document.getElementById('dock-lo-obs-val');
     const obsRing = document.getElementById('dock-lo-obs-ring');
-    const newDockObs = al.obs || 0;
+    const newDockObs = getNumericObs(al.obs);
     if (obsVal) {
       if (newDockObs > 0 && _prevObsValues.dock != null && _prevObsValues.dock > 0) {
         animateOBS(obsVal, _prevObsValues.dock, newDockObs, 400);
@@ -123,7 +128,7 @@ export function _syncMobileDockBar(): void {
 
   const al = getActiveLoadout();
   if (al) {
-    const newMobObs = al.obs || 0;
+    const newMobObs = getNumericObs(al.obs);
     if (newMobObs > 0 && _prevObsValues.mobile != null && _prevObsValues.mobile > 0) {
       animateOBS(obsEl, _prevObsValues.mobile, newMobObs, 400);
     } else {
@@ -145,9 +150,10 @@ export function _syncDockRail(): void {
   const countEl = document.getElementById('dock-rail-count');
   const al = getActiveLoadout();
   if (obsEl) {
-    if (al && al.obs) {
-      obsEl.textContent = al.obs.toFixed(1);
-      obsEl.style.color = getObsScoreColor(al.obs);
+    const activeObs = al ? getNumericObs(al.obs) : 0;
+    if (activeObs > 0) {
+      obsEl.textContent = activeObs.toFixed(1);
+      obsEl.style.color = getObsScoreColor(activeObs);
     } else {
       obsEl.textContent = '\u2014';
       obsEl.style.color = 'var(--dc-storm)';
@@ -173,7 +179,8 @@ export function renderMobileLoadoutPills(): void {
   container.innerHTML = sls.map(lo => {
     const isActive = al && al.id === lo.id;
     const name = (lo.name || 'Loadout').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const obs = lo.obs ? lo.obs.toFixed(1) : '\u2014';
+    const obsValue = getNumericObs(lo.obs);
+    const obs = obsValue > 0 ? obsValue.toFixed(1) : '\u2014';
     const cls = isActive
       ? 'bg-[var(--dc-platinum)] text-[var(--dc-void)] border-[var(--dc-platinum)]'
       : 'bg-transparent text-[var(--dc-storm)] border-[var(--dc-border)] hover:text-[var(--dc-platinum)] hover:border-[var(--dc-storm)]';
@@ -222,7 +229,8 @@ function _renderDockPanelBible(container: HTMLElement): void {
   } else {
     const racquet = RACQUETS.find(r => r.id === al.frameId);
     const frameName = racquet ? racquet.name.replace(/\s+\d+g$/, '') : '\u2014';
-    const obs = al.obs ? al.obs.toFixed(1) : '\u2014';
+    const obsValue = getNumericObs(al.obs);
+    const obs = obsValue > 0 ? obsValue.toFixed(1) : '\u2014';
 
     let stringName = '\u2014';
     if (al.isHybrid) {
@@ -428,7 +436,8 @@ function _renderDockPanelCompare(container: HTMLElement): void {
         const str = STRINGS.find(s => s.id === lo.stringId);
         stringName = str ? str.name.split(' ')[0] : '\u2014';
       }
-      html += '<button class="dock-compare-pill" onclick="_dockCompareQuickAdd(\'' + lo.id + '\')" title="OBS ' + (lo.obs ? lo.obs.toFixed(1) : '\u2014') + '">' +
+      const slotObsValue = getNumericObs(lo.obs);
+      html += '<button class="dock-compare-pill" onclick="_dockCompareQuickAdd(\'' + lo.id + '\')" title="OBS ' + (slotObsValue > 0 ? slotObsValue.toFixed(1) : '\u2014') + '">' +
         '<span class="dock-compare-pill-frame">' + frameName + '</span>' +
         '<span class="dock-compare-pill-string">' + stringName + '</span>' +
       '</button>';
@@ -524,7 +533,8 @@ function _renderDockPanelOptimize(container: HTMLElement): void {
   }
 
   const racquet = RACQUETS.find(r => r.id === al.frameId);
-  const obs = al.obs ? al.obs.toFixed(1) : '\u2014';
+  const obsValue = getNumericObs(al.obs);
+  const obs = obsValue > 0 ? obsValue.toFixed(1) : '\u2014';
 
   let stringName = '\u2014';
   if (al.isHybrid) {

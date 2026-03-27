@@ -4,6 +4,11 @@
 import { getActiveLoadout } from '../../state/store.js';
 import { _prevObsValues, animateOBS } from './obs-animation.js';
 
+function getNumericObs(value: unknown): number {
+  const numeric = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(numeric) ? numeric : 0;
+}
+
 /**
  * Sync mobile dock bar with current active loadout
  */
@@ -14,7 +19,7 @@ export function _syncMobileDockBar(): void {
   
   const al = getActiveLoadout();
   if (al) {
-    const newMobObs = al.obs || 0;
+    const newMobObs = getNumericObs(al.obs);
     if (newMobObs > 0 && _prevObsValues.mobile != null && _prevObsValues.mobile > 0) {
       animateOBS(obsEl, _prevObsValues.mobile, newMobObs, 400);
     } else {

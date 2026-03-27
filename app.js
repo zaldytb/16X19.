@@ -120,6 +120,29 @@ Object.defineProperty(window, 'savedLoadouts', {
 let activeLoadout = null; // Synced with store via subscription below
 let savedLoadouts = [];   // Synced with store via subscription below
 
+function _numericObs(value) {
+  var numeric = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(numeric) ? numeric : 0;
+}
+
+function _formatBeamWidth(beamWidth) {
+  if (Array.isArray(beamWidth) && beamWidth.length > 0) return beamWidth.join('/');
+  if (typeof beamWidth === 'number' && Number.isFinite(beamWidth)) return String(beamWidth);
+  return '\u2014';
+}
+
+function _formatTensionRange(tensionRange) {
+  if (
+    Array.isArray(tensionRange) &&
+    tensionRange.length >= 2 &&
+    typeof tensionRange[0] === 'number' &&
+    typeof tensionRange[1] === 'number'
+  ) {
+    return tensionRange[0] + '-' + tensionRange[1] + ' lbs';
+  }
+  return '\u2014';
+}
+
 // Sync local refs with store (for backward compat with code that reads local vars)
 subscribe('activeLoadout', () => { activeLoadout = getActiveLoadout(); });
 subscribe('savedLoadouts', () => { savedLoadouts = getSavedLoadouts(); });
@@ -385,7 +408,7 @@ function renderDockPanel() {
     // OBS value + color
     var obsVal = document.getElementById('dock-lo-obs-val');
     var obsRing = document.getElementById('dock-lo-obs-ring');
-    var newDockObs = al.obs || 0;
+    var newDockObs = _numericObs(al.obs);
     if (obsVal) {
       if (newDockObs > 0 && _prevObsValues.dock != null && _prevObsValues.dock > 0) {
         animateOBS(obsVal, _prevObsValues.dock, newDockObs, 400);
@@ -464,7 +487,8 @@ function renderMobileLoadoutPills() {
   container.innerHTML = sls.map(function(lo) {
     var isActive = al && al.id === lo.id;
     var name = (lo.name || 'Loadout').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    var obs = lo.obs ? lo.obs.toFixed(1) : '\u2014';
+    var obsValue = _numericObs(lo.obs);
+    var obs = obsValue > 0 ? obsValue.toFixed(1) : '\u2014';
     var cls = isActive
       ? 'bg-[var(--dc-platinum)] text-[var(--dc-void)] border-[var(--dc-platinum)]'
       : 'bg-transparent text-[var(--dc-storm)] border-[var(--dc-border)] hover:text-[var(--dc-platinum)] hover:border-[var(--dc-storm)]';
@@ -521,7 +545,8 @@ function _renderDockPanelBible(container) {
     // Has loadout — show current build summary + action links
     const racquet = RACQUETS.find(r => r.id === al.frameId);
     const frameName = racquet ? racquet.name.replace(/\\s+\\d+g$/, '') : '—';
-    const obs = al.obs ? al.obs.toFixed(1) : '—';
+    const obsValue = _numericObs(al.obs);
+    const obs = obsValue > 0 ? obsValue.toFixed(1) : '—';
 
     let stringName = '—';
     if (al.isHybrid) {
@@ -736,7 +761,8 @@ function _renderDockPanelCompare(container) {
         var str = STRINGS.find(function(s) { return s.id === lo.stringId; });
         stringName = str ? str.name.split(' ')[0] : '—';
       }
-      html += '<button class="dock-compare-pill" onclick="_dockCompareQuickAdd(\'' + lo.id + '\')" title="OBS ' + (lo.obs ? lo.obs.toFixed(1) : '—') + '">' +
+      var slotObsValue = _numericObs(lo.obs);
+      html += '<button class="dock-compare-pill" onclick="_dockCompareQuickAdd(\'' + lo.id + '\')" title="OBS ' + (slotObsValue > 0 ? slotObsValue.toFixed(1) : '—') + '">' +
         '<span class="dock-compare-pill-frame">' + frameName + '</span>' +
         '<span class="dock-compare-pill-string">' + stringName + '</span>' +
       '</button>';
@@ -826,7 +852,8 @@ function _renderDockPanelOptimize(container) {
   }
 
   const racquet = RACQUETS.find(r => r.id === al.frameId);
-  const obs = al.obs ? al.obs.toFixed(1) : '—';
+  const obsValue = _numericObs(al.obs);
+  const obs = obsValue > 0 ? obsValue.toFixed(1) : '—';
 
   // Current string info
   let stringName = '—';
@@ -885,7 +912,7 @@ function _syncMobileDockBar() {
   
   const al = getActiveLoadout();
   if (al) {
-    var newMobObs = al.obs || 0;
+    var newMobObs = _numericObs(al.obs);
     if (newMobObs > 0 && _prevObsValues.mobile != null && _prevObsValues.mobile > 0) {
       animateOBS(obsEl, _prevObsValues.mobile, newMobObs, 400);
     } else {
@@ -939,9 +966,10 @@ function _syncDockRail() {
   var obsEl = document.getElementById('dock-rail-obs');
   var countEl = document.getElementById('dock-rail-count');
   if (obsEl) {
-    if (activeLoadout && activeLoadout.obs) {
-      obsEl.textContent = activeLoadout.obs.toFixed(1);
-      obsEl.style.color = getObsScoreColor(activeLoadout.obs);
+    var railObs = activeLoadout ? _numericObs(activeLoadout.obs) : 0;
+    if (railObs > 0) {
+      obsEl.textContent = railObs.toFixed(1);
+      obsEl.style.color = getObsScoreColor(railObs);
     } else {
       obsEl.textContent = '—';
       obsEl.style.color = 'var(--dc-storm)';
@@ -1687,8 +1715,8 @@ function showFrameSpecs(racquet) {
     <div class="frame-spec-item"><span class="frame-spec-label">Pattern</span><span class="frame-spec-value">${racquet.pattern}</span></div>
     <div class="frame-spec-item"><span class="frame-spec-label">Head</span><span class="frame-spec-value">${racquet.headSize} sq in</span></div>
     <div class="frame-spec-item"><span class="frame-spec-label">Balance</span><span class="frame-spec-value">${racquet.balancePts}</span></div>
-    <div class="frame-spec-item"><span class="frame-spec-label">Beam</span><span class="frame-spec-value">${racquet.beamWidth.join('/')}</span></div>
-    <div class="frame-spec-item"><span class="frame-spec-label">Tension</span><span class="frame-spec-value">${racquet.tensionRange[0]}-${racquet.tensionRange[1]} lbs</span></div>
+    <div class="frame-spec-item"><span class="frame-spec-label">Beam</span><span class="frame-spec-value">${_formatBeamWidth(racquet.beamWidth)}</span></div>
+    <div class="frame-spec-item"><span class="frame-spec-label">Tension</span><span class="frame-spec-value">${_formatTensionRange(racquet.tensionRange)}</span></div>
   `;
 }
 
@@ -2208,9 +2236,11 @@ function renderRadarChart(stats) {
 
 function renderFitProfile(fitProfile) {
   const grid = $('#fit-grid');
-  const bestFor = fitProfile.bestFor.join(', ');
-  const watchOut = fitProfile.watchOut.length > 0 && fitProfile.watchOut[0].toLowerCase().indexOf('no major') === -1
-    ? fitProfile.watchOut.join(', ')
+  const bestForList = Array.isArray(fitProfile.bestFor) ? fitProfile.bestFor : [];
+  const watchOutList = Array.isArray(fitProfile.watchOut) ? fitProfile.watchOut : [];
+  const bestFor = bestForList.join(', ');
+  const watchOut = watchOutList.length > 0 && watchOutList[0].toLowerCase().indexOf('no major') === -1
+    ? watchOutList.join(', ')
     : '';
   const tension = fitProfile.tensionRec || '';
 

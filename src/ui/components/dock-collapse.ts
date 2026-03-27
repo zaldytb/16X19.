@@ -4,6 +4,11 @@
 import { getObsScoreColor } from '../../engine/composite.js';
 import { getActiveLoadout, getSavedLoadouts } from '../../state/store.js';
 
+function getNumericObs(value: unknown): number {
+  const numeric = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(numeric) ? numeric : 0;
+}
+
 /**
  * Toggle dock collapsed state (desktop rail mode)
  */
@@ -26,9 +31,10 @@ export function _syncDockRail(): void {
   const countEl = document.getElementById('dock-rail-count');
   const activeLoadout = getActiveLoadout();
   if (obsEl) {
-    if (activeLoadout && activeLoadout.obs) {
-      obsEl.textContent = activeLoadout.obs.toFixed(1);
-      obsEl.style.color = getObsScoreColor(activeLoadout.obs);
+    const obsValue = activeLoadout ? getNumericObs(activeLoadout.obs) : 0;
+    if (obsValue > 0) {
+      obsEl.textContent = obsValue.toFixed(1);
+      obsEl.style.color = getObsScoreColor(obsValue);
     } else {
       obsEl.textContent = '\u2014';
       obsEl.style.color = 'var(--dc-storm)';

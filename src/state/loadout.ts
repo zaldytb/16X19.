@@ -38,6 +38,23 @@ interface CreateLoadoutOptions {
   source?: string;
 }
 
+function toFiniteNumber(value: unknown, fallback: number): number {
+  const numeric = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(numeric) ? numeric : fallback;
+}
+
+function normalizeStoredLoadout(loadout: Loadout): Loadout {
+  return {
+    ...loadout,
+    mainsTension: toFiniteNumber(loadout.mainsTension, 55),
+    crossesTension: toFiniteNumber(loadout.crossesTension, toFiniteNumber(loadout.mainsTension, 53)),
+    obs: toFiniteNumber(loadout.obs, 0),
+    gauge: loadout.gauge == null ? null : String(loadout.gauge),
+    mainsGauge: loadout.mainsGauge == null ? null : String(loadout.mainsGauge),
+    crossesGauge: loadout.crossesGauge == null ? null : String(loadout.crossesGauge),
+  };
+}
+
 /**
  * Create a new loadout from frame, string, and tension settings
  */
@@ -122,7 +139,11 @@ export function loadSavedLoadouts(): Loadout[] {
     const stored = _store.getItem('tll-loadouts');
     if (stored) {
       const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed)) return parsed as Loadout[];
+      if (Array.isArray(parsed)) {
+        return parsed
+          .filter((item): item is Loadout => !!item && typeof item === 'object')
+          .map((item) => normalizeStoredLoadout(item));
+      }
     }
   } catch(e) {}
   return [];

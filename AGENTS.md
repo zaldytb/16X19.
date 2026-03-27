@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Physics-based tennis equipment analysis tool. Vanilla JS + Vite + Tailwind CSS. The prediction engine (`src/engine/`) is fully TypeScript with strict mode; everything else (`app.js`, `src/state/`, `src/ui/`, `src/utils/`) is plain JS.
+Physics-based tennis equipment analysis tool. Vite + Tailwind CSS + TypeScript. The prediction engine (`src/engine/`) and state management (`src/state/`) are fully TypeScript with strict mode; UI components (`src/ui/`), data loading (`src/data/`), and utilities (`src/utils/`) are also TypeScript. Only `app.js` remains plain JS (the application shell).
 
 **Build:** `npm run dev` / `npm run build` (Vite)
 **Type check:** `npm run typecheck` (engine only — zero errors required)
@@ -12,13 +12,13 @@ Physics-based tennis equipment analysis tool. Vanilla JS + Vite + Tailwind CSS. 
 
 ## TypeScript Engine
 
-`src/engine/` is strict TypeScript (`noImplicitAny`, `strictNullChecks`). All other files are plain JS — `checkJs: false` means they are NOT type-checked.
+`src/engine/` and `src/state/` are strict TypeScript (`noImplicitAny`, `strictNullChecks`). `src/ui/`, `src/data/`, and `src/utils/` are also TypeScript. Only `app.js` remains plain JS — `checkJs: false` means it is NOT type-checked.
 
 ### File Map
 
 | File | Purpose |
 |------|---------|
-| `types.ts` | All domain interfaces — edit here when adding fields |
+| `types.ts` | All domain interfaces — edit here when adding fields. Includes `Loadout` type (single source of truth). |
 | `constants.ts` | Config constants (OBS_TIERS, GAUGE_OPTIONS, STAT_KEYS, etc.) |
 | `frame-physics.ts` | `calcFrameBase`, `normalizeRawSpecs`, math helpers |
 | `string-profile.ts` | `calcBaseStringProfile`, `calcStringFrameMod`, `applyGaugeModifier` |
@@ -26,6 +26,16 @@ Physics-based tennis equipment analysis tool. Vanilla JS + Vite + Tailwind CSS. 
 | `hybrid.ts` | `calcHybridInteraction` |
 | `composite.ts` | `predictSetup`, `computeCompositeScore`, `generateIdentity`, `classifySetup` |
 | `index.ts` | Barrel re-exports (public API) |
+
+### State Store (Phase 6)
+
+| File | Purpose |
+|------|---------|
+| `store.ts` | Centralized state store. Owns `_activeLoadout` and `_savedLoadouts`. Provides getters, setters, and pub/sub via `subscribe()`. |
+| `loadout.ts` | Loadout CRUD operations. Delegates to store for state; provides `createLoadout()`, `saveLoadout()`, etc. |
+| `setup-sync.ts` | Setup synchronization. `getCurrentSetup()` reads from store. |
+| `presets.ts` | Top builds generation. Uses store via loadout.ts. |
+| `index.ts` | Public API exports from all state modules. |
 
 ### Key Types
 
@@ -205,7 +215,7 @@ const cardClasses = isFeatured
 ```
 
 ### 6. Searchable Select Component
-Extracted to `src/ui/components/searchable-select.js` and imported via `src/main.js`:
+Extracted to `src/ui/components/searchable-select.ts` (TypeScript) and imported via `src/main.js`:
 ```javascript
 // Store instance for programmatic access
 ssInstances['my-select'] = createSearchableSelect(container, {
@@ -318,11 +328,35 @@ Active Loadout (source of truth)
 
 | Function | Purpose |
 |----------|---------|
-| `getCurrentSetup()` | Returns `{racquet, stringConfig}` from active loadout or editor DOM |
-| `activateLoadout(lo)` | Sets new active loadout, triggers re-render across pages |
+| `getCurrentSetup()` | Returns `{racquet, stringConfig}` from active loadout (via store) or editor DOM |
+| `activateLoadout(lo)` | Sets new active loadout via `setActiveLoadout()`, triggers re-render across pages |
+| `getActiveLoadout()` | Store getter — returns current active loadout or null |
+| `getSavedLoadouts()` | Store getter — returns array of saved loadouts |
+| `setActiveLoadout(lo)` | Store setter — updates active loadout and notifies subscribers |
+| `setSavedLoadouts(arr)` | Store setter — updates saved loadouts and notifies subscribers |
 | `_compSyncWithActiveLoadout()` | Switches Racket Bible to active racket frame + re-inits string injector |
 | `_compInitStringInjector()` | Initializes modulator with active loadout strings or fresh state |
 | `_stringSyncWithActiveLoadout()` | Syncs String Compendium with active loadout state |
+
+### State Store Architecture (Phase 6)
+
+The centralized store in `src/state/store.ts` is the single source of truth:
+
+```
+src/state/store.ts
+    ├─ _activeLoadout: Loadout | null
+    ├─ _savedLoadouts: Loadout[]
+    ├─ getActiveLoadout(): Loadout | null
+    ├─ getSavedLoadouts(): Loadout[]
+    ├─ setActiveLoadout(lo): void  (+ notifies subscribers)
+    ├─ setSavedLoadouts(arr): void (+ notifies subscribers)
+    ├─ addSavedLoadout(lo): void
+    ├─ removeSavedLoadout(id): void
+    ├─ updateSavedLoadout(id, updates): void
+    └─ subscribe(key, listener): () => void  (pub/sub)
+```
+
+**Backward compatibility:** `app.js` has `Object.defineProperty` shims on `window` so inline HTML handlers referencing `activeLoadout` and `savedLoadouts` continue to work. Local variables in `app.js` sync with store via subscriptions.
 
 ### Consistency Rules
 

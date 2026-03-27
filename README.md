@@ -31,24 +31,27 @@ src/
 │   ├── composite.ts     # predictSetup, computeCompositeScore, generateIdentity
 │   └── index.ts         # barrel exports
 │
-├── state/               # State management (JS)
-│   ├── loadout.js       # CRUD for loadouts
-│   ├── setup-sync.js    # getCurrentSetup, state sync
-│   └── presets.js       # Top builds generation
+├── state/               # State management (TypeScript)
+│   ├── store.ts         # Centralized state store (single source of truth)
+│   ├── loadout.ts       # CRUD for loadouts (delegates to store)
+│   ├── setup-sync.ts    # getCurrentSetup, state sync
+│   ├── presets.ts       # Top builds generation
+│   └── index.ts         # Public API exports
 │
-├── ui/                  # UI components (JS)
+├── ui/                  # UI components (TypeScript)
 │   ├── components/
-│   │   └── searchable-select.js
+│   │   └── searchable-select.ts
 │   ├── pages/
 │   │   └── leaderboard.js
-│   ├── theme.js         # Dark/light mode
-│   └── nav.js           # Navigation helpers
+│   ├── theme.ts         # Dark/light mode
+│   └── nav.ts           # Navigation helpers
 │
-├── data/                # Data loading
-│   └── loader.js        # RACQUETS, STRINGS, FRAME_META imports
+├── data/                # Data loading (TypeScript)
+│   └── loader.ts        # RACQUETS, STRINGS, FRAME_META imports
 │
-└── utils/               # Utilities
-    └── share.js         # URL encoding, export/import
+└── utils/               # Utilities (TypeScript)
+    ├── share.ts         # URL encoding, export/import
+    └── helpers.ts       # Shared utilities (debounce, throttle, etc.)
 ```
 
 ### Prediction Engine (4-Layer Pipeline)
@@ -64,7 +67,7 @@ Composite score (OBS) maps to a 10-tier ranking system ("Delete This" → "Max A
 
 ### TypeScript Engine
 
-`src/engine/` is fully TypeScript with `strict: true`. Key types in `types.ts`:
+`src/engine/` and `src/state/` are fully TypeScript with `strict: true`. Key types in `types.ts`:
 
 | Type | Description |
 |------|-------------|
@@ -76,8 +79,9 @@ Composite score (OBS) maps to a 10-tier ranking system ("Delete This" → "Max A
 | `FrameBaseScores` | 11-attr output of `calcFrameBase` |
 | `StringProfileScores` | 7-attr output of `calcBaseStringProfile` |
 | `TensionContext` | Context object for OBS sanity penalty calculation |
+| `Loadout` | User-saved build with frame, strings, tensions, stats |
 
-`moduleResolution: "bundler"` lets `.js` imports in `.ts` files resolve to `.ts` — no import path changes needed. `app.js` and all other `src/` files remain plain JS.
+`moduleResolution: "bundler"` lets `.js` imports in `.ts` files resolve to `.ts` — no import path changes needed. `app.js` remains plain JS; all `src/` subdirectories are TypeScript.
 
 ### Bible & Compendium Pages
 
@@ -171,7 +175,7 @@ npm run enrich:twu-strings -- --input pipeline/data/twu-strings-raw-YYYY-MM-DD.c
 ├── src/
 │   ├── main.js             ← Vite entry point, bridges engine to window
 │   ├── engine/             ← prediction engine (TypeScript, strict mode)
-│   │   ├── types.ts        ← domain interfaces
+│   │   ├── types.ts        ← domain interfaces (Racquet, StringData, Loadout, etc.)
 │   │   ├── constants.ts
 │   │   ├── frame-physics.ts
 │   │   ├── string-profile.ts
@@ -179,10 +183,15 @@ npm run enrich:twu-strings -- --input pipeline/data/twu-strings-raw-YYYY-MM-DD.c
 │   │   ├── hybrid.ts
 │   │   ├── composite.ts
 │   │   └── index.ts
-│   ├── state/              ← state management (JS)
-│   ├── ui/                 ← UI components (JS)
-│   ├── data/               ← data loading (JS)
-│   └── utils/              ← utilities (JS)
+│   ├── state/              ← state management (TypeScript)
+│   │   ├── store.ts        ← centralized store (single source of truth)
+│   │   ├── loadout.ts      ← loadout CRUD (delegates to store)
+│   │   ├── setup-sync.ts   ← setup synchronization
+│   │   ├── presets.ts      ← build generation
+│   │   └── index.ts        ← public API exports
+│   ├── ui/                 ← UI components (TypeScript)
+│   ├── data/               ← data loading (TypeScript)
+│   └── utils/              ← utilities (TypeScript)
 │
 ├── pipeline/
 │   ├── data/

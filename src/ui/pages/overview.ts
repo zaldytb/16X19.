@@ -428,6 +428,14 @@ export function renderRadarChart(stats: SetupAttributes): void {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
+  const chartApi = Chart as unknown as {
+    getChart?: (key: HTMLCanvasElement) => Chart | undefined;
+  };
+  const existingChart = _currentRadarChart || chartApi.getChart?.(canvas) || null;
+  if (!_currentRadarChart && existingChart) {
+    _currentRadarChart = existingChart;
+  }
+
   const data = STAT_KEYS.map(k => stats[k as keyof SetupAttributes] as number);
 
   const isDark = document.documentElement.dataset.theme === 'dark';
@@ -437,16 +445,16 @@ export function renderRadarChart(stats: SetupAttributes): void {
   const accentColor = '#AF0000';
   const fillColor = 'rgba(175, 0, 0, 0.06)';
 
-  if (_currentRadarChart) {
-    _currentRadarChart.data.datasets[0].data = data;
-    _currentRadarChart.data.datasets[0].borderColor = accentColor;
-    _currentRadarChart.data.datasets[0].backgroundColor = fillColor;
-    _currentRadarChart.data.datasets[0].pointBackgroundColor = accentColor;
-    _currentRadarChart.data.datasets[0].pointBorderColor = 'transparent';
-    _currentRadarChart.options.scales.r.grid.color = gridColor;
-    _currentRadarChart.options.scales.r.angleLines.color = angleColor;
-    _currentRadarChart.options.scales.r.pointLabels.color = labelColor;
-    _currentRadarChart.update('active');
+  if (existingChart) {
+    existingChart.data.datasets[0].data = data;
+    existingChart.data.datasets[0].borderColor = accentColor;
+    existingChart.data.datasets[0].backgroundColor = fillColor;
+    existingChart.data.datasets[0].pointBackgroundColor = accentColor;
+    existingChart.data.datasets[0].pointBorderColor = 'transparent';
+    existingChart.options.scales.r.grid.color = gridColor;
+    existingChart.options.scales.r.angleLines.color = angleColor;
+    existingChart.options.scales.r.pointLabels.color = labelColor;
+    existingChart.update('active');
     return;
   }
 

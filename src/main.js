@@ -18,6 +18,7 @@ import * as Overview from './ui/pages/overview.js';
 import * as Optimize from './ui/pages/optimize.js';
 import * as Tune from './ui/pages/tune.js';
 import * as Compare from './ui/pages/compare.js';
+import * as Compendium from './ui/pages/compendium.js';
 
 // Import dock components
 import * as DockCollapse from './ui/components/dock-collapse.js';
@@ -149,6 +150,37 @@ window.getSlotColors = Compare.getSlotColors;
 
 // Note: Compare state (comparisonSlots, comparisonRadarChart) comes from app.js
 // The TypeScript functions access them via window global dynamically
+
+// Bridge: expose Compendium functions to window
+window.initCompendium = Compendium.initCompendium;
+window._compSwitchTab = Compendium._compSwitchTab;
+window._compToggleHud = Compendium._compToggleHud;
+window._compGetFilteredRacquets = Compendium._compGetFilteredRacquets;
+window._compRenderRoster = Compendium._compRenderRoster;
+window._compSelectFrame = Compendium._compSelectFrame;
+window._compSyncWithActiveLoadout = Compendium._compSyncWithActiveLoadout;
+window._compRenderMain = Compendium._compRenderMain;
+window._compUpdateInjectModeUI = Compendium._compUpdateInjectModeUI;
+window._compSetInjectMode = Compendium._compSetInjectMode;
+window._compInitStringInjector = Compendium._compInitStringInjector;
+window._compPopulateGaugeDropdown = Compendium._compPopulateGaugeDropdown;
+window._compPreviewStats = Compendium._compPreviewStats;
+window._compRenderPreviewBars = Compendium._compRenderPreviewBars;
+window._compClearPreview = Compendium._compClearPreview;
+window._compApplyInjection = Compendium._compApplyInjection;
+window._compClearInjection = Compendium._compClearInjection;
+window._compGenerateTopBuilds = Compendium._compGenerateTopBuilds;
+window._compPickDiverseBuilds = Compendium._compPickDiverseBuilds;
+window._compRenderBuildCard = Compendium._compRenderBuildCard;
+window._compSetSort = Compendium._compSetSort;
+window._compCreateLoadoutFromBuild = Compendium._compCreateLoadoutFromBuild;
+window._compAction = Compendium._compAction;
+window._compAddBuildToCompare = Compendium._compAddBuildToCompare;
+window._compActionCompare = Compendium._compActionCompare;
+
+// Bridge: expose remaining legacy string compendium functions used by extracted compendium tab switching
+window._stringRenderRoster = App._stringRenderRoster;
+window._stringSyncWithActiveLoadout = App._stringSyncWithActiveLoadout;
 
 // Bridge: expose dock component functions to window
 window.toggleDockCollapse = DockCollapse.toggleDockCollapse;

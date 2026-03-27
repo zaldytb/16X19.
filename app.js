@@ -96,6 +96,13 @@ let _tuneInitialized = false;
 let _optimizeInitialized = false;
 let _compendiumInitialized = false;
 
+delete window.currentMode;
+Object.defineProperty(window, 'currentMode', {
+  get: () => currentMode,
+  set: (v) => { currentMode = v; },
+  configurable: true
+});
+
 // === LOADOUT SYSTEM ===
 // activeLoadout and savedLoadouts are now backed by the centralized state store.
 // The local variables are kept as backward-compatible shims using getters/setters.
@@ -1262,11 +1269,19 @@ function switchMode(mode) {
     }
   } else if (mode === 'compendium') {
     if (!_compendiumInitialized) {
-      initCompendium();
+      if (window.initCompendium && window.initCompendium !== initCompendium) {
+        window.initCompendium();
+      } else {
+        initCompendium();
+      }
       _compendiumInitialized = true;
     } else {
       // Re-sync with active loadout to ensure consistency
-      _compSyncWithActiveLoadout();
+      if (window._compSyncWithActiveLoadout && window._compSyncWithActiveLoadout !== _compSyncWithActiveLoadout) {
+        window._compSyncWithActiveLoadout();
+      } else {
+        _compSyncWithActiveLoadout();
+      }
     }
   }
   // howitworks mode needs no special init — it's static content
@@ -5388,10 +5403,18 @@ function _initLandingSearch() {
 function _landingSelectFrame(racquetId) {
   // Switch to Racket Bible and select the frame
   if (!_compendiumInitialized) {
-    initCompendium();
+    if (window.initCompendium && window.initCompendium !== initCompendium) {
+      window.initCompendium();
+    } else {
+      initCompendium();
+    }
     _compendiumInitialized = true;
   }
-  _compSelectFrame(racquetId);
+  if (window._compSelectFrame && window._compSelectFrame !== _compSelectFrame) {
+    window._compSelectFrame(racquetId);
+  } else {
+    _compSelectFrame(racquetId);
+  }
   switchMode('compendium');
 
   // Also scroll the roster to highlight
@@ -9298,6 +9321,7 @@ export {
   createLoadout,
   activateLoadout,
   getCurrentSetup,
+  saveLoadout,
   saveActiveLoadout,
   resetActiveLoadout,
   shareActiveLoadout,
@@ -9346,6 +9370,8 @@ export {
   _compClearInjection,
   _compSetSort,
   _stringToggleHud,
+  _stringRenderRoster,
+  _stringSyncWithActiveLoadout,
   _stringSelectString,
   _stringSetModMode,
   _stringAddToLoadout,

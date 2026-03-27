@@ -14,6 +14,7 @@ import { getActiveLoadout, getSavedLoadouts, setActiveLoadout, setSavedLoadouts 
 import * as Leaderboard from './ui/pages/leaderboard.js';
 import * as MyLoadouts from './ui/pages/my-loadouts.js';
 import * as FindMyBuild from './ui/pages/find-my-build.js';
+import * as Overview from './ui/pages/overview.js';
 
 // Import dock components
 import * as DockCollapse from './ui/components/dock-collapse.js';
@@ -54,6 +55,22 @@ window._fmbSearchDirection = FindMyBuild._fmbSearchDirection;
 window._fmbRankFrames = FindMyBuild._fmbRankFrames;
 window._fmbRenderFrameCard = FindMyBuild._fmbRenderFrameCard;
 window._fmbAction = FindMyBuild._fmbAction;
+
+// Bridge: expose Overview functions to window
+window.renderDashboard = Overview.renderDashboard;
+window.renderOverviewHero = Overview.renderOverviewHero;
+window.getRatingDescriptor = Overview.getRatingDescriptor;
+window.renderOCFoundation = Overview.renderOCFoundation;
+window.renderOCSnapshot = Overview.renderOCSnapshot;
+window._statBarColor = Overview._statBarColor;
+window.renderStatBars = Overview.renderStatBars;
+window.renderBuildDNAHighlights = Overview.renderBuildDNAHighlights;
+window.radarTooltipHandler = Overview.radarTooltipHandler;
+window.renderRadarChart = Overview.renderRadarChart;
+window.renderFitProfile = Overview.renderFitProfile;
+window.renderWarnings = Overview.renderWarnings;
+window.generateFitProfile = Overview.generateFitProfile;
+window.generateWarnings = Overview.generateWarnings;
 
 // Bridge: expose dock component functions to window
 window.toggleDockCollapse = DockCollapse.toggleDockCollapse;

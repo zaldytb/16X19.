@@ -438,3 +438,70 @@ User journey that maintains consistency:
 
 **Phase 8g:** String Compendium (~25 functions)
 - `_stringRenderMain()`, `_stringRenderRoster()`, string-first modulator
+
+### Phase 8b: Overview Page
+
+**Status:** ✅ Completed
+
+**New File:**
+
+| File | Functions | Description |
+|------|-----------|-------------|
+| `src/ui/pages/overview.ts` | 18 | Overview dashboard including `renderDashboard()`, `renderOverviewHero()`, `renderStatBars()`, `renderRadarChart()`, `renderFitProfile()`, `renderWarnings()`, plus `generateFitProfile()` and `generateWarnings()` generators |
+
+**Key Implementation Details:**
+
+1. **Chart.js Integration**: `renderRadarChart()` maintains `_currentRadarChart` module-level state for Chart.js instance reuse. The chart uses dark mode-aware colors and custom external tooltip handler.
+
+2. **Discriminated Union Handling**: The engine's `StringConfig` type is a discriminated union (`HybridStringConfig | FullbedStringConfig`). Type narrowing via `if (stringConfig.isHybrid)` is required to access type-specific properties:
+   ```typescript
+   if (stringConfig.isHybrid) {
+     // TypeScript narrows to HybridStringConfig
+     stringName = `${stringConfig.mains.name} / ${stringConfig.crosses.name}`;
+   } else {
+     // TypeScript narrows to FullbedStringConfig
+     stringName = stringConfig.string.name;
+   }
+   ```
+
+3. **Stat Bars Animation**: `renderStatBars()` uses a two-phase animation with `requestAnimationFrame` for staggered segment activation (40ms delay between bars, 15ms between segments).
+
+4. **Data Generators**: `generateFitProfile()` and `generateWarnings()` are pure functions that transform stats/racquet/stringConfig into UI-ready data structures. These could potentially move to the engine in future refactors.
+
+5. **External Dependencies**: Uses `WindowExt` interface for app.js functions:
+   - `getCurrentSetup()` - Gets current racquet/string setup
+   - `refreshTuneIfActive()` - Refreshes Tune mode panels
+   - `_assignStaggerIndices()` - Animation helper
+
+**Window Bridge:**
+```javascript
+window.renderDashboard = Overview.renderDashboard;
+window.renderOverviewHero = Overview.renderOverviewHero;
+window.renderStatBars = Overview.renderStatBars;
+window.renderRadarChart = Overview.renderRadarChart;
+window.generateFitProfile = Overview.generateFitProfile;
+window.generateWarnings = Overview.generateWarnings;
+// ... etc
+```
+
+**Verification:**
+- ✅ `npm run typecheck` — zero errors
+- ✅ `npm run canary` — all 5 tests pass, 0.0 OBS drift
+- ✅ No accidental `window.` leakage (only `window.scrollX/Y` for tooltip positioning)
+
+### Remaining Migration Work
+
+**Phase 8c:** Optimize Page (~18 functions)
+- `initOptimize()`, `runOptimizer()`, `renderOptimizerResults()`
+
+**Phase 8d:** Tune Page (~32 functions)
+- `initTuneMode()`, `runTensionSweep()`, tension charts
+
+**Phase 8e:** Compare Page (~67 functions)
+- `renderComparisonSlots()`, `renderCompareSummaries()`, verdict/matrix
+
+**Phase 8f:** Racket Bible (~28 functions)
+- `_compRenderMain()`, `_compRenderRoster()`, build card generation
+
+**Phase 8g:** String Compendium (~25 functions)
+- `_stringRenderMain()`, `_stringRenderRoster()`, string-first modulator

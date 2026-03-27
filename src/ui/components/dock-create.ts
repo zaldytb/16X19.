@@ -66,7 +66,7 @@ export function _renderCreateForm(title: string, showCancel: boolean): string {
  */
 export function _renderCreateFormTailwind(title: string, showCancel: boolean): string {
   return (
-    '<div class="border border-[var(--dc-border)] bg-[var(--dc-void-deep)] p-4 flex flex-col gap-3">' +
+    '<div class="dock-cf-form border border-[var(--dc-border)] bg-[var(--dc-void-deep)] p-4 flex flex-col gap-3">' +
       '<div class="flex items-center justify-between border-b border-[var(--dc-border)] pb-3">' +
         '<span class="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--dc-platinum)]">' + title + '</span>' +
         (showCancel ? '<a class="font-mono text-[9px] uppercase tracking-widest text-[var(--dc-storm)] hover:text-[var(--dc-platinum)] cursor-pointer transition-colors" href="#" onclick="_hideNewLoadoutForm(); return false;">Cancel</a>' : '') +

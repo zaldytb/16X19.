@@ -14,6 +14,11 @@ import { getActiveLoadout, getSavedLoadouts, setActiveLoadout, setSavedLoadouts 
 import * as Leaderboard from './ui/pages/leaderboard.js';
 import * as MyLoadouts from './ui/pages/my-loadouts.js';
 
+// Import dock components
+import * as DockCollapse from './ui/components/dock-collapse.js';
+import * as MobileDock from './ui/components/mobile-dock.js';
+import * as ObsAnimation from './ui/components/obs-animation.js';
+
 // Bridge: expose all exports to window for inline HTML handlers
 // This maintains backward compatibility with onclick="funcName()" patterns
 Object.entries(App).forEach(([key, val]) => {
@@ -31,6 +36,14 @@ window.setSavedLoadouts = setSavedLoadouts;
 // Bridge: expose My Loadouts functions to window
 window.renderMyLoadouts = MyLoadouts.renderMyLoadouts;
 window.confirmRemoveLoadout = MyLoadouts.confirmRemoveLoadout;
+
+// Bridge: expose dock component functions to window
+window.toggleDockCollapse = DockCollapse.toggleDockCollapse;
+window._syncDockRail = DockCollapse._syncDockRail;
+window._initDockCollapse = DockCollapse._initDockCollapse;
+window.toggleMobileDock = MobileDock.toggleMobileDock;
+window._syncMobileDockBar = MobileDock._syncMobileDockBar;
+window.animateOBS = ObsAnimation.animateOBS;
 
 // Backward-compatible shims for inline HTML handlers that reference activeLoadout/savedLoadouts directly
 Object.defineProperty(window, 'activeLoadout', {

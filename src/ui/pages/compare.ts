@@ -656,8 +656,8 @@ export function _compareLoadFromSaved(slotIndex: number, loadoutId: string): voi
   } else {
     slot.isHybrid = false;
     slot.stringId = (lo as any).stringId || '';
-    slot.mainsTension = (lo as any).tension ?? 55;
-    slot.crossesTension = (lo as any).tension ?? 53;
+    slot.mainsTension = (lo as any).mainsTension ?? (lo as any).tension ?? 55;
+    slot.crossesTension = (lo as any).crossesTension ?? (lo as any).tension ?? 53;
   }
   
   slot.sourceLoadoutId = loadoutId;
@@ -709,10 +709,16 @@ function _compareEditorStringHTML(slot: CompareSlot, index: number): string {
         <div class="compare-ed-ss-string" data-slot="${index}" data-value="${slot.stringId || ''}"></div>
       </div>
       <div class="compare-ed-row compare-ed-tensions">
-        <label>Tension</label>
+        <label>Mains tension</label>
         <input type="range" min="20" max="70" value="${slot.mainsTension}" 
           oninput="_compareOnTensionInput(this, ${index}, 'mainsTension')">
         <span class="compare-ed-tension-val">${slot.mainsTension}</span>
+      </div>
+      <div class="compare-ed-row compare-ed-tensions">
+        <label>Crosses tension</label>
+        <input type="range" min="20" max="70" value="${slot.crossesTension}" 
+          oninput="_compareOnTensionInput(this, ${index}, 'crossesTension')">
+        <span class="compare-ed-tension-val">${slot.crossesTension}</span>
       </div>
     `;
   }

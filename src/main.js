@@ -140,25 +140,12 @@ window.renderComparisonDeltas = Compare.renderComparisonDeltas;
 window.renderCompareSummaries = Compare.renderCompareSummaries;
 window.renderCompareVerdict = Compare.renderCompareVerdict;
 window.renderCompareMatrix = Compare.renderCompareMatrix;
-window.openCompareEditor = Compare.openCompareEditor;
-window.closeCompareEditors = Compare.closeCompareEditors;
 window._toggleCompareCardEditor = Compare._toggleCompareCardEditor;
-window._compareEditorStringHTML = Compare._compareEditorStringHTML;
-window._compareInitEditorSS = Compare._compareInitEditorSS;
-window._compareBuildLoadFromSavedDropdown = Compare._compareBuildLoadFromSavedDropdown;
 window._compareLoadFromSaved = Compare._compareLoadFromSaved;
-window.generateCompareVerdict = Compare.generateCompareVerdict;
-window._renderCompareSuggestions = Compare._renderCompareSuggestions;
-window._addSuggestionToCompare = Compare._addSuggestionToCompare;
-window._getCompareSlotTag = Compare._getCompareSlotTag;
-window._addLoadoutAsSlot = Compare._addLoadoutAsSlot;
-window._isCompareSlotStale = Compare._isCompareSlotStale;
 window._refreshCompareSlot = Compare._refreshCompareSlot;
-window._autoFillCompareFromSaved = Compare._autoFillCompareFromSaved;
-window._showCompareQuickAddPrompt = Compare._showCompareQuickAddPrompt;
-window._compareQuickAdd = Compare._compareQuickAdd;
 window.getSlotColors = Compare.getSlotColors;
 // openTuneForSlot not bridged - uses app.js version
+// Several legacy compare helpers still come from app.js; avoid overwriting them here.
 
 // Note: Compare state (comparisonSlots, comparisonRadarChart) comes from app.js
 // The TypeScript functions access them via window global dynamically

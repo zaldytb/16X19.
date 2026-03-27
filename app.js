@@ -10771,6 +10771,13 @@ export {
   handleResponsiveHeader,
   _initDockCollapse,
   
+  // My Loadouts actions
+  shareLoadout,
+  addLoadoutToCompare,
+
+  // Find My Build frame ranking
+  _compGenerateTopBuilds,
+
   // Dock functions
   _dockCompareEdit,
   _dockCompareRemove,

@@ -16,6 +16,7 @@ import * as MyLoadouts from './ui/pages/my-loadouts.js';
 import * as FindMyBuild from './ui/pages/find-my-build.js';
 import * as Overview from './ui/pages/overview.js';
 import * as Optimize from './ui/pages/optimize.js';
+import * as Tune from './ui/pages/tune.js';
 
 // Import dock components
 import * as DockCollapse from './ui/components/dock-collapse.js';
@@ -87,6 +88,37 @@ window.optActionSave = Optimize.optActionSave;
 window._toggleOptMS = Optimize._toggleOptMS;
 window._updateOptMSLabel = Optimize._updateOptMSLabel;
 window._renderExcludeTags = Optimize._renderExcludeTags;
+
+// Bridge: expose Tune functions to window
+window.toggleTuneMode = Tune.toggleTuneMode;
+window.closeTuneMode = Tune.closeTuneMode;
+window.dockBuilderPanel = Tune.dockBuilderPanel;
+window.refreshTuneIfActive = Tune.refreshTuneIfActive;
+window.initTuneMode = Tune.initTuneMode;
+window.runTensionSweep = Tune.runTensionSweep;
+window.calculateOptimalWindow = Tune.calculateOptimalWindow;
+window.renderOptimalBuildWindow = Tune.renderOptimalBuildWindow;
+window.renderDeltaVsBaseline = Tune.renderDeltaVsBaseline;
+window.renderGaugeExplorer = Tune.renderGaugeExplorer;
+window.renderBaselineMarker = Tune.renderBaselineMarker;
+window.renderOptimalZone = Tune.renderOptimalZone;
+window.renderSweepChart = Tune.renderSweepChart;
+window.renderBestValueMove = Tune.renderBestValueMove;
+window.renderTuneHybridToggle = Tune.renderTuneHybridToggle;
+window.renderOriginalTensionMarker = Tune.renderOriginalTensionMarker;
+window.onTuneSliderInput = Tune.onTuneSliderInput;
+// tuneSandboxCommit intentionally uses app.js version (slider/state bound to app.js flow)
+window.applyExploredTension = Tune.applyExploredTension;
+window.updateSliderLabel = Tune.updateSliderLabel;
+window.updateDeltaTitle = Tune.updateDeltaTitle;
+window.getHybridBaselineTension = Tune.getHybridBaselineTension;
+window._tuneStringKey = Tune._tuneStringKey;
+window._recomputeExploredState = Tune._recomputeExploredState;
+window._updateTuneApplyButton = Tune._updateTuneApplyButton;
+
+// Bridge: expose Tune state
+window.tuneState = Tune.tuneState;
+window.sweepChart = Tune.sweepChart;
 
 // Bridge: expose dock component functions to window
 window.toggleDockCollapse = DockCollapse.toggleDockCollapse;

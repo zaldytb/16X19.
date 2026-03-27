@@ -563,3 +563,66 @@ window.generateWarnings = Overview.generateWarnings;
 
 **Phase 8g:** String Compendium (~25 functions)
 - `_stringRenderMain()`, `_stringRenderRoster()`, string-first modulator
+
+
+### Phase 8d: Tune Page
+
+**Status:** ✅ Completed
+
+**New File:**
+
+| File | Functions | Description |
+|------|-----------|-------------|
+| `src/ui/pages/tune.ts` | 28 | Tune page including `initTuneMode()`, `runTensionSweep()`, `calculateOptimalWindow()`, `renderSweepChart()`, `renderGaugeExplorer()`, slider handling, and apply/commit actions |
+
+**Key Implementation Details:**
+
+1. **Module State**: `tuneState` object maintains:
+   - `baselineTension` / `exploredTension` - for A/B comparison
+   - `hybridDimension` - 'mains', 'crosses', or 'linked' exploration mode
+   - `sweepData` - cached tension sweep results
+   - `optimalWindow` - computed best tension range (±2% of peak OBS)
+   - `baseline` / `explored` - snapshot vs live exploration states
+
+2. **Tension Sweep**: `runTensionSweep()` iterates 1-lb increments across the tension range (frame spec ±5 lbs), computing stats at each tension. Results cached in `tuneState.sweepData`.
+
+3. **Optimal Window Calculation**: Finds the tension range within 2% of peak OBS score. The anchor tension is where the peak occurs, with a reason string explaining why (control/comfort/spin anchor).
+
+4. **Chart.js Sweep Chart**: Multi-line chart showing control, spin, power, comfort curves across tension range. Includes custom plugin for baseline/explored vertical markers.
+
+5. **Gauge Explorer**: Grid UI showing how each gauge option affects stats and OBS. Supports hybrid (mains/crosses separately) and full bed modes.
+
+6. **Hybrid Dimension Toggle**: Three modes:
+   - **Linked**: Both mains and crosses move together (maintains differential)
+   - **Mains**: Only mains tension changes
+   - **Crosses**: Only crosses tension changes
+
+7. **State Persistence**: The `tuneState` is exported and bridged to window, allowing app.js to access it directly (needed for theme switching callbacks).
+
+**Window Bridge:**
+```javascript
+window.tuneState = Tune.tuneState;  // Direct state access
+window.sweepChart = Tune.sweepChart; // Chart instance
+window.initTuneMode = Tune.initTuneMode;
+window.runTensionSweep = Tune.runTensionSweep;
+window.onTuneSliderInput = Tune.onTuneSliderInput;
+window.tuneSandboxCommit = Tune.tuneSandboxCommit;
+window.applyExploredTension = Tune.applyExploredTension;
+// ... etc
+```
+
+**Verification:**
+- ✅ `npm run typecheck` — zero errors
+- ✅ `npm run canary` — all 5 tests pass, 0.0 OBS drift
+- ✅ No accidental `window.` leakage
+
+### Remaining Migration Work
+
+**Phase 8e:** Compare Page (~67 functions)
+- `renderComparisonSlots()`, `renderCompareSummaries()`, verdict/matrix
+
+**Phase 8f:** Racket Bible (~28 functions)
+- `_compRenderMain()`, `_compRenderRoster()`, build card generation
+
+**Phase 8g:** String Compendium (~25 functions)
+- `_stringRenderMain()`, `_stringRenderRoster()`, string-first modulator

@@ -1,22 +1,10 @@
 // src/ui/pages/find-my-build.ts
 // Find My Build wizard implementation
 
-import { RACQUETS, STRINGS } from '../../data/loader.js';
-import { predictSetup } from '../../engine/index.js';
-import { buildTensionContext, computeCompositeScore } from '../../engine/composite.js';
+import { RACQUETS } from '../../data/loader.js';
 import type { Racquet, StringData, Loadout } from '../../engine/types.js';
-
-// Build info type from _compGenerateTopBuilds
-type BuildInfo = {
-  string?: StringData;
-  mains?: StringData;
-  crosses?: StringData;
-  tension: number;
-  score: number;
-  stats: Record<string, number>;
-  type: 'full' | 'hybrid';
-  label?: string;
-};
+import { generateTopBuilds } from '../../state/presets.js';
+import type { Build } from '../../state/presets.js';
 
 // Window extensions for external functions
 interface WindowExt extends Window {
@@ -27,7 +15,6 @@ interface WindowExt extends Window {
   initOptimize?: () => void;
   runOptimizer?: () => void;
   renderDockContextPanel?: () => void;
-  _compGenerateTopBuilds?: (racquet: Racquet, count: number) => BuildInfo[];
 }
 
 // FMB Wizard state
@@ -48,7 +35,7 @@ const _fmbAnswers: {
 let _fmbCurrentFrames: Array<{
   racquet: Racquet;
   score: number;
-  topBuilds: BuildInfo[];
+  topBuilds: Build[];
 }> = [];
 let _fmbLastProfile: {
   statPriorities: Record<string, number>;
@@ -426,15 +413,13 @@ export function _fmbSearchDirection(direction: 'closest' | 'safer' | 'ceiling'):
  * Rank frames based on profile
  */
 export function _fmbRankFrames(profile: ReturnType<typeof _fmbGenerateProfile>): typeof _fmbCurrentFrames {
-  const win = window as WindowExt;
-
   const ranked = (RACQUETS as unknown as Racquet[]).map(racquet => {
-    const topBuilds = win._compGenerateTopBuilds?.(racquet, 3) || [];
+    const topBuilds = generateTopBuilds(racquet, 3);
 
     let score = 0;
     if (topBuilds.length > 0) {
       const bestBuild = topBuilds[0];
-      const stats = bestBuild.stats;
+      const stats = bestBuild.stats as unknown as Record<string, number>;
 
       Object.entries(profile.statPriorities).forEach(([stat, weight]) => {
         score += (stats[stat] || 0) * weight;
@@ -465,7 +450,7 @@ export function _fmbRenderFrameCard(fr: typeof _fmbCurrentFrames[0], idx: number
   let buildsHtml = '';
   if (builds && builds.length > 0) {
     buildsHtml = '<div class="fmb-frame-builds">' +
-      builds.map((build: BuildInfo, bIdx: number) => {
+      builds.map((build: Build, bIdx: number) => {
         const isHybrid = build.type === 'hybrid';
         const name = isHybrid
           ? `${build.mains?.name} / ${build.crosses?.name}`
@@ -506,7 +491,7 @@ export function _fmbAction(action: 'activate' | 'save', frameIdx: number, buildI
   const frame = _fmbCurrentFrames[frameIdx];
   if (!frame) return;
 
-  const build = frame.topBuilds[buildIdx] as BuildInfo | undefined;
+  const build = frame.topBuilds[buildIdx] as Build | undefined;
   if (!build) return;
 
   if (action === 'activate') {

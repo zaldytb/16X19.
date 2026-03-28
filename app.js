@@ -43,6 +43,14 @@ import {
 import { calcHybridInteraction } from './src/engine/hybrid.js';
 import { loadSavedLoadouts, persistSavedLoadouts, setActiveLoadout as _stateSetActiveLoadout, setSavedLoadouts as _stateSetSavedLoadouts, getSetupFromLoadout } from './src/state/loadout.js';
 import { getActiveLoadout, setActiveLoadout, getSavedLoadouts, setSavedLoadouts, addSavedLoadout, removeSavedLoadout, updateSavedLoadout, subscribe } from './src/state/store.js';
+import {
+  installWindowAppStateBridge,
+  setCurrentMode as _setAppCurrentMode,
+  setComparisonSlots as _setAppComparisonSlots,
+  setComparisonRadarChart as _setAppComparisonRadarChart,
+  setCurrentRadarChart as _setAppCurrentRadarChart,
+  setSlotColors as _setAppSlotColors
+} from './src/state/app-state.js';
 import { createSearchableSelect, ssInstances, _initQaSearchable } from './src/ui/components/searchable-select.js';
 import { renderMyLoadouts, confirmRemoveLoadout } from './src/ui/pages/my-loadouts.js';
 import { _dockContextActions, _dockGuidance, _dockIcons, _dockReturnEditorHome, _dockRelocateEditorToContext, _dockClearNonEditor } from './src/ui/components/dock-panel.js';
@@ -96,12 +104,11 @@ let _tuneInitialized = false;
 let _optimizeInitialized = false;
 let _compendiumInitialized = false;
 
-delete window.currentMode;
-Object.defineProperty(window, 'currentMode', {
-  get: () => currentMode,
-  set: (v) => { currentMode = v; },
-  configurable: true
-});
+installWindowAppStateBridge();
+_setAppCurrentMode(currentMode);
+_setAppComparisonSlots(comparisonSlots);
+_setAppComparisonRadarChart(comparisonRadarChart);
+_setAppCurrentRadarChart(currentRadarChart);
 
 // === LOADOUT SYSTEM ===
 // activeLoadout and savedLoadouts are now backed by the centralized state store.
@@ -1209,6 +1216,7 @@ function switchMode(mode) {
 
   const prevMode = currentMode;
   currentMode = mode;
+  _setAppCurrentMode(currentMode);
 
   // Update legacy flags for backward compat
   isTuneMode = (mode === 'tune');
@@ -1615,6 +1623,7 @@ function getSlotColors() {
   ];
 }
 let SLOT_COLORS = getSlotColors();
+_setAppSlotColors(SLOT_COLORS);
 
 // ============================================
 // POPULATE DROPDOWNS (Searchable)
@@ -2276,6 +2285,7 @@ function renderRadarChart(stats) {
       }
     }
   });
+  _setAppCurrentRadarChart(currentRadarChart);
 }
 
 function renderFitProfile(fitProfile) {
@@ -2604,6 +2614,7 @@ function updateComparisonRadar() {
       animation: { duration: 600, easing: 'easeOutQuart' }
     }
   });
+  _setAppComparisonRadarChart(comparisonRadarChart);
 }
 
 function renderComparisonDeltas() {
@@ -5219,7 +5230,10 @@ import { toggleTheme as _toggleThemeBase, getTheme, setTheme, initTheme } from '
 // Wrapper that provides app-specific callbacks to the theme module
 function toggleTheme() {
   const callbacks = {
-    refreshSlotColors: () => { SLOT_COLORS = getSlotColors(); },
+    refreshSlotColors: () => {
+      SLOT_COLORS = getSlotColors();
+      _setAppSlotColors(SLOT_COLORS);
+    },
     refreshRadarChart: () => {
       const setup = getCurrentSetup();
       if (!setup) return;
@@ -9175,6 +9189,7 @@ function _refreshCompareSlot(slotIndex) {
 
 function _autoFillCompareFromSaved() {
   comparisonSlots = [];
+  _setAppComparisonSlots(comparisonSlots);
   var added = 0;
 
   if (activeLoadout) {

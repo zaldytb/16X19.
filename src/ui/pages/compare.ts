@@ -6,6 +6,12 @@
 import { predictSetup, generateIdentity, computeCompositeScore, getObsScoreColor } from '../../engine/index.js';
 import { STAT_KEYS, STAT_LABELS, STAT_LABELS_FULL } from '../../engine/constants.js';
 import { getActiveLoadout, getSavedLoadouts } from '../../state/store.js';
+import {
+  getComparisonSlots as getAppComparisonSlots,
+  setComparisonRadarChart as setAppComparisonRadarChart,
+  getComparisonRadarChart as getAppComparisonRadarChart,
+  getCurrentMode as getAppCurrentMode
+} from '../../state/app-state.js';
 import { createSearchableSelect } from '../components/searchable-select.js';
 import type { SetupStats, StringData, Racquet, IdentityResult, TensionContext } from '../../engine/types.js';
 
@@ -13,14 +19,6 @@ import type { SetupStats, StringData, Racquet, IdentityResult, TensionContext } 
 import { RACQUETS as _RACQUETS, STRINGS as _STRINGS } from '../../data/loader.js';
 const RACQUETS = (_RACQUETS as unknown) as Racquet[];
 const STRINGS = (_STRINGS as unknown) as StringData[];
-
-// Helper to get the actual comparisonSlots array (app.js global or local fallback)
-function getSlots(): CompareSlot[] {
-  if (typeof window !== 'undefined' && (window as any).comparisonSlots) {
-    return (window as any).comparisonSlots as CompareSlot[];
-  }
-  return [];
-}
 
 // Chart.js type declaration for global Chart object
 declare const Chart: any;
@@ -60,13 +58,13 @@ export interface SlotColor {
 // Access the global state from app.js (backward compatibility)
 // All functions use these helpers to ensure they operate on the same data
 function slots(): CompareSlot[] {
-  return (window as any).comparisonSlots ?? [];
+  return getAppComparisonSlots<CompareSlot>();
 }
 function setRadarChart(chart: any): void {
-  (window as any).comparisonRadarChart = chart;
+  setAppComparisonRadarChart(chart);
 }
 function getRadarChart(): any {
-  return (window as any).comparisonRadarChart;
+  return getAppComparisonRadarChart();
 }
 
 // Exports for backward compatibility
@@ -114,18 +112,13 @@ export function toggleComparisonMode(): void {
   // Legacy compat â€” now routes through switchMode in app.js
   // This function is called from inline handlers, so it needs window.switchMode
   if (typeof (window as any).switchMode === 'function') {
-    const currentMode = (window as any).currentMode;
+    const currentMode = getAppCurrentMode();
     if (currentMode === 'compare') {
       (window as any).switchMode('overview');
     } else {
       (window as any).switchMode('compare');
     }
   }
-}
-
-// Helper to ensure we're using the app.js global comparisonSlots
-function getComparisonSlots(): CompareSlot[] {
-  return getSlots();
 }
 
 export function addComparisonSlotFromHome(): void {

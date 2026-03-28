@@ -5,11 +5,15 @@ import { RACQUETS, STRINGS } from '../../data/loader.js';
 import { getObsScoreColor, computeCompositeScore, buildTensionContext } from '../../engine/composite.js';
 import type { Loadout } from '../../engine/types.js';
 import { getActiveLoadout, getSavedLoadouts } from '../../state/store.js';
+import {
+  getComparisonSlots as getAppComparisonSlots,
+  getSlotColors as getAppSlotColors,
+  getCurrentMode as getAppCurrentMode
+} from '../../state/app-state.js';
 import { _dockGuidance, _dockIcons, _dockContextActions, _dockReturnEditorHome, _dockClearNonEditor, _dockRelocateEditorToContext } from './dock-panel.js';
 import { _prevObsValues, animateOBS } from './obs-animation.js';
 
-// Globals accessed from app.js (declared as externals)
-declare const comparisonSlots: Array<{
+type DockComparisonSlot = {
   racquetId: string;
   stringId?: string;
   mainsId?: string;
@@ -19,13 +23,21 @@ declare const comparisonSlots: Array<{
   isHybrid?: boolean;
   stats?: Record<string, number>;
   identity?: { archetype?: string };
-}>;
-declare const SLOT_COLORS: Array<{ border: string; label: string; cssClass: string }>;
-declare const currentMode: string;
+};
+
+type DockSlotColor = { border: string; label: string; cssClass: string };
 
 function getNumericObs(value: unknown): number {
   const numeric = typeof value === 'number' ? value : Number(value);
   return Number.isFinite(numeric) ? numeric : 0;
+}
+
+function getComparisonSlots(): DockComparisonSlot[] {
+  return getAppComparisonSlots<DockComparisonSlot>();
+}
+
+function getSlotColors(): DockSlotColor[] {
+  return getAppSlotColors<DockSlotColor>();
 }
 
 /**
@@ -199,7 +211,7 @@ export function renderDockContextPanel(): void {
   // Clear mode-specific classes from previous render
   container.classList.remove('dock-tune-mode');
 
-  switch (currentMode) {
+  switch (getAppCurrentMode()) {
     case 'compendium': _renderDockPanelBible(container); break;
     case 'overview':   _renderDockPanelOverview(container); break;
     case 'tune':       _renderDockPanelTune(container); break;
@@ -369,11 +381,14 @@ function _renderDockPanelCompare(container: HTMLElement): void {
 
   let html = '';
 
+  const comparisonSlots = getComparisonSlots();
+  const slotColors = getSlotColors();
+
   if (comparisonSlots.length > 0) {
     html += '<div class="dock-ctx-label">Compare slots</div>';
     html += '<div class="dock-compare-slots">';
     comparisonSlots.forEach((slot, i) => {
-      const color = SLOT_COLORS[i];
+      const color = slotColors[i];
       const racquet = RACQUETS.find(r => r.id === slot.racquetId);
       const frameName = racquet ? racquet.name.replace(/\s+\d+g$/, '') : 'Not set';
 
@@ -474,6 +489,7 @@ export function _dockCompareEdit(slotIndex: number): void {
  * Remove a compare slot
  */
 export function _dockCompareRemove(slotIndex: number): void {
+  const comparisonSlots = getComparisonSlots();
   comparisonSlots.splice(slotIndex, 1);
 
   try {
@@ -493,6 +509,7 @@ export function _dockCompareRemove(slotIndex: number): void {
  * Quick add a loadout to compare
  */
 export function _dockCompareQuickAdd(loadoutId: string): void {
+  const comparisonSlots = getComparisonSlots();
   const savedLoadouts = getSavedLoadouts();
   const lo = savedLoadouts.find(l => l.id === loadoutId);
   if (!lo || comparisonSlots.length >= 3) return;

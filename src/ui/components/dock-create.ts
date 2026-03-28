@@ -3,11 +3,11 @@
 
 import { RACQUETS, STRINGS } from '../../data/loader.js';
 import { getActiveLoadout, getSavedLoadouts } from '../../state/store.js';
+import { getCurrentMode } from '../../state/app-state.js';
 
 // Globals from app.js
 declare const activeLoadout: Loadout | null;
 declare const savedLoadouts: Loadout[];
-declare const currentMode: string;
 
 import type { Loadout } from '../../engine/types.js';
 
@@ -236,7 +236,7 @@ export function _cfActivate(): void {
   if (isFirstLoadout) {
     win.saveLoadout?.(lo);
     win.switchMode?.('tune');
-  } else if (currentMode === 'overview') {
+  } else if (getCurrentMode() === 'overview') {
     win.renderDashboard?.();
   }
 }

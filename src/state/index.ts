@@ -32,3 +32,18 @@ export {
   syncCompendiumWithActiveLoadout,
   syncStringCompendiumWithActiveLoadout
 } from './setup-sync.js';
+
+// Shared app runtime state
+export {
+  getCurrentMode,
+  setCurrentMode,
+  getComparisonSlots,
+  setComparisonSlots,
+  getComparisonRadarChart,
+  setComparisonRadarChart,
+  getCurrentRadarChart,
+  setCurrentRadarChart,
+  getSlotColors,
+  setSlotColors,
+  installWindowAppStateBridge
+} from './app-state.js';

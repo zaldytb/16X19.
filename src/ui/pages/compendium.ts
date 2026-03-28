@@ -13,9 +13,7 @@ import type { Loadout, Racquet, SetupStats } from '../../engine/types.js';
 import { createLoadout } from '../../state/loadout.js';
 import { generateBuildReason, generateTopBuilds, pickDiverseBuilds, type Build } from '../../state/presets.js';
 import { getCurrentSetup } from '../../state/setup-sync.js';
-import { getComparisonSlots as getAppComparisonSlots } from '../../state/app-state.js';
 import { createSearchableSelect, ssInstances } from '../components/searchable-select.js';
-import { recalcSlot, renderCompareMatrix, renderCompareSummaries, renderCompareVerdict, renderComparisonSlots, updateComparisonRadar } from './compare.js';
 
 const RACQUET_DATA = (RACQUETS as unknown) as Racquet[];
 
@@ -33,19 +31,6 @@ interface CompInjectState {
   crossesId: string;
   mode: CompMode;
   baseStats: SetupStats | null;
-}
-
-interface CompareSlot {
-  id: number;
-  racquetId: string;
-  stringId: string;
-  isHybrid: boolean;
-  mainsId: string;
-  crossesId: string;
-  mainsTension: number;
-  crossesTension: number;
-  stats: SetupStats | null;
-  identity: unknown;
 }
 
 interface CompareWindowExt extends Window {
@@ -73,18 +58,6 @@ let _compInjectState: CompInjectState = {
 function getWindowFn<T extends (...args: any[]) => any>(name: string): T | null {
   const value = (window as any)[name];
   return typeof value === 'function' ? (value as T) : null;
-}
-
-function getComparisonSlots(): CompareSlot[] {
-  return getAppComparisonSlots<CompareSlot>();
-}
-
-function refreshComparePage(): void {
-  renderComparisonSlots();
-  renderCompareSummaries();
-  renderCompareVerdict();
-  renderCompareMatrix();
-  try { updateComparisonRadar(); } catch (_err) {}
 }
 
 function _extractBrand(name: string): string {
@@ -985,37 +958,8 @@ export function _compAddBuildToCompare(build: BuildWithArchetype): void {
     if (targetSlotId) {
       win.compareSetSlotLoadout(targetSlotId, compareLoadout, compareLoadout.stats);
       getWindowFn<(mode: string) => void>('switchMode')?.('compare');
-      return;
     }
   }
-
-  const comparisonSlots = getComparisonSlots();
-  if (comparisonSlots.length >= 3) comparisonSlots.pop();
-  const racquetId = _compSelectedRacquetId;
-  const racquet = RACQUET_DATA.find((r) => r.id === racquetId);
-  if (!racquet || !racquetId) return;
-
-  const cfg = build.type === 'hybrid'
-    ? { isHybrid: true as const, mains: build.mains!, crosses: build.crosses!, mainsTension: build.tension, crossesTension: build.crossesTension }
-    : { isHybrid: false as const, string: build.string, mainsTension: build.tension, crossesTension: build.tension };
-
-  const stats = predictSetup(racquet, cfg);
-  const identity = stats ? generateIdentity(stats, racquet, cfg) : null;
-  comparisonSlots.push({
-    id: Date.now(),
-    racquetId,
-    stringId: build.type === 'hybrid' ? '' : build.string.id,
-    isHybrid: build.type === 'hybrid',
-    mainsId: build.type === 'hybrid' ? build.mainsId || '' : '',
-    crossesId: build.type === 'hybrid' ? build.crossesId || '' : '',
-    mainsTension: build.tension,
-    crossesTension: build.crossesTension || build.tension,
-    stats,
-    identity,
-  });
-  recalcSlot(comparisonSlots.length - 1);
-  refreshComparePage();
-  getWindowFn<(mode: string) => void>('switchMode')?.('compare');
 }
 
 export function _compActionCompare(racquetId: string, stringId: string, tension: number): void {
@@ -1028,32 +972,6 @@ export function _compActionCompare(racquetId: string, stringId: string, tension:
     if (targetSlotId) {
       win.compareSetSlotLoadout(targetSlotId, compareLoadout, compareLoadout.stats);
       getWindowFn<(mode: string) => void>('switchMode')?.('compare');
-      return;
     }
   }
-
-  const comparisonSlots = getComparisonSlots();
-  if (comparisonSlots.length >= 3) comparisonSlots.pop();
-  const racquet = RACQUET_DATA.find((r) => r.id === racquetId);
-  const stringData = STRINGS.find((s) => s.id === stringId);
-  if (!racquet || !stringData) return;
-
-  const cfg = { isHybrid: false as const, string: stringData, mainsTension: tension, crossesTension: tension };
-  const stats = predictSetup(racquet, cfg);
-  const identity = stats ? generateIdentity(stats, racquet, cfg) : null;
-  comparisonSlots.push({
-    id: Date.now(),
-    racquetId,
-    stringId,
-    isHybrid: false,
-    mainsId: '',
-    crossesId: '',
-    mainsTension: tension,
-    crossesTension: tension,
-    stats,
-    identity,
-  });
-  recalcSlot(comparisonSlots.length - 1);
-  refreshComparePage();
-  getWindowFn<(mode: string) => void>('switchMode')?.('compare');
 }

@@ -20,7 +20,7 @@ import {
 } from '../../state/app-state.js';
 import * as Overview from './overview.js';
 import * as Tune from './tune.js';
-import * as Compare from './compare.js';
+import * as ComparePage from './compare/index.js';
 import * as Optimize from './optimize.js';
 import * as Compendium from './compendium.js';
 import {
@@ -92,12 +92,12 @@ function getCompareSlots(): CompareSlot[] {
 }
 
 function renderCompareSurfaces(): void {
-  Compare.renderComparisonSlots();
-  Compare.renderCompareSummaries();
-  Compare.renderCompareVerdict();
-  Compare.renderCompareMatrix();
+  ComparePage.renderComparisonSlots();
+  ComparePage.renderCompareSummaries();
+  ComparePage.renderCompareVerdict();
+  ComparePage.renderCompareMatrix();
   try {
-    Compare.updateComparisonRadar();
+    ComparePage.updateComparisonRadar();
   } catch (_err) {
     // Preserve legacy tolerance for partial compare state.
   }
@@ -653,10 +653,10 @@ export function switchMode(mode: string): void {
         if (getSavedLoadouts().length >= 2) {
           autoFillCompareFromSaved();
         } else if (getSavedLoadouts().length === 1 || getActiveLoadout()) {
-          Compare.addComparisonSlotFromHome();
+          ComparePage.addComparisonSlotFromHome();
           _showCompareQuickAddPrompt();
         } else {
-          Compare.addComparisonSlotFromHome();
+          ComparePage.addComparisonSlotFromHome();
         }
       }
     } else {
@@ -666,10 +666,10 @@ export function switchMode(mode: string): void {
         if (getSavedLoadouts().length >= 2) {
           autoFillCompareFromSaved();
         } else if (getSavedLoadouts().length === 1 || getActiveLoadout()) {
-          Compare.addComparisonSlotFromHome();
+          ComparePage.addComparisonSlotFromHome();
           _showCompareQuickAddPrompt();
         } else {
-          Compare.addComparisonSlotFromHome();
+          ComparePage.addComparisonSlotFromHome();
         }
       } else {
         renderCompareSurfaces();
@@ -858,7 +858,7 @@ export function init(): void {
   _initCalled = true;
 
   installWindowAppStateBridge();
-  setSlotColors(Compare.getSlotColors());
+  setSlotColors(ComparePage.getSlotColors());
   _syncLegacyModeState(getCurrentMode());
 
   const selectRacquet = $('#select-racquet');
@@ -879,7 +879,7 @@ export function init(): void {
   $('#btn-hybrid')?.addEventListener('click', () => _handleHybridToggle(true));
 
   renderComparisonPresets();
-  document.getElementById('btn-add-slot')?.addEventListener('click', Compare.addComparisonSlot);
+  document.getElementById('btn-add-slot')?.addEventListener('click', ComparePage.addComparisonSlot);
 
   document.querySelectorAll('.mode-btn').forEach((button) => {
     button.addEventListener('click', () => {

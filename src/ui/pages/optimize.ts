@@ -4,8 +4,6 @@
 import { RACQUETS, STRINGS } from '../../data/loader.js';
 import { predictSetup, buildTensionContext, computeCompositeScore, getObsScoreColor } from '../../engine/index.js';
 import type { Racquet, StringData, SetupAttributes, StringConfig } from '../../engine/types.js';
-import { getComparisonSlots as getAppComparisonSlots } from '../../state/app-state.js';
-import { recalcSlot, renderCompareMatrix, renderCompareSummaries, renderCompareVerdict, renderComparisonSlots, updateComparisonRadar } from './compare.js';
 
 // Window extensions for external dependencies
 interface WindowExt extends Window {
@@ -17,19 +15,6 @@ interface WindowExt extends Window {
   activeLoadout?: { frameId: string } | null;
   compareGetState?: () => { slots?: Array<{ id: string; loadout: unknown | null }> };
   compareSetSlotLoadout?: (slotId: string, loadout: { id: string }, stats: SetupAttributes) => void;
-}
-
-interface CompareSlot {
-  id: number;
-  racquetId: string;
-  stringId?: string;
-  isHybrid?: boolean;
-  mainsId?: string;
-  crossesId?: string;
-  mainsTension: number;
-  crossesTension: number;
-  stats?: SetupAttributes;
-  identity?: unknown;
 }
 
 // Module-level state
@@ -753,32 +738,8 @@ export function optActionCompare(idx: number): void {
     if (targetSlotId) {
       win.compareSetSlotLoadout(targetSlotId, lo, lo.stats);
       win.switchMode?.('compare');
-      return;
     }
   }
-
-  const comparisonSlots = getAppComparisonSlots<CompareSlot>();
-  if (comparisonSlots.length >= 3) comparisonSlots.pop();
-  const slotData = {
-    id: Date.now(),
-    racquetId: preset.racquetId,
-    stringId: preset.stringId || '',
-    isHybrid: preset.isHybrid,
-    mainsId: preset.mainsId || '',
-    crossesId: preset.crossesId || '',
-    mainsTension: preset.mainsTension,
-    crossesTension: preset.crossesTension,
-    stats: undefined as unknown as SetupAttributes,
-    identity: null
-  };
-  comparisonSlots.push(slotData);
-  recalcSlot(comparisonSlots.length - 1);
-  win.switchMode?.('compare');
-  renderComparisonSlots();
-  renderCompareSummaries();
-  renderCompareVerdict();
-  renderCompareMatrix();
-  updateComparisonRadar();
 }
 
 /**

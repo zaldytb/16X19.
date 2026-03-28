@@ -18,7 +18,6 @@ import * as FindMyBuild from './ui/pages/find-my-build.js';
 import * as Overview from './ui/pages/overview.js';
 import * as Optimize from './ui/pages/optimize.js';
 import * as Tune from './ui/pages/tune.js';
-import * as Compare from './ui/pages/compare.js';
 import * as ComparePage from './ui/pages/compare/index.js';
 import * as Compendium from './ui/pages/compendium.js';
 import * as Strings from './ui/pages/strings.js';

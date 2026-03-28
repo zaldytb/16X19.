@@ -161,6 +161,42 @@ function buildCompareSlotFromLoadout(loadout: Loadout): CompareSlot | null {
 }
 
 function autoFillCompareFromSaved(): void {
+  const runtimeWin = window as any;
+  const compareState = runtimeWin.compareGetState?.();
+  if (compareState?.slots && typeof runtimeWin.compareClearSlot === 'function' && typeof runtimeWin.compareSetSlotLoadout === 'function') {
+    compareState.slots.forEach((slot: any) => {
+      runtimeWin.compareClearSlot(slot.id);
+    });
+
+    const activeLoadout = getActiveLoadout();
+    const savedLoadouts = getSavedLoadouts();
+    const compareCandidates: Loadout[] = [];
+
+    if (activeLoadout) compareCandidates.push({ ...activeLoadout });
+
+    for (const loadout of savedLoadouts) {
+      if (compareCandidates.length >= 3) break;
+      if (activeLoadout && loadout.id === activeLoadout.id) continue;
+      compareCandidates.push({ ...loadout });
+    }
+
+    if (compareCandidates.length < 2 && savedLoadouts.length > 0) {
+      const first = savedLoadouts[0];
+      const alreadyPresent = compareCandidates.some((candidate) => candidate.id === first.id);
+      if (!alreadyPresent) compareCandidates.push({ ...first });
+    }
+
+    compareCandidates.slice(0, 3).forEach((candidate) => {
+      const setup = getSetupFromLoadout(candidate);
+      if (!setup) return;
+      const stats = predictSetup(setup.racquet, setup.stringConfig);
+      const latestState = runtimeWin.compareGetState?.();
+      const emptySlot = latestState?.slots?.find((slot: any) => slot.loadout === null);
+      if (emptySlot) runtimeWin.compareSetSlotLoadout(emptySlot.id, candidate, stats);
+    });
+    return;
+  }
+
   const slots = getCompareSlots();
   slots.length = 0;
   let added = 0;
@@ -611,6 +647,18 @@ export function switchMode(mode: string): void {
     const win = window as any;
     if (win.initComparePage) {
       win.initComparePage();
+      const compareState = win.compareGetState?.();
+      const configuredSlots = compareState?.slots?.filter((slot: any) => slot.loadout !== null) || [];
+      if (configuredSlots.length === 0) {
+        if (getSavedLoadouts().length >= 2) {
+          autoFillCompareFromSaved();
+        } else if (getSavedLoadouts().length === 1 || getActiveLoadout()) {
+          Compare.addComparisonSlotFromHome();
+          _showCompareQuickAddPrompt();
+        } else {
+          Compare.addComparisonSlotFromHome();
+        }
+      }
     } else {
       // Fallback to legacy compare
       renderComparisonPresets();
@@ -651,6 +699,28 @@ export function switchMode(mode: string): void {
 }
 
 export function openTuneForSlot(slotIndex: number): void {
+  const win = window as any;
+  const compareStateSlot = win.compareGetState?.()?.slots?.[slotIndex] || null;
+
+  if (compareStateSlot?.loadout && compareStateSlot?.stats) {
+    const compareLoadout = compareStateSlot.loadout as Loadout;
+    const loadout: Loadout = {
+      ...compareLoadout,
+      stats: compareStateSlot.stats,
+      source: compareLoadout.source || 'compare',
+      _dirty: false,
+    };
+
+    activateLoadout(loadout);
+    if (getCurrentMode() !== 'tune') {
+      switchMode('tune');
+    } else {
+      const setup = getCurrentSetup();
+      if (setup) initTuneModeCompat(setup);
+    }
+    return;
+  }
+
   const slot = getCompareSlots()[slotIndex];
   if (!slot?.stats) return;
 

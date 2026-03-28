@@ -15,7 +15,7 @@ import {
   setSlotColors as setAppSlotColors
 } from '../../state/app-state.js';
 import { createSearchableSelect } from '../components/searchable-select.js';
-import type { SetupStats, StringData, Racquet, IdentityResult, TensionContext } from '../../engine/types.js';
+import type { Loadout, SetupStats, StringData, Racquet, IdentityResult, TensionContext } from '../../engine/types.js';
 
 // Data imports - use any since data.js has different runtime types
 import { RACQUETS as _RACQUETS, STRINGS as _STRINGS } from '../../data/loader.js';
@@ -44,6 +44,11 @@ export interface CompareSlot {
   snapshotObs?: number;
 }
 
+interface CompareWindowExt extends Window {
+  compareGetState?: () => { slots?: Array<{ id: string; loadout: Loadout | null; stats: SetupStats | null }> };
+  compareSetSlotLoadout?: (slotId: string, loadout: Loadout, stats: SetupStats) => void;
+}
+
 export interface SlotColor {
   border: string;
   bg: string;
@@ -67,6 +72,38 @@ function setRadarChart(chart: any): void {
 }
 function getRadarChart(): any {
   return getAppComparisonRadarChart();
+}
+
+function getCompareStateSlotByIndex(index: number): { id: string; loadout: Loadout | null; stats: SetupStats | null } | null {
+  const state = (window as CompareWindowExt).compareGetState?.();
+  return state?.slots?.[index] || null;
+}
+
+function buildStatsFromLoadout(loadout: Loadout): SetupStats | null {
+  const racquet = RACQUETS.find((frame) => frame.id === loadout.frameId);
+  if (!racquet) return null;
+
+  if (loadout.isHybrid) {
+    const mains = STRINGS.find((string) => string.id === loadout.mainsId);
+    const crosses = STRINGS.find((string) => string.id === loadout.crossesId);
+    if (!mains || !crosses) return null;
+    return predictSetup(racquet, {
+      isHybrid: true,
+      mains,
+      crosses,
+      mainsTension: loadout.mainsTension,
+      crossesTension: loadout.crossesTension,
+    });
+  }
+
+  const string = STRINGS.find((entry) => entry.id === loadout.stringId);
+  if (!string) return null;
+  return predictSetup(racquet, {
+    isHybrid: false,
+    string,
+    mainsTension: loadout.mainsTension,
+    crossesTension: loadout.crossesTension,
+  });
 }
 
 const SLOT_COLOR_PALETTE: SlotColor[] = [
@@ -641,7 +678,17 @@ export function _compareLoadFromSaved(slotIndex: number, loadoutId: string): voi
   if (!loadoutId) return;
   const saved = getSavedLoadouts();
   const lo = saved.find((s: any) => s.id === loadoutId);
-  if (!lo || !slots()[slotIndex]) return;
+  if (!lo) return;
+
+  const newSlot = getCompareStateSlotByIndex(slotIndex);
+  const newStats = ((lo as Loadout).stats as SetupStats | null) || buildStatsFromLoadout(lo as Loadout);
+  const win = window as CompareWindowExt;
+  if (newSlot && newStats && typeof win.compareSetSlotLoadout === 'function') {
+    win.compareSetSlotLoadout(newSlot.id, { ...(lo as Loadout), stats: newStats }, newStats);
+    return;
+  }
+
+  if (!slots()[slotIndex]) return;
 
   const slot = slots()[slotIndex];
   slot.racquetId = (lo as any).frameId || '';
@@ -675,6 +722,13 @@ function _isCompareSlotStale(slot: CompareSlot): boolean {
 }
 
 export function _refreshCompareSlot(index: number): void {
+  const newSlot = getCompareStateSlotByIndex(index);
+  const newLoadout = newSlot?.loadout as (Loadout & { sourceLoadoutId?: string | null }) | null;
+  if (newLoadout?.sourceLoadoutId) {
+    _compareLoadFromSaved(index, newLoadout.sourceLoadoutId);
+    return;
+  }
+
   const slot = slots()[index];
   if (!slot?.sourceLoadoutId) return;
   _compareLoadFromSaved(index, slot.sourceLoadoutId);

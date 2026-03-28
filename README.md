@@ -1,292 +1,197 @@
-# Tennis Loadout Lab
+# 16X19 / Tennis Loadout Lab
 
-**Frame × String × Tension Prediction Engine**
+Frame x String x Tension prediction tool for tennis setups.
 
-Physics-based tennis equipment prediction tool. Calculates composite performance scores across 11 attributes by modeling frame physics, string properties, tension effects, and hybrid interactions.
+16X19 models how a racquet and string setup performs across 11 attributes:
+power, spin, control, comfort, feel, stability, forgiveness, launch,
+maneuverability, durability, and playability.
 
-Vite + ES Modules + Tailwind CSS. Deploys to GitHub Pages and Vercel.
+The app lets users:
+- browse a racquet database
+- browse a string database
+- build full-bed and hybrid setups
+- view performance predictions and OBS composite scores
+- tune tension with live deltas
+- compare multiple setups side by side
+- generate optimized and recommended builds
+- save, restore, and share loadouts
+
+Primary URL: `https://zaldytb.github.io/loadout-lab/`
+Mirror: `https://loadout-lab.vercel.app`
+
+## Stack
+
+- Vite 8
+- TypeScript 6 in strict mode
+- JavaScript compatibility layer in `app.js`
+- Tailwind CSS 4 via CDN plus custom CSS
+- Chart.js via CDN
+- Node.js 20+
 
 ## Quick Start
 
 ```bash
 npm install
-npm run dev        # Development server
-npm run build      # Production build
-npm run typecheck  # TypeScript type check (engine only)
+npm run dev
+npm run typecheck
+npm run canary
+npm run build
 ```
 
-## Architecture
+## Current Architecture
 
-### Source Layout
+The migration is well underway.
 
+TypeScript now owns the main runtime entrypoints for:
+- shell and mode switching
+- overview
+- tune runtime
+- compare
+- optimize
+- compendium
+- strings
+
+`app.js` still exists as a large compatibility layer and fallback bank. It is
+smaller than before, but it still contains duplicated legacy implementations
+that have not all been deleted yet.
+
+Current high-level state:
+- `src/engine/` is TypeScript and strict
+- `src/state/` is TypeScript and is the source of truth for loadouts
+- `src/ui/pages/` contains the main extracted page modules
+- `src/main.js` is the bridge from modules to `window.*` for inline handlers
+- `app.js` is still the remaining monolith and compatibility surface
+
+## Source Layout
+
+```text
+loadout-lab/
+|- index.html
+|- app.js
+|- style.css
+|- data.js
+|- src/
+|  |- main.js
+|  |- engine/
+|  |- state/
+|  |  |- store.ts
+|  |  |- loadout.ts
+|  |  |- setup-sync.ts
+|  |  |- app-state.ts
+|  |  `- presets.ts
+|  |- ui/
+|  |  |- components/
+|  |  |- pages/
+|  |  |  |- overview.ts
+|  |  |  |- tune.ts
+|  |  |  |- compare.ts
+|  |  |  |- optimize.ts
+|  |  |  |- compendium.ts
+|  |  |  |- strings.ts
+|  |  |  |- find-my-build.ts
+|  |  |  |- my-loadouts.ts
+|  |  |  `- leaderboard.js
+|  |  `- shared/
+|  |- data/
+|  `- utils/
+|- pipeline/
+|- tools/
+|- docs/
+`- .github/workflows/
 ```
-src/
-├── engine/              # Prediction engine — TypeScript, strict mode
-│   ├── types.ts         # All domain interfaces and type aliases
-│   ├── constants.ts     # GAUGE_OPTIONS, STAT_KEYS, OBS_TIERS, etc.
-│   ├── frame-physics.ts # calcFrameBase, normalizeRawSpecs
-│   ├── string-profile.ts# calcBaseStringProfile, gauge modifiers
-│   ├── tension.ts       # calcTensionModifier, buildTensionContext
-│   ├── hybrid.ts        # calcHybridInteraction
-│   ├── composite.ts     # predictSetup, computeCompositeScore, generateIdentity
-│   └── index.ts         # barrel exports
-│
-├── state/               # State management (TypeScript)
-│   ├── store.ts         # Centralized state store (single source of truth)
-│   ├── loadout.ts       # CRUD for loadouts (delegates to store)
-│   ├── setup-sync.ts    # getCurrentSetup, state sync
-│   ├── presets.ts       # Top builds generation
-│   └── index.ts         # Public API exports
-│
-├── ui/                  # UI components (TypeScript)
-│   ├── components/
-│   │   └── searchable-select.ts
-│   ├── pages/
-│   │   └── leaderboard.js
-│   ├── theme.ts         # Dark/light mode
-│   └── nav.ts           # Navigation helpers
-│
-├── data/                # Data loading (TypeScript)
-│   └── loader.ts        # RACQUETS, STRINGS, FRAME_META imports
-│
-└── utils/               # Utilities (TypeScript)
-    ├── share.ts         # URL encoding, export/import
-    └── helpers.ts       # Shared utilities (debounce, throttle, etc.)
-```
 
-### Prediction Engine (4-Layer Pipeline)
+## Prediction Engine
 
-| Layer | Function | Description |
-|-------|----------|-------------|
-| L0 | `calcFrameBase()` | Normalizes raw specs → 11 attribute scores via weighted linear models + sigmoid compression |
-| L1 | `calcBaseStringProfile()` + `calcStringFrameMod()` | String scoring (TWU data) + frame coupling deltas |
-| L2 | `calcTensionModifier()` | Pattern-aware tension effects (open/dense/standard) |
-| L3 | `calcHybridInteraction()` | Mains/crosses material pairing bonuses |
+The engine is deterministic. The same setup always produces the same output.
 
-Composite score (OBS) maps to a 10-tier ranking system ("Delete This" → "Max Aura"). All engine functions are pure — same inputs always produce identical outputs. 5 canary tests guard against regression on every export.
+Pipeline:
+- L0: frame physics normalization
+- L1: string profile plus frame coupling
+- L2: tension effects
+- L3: hybrid interaction
 
-### TypeScript Engine
+Core outputs:
+- 11 attribute scores
+- build identity / archetype
+- OBS composite score and tier
 
-`src/engine/` and `src/state/` are fully TypeScript with `strict: true`. Key types in `types.ts`:
+## State Model
 
-| Type | Description |
-|------|-------------|
-| `Racquet` | Frame data shape (matches data.js fields — note: `swingweight` lowercase) |
-| `StringData` | String entry with `twScore: TwScore`, gauge, material, shape |
-| `StringConfig` | Discriminated union — `HybridStringConfig \| FullbedStringConfig` |
-| `SetupAttributes` | 11 numeric attributes (spin, power, control, …) |
-| `SetupStats` | `SetupAttributes + _debug?` — return type of `predictSetup` |
-| `FrameBaseScores` | 11-attr output of `calcFrameBase` |
-| `StringProfileScores` | 7-attr output of `calcBaseStringProfile` |
-| `TensionContext` | Context object for OBS sanity penalty calculation |
-| `Loadout` | User-saved build with frame, strings, tensions, stats |
+The active loadout is the source of truth for the live app.
 
-`moduleResolution: "bundler"` lets `.js` imports in `.ts` files resolve to `.ts` — no import path changes needed. `app.js` remains plain JS; all `src/` subdirectories are TypeScript.
+Important state modules:
+- `src/state/store.ts`: active and saved loadouts
+- `src/state/setup-sync.ts`: setup derivation from loadouts
+- `src/state/app-state.ts`: shared runtime UI state such as mode and compare state
 
-### Bible & Compendium Pages
+## Migration Notes
 
-**Racket Bible** (`comp-tab-rackets`): Browse racquets with hero layout (weight anchor, spec strip, console output). String Modulator panel for injection preview with fullbed/hybrid toggle, gauge selection, and real-time battery bar preview. Top Builds grid with OBS-ranked string recommendations.
+What is already extracted:
+- Compendium
+- String Compendium
+- Shell ownership
+- Overview runtime ownership
+- Compare runtime ownership
+- Tune runtime ownership
 
-**String Compendium** (`comp-tab-strings`): Mirror architecture to Racket Bible. Browse strings by material, shape, stiffness. Hero shows TWU composite score. String Telemetry displays intrinsic characteristics. **Frame Injection** modulator — select frame, configure gauge/tension, preview how string affects frame stats. Supports hybrid configurations with independent crosses string selection.
+What still remains in the monolith:
+- duplicated legacy renderers and wrappers in `app.js`
+- Tune recommendation content still sourced from `app.js`
+- `leaderboard.js` is still JavaScript
 
-## Data Layer
-
-Equipment data lives in `pipeline/data/` as JSON files. The browser loads `data.js` which is generated from these files.
-
-- `pipeline/data/frames.json` — racquet database (source of truth)
-- `pipeline/data/strings.json` — string database (source of truth)
-- `data.js` — generated, never edit directly
-
-### Design System
-
-"Digicraft Brutalism" — monochrome base (#1A1A1A void, #DCDFE2 platinum, #5E666C storm) with #FF4500 accent orange for data visualization. Inter + JetBrains Mono typography. Halftone grain textures. No drop shadows.
-
-**Tailwind CSS** (CDN, inline config in `index.html`):
-- Dark mode: `[data-theme="dark"]` selector
-- Custom colors: `dc-void`, `dc-platinum`, `dc-storm`, `dc-accent`, `dc-red`
-- Typography: Elephant (hero: 4.5rem), Obs (2.5-3.5rem), Mouse (9px labels)
+See [ts-migration-plan.md](ts-migration-plan.md) for the current continuation plan.
 
 ## Data Pipeline
 
-### Adding new equipment
+Source of truth:
+- `pipeline/data/frames.json`
+- `pipeline/data/strings.json`
+- `pipeline/data/canaries.json`
+
+Generated browser data:
+- `data.js`
+
+Never edit `data.js` directly.
+
+Useful commands:
 
 ```bash
-# Interactive
+npm run validate
+npm run export
+npm run pipeline
 npm run ingest:frame
 npm run ingest:string
-
-# Batch CSV import
-node pipeline/scripts/ingest.js --type frame --csv path/to/file.csv
-node pipeline/scripts/ingest.js --type string --csv path/to/file.csv
-
-# After any addition
-npm run pipeline
+npm run scrape:twu
+npm run scrape:twu-strings
 ```
 
-### Visual tools (browser-based, no install)
+## Testing
 
-- `tools/frame-editor.html` — spreadsheet-style batch frame editor, exports CSV
-- `tools/twu-import.html` — AI-assisted extraction from TWU pages using Claude API
-
-### TWU bulk scraping
+Required checks before pushing:
 
 ```bash
-# Scrape all racquets from TWU comparison database
-npm run scrape:twu
-
-# Scrape polyester string data
-npm run scrape:twu-strings
-
-# Enrich scraped frames with inferred specs (beamWidth, pattern, etc.)
-npm run enrich:twu -- --input pipeline/data/twu-scrape-YYYY-MM-DD.csv --filter --dedup
-
-# Enrich scraped strings with gauge, shape, identity
-npm run enrich:twu-strings -- --input pipeline/data/twu-strings-raw-YYYY-MM-DD.csv --filter
+npm run typecheck
+npm run canary
+npm run build
 ```
 
-### Pipeline commands
-
-| Command | Description |
-|---------|-------------|
-| `npm run validate` | Check all data against schemas |
-| `npm run export` | Regenerate data.js from JSON |
-| `npm run export:verify` | Regenerate + canary regression test |
-| `npm run canary` | Run 5 regression canaries |
-| `npm run canary:baseline` | Re-record canary expected values |
-| `npm run typecheck` | TypeScript type check (engine only, zero errors) |
-| `npm run estimate` | Show string estimation accuracy stats |
-| `npm run calibrate` | Re-fit string estimation coefficients |
-| `npm run pipeline` | Full validate + export + verify |
-| `npm run scrape:twu` | Scrape TWU racquet database |
-| `npm run scrape:twu-strings` | Scrape TWU string database |
-| `npm run enrich:twu` | Enrich scraped frame CSV |
-
-### File structure
-
-```
-├── index.html              ← app shell (Tailwind CDN config inline)
-├── app.js                  ← main app (~10,700 lines, imports from src/)
-├── style.css               ← Digicraft design system (Tailwind + custom)
-├── data.js                 ← generated from pipeline (never edit)
-├── vite.config.js          ← Vite configuration
-├── tsconfig.json           ← TypeScript config (engine only, strict)
-├── package.json
-│
-├── src/
-│   ├── main.js             ← Vite entry point, bridges engine to window
-│   ├── engine/             ← prediction engine (TypeScript, strict mode)
-│   │   ├── types.ts        ← domain interfaces (Racquet, StringData, Loadout, etc.)
-│   │   ├── constants.ts
-│   │   ├── frame-physics.ts
-│   │   ├── string-profile.ts
-│   │   ├── tension.ts
-│   │   ├── hybrid.ts
-│   │   ├── composite.ts
-│   │   └── index.ts
-│   ├── state/              ← state management (TypeScript)
-│   │   ├── store.ts        ← centralized store (single source of truth)
-│   │   ├── loadout.ts      ← loadout CRUD (delegates to store)
-│   │   ├── setup-sync.ts   ← setup synchronization
-│   │   ├── presets.ts      ← build generation
-│   │   └── index.ts        ← public API exports
-│   ├── ui/                 ← UI components (TypeScript)
-│   ├── data/               ← data loading (TypeScript)
-│   └── utils/              ← utilities (TypeScript)
-│
-├── pipeline/
-│   ├── data/
-│   │   ├── frames.json         ← racquet database (source of truth)
-│   │   ├── strings.json        ← string database (source of truth)
-│   │   └── canaries.json       ← regression test definitions
-│   ├── schemas/
-│   │   ├── frame.schema.json
-│   │   └── string.schema.json
-│   ├── scripts/
-│   │   ├── validate.js
-│   │   ├── estimate.js
-│   │   ├── calibrate.js
-│   │   ├── ingest.js
-│   │   ├── canary-test.js
-│   │   ├── export-to-app.js
-│   │   ├── scrape-twu.js
-│   │   ├── scrape-twu-strings.js
-│   │   ├── enrich-twu-csv.js
-│   │   └── enrich-twu-strings.js
-│   └── engine/
-│       └── core.js             ← portable engine copy (Node.js, used by pipeline)
-│
-├── tools/
-│   ├── frame-editor.html       ← visual batch frame editor
-│   └── twu-import.html         ← AI-assisted TWU data extraction
-│
-└── .github/workflows/
-    └── deploy.yml              ← GitHub Pages auto-deployment
-```
-
-### Key principles
-
-- `pipeline/data/*.json` is the source of truth
-- `data.js` is generated — never edit directly
-- `app.js` imports engine from `src/engine/` — no inline engine code
-- The engine is deterministic — same inputs always produce same outputs
-- Canary tests guard against regression on every export
-- Setup syncing ensures consistency across all pages (see below)
+Manual smoke checks are especially important after UI migrations:
+- overview renders correctly
+- tune slider, delta card, OBS card, and apply flow stay in sync
+- compare renders slots, verdicts, and radar
+- compendium and strings load without console errors
+- save, activate, reset, and compare flows work from the dock
 
 ## Deployment
 
-### GitHub Pages (Primary)
-
-Pushes to `main` auto-deploy via GitHub Actions:
+GitHub Pages deploys from `main`.
 
 ```bash
 git push origin main
 ```
 
-Check status: https://github.com/zaldytb/loadout-lab/actions
+GitHub Actions:
+`https://github.com/zaldytb/loadout-lab/actions`
 
-Live at: https://zaldytb.github.io/loadout-lab/
-
-### Vercel (Mirror)
-
-Also deploys to Vercel on every push:
-https://loadout-lab.vercel.app
-
-## Setup Syncing
-
-The app maintains a single source of truth: the **active loadout** (frame + strings + tensions). All pages sync to this state:
-
-### Automatic Sync Points
-
-| Page | Sync Behavior |
-|------|---------------|
-| **Overview** | Always shows active loadout stats |
-| **Tune** | Initializes with active racquet + strings, modifications update active loadout |
-| **Compare** | Uses active loadout as first slot, survives roundtrips |
-| **Optimize** | Searches from current active setup as baseline |
-| **Racket Bible** | On entry: auto-selects active racket frame, syncs strings to modulator |
-| **String Compendium** | On entry: auto-selects active strings, syncs frame to injector |
-
-### User Workflows
-
-**Browsing different rackets** (no loadout → new setup):
-```
-Racket Bible → Select Frame A → Apply → Creates loadout + activates
-→ Browse Frame B → Fresh modulator → Apply → Overwrites with Frame B setup
-```
-
-**Modifying active setup** (existing loadout → update):
-```
-Overview → Tune → Change tension → Save → Active loadout updated
-→ Racket Bible → Shows same frame + strings → Modify → Apply → Updates active
-```
-
-**Hybrid mode consistency**:
-```
-Racket Bible → Hybrid mode → Select mains + crosses → Apply
-→ Any page → Shows hybrid setup
-→ Back to Racket Bible → Hybrid mode preserved, strings populated
-```
-
-### Implementation
-
-Sync is handled by `getCurrentSetup()` which returns the active configuration. Mode switching triggers re-sync via `switchMode()`. The Racket Bible uses `_compSyncWithActiveLoadout()` to ensure the displayed frame matches the active loadout on every entry.
+Vercel mirror:
+`https://loadout-lab.vercel.app`

@@ -17,15 +17,17 @@ import { getActiveLoadout, getSavedLoadouts } from '../../state/store.js';
 import { getCurrentSetup, getSetupFromLoadout } from '../../state/setup-sync.js';
 import { getCurrentMode } from '../../state/app-state.js';
 import { _prevObsValues, animateOBS } from '../components/obs-animation.js';
+import {
+  generateRecommendedBuilds,
+  renderWhatToTryNext as renderSharedWhatToTryNext,
+  renderExplorePrompt as renderSharedExplorePrompt
+} from '../shared/recommendations.js';
 
 // Window extensions for external dependencies
 interface WindowExt extends Window {
   switchMode?: (mode: string) => void;
   getCurrentSetup?: () => { racquet: Racquet; stringConfig: StringConfig } | null;
   renderDashboard?: () => void;
-  renderRecommendedBuilds?: (setup: { racquet: Racquet; stringConfig: StringConfig }) => void;
-  renderWhatToTryNext?: (setup: { racquet: Racquet; stringConfig: StringConfig }, candidates: unknown[]) => void;
-  renderExplorePrompt?: (setup: { racquet: Racquet; stringConfig: StringConfig }, isCurrentInTop: boolean, topBuilds: unknown[]) => void;
   currentMode?: string;
   $?: (sel: string) => HTMLElement | null;
   renderDockPanel?: () => void;
@@ -63,6 +65,8 @@ export const tuneState = {
   } | null,
   explored: null as { stats: SetupAttributes; obs: number; identity: { archetype: string; description: string } } | null
 };
+
+type RecommendedCandidate = ReturnType<typeof generateRecommendedBuilds>['all'][number];
 
 // Chart.js type
 type Chart = {
@@ -303,7 +307,7 @@ export function initTuneMode(setup: { racquet: Racquet; stringConfig: StringConf
   renderSweepChart(setup);
   renderBestValueMove();
   renderOverallBuildScore(setup, true);
-  win.renderRecommendedBuilds?.(setup);
+  renderRecommendedBuilds(setup);
   renderOriginalTensionMarker();
 
   // Reset Apply button
@@ -973,7 +977,7 @@ export function renderTuneHybridToggle(stringConfig: StringConfig): void {
         _recomputeExploredState();
         renderOriginalTensionMarker();
         renderOverallBuildScore(setup, true);
-        win.renderRecommendedBuilds?.(setup);
+        renderRecommendedBuilds(setup);
       }
     });
   });
@@ -1159,6 +1163,141 @@ export function renderOverallBuildScore(
     }
   }
   _prevObsValues.tune = score;
+}
+
+function _getCurrentRecommendationKey(stringConfig: StringConfig): string | null {
+  if (stringConfig.isHybrid) {
+    const hybridConfig = stringConfig as StringConfig & {
+      mains?: StringData;
+      crosses?: StringData;
+      mainsId?: string;
+      crossesId?: string;
+    };
+    const mainsId = hybridConfig.mains?.id || hybridConfig.mainsId;
+    const crossesId = hybridConfig.crosses?.id || hybridConfig.crossesId;
+    return mainsId && crossesId ? `hybrid:${mainsId}/${crossesId}` : null;
+  }
+
+  const fullbedConfig = stringConfig as StringConfig & { string?: StringData };
+  return fullbedConfig.string?.id ? `full:${fullbedConfig.string.id}` : null;
+}
+
+function _getRecommendationKey(candidate: RecommendedCandidate): string {
+  return candidate.type === 'hybrid'
+    ? `hybrid:${candidate.mainsId}/${candidate.crossesId}`
+    : `full:${candidate.stringId}`;
+}
+
+function _renderRecommendationItem(
+  setup: { racquet: Racquet; stringConfig: StringConfig },
+  candidate: RecommendedCandidate,
+  rank: number,
+  currentOBS: number,
+  currentKey: string | null
+): string {
+  const isCurrent = currentKey === _getRecommendationKey(candidate);
+  const delta = candidate.score - currentOBS;
+  const deltaStr = delta > 0 ? `+${delta.toFixed(1)}` : delta.toFixed(1);
+  const deltaCls =
+    delta > 0.5 ? 'recs-delta-positive' : delta < -0.5 ? 'recs-delta-negative' : 'recs-delta-neutral';
+  const tensionLabel =
+    candidate.type === 'hybrid'
+      ? `M:${candidate.tension} / X:${candidate.tension - 2} lbs`
+      : `${candidate.tension} lbs`;
+  const stringId = candidate.stringId || candidate.string?.id || '';
+  const mainsId = candidate.mainsId || '';
+  const crossesId = candidate.crossesId || '';
+
+  return `
+    <div class="recs-item ${isCurrent ? 'recs-item-current' : ''}">
+      <div class="recs-rank">${rank}</div>
+      <div class="recs-info">
+        <div class="recs-name">${candidate.label} ${candidate.gauge ? `<span class="recs-gauge">${candidate.gauge}</span>` : ''}</div>
+        <div class="recs-meta">
+          <span class="recs-tension-rec">${tensionLabel}</span>
+          ${isCurrent ? '<span class="recs-badge-current">CURRENT</span>' : ''}
+        </div>
+      </div>
+      <div class="recs-composite">
+        <span class="recs-composite-value">${candidate.score.toFixed(1)}</span>
+        <span class="recs-composite-delta ${deltaCls}">${isCurrent ? 'YOU' : deltaStr}</span>
+      </div>
+      <div class="recs-action-row">
+        <button class="recs-apply-btn" onclick="_applyRecBuild('${setup.racquet.id}','${stringId}',${candidate.tension},'${candidate.type}','${mainsId}','${crossesId}')">Apply</button>
+        <button class="recs-save-btn" onclick="_saveRecBuild('${setup.racquet.id}','${stringId}',${candidate.tension},'${candidate.type}','${mainsId}','${crossesId}')">Save</button>
+      </div>
+    </div>
+  `;
+}
+
+export function renderWhatToTryNext(
+  setup: { racquet: Racquet; stringConfig: StringConfig },
+  candidates: RecommendedCandidate[]
+): void {
+  const container = document.getElementById('wttn-content');
+  if (!container) return;
+  container.innerHTML = renderSharedWhatToTryNext(container, setup, candidates);
+}
+
+export function renderExplorePrompt(
+  setup: { racquet: Racquet; stringConfig: StringConfig },
+  isCurrentInTop: boolean,
+  topBuilds: RecommendedCandidate[]
+): void {
+  const row = document.getElementById('tune-row-explore');
+  const container = document.getElementById('explore-content');
+  if (!row || !container) return;
+
+  if (setup.stringConfig.isHybrid) {
+    row.classList.remove('hidden');
+    renderSharedExplorePrompt(container, setup, isCurrentInTop, topBuilds);
+    return;
+  }
+
+  if (isCurrentInTop) {
+    row.classList.add('hidden');
+    container.innerHTML = '';
+    return;
+  }
+
+  row.classList.remove('hidden');
+  renderSharedExplorePrompt(container, setup, isCurrentInTop, topBuilds);
+}
+
+export function renderRecommendedBuilds(setup: { racquet: Racquet; stringConfig: StringConfig }): void {
+  const container = document.getElementById('recs-content');
+  if (!container) return;
+
+  const recommendations = generateRecommendedBuilds(setup);
+  const currentKey = _getCurrentRecommendationKey(setup.stringConfig);
+  const topCombined = [...recommendations.fullBed, ...recommendations.hybrid];
+
+  container.innerHTML = `
+    <div class="recs-split">
+      <div class="recs-panel">
+        <div class="recs-panel-header">
+          <span class="recs-panel-title">FULL BED</span>
+          <span class="recs-panel-sub">Single string, both directions</span>
+        </div>
+        <div class="recs-list">
+          ${recommendations.fullBed.map((candidate, index) => _renderRecommendationItem(setup, candidate, index + 1, recommendations.currentOBS, currentKey)).join('')}
+        </div>
+      </div>
+      <div class="recs-panel">
+        <div class="recs-panel-header">
+          <span class="recs-panel-title">HYBRID</span>
+          <span class="recs-panel-sub">Mains / Crosses pairing</span>
+        </div>
+        <div class="recs-list">
+          ${recommendations.hybrid.map((candidate, index) => _renderRecommendationItem(setup, candidate, index + 1, recommendations.currentOBS, currentKey)).join('')}
+        </div>
+      </div>
+    </div>
+    <p class="recs-footnote">Composite score across all 11 stats at optimal tension for <strong>${setup.racquet.name.replace(/\s+\d+g$/, '')}</strong>. Delta is vs your current build.</p>
+  `;
+
+  renderExplorePrompt(setup, recommendations.isCurrentInTop, topCombined);
+  renderWhatToTryNext(setup, recommendations.all);
 }
 
 /**

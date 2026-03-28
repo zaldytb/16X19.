@@ -4613,6 +4613,9 @@ function generateWhySentence(bucket, gains, losses, classification) {
 }
 
 function renderWhatToTryNext(setup, allCandidates) {
+  if (typeof window.renderWhatToTryNext === 'function' && window.renderWhatToTryNext !== renderWhatToTryNext) {
+    return window.renderWhatToTryNext(setup, allCandidates);
+  }
   const container = $('#wttn-content');
   const { racquet, stringConfig } = setup;
 
@@ -4740,6 +4743,9 @@ function renderWhatToTryNext(setup, allCandidates) {
 
 // ---- Recommended Builds ----
 function renderRecommendedBuilds(setup) {
+  if (typeof window.renderRecommendedBuilds === 'function' && window.renderRecommendedBuilds !== renderRecommendedBuilds) {
+    return window.renderRecommendedBuilds(setup);
+  }
   const container = $('#recs-content');
   const { racquet, stringConfig } = setup;
 
@@ -4932,6 +4938,9 @@ function renderRecommendedBuilds(setup) {
 }
 
 function renderExplorePrompt(setup, isCurrentInTop, topBuilds) {
+  if (typeof window.renderExplorePrompt === 'function' && window.renderExplorePrompt !== renderExplorePrompt) {
+    return window.renderExplorePrompt(setup, isCurrentInTop, topBuilds);
+  }
   const row = $('#tune-row-explore');
   const container = $('#explore-content');
   const { stringConfig } = setup;

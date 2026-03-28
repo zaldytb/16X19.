@@ -3,7 +3,7 @@
  * Handles multi-setup comparison with radar charts, verdict analysis, and slot management
  */
 
-import { predictSetup, generateIdentity, computeCompositeScore, getObsScoreColor } from '../../engine/index.js';
+import { predictSetup, generateIdentity, computeCompositeScore, getObsScoreColor, buildTensionContext } from '../../engine/index.js';
 import { STAT_KEYS, STAT_LABELS, STAT_LABELS_FULL } from '../../engine/constants.js';
 import { getActiveLoadout, getSavedLoadouts } from '../../state/store.js';
 import {
@@ -47,6 +47,10 @@ export interface CompareSlot {
 interface CompareWindowExt extends Window {
   compareGetState?: () => { slots?: Array<{ id: string; loadout: Loadout | null; stats: SetupStats | null }> };
   compareSetSlotLoadout?: (slotId: string, loadout: Loadout, stats: SetupStats) => void;
+  compareClearSlot?: (slotId: string) => void;
+  compareAddSlot?: (slotId: string) => void;
+  compareEditSlot?: (slotId: string) => void;
+  compareAddLoadoutToNextAvailableSlot?: (loadout: Loadout) => string | null;
 }
 
 export interface SlotColor {
@@ -104,6 +108,37 @@ function buildStatsFromLoadout(loadout: Loadout): SetupStats | null {
     mainsTension: loadout.mainsTension,
     crossesTension: loadout.crossesTension,
   });
+}
+
+function buildLoadoutFromSetup(setup: { racquet: Racquet; stringConfig: any } | null): Loadout | null {
+  if (!setup) return null;
+  const stats = predictSetup(setup.racquet, setup.stringConfig);
+  const identity = generateIdentity(stats, setup.racquet, setup.stringConfig);
+
+  return {
+    id: `compare-${Date.now()}`,
+    name: setup.stringConfig.isHybrid
+      ? `${setup.stringConfig.mains.name} / ${setup.stringConfig.crosses.name} on ${setup.racquet.name}`
+      : `${setup.stringConfig.string.name} on ${setup.racquet.name}`,
+    frameId: setup.racquet.id,
+    stringId: setup.stringConfig.isHybrid ? null : setup.stringConfig.string.id,
+    isHybrid: !!setup.stringConfig.isHybrid,
+    mainsId: setup.stringConfig.isHybrid ? setup.stringConfig.mains.id : null,
+    crossesId: setup.stringConfig.isHybrid ? setup.stringConfig.crosses.id : null,
+    mainsTension: setup.stringConfig.mainsTension,
+    crossesTension: setup.stringConfig.crossesTension,
+    gauge: null,
+    mainsGauge: null,
+    crossesGauge: null,
+    stats,
+    obs: +computeCompositeScore(stats, buildTensionContext({
+      mainsTension: setup.stringConfig.mainsTension,
+      crossesTension: setup.stringConfig.crossesTension,
+    }, setup.racquet)).toFixed(1),
+    identity: identity?.name || '',
+    source: 'compare',
+    _dirty: false,
+  };
 }
 
 const SLOT_COLOR_PALETTE: SlotColor[] = [
@@ -165,9 +200,21 @@ export function toggleComparisonMode(): void {
 }
 
 export function addComparisonSlotFromHome(): void {
-  if (slots().length >= 3) return;
+  const win = window as CompareWindowExt;
+  const activeLoadout = getActiveLoadout() as Loadout | null;
+  if (activeLoadout && typeof win.compareAddLoadoutToNextAvailableSlot === 'function') {
+    const added = win.compareAddLoadoutToNextAvailableSlot({ ...activeLoadout });
+    if (added) return;
+  }
 
   const setup = getCurrentSetup();
+  const setupLoadout = buildLoadoutFromSetup(setup);
+  if (setupLoadout && typeof win.compareAddLoadoutToNextAvailableSlot === 'function') {
+    const added = win.compareAddLoadoutToNextAvailableSlot(setupLoadout);
+    if (added) return;
+  }
+
+  if (slots().length >= 3) return;
   const slotData: CompareSlot = {
     id: Date.now(),
     racquetId: '',
@@ -206,6 +253,14 @@ export function addComparisonSlotFromHome(): void {
 }
 
 export function addComparisonSlot(): void {
+  const win = window as CompareWindowExt;
+  const compareState = win.compareGetState?.();
+  const emptySlot = compareState?.slots?.find((slot) => slot.loadout === null);
+  if (emptySlot && typeof win.compareAddSlot === 'function') {
+    win.compareAddSlot(emptySlot.id);
+    return;
+  }
+
   if (slots().length >= 3) return;
 
   const slotIndex = slots().length;
@@ -241,6 +296,13 @@ export function addComparisonSlot(): void {
 }
 
 export function removeComparisonSlot(index: number): void {
+  const win = window as CompareWindowExt;
+  const newSlot = getCompareStateSlotByIndex(index);
+  if (newSlot && typeof win.compareClearSlot === 'function') {
+    win.compareClearSlot(newSlot.id);
+    return;
+  }
+
   slots().splice(index, 1);
   renderComparisonSlots();
   renderCompareSummaries();

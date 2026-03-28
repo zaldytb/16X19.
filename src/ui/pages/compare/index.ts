@@ -97,6 +97,9 @@ function renderSlots(): void {
         onEdit: handleEditSlot,
         onRemove: handleRemoveSlot,
         onAdd: handleAddSlot,
+        onTune: handleTuneSlot,
+        onSetActive: handleSetActiveSlot,
+        onSave: handleSaveSlot,
         animationDelay: index * 100
       })).join('')}
     </div>
@@ -182,6 +185,46 @@ function handleEditSlot(slotId: SlotId): void {
 function handleRemoveSlot(slotId: SlotId): void {
   if (confirm('Remove this build from comparison?')) {
     clearSlot(slotId);
+  }
+}
+
+function getSlotById(slotId: SlotId): Slot | null {
+  return _currentState.slots.find((slot) => slot.id === slotId) || null;
+}
+
+function handleTuneSlot(slotId: SlotId): void {
+  const slot = getSlotById(slotId);
+  if (!slot || slot.loadout === null) return;
+
+  const win = window as any;
+  win.activateLoadout?.({ ...slot.loadout, stats: slot.stats });
+  win.switchMode?.('tune');
+}
+
+function handleSetActiveSlot(slotId: SlotId): void {
+  const slot = getSlotById(slotId);
+  if (!slot || slot.loadout === null) return;
+
+  const win = window as any;
+  win.activateLoadout?.({ ...slot.loadout, stats: slot.stats });
+  win.switchMode?.('overview');
+}
+
+function handleSaveSlot(slotId: SlotId, button?: HTMLButtonElement | null): void {
+  const slot = getSlotById(slotId);
+  if (!slot || slot.loadout === null) return;
+
+  const win = window as any;
+  win.saveLoadout?.({ ...slot.loadout, stats: slot.stats, _dirty: false });
+
+  if (button) {
+    const originalText = button.textContent || 'Save';
+    button.textContent = 'Saved';
+    button.classList.add('is-saved');
+    window.setTimeout(() => {
+      button.textContent = originalText;
+      button.classList.remove('is-saved');
+    }, 1200);
   }
 }
 
@@ -289,6 +332,9 @@ function setupWindowHandlers(): void {
   win.compareAddSlot = (slotId: string) => handleAddSlot(slotId as SlotId);
   win.compareEditSlot = (slotId: string) => handleEditSlot(slotId as SlotId);
   win.compareRemoveSlot = (slotId: string) => handleRemoveSlot(slotId as SlotId);
+  win.compareTuneSlot = (slotId: string) => handleTuneSlot(slotId as SlotId);
+  win.compareSetActiveSlot = (slotId: string) => handleSetActiveSlot(slotId as SlotId);
+  win.compareSaveSlot = (slotId: string, button?: HTMLButtonElement) => handleSaveSlot(slotId as SlotId, button);
   win.compareQuickAddSaved = (loadoutId: string) => {
     const loadout = getSavedLoadouts().find((item) => item.id === loadoutId);
     if (!loadout) return;

@@ -9,7 +9,7 @@
   flex-direction: column;
   gap: 2rem;
   padding: 1.5rem;
-  max-width: 1400px;
+  max-width: 1560px;
   margin: 0 auto;
 }
 
@@ -53,7 +53,8 @@
 .compare-slots-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
+  gap: 1.75rem;
+  align-items: stretch;
 }
 
 @media (max-width: 1024px) {
@@ -71,13 +72,16 @@
 /* Slot Cards */
 .compare-slot-card {
   position: relative;
-  padding: 1.5rem;
+  min-height: 360px;
+  padding: 1.75rem;
   border-radius: 4px;
   background: var(--dc-void-lift);
   transition: all 0.3s ease;
   animation: slotEnter 0.4s ease-out forwards;
   opacity: 0;
   transform: translateY(12px);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
 }
 
 @keyframes slotEnter {
@@ -113,7 +117,6 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 280px;
   text-align: center;
   border-style: dashed;
   border-width: 2px;
@@ -229,6 +232,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  justify-content: space-between;
 }
 
 .compare-slot-frame {
@@ -243,6 +247,9 @@
   font-family: 'Inter', sans-serif;
   font-size: 13px;
   color: var(--dc-platinum-dim);
+  line-height: 1.45;
+  min-height: 2.8em;
+  text-wrap: balance;
 }
 
 .compare-slot-tension {
@@ -253,26 +260,27 @@
 }
 
 .compare-slot-score {
-  margin-top: 1.5rem;
+  margin-top: 2rem;
   text-align: center;
 }
 
 .compare-slot-obs {
   font-family: 'Inter', sans-serif;
-  font-size: 48px;
+  font-size: clamp(3.6rem, 5vw, 5rem);
   font-weight: 700;
   line-height: 1;
   letter-spacing: -0.02em;
 }
 
 .compare-slot-actions {
-  margin-top: 1.25rem;
-  display: flex;
+  margin-top: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
 }
 
+.compare-slot-action,
 .compare-slot-edit {
-  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -290,9 +298,26 @@
   transition: all 0.2s ease;
 }
 
+.compare-slot-action:hover,
 .compare-slot-edit:hover {
   border-color: var(--dc-platinum);
   color: var(--dc-platinum);
+}
+
+.compare-slot-action-primary {
+  border-color: rgba(175, 0, 0, 0.5);
+  color: var(--dc-white);
+}
+
+.compare-slot-action-primary:hover {
+  border-color: var(--dc-red);
+  color: var(--dc-white);
+  box-shadow: 0 0 18px rgba(175, 0, 0, 0.18);
+}
+
+.compare-slot-action.is-saved {
+  border-color: var(--dc-accent);
+  color: var(--dc-accent);
 }
 
 /* Radar Section */

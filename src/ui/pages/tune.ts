@@ -13,6 +13,7 @@ import type { Racquet, StringData, SetupAttributes, StringConfig, Loadout } from
 import { GAUGE_LABELS } from '../../engine/constants.js';
 import { getGaugeOptions } from '../../engine/string-profile.js';
 import { STRINGS } from '../../data/loader.js';
+import { createLoadout } from '../../state/loadout.js';
 import { getActiveLoadout, getSavedLoadouts } from '../../state/store.js';
 import { getCurrentSetup, getSetupFromLoadout } from '../../state/setup-sync.js';
 import { getCurrentMode } from '../../state/app-state.js';
@@ -28,6 +29,8 @@ interface WindowExt extends Window {
   switchMode?: (mode: string) => void;
   getCurrentSetup?: () => { racquet: Racquet; stringConfig: StringConfig } | null;
   renderDashboard?: () => void;
+  activateLoadout?: (loadout: Loadout | null) => void;
+  saveLoadout?: (loadout: Loadout) => void;
   currentMode?: string;
   $?: (sel: string) => HTMLElement | null;
   renderDockPanel?: () => void;
@@ -1230,6 +1233,42 @@ function _renderRecommendationItem(
   `;
 }
 
+function _buildTuneRecommendationLoadout(
+  frameId: string,
+  stringId: string,
+  tension: number,
+  type: string,
+  mainsId?: string,
+  crossesId?: string
+): Loadout | null {
+  const opts: {
+    source: string;
+    isHybrid?: boolean;
+    mainsId?: string;
+    crossesId?: string;
+    crossesTension?: number;
+  } = { source: 'manual' };
+
+  if (type === 'hybrid' && mainsId && crossesId) {
+    opts.isHybrid = true;
+    opts.mainsId = mainsId;
+    opts.crossesId = crossesId;
+    opts.crossesTension = tension - 2;
+  }
+
+  return createLoadout(frameId, type === 'hybrid' ? mainsId || null : stringId, tension, opts);
+}
+
+function _flashActionButton(button: HTMLElement, idleLabel: string, successLabel: string): void {
+  if (!(button instanceof HTMLButtonElement)) return;
+  button.textContent = successLabel;
+  button.disabled = true;
+  window.setTimeout(() => {
+    button.textContent = idleLabel;
+    button.disabled = false;
+  }, 1500);
+}
+
 export function renderWhatToTryNext(
   setup: { racquet: Racquet; stringConfig: StringConfig },
   candidates: RecommendedCandidate[]
@@ -1298,6 +1337,71 @@ export function renderRecommendedBuilds(setup: { racquet: Racquet; stringConfig:
 
   renderExplorePrompt(setup, recommendations.isCurrentInTop, topCombined);
   renderWhatToTryNext(setup, recommendations.all);
+}
+
+export function _applyWttnBuild(btn: HTMLElement): void {
+  const setup = getCurrentSetup();
+  if (!setup) return;
+
+  const stringId = btn.dataset.stringId || '';
+  const tension = parseInt(btn.dataset.tension || '', 10);
+  const type = btn.dataset.type || 'full';
+  const mainsId = btn.dataset.mainsId || undefined;
+  const crossesId = btn.dataset.crossesId || undefined;
+
+  const loadout = _buildTuneRecommendationLoadout(setup.racquet.id, stringId, tension, type, mainsId, crossesId);
+  if (loadout) {
+    (window as WindowExt).activateLoadout?.(loadout);
+    const newSetup = getCurrentSetup();
+    if (newSetup && getCurrentMode() === 'tune') initTuneMode(newSetup);
+  }
+
+  _flashActionButton(btn, 'Apply', 'Applied \u2713');
+}
+
+export function _applyRecBuild(
+  racquetId: string,
+  stringId: string,
+  tension: number,
+  type: string,
+  mainsId?: string,
+  crossesId?: string
+): void {
+  const loadout = _buildTuneRecommendationLoadout(racquetId, stringId, tension, type, mainsId, crossesId);
+  if (loadout) {
+    (window as WindowExt).activateLoadout?.(loadout);
+    const newSetup = getCurrentSetup();
+    if (newSetup && getCurrentMode() === 'tune') initTuneMode(newSetup);
+  }
+}
+
+export function _saveWttnBuild(btn: HTMLElement): void {
+  const frameId = btn.dataset.frameId || '';
+  const stringId = btn.dataset.stringId || '';
+  const tension = parseInt(btn.dataset.tension || '', 10);
+  const type = btn.dataset.type || 'full';
+  const mainsId = btn.dataset.mainsId || undefined;
+  const crossesId = btn.dataset.crossesId || undefined;
+
+  const loadout = _buildTuneRecommendationLoadout(frameId, stringId, tension, type, mainsId, crossesId);
+  if (loadout) {
+    (window as WindowExt).saveLoadout?.(loadout);
+    _flashActionButton(btn, 'Save', 'Saved \u2713');
+  }
+}
+
+export function _saveRecBuild(
+  racquetId: string,
+  stringId: string,
+  tension: number,
+  type: string,
+  mainsId?: string,
+  crossesId?: string
+): void {
+  const loadout = _buildTuneRecommendationLoadout(racquetId, stringId, tension, type, mainsId, crossesId);
+  if (loadout) {
+    (window as WindowExt).saveLoadout?.(loadout);
+  }
 }
 
 /**

@@ -3375,6 +3375,9 @@ let tuneState = {
 };
 
 function toggleTuneMode() {
+  if (typeof window.toggleTuneMode === 'function' && window.toggleTuneMode !== toggleTuneMode) {
+    return window.toggleTuneMode();
+  }
   // Legacy compat — now routes through switchMode
   if (currentMode === 'tune') {
     switchMode('overview');
@@ -3386,6 +3389,9 @@ function toggleTuneMode() {
 }
 
 function closeTuneMode() {
+  if (typeof window.closeTuneMode === 'function' && window.closeTuneMode !== closeTuneMode) {
+    return window.closeTuneMode();
+  }
   // Legacy compat — now routes through switchMode
   switchMode('overview');
 }
@@ -3583,6 +3589,9 @@ function initTuneMode(setup) {
 }
 
 function runTensionSweep(setup) {
+  if (typeof window.runTensionSweep === 'function' && window.runTensionSweep !== runTensionSweep) {
+    return window.runTensionSweep(setup);
+  }
   const { racquet, stringConfig } = setup;
   const sweepMin = Math.max(racquet.tensionRange[0] - 5, 30);
   const sweepMax = Math.min(racquet.tensionRange[1] + 5, 75);
@@ -3624,6 +3633,9 @@ function runTensionSweep(setup) {
 }
 
 function calculateOptimalWindow(setup) {
+  if (typeof window.calculateOptimalWindow === 'function' && window.calculateOptimalWindow !== calculateOptimalWindow) {
+    return window.calculateOptimalWindow(setup);
+  }
   const { racquet } = setup;
   const data = tuneState.sweepData;
   if (!data || data.length === 0) return;
@@ -3661,6 +3673,9 @@ function calculateOptimalWindow(setup) {
 }
 
 function renderOptimalBuildWindow(sMin, sMax) {
+  if (typeof window.renderOptimalBuildWindow === 'function' && window.renderOptimalBuildWindow !== renderOptimalBuildWindow) {
+    return window.renderOptimalBuildWindow(sMin, sMax);
+  }
   const container = $('#optimal-content');
   const w = tuneState.optimalWindow;
   if (!w) {
@@ -3725,6 +3740,9 @@ function renderOptimalBuildWindow(sMin, sMax) {
 }
 
 function renderDeltaVsBaseline() {
+  if (typeof window.renderDeltaVsBaseline === 'function' && window.renderDeltaVsBaseline !== renderDeltaVsBaseline) {
+    return window.renderDeltaVsBaseline();
+  }
   const container = $('#delta-content');
   const data = tuneState.sweepData;
   if (!data) return;
@@ -3913,6 +3931,9 @@ function _updateDeltaBatteryBars(baseStats, exploredStats, isAtBaseline) {
 // GAUGE EXPLORER — shows how each available gauge shifts stats vs current
 // ============================================
 function renderGaugeExplorer(setup) {
+  if (typeof window.renderGaugeExplorer === 'function' && window.renderGaugeExplorer !== renderGaugeExplorer) {
+    return window.renderGaugeExplorer(setup);
+  }
   const container = $('#gauge-explore-content');
   if (!container) return;
   if (!setup) { container.innerHTML = ''; return; }
@@ -4063,6 +4084,9 @@ function renderGaugeExplorer(setup) {
 }
 
 function renderBaselineMarker(sliderMin, sliderMax) {
+  if (typeof window.renderBaselineMarker === 'function' && window.renderBaselineMarker !== renderBaselineMarker) {
+    return window.renderBaselineMarker(sliderMin, sliderMax);
+  }
   const marker = $('#slider-baseline-marker');
   const pct = ((tuneState.baselineTension - sliderMin) / (sliderMax - sliderMin)) * 100;
   marker.style.left = `${pct}%`;
@@ -4070,6 +4094,9 @@ function renderBaselineMarker(sliderMin, sliderMax) {
 }
 
 function renderOptimalZone(sliderMin, sliderMax) {
+  if (typeof window.renderOptimalZone === 'function' && window.renderOptimalZone !== renderOptimalZone) {
+    return window.renderOptimalZone(sliderMin, sliderMax);
+  }
   const zone = $('#slider-optimal-zone');
   const w = tuneState.optimalWindow;
   if (!w) { zone.style.display = 'none'; return; }
@@ -4082,6 +4109,9 @@ function renderOptimalZone(sliderMin, sliderMax) {
 }
 
 function renderSweepChart(setup) {
+  if (typeof window.renderSweepChart === 'function' && window.renderSweepChart !== renderSweepChart) {
+    return window.renderSweepChart(setup);
+  }
   const data = tuneState.sweepData;
   if (!data || data.length === 0) return;
 
@@ -4311,6 +4341,9 @@ function renderSweepChart(setup) {
 }
 
 function renderBestValueMove() {
+  if (typeof window.renderBestValueMove === 'function' && window.renderBestValueMove !== renderBestValueMove) {
+    return window.renderBestValueMove();
+  }
   const container = $('#slider-best-value');
   const data = tuneState.sweepData;
   const w = tuneState.optimalWindow;
@@ -5161,6 +5194,9 @@ function tuneSandboxCommit() {
 }
 
 function renderTuneHybridToggle(stringConfig) {
+  if (typeof window.renderTuneHybridToggle === 'function' && window.renderTuneHybridToggle !== renderTuneHybridToggle) {
+    return window.renderTuneHybridToggle(stringConfig);
+  }
   const container = $('#tune-hybrid-toggle');
   // Show toggle for both hybrid AND Full Bed (which now has independent tensions)
   const hasSplitTensions = stringConfig.isHybrid || (stringConfig.mainsTension !== undefined && stringConfig.crossesTension !== undefined);
@@ -8926,6 +8962,9 @@ function _fmbSelectBuild(racquetId, stringId, tension) {
 // ============================================
 
 function _applyWttnBuild(btn) {
+  if (typeof window._applyWttnBuild === 'function' && window._applyWttnBuild !== _applyWttnBuild) {
+    return window._applyWttnBuild(btn);
+  }
   var setup = getCurrentSetup();
   if (!setup) return;
 
@@ -8960,6 +8999,9 @@ function _applyWttnBuild(btn) {
 }
 
 function _applyRecBuild(racquetId, stringId, tension, type, mainsId, crossesId) {
+  if (typeof window._applyRecBuild === 'function' && window._applyRecBuild !== _applyRecBuild) {
+    return window._applyRecBuild(racquetId, stringId, tension, type, mainsId, crossesId);
+  }
   var opts = { source: 'manual' };
   if (type === 'hybrid' && mainsId && crossesId) {
     opts.isHybrid = true;
@@ -8976,6 +9018,9 @@ function _applyRecBuild(racquetId, stringId, tension, type, mainsId, crossesId) 
 }
 
 function _saveWttnBuild(btn) {
+  if (typeof window._saveWttnBuild === 'function' && window._saveWttnBuild !== _saveWttnBuild) {
+    return window._saveWttnBuild(btn);
+  }
   var frameId = btn.dataset.frameId;
   var stringId = btn.dataset.stringId;
   var tension = parseInt(btn.dataset.tension);
@@ -9005,6 +9050,9 @@ function _saveWttnBuild(btn) {
 }
 
 function _saveRecBuild(racquetId, stringId, tension, type, mainsId, crossesId) {
+  if (typeof window._saveRecBuild === 'function' && window._saveRecBuild !== _saveRecBuild) {
+    return window._saveRecBuild(racquetId, stringId, tension, type, mainsId, crossesId);
+  }
   var opts = { source: 'manual' };
   if (type === 'hybrid' && mainsId && crossesId) {
     opts.isHybrid = true;
@@ -9021,6 +9069,9 @@ function _saveRecBuild(racquetId, stringId, tension, type, mainsId, crossesId) {
 // ============================================
 
 function renderOriginalTensionMarker() {
+  if (typeof window.renderOriginalTensionMarker === 'function' && window.renderOriginalTensionMarker !== renderOriginalTensionMarker) {
+    return window.renderOriginalTensionMarker();
+  }
   var slider = document.getElementById('tune-slider');
   if (!slider) return;
   var container = slider.parentElement;

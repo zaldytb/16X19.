@@ -231,6 +231,13 @@ function addLoadoutToSlot(slotId: SlotId, loadout: Loadout): void {
   (window as any).renderDockContextPanel?.();
 }
 
+export function addLoadoutToNextAvailableSlot(loadout: Loadout): SlotId | null {
+  const emptySlotId = getFirstEmptySlot();
+  if (!emptySlotId) return null;
+  addLoadoutToSlot(emptySlotId, loadout);
+  return emptySlotId;
+}
+
 /**
  * Open the slot editor modal
  */

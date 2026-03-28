@@ -19,7 +19,6 @@ import {
   calcFrameBase,
   calcBaseStringProfile,
 } from '../../engine/composite.js';
-
 // App-level functions - will be set by init
 let _createLoadout = null;
 let _activateLoadout = null;
@@ -28,12 +27,6 @@ let _initCompendium = null;
 let _compSelectFrame = null;
 let _compSwitchTab = null;
 let _stringSelectString = null;
-let _comparisonSlots = null;
-let _renderComparisonSlots = null;
-let _renderCompareSummaries = null;
-let _renderCompareVerdict = null;
-let _renderCompareMatrix = null;
-let _updateComparisonRadar = null;
 
 /**
  * Initialize leaderboard with app-level dependencies
@@ -46,12 +39,6 @@ export function initLeaderboardApp(appExports) {
   _compSelectFrame = appExports._compSelectFrame;
   _compSwitchTab = appExports._compSwitchTab;
   _stringSelectString = appExports._stringSelectString;
-  _comparisonSlots = appExports.comparisonSlots;
-  _renderComparisonSlots = appExports.renderComparisonSlots;
-  _renderCompareSummaries = appExports.renderCompareSummaries;
-  _renderCompareVerdict = appExports.renderCompareVerdict;
-  _renderCompareMatrix = appExports.renderCompareMatrix;
-  _updateComparisonRadar = appExports.updateComparisonRadar;
 }
 
 // Local state for compendium tracking (avoids circular import issues)
@@ -1079,44 +1066,88 @@ function _lbv2ViewString(stringId) {
   setTimeout(function() { if (_stringSelectString) _stringSelectString(stringId); }, 120);
 }
 
-function _lbv2Compare(racquetId, stringId, tension, type, mainsId, crossesId, crossesTension) {
-  if (_comparisonSlots && _comparisonSlots.length >= 3) _comparisonSlots.pop();
-  const racquet = RACQUETS.find(r => r.id === racquetId);
-  if (!racquet) return;
+function _lbv2ShowCompareWarning(message) {
+  const existing = document.getElementById('lbv2-compare-warning');
+  if (existing) existing.remove();
 
-  const isHybrid = type === 'hybrid';
-  let cfg;
-  if (isHybrid) {
-    const mains  = STRINGS.find(s => s.id === mainsId);
-    const cross  = STRINGS.find(s => s.id === crossesId);
-    cfg = { isHybrid: true, mains, crosses: cross, mainsTension: tension, crossesTension };
-  } else {
-    const str = STRINGS.find(s => s.id === stringId);
-    cfg = { isHybrid: false, string: str, mainsTension: tension, crossesTension: tension };
+  const overlay = document.createElement('div');
+  overlay.id = 'lbv2-compare-warning';
+  overlay.className = 'fixed inset-0 z-[1200] flex items-center justify-center bg-dc-void/75 px-4';
+  overlay.innerHTML = `
+    <div class="w-full max-w-md border border-dc-storm/40 bg-white dark:bg-dc-void-lift shadow-2xl">
+      <div class="border-b border-dc-storm/20 px-5 py-4">
+        <div class="font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-dc-red">Compare Full</div>
+      </div>
+      <div class="px-5 py-4">
+        <p class="text-[13px] leading-6 text-dc-void dark:text-dc-platinum">${message}</p>
+      </div>
+      <div class="flex justify-end border-t border-dc-storm/20 px-5 py-4">
+        <button
+          type="button"
+          class="border border-dc-storm/40 px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-dc-storm hover:border-dc-storm hover:text-dc-platinum transition-colors"
+          id="lbv2-compare-warning-close"
+        >OK</button>
+      </div>
+    </div>
+  `;
+
+  function closeDialog() {
+    overlay.remove();
+    document.removeEventListener('keydown', onKeydown);
   }
 
-  const stats    = predictSetup(racquet, cfg);
-  const identity = stats ? generateIdentity(stats, racquet, cfg) : null;
+  function onKeydown(event) {
+    if (event.key === 'Escape' || event.key === 'Enter') {
+      closeDialog();
+    }
+  }
 
-  if (_comparisonSlots) _comparisonSlots.push({
-    id: Date.now() + Math.random(),
-    racquetId,
-    stringId:       isHybrid ? '' : stringId,
-    isHybrid,
-    mainsId:        mainsId || '',
-    crossesId:      crossesId || '',
-    mainsTension:   tension,
-    crossesTension: crossesTension || tension,
-    stats,
-    identity,
+  overlay.addEventListener('click', function(event) {
+    if (event.target === overlay) closeDialog();
+  });
+  overlay.querySelector('#lbv2-compare-warning-close')?.addEventListener('click', closeDialog);
+  document.addEventListener('keydown', onKeydown);
+  document.body.appendChild(overlay);
+}
+
+function _lbv2Compare(racquetId, stringId, tension, type, mainsId, crossesId, crossesTension) {
+  const compareState = typeof window.compareGetState === 'function'
+    ? window.compareGetState()
+    : null;
+  const emptySlot = compareState?.slots?.find(function(slot) {
+    return !slot.loadout;
   });
 
+  if (!emptySlot) {
+    _lbv2ShowCompareWarning('All 3 compare slots are already filled. Remove one of the existing builds before adding a leaderboard result.');
+    return;
+  }
+
+  const opts = { source: 'leaderboard' };
+  if (type === 'hybrid') {
+    opts.isHybrid = true;
+    opts.mainsId = mainsId;
+    opts.crossesId = crossesId;
+    opts.crossesTension = crossesTension;
+  }
+
+  const loadout = _createLoadout
+    ? _createLoadout(racquetId, type === 'hybrid' ? mainsId : stringId, tension, opts)
+    : null;
+  if (!loadout) return;
+
+  if (typeof window.compareAddLoadoutToNextAvailableSlot === 'function') {
+    const slotId = window.compareAddLoadoutToNextAvailableSlot(loadout);
+    if (!slotId) {
+      _lbv2ShowCompareWarning('All 3 compare slots are already filled. Remove one of the existing builds before adding a leaderboard result.');
+      return;
+    }
+  } else {
+    _lbv2ShowCompareWarning('Compare is not ready yet. Open the Compare tab once, then try again.');
+    return;
+  }
+
   if (_switchMode) _switchMode('compare');
-  if (_renderComparisonSlots) _renderComparisonSlots();
-  if (_renderCompareSummaries) _renderCompareSummaries();
-  if (_renderCompareVerdict) _renderCompareVerdict();
-  if (_renderCompareMatrix) _renderCompareMatrix();
-  try { if (_updateComparisonRadar) _updateComparisonRadar(); } catch(e) {}
 }
 
 

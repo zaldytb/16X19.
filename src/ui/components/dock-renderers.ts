@@ -627,15 +627,27 @@ export function _dockCompareEdit(slotIndex: number | string): void {
  * Remove a compare slot
  */
 export function _dockCompareRemove(slotIndex: number): void {
+  const win = window as any;
+  const compareState = win.compareGetState?.();
+
+  if (compareState?.slots && typeof win.compareClearSlot === 'function') {
+    const targetSlot = compareState.slots[slotIndex];
+    if (targetSlot?.id) {
+      win.compareClearSlot(targetSlot.id);
+      renderDockContextPanel();
+      return;
+    }
+  }
+
   const comparisonSlots = getComparisonSlots();
   comparisonSlots.splice(slotIndex, 1);
 
   try {
-    (window as any).renderComparisonSlots?.();
-    (window as any).renderCompareSummaries?.();
-    (window as any).renderCompareVerdict?.();
-    (window as any).renderCompareMatrix?.();
-    (window as any).updateComparisonRadar?.();
+    win.renderComparisonSlots?.();
+    win.renderCompareSummaries?.();
+    win.renderCompareVerdict?.();
+    win.renderCompareMatrix?.();
+    win.updateComparisonRadar?.();
   } catch (e) {
     console.warn('Compare workspace render error after remove:', e);
   }
@@ -647,18 +659,28 @@ export function _dockCompareRemove(slotIndex: number): void {
  * Quick add a loadout to compare
  */
 export function _dockCompareQuickAdd(loadoutId: string): void {
-  const comparisonSlots = getComparisonSlots();
   const savedLoadouts = getSavedLoadouts();
   const lo = savedLoadouts.find(l => l.id === loadoutId);
-  if (!lo || comparisonSlots.length >= 3) return;
-  (window as any)._addLoadoutAsSlot?.(lo);
+  if (!lo) return;
+
+  const win = window as any;
+  const compareState = win.compareGetState?.();
+  if (compareState?.slots && typeof win.compareQuickAddSaved === 'function') {
+    win.compareQuickAddSaved(loadoutId);
+    renderDockContextPanel();
+    return;
+  }
+
+  const comparisonSlots = getComparisonSlots();
+  if (comparisonSlots.length >= 3) return;
+  win._addLoadoutAsSlot?.(lo);
 
   try {
-    (window as any).renderComparisonSlots?.();
-    (window as any).renderCompareSummaries?.();
-    (window as any).renderCompareVerdict?.();
-    (window as any).renderCompareMatrix?.();
-    (window as any).updateComparisonRadar?.();
+    win.renderComparisonSlots?.();
+    win.renderCompareSummaries?.();
+    win.renderCompareVerdict?.();
+    win.renderCompareMatrix?.();
+    win.updateComparisonRadar?.();
   } catch (e) {
     console.warn('Compare workspace render error after quick-add:', e);
   }

@@ -13,7 +13,9 @@ import type { Loadout, Racquet, SetupStats } from '../../engine/types.js';
 import { createLoadout } from '../../state/loadout.js';
 import { generateBuildReason, generateTopBuilds, pickDiverseBuilds, type Build } from '../../state/presets.js';
 import { getCurrentSetup } from '../../state/setup-sync.js';
+import { getComparisonSlots as getAppComparisonSlots } from '../../state/app-state.js';
 import { createSearchableSelect, ssInstances } from '../components/searchable-select.js';
+import { recalcSlot, renderCompareMatrix, renderCompareSummaries, renderCompareVerdict, renderComparisonSlots, updateComparisonRadar } from './compare.js';
 
 const RACQUET_DATA = (RACQUETS as unknown) as Racquet[];
 
@@ -68,8 +70,15 @@ function getWindowFn<T extends (...args: any[]) => any>(name: string): T | null 
 }
 
 function getComparisonSlots(): CompareSlot[] {
-  const slots = (window as any).comparisonSlots;
-  return Array.isArray(slots) ? (slots as CompareSlot[]) : [];
+  return getAppComparisonSlots<CompareSlot>();
+}
+
+function refreshComparePage(): void {
+  renderComparisonSlots();
+  renderCompareSummaries();
+  renderCompareVerdict();
+  renderCompareMatrix();
+  try { updateComparisonRadar(); } catch (_err) {}
 }
 
 function _extractBrand(name: string): string {
@@ -985,6 +994,8 @@ export function _compAddBuildToCompare(build: BuildWithArchetype): void {
     stats,
     identity,
   });
+  recalcSlot(comparisonSlots.length - 1);
+  refreshComparePage();
   getWindowFn<(mode: string) => void>('switchMode')?.('compare');
 }
 
@@ -1010,5 +1021,7 @@ export function _compActionCompare(racquetId: string, stringId: string, tension:
     stats,
     identity,
   });
+  recalcSlot(comparisonSlots.length - 1);
+  refreshComparePage();
   getWindowFn<(mode: string) => void>('switchMode')?.('compare');
 }

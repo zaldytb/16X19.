@@ -4,6 +4,8 @@
 import { RACQUETS, STRINGS } from '../../data/loader.js';
 import { predictSetup, buildTensionContext, computeCompositeScore, getObsScoreColor } from '../../engine/index.js';
 import type { Racquet, StringData, SetupAttributes, StringConfig } from '../../engine/types.js';
+import { getComparisonSlots as getAppComparisonSlots } from '../../state/app-state.js';
+import { recalcSlot, renderCompareMatrix, renderCompareSummaries, renderCompareVerdict, renderComparisonSlots, updateComparisonRadar } from './compare.js';
 
 // Window extensions for external dependencies
 interface WindowExt extends Window {
@@ -12,25 +14,20 @@ interface WindowExt extends Window {
   loadPresetFromData?: (preset: Record<string, unknown>) => void;
   createLoadout?: (frameId: string, stringId: string, tension: number, opts?: Record<string, unknown>) => { id: string } | null;
   saveLoadout?: (loadout: { id: string }) => void;
-  comparisonSlots?: Array<{
-    id: number;
-    racquetId: string;
-    stringId?: string;
-    isHybrid?: boolean;
-    mainsId?: string;
-    crossesId?: string;
-    mainsTension: number;
-    crossesTension: number;
-    stats?: SetupAttributes;
-    identity?: unknown;
-  }>;
-  recalcSlot?: (index: number) => void;
-  renderComparisonSlots?: () => void;
-  renderCompareSummaries?: () => void;
-  renderCompareVerdict?: () => void;
-  renderCompareMatrix?: () => void;
-  updateComparisonRadar?: () => void;
   activeLoadout?: { frameId: string } | null;
+}
+
+interface CompareSlot {
+  id: number;
+  racquetId: string;
+  stringId?: string;
+  isHybrid?: boolean;
+  mainsId?: string;
+  crossesId?: string;
+  mainsTension: number;
+  crossesTension: number;
+  stats?: SetupAttributes;
+  identity?: unknown;
 }
 
 // Module-level state
@@ -736,10 +733,9 @@ export function optActionCompare(idx: number): void {
   const preset = _optBuildPresetData(c);
   const win = window as WindowExt;
 
-  if (!win.comparisonSlots) return;
-
-  if (win.comparisonSlots.length >= 3) {
-    win.comparisonSlots.pop();
+  const comparisonSlots = getAppComparisonSlots<CompareSlot>();
+  if (comparisonSlots.length >= 3) {
+    comparisonSlots.pop();
   }
 
   const slotData = {
@@ -755,15 +751,15 @@ export function optActionCompare(idx: number): void {
     identity: null
   };
 
-  win.comparisonSlots.push(slotData);
-  const slotIndex = win.comparisonSlots.length - 1;
-  win.recalcSlot?.(slotIndex);
+  comparisonSlots.push(slotData);
+  const slotIndex = comparisonSlots.length - 1;
+  recalcSlot(slotIndex);
   win.switchMode?.('compare');
-  win.renderComparisonSlots?.();
-  win.renderCompareSummaries?.();
-  win.renderCompareVerdict?.();
-  win.renderCompareMatrix?.();
-  win.updateComparisonRadar?.();
+  renderComparisonSlots();
+  renderCompareSummaries();
+  renderCompareVerdict();
+  renderCompareMatrix();
+  updateComparisonRadar();
 }
 
 /**

@@ -163,6 +163,7 @@ window.cleanupComparePage = ComparePage.cleanupComparePage;
 window.compareGetState = ComparePage.getState;
 window.compareSubscribe = ComparePage.subscribe;
 window.compareSetSlotLoadout = ComparePage.setSlotLoadout;
+window.compareAddLoadoutToNextAvailableSlot = ComparePage.addLoadoutToNextAvailableSlot;
 window.compareClearSlot = ComparePage.clearSlot;
 window.compareGetConfiguredSlots = ComparePage.getConfiguredSlots;
 

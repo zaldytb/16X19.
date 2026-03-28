@@ -6,6 +6,10 @@
 import type { Loadout, SetupStats } from '../../../../engine/types.js';
 import type { SlotId, Slot, CompareSlot, EmptySlot, CompareState } from '../types.js';
 import { getSlotColor, SLOT_COLORS } from '../types.js';
+import {
+  getComparisonSlots as getAppComparisonSlots,
+  setComparisonSlots as setAppComparisonSlots,
+} from '../../../../state/app-state.js';
 
 // Private state
 let _state: CompareState = {
@@ -19,14 +23,56 @@ let _state: CompareState = {
   editingSlotId: null
 };
 
+function syncLegacyMirror(): void {
+  setAppComparisonSlots(_state.slots.map((slot) => ({
+    id: slot.id,
+    color: slot.color,
+    loadout: slot.loadout,
+    stats: slot.stats,
+  })));
+}
+
+function hydrateFromAppState(): void {
+  const mirrored = getAppComparisonSlots<Array<Partial<Slot>>>() as Array<Partial<Slot>>;
+  if (!Array.isArray(mirrored) || mirrored.length === 0) return;
+  if (_state.slots.some((slot) => slot.loadout !== null)) return;
+
+  const nextSlots = SLOT_COLORS.map((color, index) => {
+    const mirroredSlot = mirrored[index];
+    const mirroredStats = mirroredSlot?.stats || (mirroredSlot?.loadout as Loadout | undefined)?.stats || null;
+    if (mirroredSlot && 'loadout' in mirroredSlot && mirroredSlot.loadout && mirroredStats) {
+      return {
+        id: color.id,
+        color: getSlotColor(color.id),
+        loadout: mirroredSlot.loadout,
+        stats: mirroredStats,
+      };
+    }
+
+    return {
+      id: color.id,
+      color: getSlotColor(color.id),
+      loadout: null,
+      stats: null,
+    };
+  });
+
+  _state = {
+    ..._state,
+    slots: nextSlots,
+  };
+}
+
 // Subscribers for reactive updates
 const _subscribers: Set<(state: CompareState) => void> = new Set();
 
 function notify(): void {
+  syncLegacyMirror();
   _subscribers.forEach(fn => fn(_state));
 }
 
 export function getState(): CompareState {
+  hydrateFromAppState();
   return { ..._state, slots: [..._state.slots] };
 }
 

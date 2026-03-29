@@ -1334,18 +1334,21 @@ function _assignStaggerIndices(containerSel) {
   }
 }
 
-function _renderDashboardLegacy() {}
+// Fallback legacy bridge: any old app.js call is forwarded to the final window-bound implementation.
+function _bridge(fnName, ...args) {
+  const impl = window[fnName];
+  if (typeof impl === 'function' && impl !== _bridge) {
+    return impl(...args);
+  }
+  return undefined;
+}
 
 function renderDashboard() {
-  if (typeof window.renderDashboard === 'function' && window.renderDashboard !== renderDashboard) {
-    return window.renderDashboard();
-  }
+  return _bridge('renderDashboard');
 }
 
 function renderOverviewHero(racquet, stringConfig, stats, identity) {
-  if (typeof window.renderOverviewHero === 'function' && window.renderOverviewHero !== renderOverviewHero) {
-    return window.renderOverviewHero(racquet, stringConfig, stats, identity);
-  }
+  return _bridge('renderOverviewHero', racquet, stringConfig, stats, identity);
 }
 
 
@@ -1354,72 +1357,50 @@ function renderOverviewHero(racquet, stringConfig, stats, identity) {
 // ============================================
 
 function getRatingDescriptor(score, identity) {
-  if (typeof window.getRatingDescriptor === 'function' && window.getRatingDescriptor !== getRatingDescriptor) {
-    return window.getRatingDescriptor(score, identity);
-  }
+  return _bridge('getRatingDescriptor', score, identity);
 }
 
 
 function renderOCFoundation(racquet, stringConfig, stats) {
-  if (typeof window.renderOCFoundation === 'function' && window.renderOCFoundation !== renderOCFoundation) {
-    return window.renderOCFoundation(racquet, stringConfig, stats);
-  }
+  return _bridge('renderOCFoundation', racquet, stringConfig, stats);
 }
 
 function renderOCSnapshot(fitProfile) {
-  if (typeof window.renderOCSnapshot === 'function' && window.renderOCSnapshot !== renderOCSnapshot) {
-    return window.renderOCSnapshot(fitProfile);
-  }
+  return _bridge('renderOCSnapshot', fitProfile);
 }
 
 // Stat bar grouping for Build DNA
 function _statBarColor(val) {
-  if (typeof window._statBarColor === 'function' && window._statBarColor !== _statBarColor) {
-    return window._statBarColor(val);
-  }
+  return _bridge('_statBarColor', val);
 }
 
 function renderStatBars(stats) {
-  if (typeof window.renderStatBars === 'function' && window.renderStatBars !== renderStatBars) {
-    return window.renderStatBars(stats);
-  }
+  return _bridge('renderStatBars', stats);
 }
 
 function renderBuildDNAHighlights(stats) {
-  if (typeof window.renderBuildDNAHighlights === 'function' && window.renderBuildDNAHighlights !== renderBuildDNAHighlights) {
-    return window.renderBuildDNAHighlights(stats);
-  }
+  return _bridge('renderBuildDNAHighlights', stats);
 }
 
 // ---- Ballistic HUD Tooltip Handler ----
 function radarTooltipHandler(context) {
-  if (typeof window.radarTooltipHandler === 'function' && window.radarTooltipHandler !== radarTooltipHandler) {
-    return window.radarTooltipHandler(context);
-  }
+  return _bridge('radarTooltipHandler', context);
 }
 
 function renderRadarChart(stats) {
-  if (typeof window.renderRadarChart === 'function' && window.renderRadarChart !== renderRadarChart) {
-    return window.renderRadarChart(stats);
-  }
+  return _bridge('renderRadarChart', stats);
 }
 
 function renderFitProfile(fitProfile) {
-  if (typeof window.renderFitProfile === 'function' && window.renderFitProfile !== renderFitProfile) {
-    return window.renderFitProfile(fitProfile);
-  }
+  return _bridge('renderFitProfile', fitProfile);
 }
 
 function renderFitProfileActive(fitProfile) {
-  if (typeof window.renderFitProfile === 'function') {
-    return window.renderFitProfile(fitProfile);
-  }
+  return _bridge('renderFitProfile', fitProfile);
 }
 
 function renderWarnings(warnings) {
-  if (typeof window.renderWarnings === 'function' && window.renderWarnings !== renderWarnings) {
-    return window.renderWarnings(warnings);
-  }
+  return _bridge('renderWarnings', warnings);
 }
 
 // ============================================
@@ -1427,50 +1408,34 @@ function renderWarnings(warnings) {
 // ============================================
 
 function toggleComparisonMode() {
-  if (typeof window.toggleComparisonMode === 'function' && window.toggleComparisonMode !== toggleComparisonMode) {
-    return window.toggleComparisonMode();
-  }
+  return _bridge('toggleComparisonMode');
 }
 
 function addComparisonSlotFromHome() {
-  if (typeof window.addComparisonSlotFromHome === 'function' && window.addComparisonSlotFromHome !== addComparisonSlotFromHome) {
-    return window.addComparisonSlotFromHome();
-  }
+  return _bridge('addComparisonSlotFromHome');
 }
 
 function addComparisonSlot() {
-  if (typeof window.addComparisonSlot === 'function' && window.addComparisonSlot !== addComparisonSlot) {
-    return window.addComparisonSlot();
-  }
+  return _bridge('addComparisonSlot');
 }
 
 function removeComparisonSlot(index) {
-  if (typeof window.removeComparisonSlot === 'function' && window.removeComparisonSlot !== removeComparisonSlot) {
-    return window.removeComparisonSlot(index);
-  }
+  return _bridge('removeComparisonSlot', index);
 }
 
 function renderComparisonSlots() {
-  if (typeof window.renderComparisonSlots === 'function' && window.renderComparisonSlots !== renderComparisonSlots) {
-    return window.renderComparisonSlots();
-  }
+  return _bridge('renderComparisonSlots');
 }
 
 function recalcSlot(index) {
-  if (typeof window.recalcSlot === 'function' && window.recalcSlot !== recalcSlot) {
-    return window.recalcSlot(index);
-  }
+  return _bridge('recalcSlot', index);
 }
 function updateComparisonRadar() {
-  if (typeof window.updateComparisonRadar === 'function' && window.updateComparisonRadar !== updateComparisonRadar) {
-    return window.updateComparisonRadar();
-  }
+  return _bridge('updateComparisonRadar');
 }
 
 function renderComparisonDeltas() {
-  if (typeof window.renderComparisonDeltas === 'function' && window.renderComparisonDeltas !== renderComparisonDeltas) {
-    return window.renderComparisonDeltas();
-  }
+  return _bridge('renderComparisonDeltas');
 }
 
 // ============================================
@@ -1478,9 +1443,7 @@ function renderComparisonDeltas() {
 // ============================================
 
 function renderCompareSummaries() {
-  if (typeof window.renderCompareSummaries === 'function' && window.renderCompareSummaries !== renderCompareSummaries) {
-    return window.renderCompareSummaries();
-  }
+  return _bridge('renderCompareSummaries');
 }
 
 // Fix 2: Build "Load from My Loadouts" dropdown for compare slot editor
@@ -1490,9 +1453,7 @@ function _compareBuildLoadFromSavedDropdown(slotIndex) {
 }
 
 function _compareLoadFromSaved(slotIndex, loadoutId) {
-  if (typeof window._compareLoadFromSaved === 'function' && window._compareLoadFromSaved !== _compareLoadFromSaved) {
-    return window._compareLoadFromSaved(slotIndex, loadoutId);
-  }
+  return _bridge('_compareLoadFromSaved', slotIndex, loadoutId);
 }
 
 function _compareEditorStringHTML(slot, index) {
@@ -1500,34 +1461,26 @@ function _compareEditorStringHTML(slot, index) {
 }
 
 function _toggleCompareCardEditor(index) {
-  if (typeof window._toggleCompareCardEditor === 'function' && window._toggleCompareCardEditor !== _toggleCompareCardEditor) {
-    return window._toggleCompareCardEditor(index);
-  }
+  return _bridge('_toggleCompareCardEditor', index);
 }
 
 function _compareInitEditorSS(card, index, slot) {}
 
 function openCompareEditor(idx) { _toggleCompareCardEditor(idx); }
 function closeCompareEditors() {
-  if (typeof window.closeCompareEditors === 'function' && window.closeCompareEditors !== closeCompareEditors) {
-    return window.closeCompareEditors();
-  }
+  return _bridge('closeCompareEditors');
 }
 
 function generateCompareVerdict(slotA, slotB) {
-  return null;
+  return _bridge('generateCompareVerdict', slotA, slotB);
 }
 
 function renderCompareVerdict() {
-  if (typeof window.renderCompareVerdict === 'function' && window.renderCompareVerdict !== renderCompareVerdict) {
-    return window.renderCompareVerdict();
-  }
+  return _bridge('renderCompareVerdict');
 }
 
 function renderCompareMatrix() {
-  if (typeof window.renderCompareMatrix === 'function' && window.renderCompareMatrix !== renderCompareMatrix) {
-    return window.renderCompareMatrix();
-  }
+  return _bridge('renderCompareMatrix');
 }
 
 

@@ -54,7 +54,7 @@
   "additionalProperties": false,
 
   "_validationRanges": {
-    "_comment": "Ranges used by validate.js. warn = outside expected range. engineNorm = the range the engine normalises over.",
+    "_comment": "Ranges used by validate.ts. warn = outside expected range. engineNorm = the range the engine normalises over.",
     "stiffness":     { "warn": [90, 280],  "error": [0, 500],  "engineNorm": [115, 234] },
     "tensionLoss":   { "warn": [5, 60],    "error": [0, 100],  "engineNorm": [10, 50] },
     "spinPotential": { "warn": [3, 11],    "error": [0, 20],   "engineNorm": [4.5, 9.0] },

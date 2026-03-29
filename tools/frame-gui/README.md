@@ -4,7 +4,7 @@ A lightweight Electron desktop app for batch-importing tennis frames into Loadou
 
 ## Prerequisites
 
-- Node.js ≥ 18
+- Node.js ≥ 20
 - The `loadout-lab` repository cloned locally
 
 ## Install
@@ -70,7 +70,7 @@ Required columns are shown in white; optional columns in grey.
 
 ### Prerequisites
 
-- Node.js ≥ 18 on the **build machine**
+- Node.js ≥ 20 on the **build machine**
 - Windows (for a native `.exe`; cross-compiling from macOS/Linux requires Wine)
 
 ### Steps
@@ -100,7 +100,7 @@ The installer bundles Electron but **not** Node.js. Users must have [Node.js](ht
 All data writes go through the existing ingest pipeline:
 
 1. The GUI writes a CSV to `pipeline/import/` inside the repo root.
-2. It spawns `node pipeline/scripts/ingest.js --type frame --csv <path>`, which validates every row against `pipeline/schemas/frame.schema.json` before appending to `pipeline/data/frames.json`.
+2. It spawns `tsx` on `pipeline/scripts/ingest.ts` with `--type frame --csv <path>`, which validates every row against `pipeline/schemas/frame.schema.json` before appending to `pipeline/data/frames.json`.
 3. Optionally it then runs `npm run pipeline` (validate + export) to regenerate `data.js`.
 
 This means all existing validation, duplicate detection, and provenance tracking still apply.

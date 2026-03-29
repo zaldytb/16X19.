@@ -364,8 +364,8 @@ function getComparisonSlotKeys(): Set<string> {
   if (compareState?.slots?.length) {
     return new Set(
       compareState.slots
-        .filter((slot) => !!slot.loadout)
-        .map((slot) => {
+        .filter((slot: { loadout?: Loadout | null }) => !!slot.loadout)
+        .map((slot: { loadout?: Loadout | null }) => {
           const loadout = slot.loadout as Loadout;
           const stringKey = loadout.isHybrid
             ? `${loadout.mainsId || ''}/${loadout.crossesId || ''}`

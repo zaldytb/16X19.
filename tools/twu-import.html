@@ -293,7 +293,7 @@ tbody td.col-f0:focus,tbody td.col-f1:focus{background:var(--focus-bg)!important
   </div>
 
   <div id="pipeline-tip">
-    Pipeline: <code id="tip-cmd">node pipeline/scripts/ingest.js --type frame --csv twu-frames-YYYY-MM-DD.csv</code>
+    Pipeline: <code id="tip-cmd">npx tsx pipeline/scripts/ingest.ts --type frame --csv twu-frames-YYYY-MM-DD.csv</code>
     &nbsp;&nbsp;then&nbsp;&nbsp;<code>npm run pipeline</code>
   </div>
 </div>
@@ -366,7 +366,7 @@ tbody td.col-f0:focus,tbody td.col-f1:focus{background:var(--focus-bg)!important
         <li>Paste TWU content and click <strong>Extract Data</strong></li>
         <li>Fill in any red-border cells (required fields Claude couldn&apos;t find)</li>
         <li>Click <strong>Download CSV</strong> &mdash; only complete rows are included</li>
-        <li>Run: <code>node pipeline/scripts/ingest.js --type frame --csv path/to/twu-frames-YYYY-MM-DD.csv</code></li>
+        <li>Run: <code>npx tsx pipeline/scripts/ingest.ts --type frame --csv path/to/twu-frames-YYYY-MM-DD.csv</code></li>
         <li>Run: <code>npm run pipeline</code> to validate and regenerate data.js</li>
       </ol>
       <h3>API key security</h3>
@@ -386,7 +386,7 @@ tbody td.col-f0:focus,tbody td.col-f1:focus{background:var(--focus-bg)!important
 'use strict';
 
 // ── Column definitions ─────────────────────────────────────────────────────────
-// Frame CSV columns match: node pipeline/scripts/ingest.js --type frame --help
+// Frame CSV columns match: npx tsx pipeline/scripts/ingest.ts --type frame --help
 const FRAME_COLS = [
   { key:'id',           label:'id',           type:'id',           req:true,  def:'', w:160,
     hint:'Kebab-case unique ID — auto-generated from name. e.g. babolat-pure-aero-100-318g' },
@@ -428,9 +428,9 @@ const FRAME_COLS = [
 
 const MATERIALS = ['Polyester', 'Co-Polyester (elastic)', 'Multifilament', 'Natural Gut', 'Synthetic Gut'];
 
-// String CSV columns match buildString(fields, ...) in pipeline/scripts/ingest.js
+// String CSV columns match buildString(fields, ...) in pipeline/scripts/ingest.ts
 // twScore sub-fields use dot notation (twScore.power) — that is the literal CSV column header
-// that ingest.js reads as fields['twScore.power'] when building the entry.
+// that ingest.ts reads as fields['twScore.power'] when building the entry.
 const STRING_COLS = [
   { key:'id',                          label:'id',           type:'id',       req:true,  def:'', w:180,
     hint:'Kebab-case unique ID — auto-generated from name' },
@@ -479,7 +479,7 @@ function getActiveCols() { return mode === 'frame' ? FRAME_COLS : STRING_COLS; }
 function today() { return new Date().toISOString().slice(0, 10); }
 
 // ── Utilities ──────────────────────────────────────────────────────────────────
-// Must match ingest.js toKebab() exactly
+// Must match ingest.ts toKebab() exactly
 function toKebab(s) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
@@ -1057,7 +1057,7 @@ function updateSummary() {
   const typeLabel = mode === 'frame' ? 'frame' : 'string';
   const fname     = `twu-${typeLabel}s-${today()}.csv`;
   document.getElementById('tip-cmd').textContent =
-    `node pipeline/scripts/ingest.js --type ${typeLabel} --csv ${fname}`;
+    `npx tsx pipeline/scripts/ingest.ts --type ${typeLabel} --csv ${fname}`;
 }
 
 // ── CSV generation ─────────────────────────────────────────────────────────────

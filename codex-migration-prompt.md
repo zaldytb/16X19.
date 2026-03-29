@@ -1,3 +1,5 @@
+> **Archived — historical agent prompt.** Describes a pre–TS-only layout (`app.js`, `src/main.js`). Current entry is [`src/main.ts`](src/main.ts); see [`ts-migration-plan.md`](ts-migration-plan.md).
+
 # Codex Prompt — Loadout Lab TypeScript Migration
 
 ## Your Role

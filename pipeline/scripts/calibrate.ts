@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 'use strict';
 // Estimation coefficient calibration script
 // Fits linear models for twScore sub-fields (power, control, playabilityDuration)

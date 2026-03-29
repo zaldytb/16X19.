@@ -111,13 +111,10 @@ ipcMain.handle('fs:save-csv', (_event, { repoRoot, filename, content }) => {
   return { savedPath };
 });
 
-// Run the ingest script
+// Run the ingest script (tsx — same as npm run ingest:frame)
 ipcMain.handle('proc:run-ingest', (_event, { repoRoot, csvPath }) => {
-  return runProcess(
-    'node',
-    ['pipeline/scripts/ingest.js', '--type', 'frame', '--csv', csvPath],
-    repoRoot
-  );
+  const tsxBin = path.join(repoRoot, 'node_modules', '.bin', 'tsx' + (process.platform === 'win32' ? '.cmd' : ''));
+  return runProcess(tsxBin, ['pipeline/scripts/ingest.ts', '--type', 'frame', '--csv', csvPath], repoRoot);
 });
 
 // Run npm run pipeline

@@ -1,3 +1,5 @@
+> **Archived — line-level audit of a former `app.js` monolith.** Kept for historical context only. Current status: [`ts-migration-plan.md`](ts-migration-plan.md).
+
 # Migration Plan Verification
 
 ## Plan Accuracy Assessment

@@ -374,7 +374,7 @@ importBtn.addEventListener('click', async () => {
     const csvPath = await doSaveCsv('frames-gui.csv');
 
     // 2. Run ingest
-    log(`Running: node pipeline/scripts/ingest.js --type frame --csv ${csvPath}`, 'info');
+    log(`Running: tsx pipeline/scripts/ingest.ts --type frame --csv ${csvPath}`, 'info');
     const ingestResult = await window.electronAPI.runIngest({ repoRoot, csvPath });
 
     if (ingestResult.stdout) {

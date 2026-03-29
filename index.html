@@ -1229,7 +1229,7 @@
               </p>
               <div class="hiw-callout">
                 <div class="hiw-callout-icon">◆</div>
-                <p>The prediction engine is deterministic — same inputs always produce same outputs. Canary tests guard against regression on every export. The engine lives in <code>app.js</code> for the browser and <code>pipeline/engine/core.js</code> for Node.js — 22 functions, portable, zero dependencies.</p>
+                <p>The prediction engine is deterministic — same inputs always produce same outputs. Canary tests guard against regression on every verified export. The canonical implementation is TypeScript in <code>src/engine/</code> (bundled by Vite for the browser); <code>npm run canary</code> imports the same modules under Node via <code>tsx</code>.</p>
               </div>
             </div>
           </div>
@@ -1501,6 +1501,6 @@
 
   </footer>
 
-  <script type="module" src="/src/main.js"></script>
+  <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

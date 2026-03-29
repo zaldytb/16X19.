@@ -61,7 +61,7 @@
   "additionalProperties": false,
 
   "_validationRanges": {
-    "_comment": "Ranges used by validate.js. warn = outside expected range (warn but don't break). engineNorm = the range the engine normalises over — outside this range the engine will clamp and lose discrimination.",
+    "_comment": "Ranges used by validate.ts. warn = outside expected range (warn but don't break). engineNorm = the range the engine normalises over — outside this range the engine will clamp and lose discrimination.",
     "stiffness":         { "warn": [50, 80],  "error": [0, 120],  "engineNorm": [55, 72] },
     "swingweight":       { "warn": [260, 380], "error": [0, 500],  "engineNorm": [300, 340] },
     "strungWeight":      { "warn": [240, 380], "error": [0, 500],  "engineNorm": [290, 340] },

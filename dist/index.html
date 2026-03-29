@@ -60,8 +60,8 @@
       }
     }
   }
-</script>
-  <script type="module" crossorigin src="./assets/index-CA4jU3jD.js"></script>
+</script>
+  <script type="module" crossorigin src="./assets/index-CgItn4-B.js"></script>
   <link rel="modulepreload" crossorigin href="./assets/composite-BcB2vSpk.js">
   <link rel="modulepreload" crossorigin href="./assets/engine-f6fmnuoF.js">
   <link rel="modulepreload" crossorigin href="./assets/searchable-select-9Vm1v8Zu.js">
@@ -1233,7 +1233,7 @@
               </p>
               <div class="hiw-callout">
                 <div class="hiw-callout-icon">◆</div>
-                <p>The prediction engine is deterministic — same inputs always produce same outputs. Canary tests guard against regression on every export. The engine lives in <code>app.js</code> for the browser and <code>pipeline/engine/core.js</code> for Node.js — 22 functions, portable, zero dependencies.</p>
+                <p>The prediction engine is deterministic — same inputs always produce same outputs. Canary tests guard against regression on every verified export. The canonical implementation is TypeScript in <code>src/engine/</code> (bundled by Vite for the browser); <code>npm run canary</code> imports the same modules under Node via <code>tsx</code>.</p>
               </div>
             </div>
           </div>
@@ -1504,6 +1504,6 @@
     </div>
 
   </footer>
-
+
 </body>
 </html>

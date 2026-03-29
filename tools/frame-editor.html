@@ -245,7 +245,7 @@ tbody td.col-f1:focus{background:var(--focus-bg)!important;}
         <li>Fill in rows &mdash; or load an existing CSV / paste from a spreadsheet</li>
         <li>Fix any red-border cells (hover for tooltip explaining the error)</li>
         <li>Click <strong>Download CSV</strong> &mdash; only valid rows are included</li>
-        <li>Run: <code>node pipeline/scripts/ingest.js --type frame --csv path/to/frames-batch-YYYY-MM-DD.csv</code></li>
+        <li>Run: <code>npx tsx pipeline/scripts/ingest.ts --type frame --csv path/to/frames-batch-YYYY-MM-DD.csv</code></li>
         <li>Run: <code>npm run pipeline</code> to validate and regenerate data.js</li>
       </ol>
       <h3>Column reference</h3>
@@ -261,7 +261,7 @@ tbody td.col-f1:focus{background:var(--focus-bg)!important;}
 'use strict';
 
 // ── Column definitions ────────────────────────────────────────────────────────
-// Order matches: node pipeline/scripts/ingest.js --type frame --help
+// Order matches: npx tsx pipeline/scripts/ingest.ts --type frame --help
 const COLS = [
   { key:'id',           label:'id',           type:'id',          req:true,  def:'',          w:160,
     hint:'Kebab-case unique ID, auto-generated from name. e.g. babolat-pure-aero-100-318g' },
@@ -573,7 +573,7 @@ function downloadCSV() {
   URL.revokeObjectURL(url);
 }
 
-// ── CSV parsing (mirrors ingest.js parseCSV logic exactly) ───────────────────
+// ── CSV parsing (mirrors ingest.ts parseCSV logic exactly) ───────────────────
 function parseCSVLine(line) {
   const fields = [];
   let i = 0;

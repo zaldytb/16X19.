@@ -1,3 +1,5 @@
+> **Archived — historical agent prompt.** The repo no longer uses root `app.js` or `src/main.js`; see [`ts-migration-plan.md`](ts-migration-plan.md) and [`README.md`](README.md) for the current layout.
+
 # 16X19 (Tennis Loadout Lab) - Final TypeScript Migration Prompt
 
 **Objective:** Cross the finish line by completely eliminating the `app.js` monolith. The frontend must run exclusively on our Vite + TypeScript bridge (`src/main.js`). 
@@ -5,12 +7,16 @@
 ## Context & Rules
 - The project is currently a hybrid. `src/main.js` handles routing, but still imports `app.js` to blindly loop through and expose its contents to `window.*` for inline HTML handlers.
 - **Rule 1:** All runtime logic MUST be strongly typed in TypeScript.
-- **Rule 2:** After edits, you MUST verify using `npm run typecheck && npm run canary && npm run build`. If it fails, fix the types before proceeding.
-- **Rule 3:** The `window.*` bridge in `src/main.js` must be explicitly populated. We are removing the automatic `Object.entries(App)` loop. All inline `<button onclick="...">` handlers in `index.html` rely on this bridge.
+- **Rule 2:** ZERO UI REDESIGNS OR DOM ALTERATIONS. You are migrating logic, not redesigning the app. You must preserve all existing CSS classes, ID selectors, and DOM structures exactly as they are. The app uses a Tailwind 4.x CDN, so runtime-generated utility classes (like `bg-dc-platinum`, `text-dc-void`) must NOT be altered or consolidated.
+- **Rule 3:** Preserve the exact Dark Mode mechanism. `toggleTheme` relies on `data-theme="dark"` on the `<html>` element. Do not implement a generic replacement.
+- **Rule 4:** After edits, you MUST verify using `npm run typecheck && npm run canary && npm run build`. If it fails, fix the types before proceeding.
+- **Rule 5:** The `window.*` bridge in `src/main.js` must be explicitly populated. We are removing the automatic `Object.entries(App)` loop. All inline `<button onclick="...">` handlers in `index.html` rely on this bridge.
 
 ## Execution Steps
 
-### Step 1: Extract Remaining Orphaned Logic
+### Step 1: Extract Remaining Orphaned Logic 
+**Critical Warning:** You MUST copy-paste the logic of the functions EXACTLY. Do NOT refactor the body, do NOT replace `document.getElementById` with React/generic abstractions, and do NOT alter the string values of classes. Add Type annotations and nothing more.
+
 Search `app.js` for the following isolated functional blocks and migrate them to their appropriate TS modules. Ensure type safety:
 1. `setHybridMode` -> Move to `src/ui/shared/helpers.ts` or `src/ui/components/dock-renderers.ts`.
 2. `hydrateDock` -> Move to `src/ui/components/dock-renderers.ts`.

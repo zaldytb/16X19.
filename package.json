@@ -2,26 +2,26 @@
   "name": "loadout-lab",
   "version": "1.0.0",
   "description": "A physics-based tennis equipment analysis tool. Pick a racquet, string, and tension — the engine predicts how your setup will play across nine attributes (power, spin, control, comfort, feel, stability, forgiveness, launch, maneuverability).",
-  "main": "app.js",
+  "private": true,
   "scripts": {
     "dev": "vite",
     "typecheck": "tsc --noEmit",
     "build": "vite build",
     "preview": "vite preview",
-    "extract": "node pipeline/scripts/extract.js",
-    "validate": "node pipeline/scripts/validate.js",
-    "export": "tsx pipeline/scripts/export-to-app.js",
-    "export:verify": "tsx pipeline/scripts/export-to-app.js --verify",
-    "canary": "tsx pipeline/scripts/canary-test.js",
-    "canary:baseline": "tsx pipeline/scripts/canary-test.js --baseline",
-    "estimate": "tsx pipeline/scripts/estimate.js",
-    "calibrate": "tsx pipeline/scripts/calibrate.js",
-    "ingest:frame": "node pipeline/scripts/ingest.js --type frame",
-    "ingest:string": "node pipeline/scripts/ingest.js --type string",
+    "extract": "tsx pipeline/scripts/extract.ts",
+    "validate": "tsx pipeline/scripts/validate.ts",
+    "export": "tsx pipeline/scripts/export-to-app.ts",
+    "export:verify": "tsx pipeline/scripts/export-to-app.ts --verify",
+    "canary": "tsx pipeline/scripts/canary-test.ts",
+    "canary:baseline": "tsx pipeline/scripts/canary-test.ts --baseline",
+    "estimate": "tsx pipeline/scripts/estimate.ts",
+    "calibrate": "tsx pipeline/scripts/calibrate.ts",
+    "ingest:frame": "tsx pipeline/scripts/ingest.ts --type frame",
+    "ingest:string": "tsx pipeline/scripts/ingest.ts --type string",
     "pipeline": "npm run validate && npm run export:verify",
-    "scrape:twu": "node pipeline/scripts/scrape-twu.js",
-    "scrape:twu-strings": "node pipeline/scripts/scrape-twu-strings.js",
-    "enrich:twu": "node pipeline/scripts/enrich-twu-csv.js"
+    "scrape:twu": "tsx pipeline/scripts/scrape-twu.ts",
+    "scrape:twu-strings": "tsx pipeline/scripts/scrape-twu-strings.ts",
+    "enrich:twu": "tsx pipeline/scripts/enrich-twu-csv.ts"
   },
   "repository": {
     "type": "git",
@@ -31,9 +31,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@tailwindcss/vite": "^4.2.2",
-    "json5": "^2.2.3",
-    "tailwindcss": "^4.2.2"
+    "json5": "^2.2.3"
   },
   "devDependencies": {
     "tsx": "^4.21.0",

@@ -1,130 +1,107 @@
-# Tennis Loadout Lab - Agent Documentation
+# Tennis Loadout Lab — Agent documentation
 
-## Project Overview
+## Project overview
 
-16X19, also referred to in older docs as Tennis Loadout Lab, is a
-physics-based tennis equipment analysis tool. It predicts how a racquet and
-string setup will perform across 11 attributes and summarizes the build with an
-OBS composite score plus identity and archetype output.
+16X19 (Tennis Loadout Lab) is a physics-based tennis equipment analysis tool. It predicts how a racquet and string setup performs across 11 attributes and summarizes the build with an OBS composite score plus identity and archetype output.
 
-Core user workflows:
-- browse racquets in the Racket Bible
-- browse strings in the String Compendium
-- configure full-bed and hybrid builds
-- tune tension with live feedback
-- compare multiple setups
-- generate optimized and recommended alternatives
-- save, activate, duplicate, and share loadouts
+**Primary URL:** `https://zaldytb.github.io/loadout-lab/`  
+**Mirror:** `https://loadout-lab.vercel.app`
 
-Primary URL: `https://zaldytb.github.io/loadout-lab/`
-Mirror: `https://loadout-lab.vercel.app`
+### Core workflows
 
-## Technology Stack
+- Browse racquets (Racket Bible) and strings (String Compendium)
+- Configure full-bed and hybrid builds
+- Tune tension with live feedback
+- Compare up to three setups
+- Optimize and explore recommended builds
+- Save, activate, duplicate, and share loadouts
+
+## Technology stack
 
 | Category | Technology |
 |----------|------------|
-| Build Tool | Vite 8.x |
-| Language | TypeScript 6.x plus legacy JavaScript |
-| Styling | Tailwind CSS 4.x CDN plus custom CSS |
-| Package Manager | npm |
-| Runtime | Node.js 20+ |
-| Charts | Chart.js via CDN |
-| Deployment | GitHub Pages and Vercel |
+| Build | Vite 8.x |
+| App language | TypeScript 6.x (strict) under `src/` |
+| Styling | Tailwind CSS 4.x **CDN** (`index.html`) + `style.css` design tokens |
+| Package manager | npm |
+| Runtime | Node.js 20+ (pipeline via `tsx`) |
+| Charts | Chart.js **CDN** (`index.html`) |
+| Deploy | GitHub Pages + Vercel |
 
-## Current Migration Snapshot
+**Important:** Tailwind is intentionally **not** wired through `@tailwindcss/vite` for the SPA. Runtime-generated utility strings in TypeScript must stay verbatim so CDN JIT output matches production.
 
-The repo is in a mixed but much healthier state than the original monolith.
+## Runtime architecture
 
-TypeScript currently owns the live bridge entrypoints for:
-- shell and mode switching
-- overview
-- tune runtime
-- compare
-- optimize
-- compendium
-- strings
-- leaderboard
-- my-loadouts
-- find-my-build
+### 1. Vite entry and `window` bridge
 
-What still remains in `app.js` (now ~3,600 lines down from 12k+):
-- duplicated legacy implementations and wrappers that are largely isolated
-- compatibility shims for inline handlers and older flows
-- older loadout and shared runtime helpers
+[`src/main.ts`](src/main.ts) is the only application entry. It:
 
-Practical takeaway:
-- prefer the extracted TypeScript modules first
-- treat `app.js` as compatibility or fallback unless the runtime bridge still points there
-- when debugging regressions, always verify the live `window.*` bridge path before fixing leaf code
+- imports page and shared modules from `src/`
+- assigns functions and state to `window.*` for `onclick="..."` and legacy global names
+- lazy-loads heavy pages (e.g. compendium, leaderboard) via dynamic `import()`
 
-## Project Structure
+[`src/global.d.ts`](src/global.d.ts) augments `Window` with the bridge surface (optional properties, permissive call signatures) so strict TypeScript stays compatible with inline HTML handlers.
+
+When debugging, **trace `window.*` from `main.ts`** — do not assume a second runtime layer.
+
+### 2. No root `app.js`
+
+The historical `app.js` monolith is **removed**. All live page logic lives under `src/**/*.ts`.
+
+### 3. Active loadout is source of truth
+
+- `src/state/store.ts` — active and saved loadouts  
+- `src/state/setup-sync.ts` — current racquet/string setup from the active loadout  
+
+### 4. Shared UI state
+
+`src/state/app-state.ts` holds mode, compare slots, radar/slot colors, and other cross-page UI coordination. Prefer this over new ad hoc globals.
+
+## Project structure
 
 ```text
 loadout-lab/
-|- index.html
-|- app.js
-|- style.css
-|- data.js
-|- README.md
-|- AGENTS.md
-|- ts-migration-plan.md
-|- src/
-|  |- main.js
-|  |- engine/
-|  |- state/
-|  |  |- store.ts
-|  |  |- loadout.ts
-|  |  |- setup-sync.ts
-|  |  |- app-state.ts
-|  |  `- presets.ts
-|  |- ui/
-|  |  |- components/
-|  |  |- pages/
-|  |  |  |- overview.ts
-|  |  |  |- tune.ts
-|  |  |  |- compare.ts
-|  |  |  |- optimize.ts
-|  |  |  |- compendium.ts
-|  |  |  |- strings.ts
-|  |  |  |- find-my-build.ts
-|  |  |  |- my-loadouts.ts
-|  |  |  `- leaderboard.ts
-|  |  `- shared/
-|  |- data/
-|  `- utils/
-|- pipeline/
-|- tools/
-`- .github/workflows/
+├── index.html
+├── vite.config.ts
+├── style.css
+├── data.js
+├── README.md
+├── AGENTS.md
+├── CLAUDE.md
+├── ts-migration-plan.md
+├── src/
+│   ├── main.ts
+│   ├── global.d.ts
+│   ├── vite-env.d.ts
+│   ├── engine/
+│   ├── state/
+│   │   ├── store.ts
+│   │   ├── loadout.ts
+│   │   ├── setup-sync.ts
+│   │   ├── app-state.ts
+│   │   └── presets.ts
+│   ├── ui/
+│   │   ├── pages/
+│   │   │   ├── shell.ts
+│   │   │   ├── overview.ts
+│   │   │   ├── tune.ts
+│   │   │   ├── compare/ …
+│   │   │   ├── optimize.ts
+│   │   │   ├── compendium.ts
+│   │   │   ├── strings.ts
+│   │   │   ├── find-my-build.ts
+│   │   │   ├── my-loadouts.ts
+│   │   │   └── leaderboard.ts
+│   │   ├── components/
+│   │   └── shared/
+│   ├── data/
+│   └── utils/
+├── pipeline/
+├── docs/
+└── .github/workflows/
 ```
 
-## Important Runtime Ownership Rules
-
-### 1. The live bridge matters more than duplicate code
-
-`src/main.js` defines the actual public ownership of inline handlers and page
-entrypoints. Always check what `window.*` points to before assuming `app.js` or
-the TS module is the live implementation.
-
-### 2. The active loadout is the source of truth
-
-`src/state/store.ts` owns:
-- active loadout
-- saved loadouts
-
-`src/state/setup-sync.ts` derives the current racquet and string configuration
-from that stored loadout state.
-
-### 3. Shared runtime UI state lives in `app-state.ts`
-
-Use `src/state/app-state.ts` for:
-- current mode
-- compare slots and compare radar state
-- shared runtime UI coordination
-
-Do not create new parallel mutable globals in `app.js` unless absolutely needed
-for temporary compatibility.
-
-## Build and Verification Commands
+## Commands
 
 ### Development
 
@@ -140,94 +117,81 @@ npm run build
 npm run preview
 ```
 
-### Regression and Data
+### Data and regression
 
 ```bash
-npm run canary
 npm run validate
 npm run export
+npm run export:verify
+npm run canary
+npm run canary:baseline
 npm run pipeline
 ```
 
-## Data Pipeline
+### Ingestion and TWU tooling
 
-Source of truth:
-- `pipeline/data/frames.json`
-- `pipeline/data/strings.json`
-- `pipeline/data/canaries.json`
+```bash
+npm run ingest:frame
+npm run ingest:string
+npm run scrape:twu
+npm run scrape:twu-strings
+npm run enrich:twu
+npm run estimate
+npm run calibrate
+```
 
-Generated output:
-- `data.js`
+Pipeline scripts live in `pipeline/scripts/*.ts` and run with **`tsx`**.
 
-Never hand-edit `data.js`.
+## Data pipeline
 
-## Debugging Guidance
+**Source of truth:** `pipeline/data/frames.json`, `strings.json`, `canaries.json`  
+**Generated:** `data.js` — never hand-edit; regenerate with `npm run export` or `npm run pipeline`.
+
+## Debugging notes
 
 ### Tune
 
-Tune has been one of the most sensitive migration areas. When touching it,
-verify these stay on one state system:
-- delta card
-- OBS card in Tune
-- WTTN
-- recommended builds
-- loadout switching while Tune is open
-- slider to apply-button flow
-
-If one Tune panel is wrong but another is correct, first check whether the
-runtime call path is split between `app.js` and `src/ui/pages/tune.ts`.
+Sensitive to split state paths. When changing Tune, verify together: delta card, OBS in Tune, WTTN, recommendations, loadout switching while Tune is open, slider → apply.
 
 ### Compare
 
-Compare is now largely TS-owned at runtime, but `app.js` still contains legacy
-duplicates. Be careful not to fix the dead path while the bridge points to the
-new one.
+Compare runtime is TypeScript (`src/ui/pages/compare/`). Keep dock actions and `app-state` compare slots in sync with the compare module.
 
 ### Overview
 
-Overview rendering is TS-owned at runtime. If something looks empty, check
-whether a legacy helper is still writing into the same DOM after the TS render.
+Overview is TS-owned (`overview.ts`). If the UI looks empty or duplicated, check for a second render pass or stale listeners, not a legacy `app.js` path.
 
-## Testing Strategy
+## Testing strategy
 
-Required automated gate:
+**Automated gate (required before commit):**
 
 ```bash
-npm run typecheck
-npm run canary
-npm run build
+npm run typecheck && npm run canary && npm run build
 ```
 
-Recommended manual checks after UI or migration work:
-- overview hero, stat bars, radar, fit box, and warnings
-- tune slider, delta bars, OBS chip, apply flow
-- compare slots, verdict, and radar
-- compendium and strings page loading and action buttons
-- create, save, activate, and reset flows from the dock
+**Manual smoke** after UI or engine work: overview hero/bars/radar/fit/warnings; tune; compare; compendium/strings; dock create/save/activate; leaderboard tab.
 
-## Common Pitfalls
+## Common pitfalls
 
-1. `data.js` is generated, not hand-authored.
-2. Tailwind CDN means runtime-generated utility class names are risky.
-3. Dark mode is driven by `data-theme="dark"` on `<html>`.
-4. `swingweight` uses a lowercase `w` in the data model.
-5. The same function name may exist in both `app.js` and TS, but only one may be live.
-6. A working render can still be wrong if it is driven by stale runtime state.
+1. `data.js` is generated — edit JSON under `pipeline/data/` and re-run the pipeline.  
+2. Tailwind via CDN — avoid risky dynamic class composition; keep existing utility strings when touching TS templates.  
+3. Dark mode: `data-theme="dark"` on `<html>`.  
+4. JSON field name: **`swingweight`** (lowercase `w`).  
+5. Import paths in TS often end in `.js` (bundler resolution to `.ts` sources).  
+6. Stale client state can produce a “working” UI with wrong numbers — verify store + setup-sync when scores look off.
 
 ## Deployment
 
-GitHub Pages deploys from pushes to `main`.
+Push to `main` for GitHub Pages; Vercel mirrors the repo.
 
 ```bash
 git push origin main
 ```
 
-Actions:
-`https://github.com/zaldytb/loadout-lab/actions`
+Actions: `https://github.com/zaldytb/loadout-lab/actions`
 
-Mirror:
-`https://loadout-lab.vercel.app`
+## Further reference
 
-## Next Migration Reference
-
-Use [ts-migration-plan.md](ts-migration-plan.md) as the current continuation document.
+- [ts-migration-plan.md](ts-migration-plan.md) — migration status and optional follow-ups  
+- [docs/README.md](docs/README.md) — documentation index  
+- [CLAUDE.md](CLAUDE.md) — Claude Code checklist and commands  

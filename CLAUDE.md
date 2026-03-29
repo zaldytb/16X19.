@@ -21,7 +21,7 @@ npm run typecheck    # TypeScript check — must be zero errors
 npm run canary       # 5 regression tests — must pass with zero OBS drift
 
 # Data pipeline (when modifying pipeline/data/*.json)
-npm run pipeline     # validate + export + canary (full pipeline)
+npm run pipeline     # validate + export:verify (validate, regenerate data.js, run canaries)
 npm run validate     # Validate frames.json / strings.json against schemas
 npm run export       # Regenerate data.js from JSON source files
 npm run canary:baseline  # Re-record expected canary values (after intentional engine changes)
@@ -41,9 +41,9 @@ npm run calibrate       # Re-fit string estimation coefficients
 
 ### Module bridge pattern
 
-The app uses a hybrid architecture: TypeScript modules live in `src/`, but the main rendering logic is in `app.js` (~10,700 lines of JavaScript). `src/main.js` is the Vite entry point — it imports everything and re-exports to `window.*` so that inline `onclick="funcName()"` handlers in `index.html` can reach them.
+TypeScript owns all live UI and engine code under `src/`. [`src/main.ts`](src/main.ts) is the Vite entry — it imports modules and assigns them to `window.*` so inline `onclick="funcName()"` handlers in `index.html` work. There is no root `app.js` monolith.
 
-When adding new engine or state functions: export from the TypeScript module → barrel-export from its `index.ts` → import and attach to `window` in `src/main.js`.
+When exposing new functions to HTML handlers: export from the TypeScript module → import in `src/main.ts` → assign to `window` (and extend `src/global.d.ts` if needed for strict typing).
 
 ### 4-Layer Prediction Engine (`src/engine/`)
 
@@ -80,7 +80,7 @@ All pages derive their initial state from `getCurrentSetup()`. The active loadou
 
 ### UI pages (`src/ui/pages/`)
 
-Six route modules: `overview.ts`, `tune.ts`, `compare.ts`, `optimize.ts`, `find-my-build.ts`, `my-loadouts.ts`. Each initializes from `getCurrentSetup()` on page entry.
+Route modules include `shell.ts`, `overview.ts`, `tune.ts`, `compare/`, `optimize.ts`, `compendium.ts`, `strings.ts`, `find-my-build.ts`, `my-loadouts.ts`, `leaderboard.ts`. They coordinate with `getCurrentSetup()` / store as appropriate.
 
 ---
 
@@ -88,7 +88,7 @@ Six route modules: `overview.ts`, `tune.ts`, `compare.ts`, `optimize.ts`, `find-
 
 - **Never edit `data.js` directly** — it's generated. Modify `pipeline/data/frames.json` or `pipeline/data/strings.json`, then run `npm run pipeline`.
 - **Swingweight spelling** — field name in JSON data is `swingweight` (lowercase 'w'), not `swingWeight`.
-- **TypeScript strict mode** — `src/engine/` and `src/state/` must compile with zero errors. `app.js` and `leaderboard.js` are legacy JS and not type-checked.
+- **TypeScript strict mode** — `src/` (engine, state, UI) must pass `npm run typecheck` with zero errors.
 - **Canary tests have zero drift tolerance** — any OBS score change (even 0.1) will fail. If you intentionally change engine math, run `npm run canary:baseline` to re-record.
 - **Tailwind is loaded via CDN** — config is inline in `index.html`, not a `tailwind.config.*` file.
 

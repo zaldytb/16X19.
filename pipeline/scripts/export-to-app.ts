@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 'use strict';
 const fs    = require('fs');
 const path  = require('path');
@@ -6,7 +8,7 @@ const { spawnSync } = require('child_process');
 const ROOT        = path.resolve(__dirname, '../..');
 const DATA_DIR    = path.join(ROOT, 'pipeline', 'data');
 const OUT_FILE    = path.join(ROOT, 'data.js');
-const CANARY_SCRIPT = path.join(ROOT, 'pipeline', 'scripts', 'canary-test.js');
+const CANARY_SCRIPT = path.join(ROOT, 'pipeline', 'scripts', 'canary-test.ts');
 const TSX_BIN     = path.join(ROOT, 'node_modules', '.bin', 'tsx' + (process.platform === 'win32' ? '.cmd' : ''));
 
 const PIPELINE_FIELDS = ['_provenance', '_meta', 'brand', '_staging'];

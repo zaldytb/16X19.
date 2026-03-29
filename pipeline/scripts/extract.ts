@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 // ⚠️  ONE-TIME MIGRATION SCRIPT — DO NOT RE-RUN
 // This script extracted RACQUETS, STRINGS, and FRAME_META from app.js
 // into pipeline/data/*.json during the initial pipeline setup.

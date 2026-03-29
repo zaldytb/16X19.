@@ -17,7 +17,7 @@ Loadout Lab is a physics-based tennis equipment analysis tool. Pick a racquet, s
 
 ## Prerequisites
 
-- **Node.js** v18 or later — needed for the data pipeline and the optional desktop GUI
+- **Node.js** v20 or later — needed for the data pipeline, `tsx`, and the optional desktop GUI
 - **npm** — bundled with Node.js
 - A modern browser (Chrome, Firefox, Safari, Edge)
 
@@ -108,8 +108,10 @@ identity,notes,aeroBonus,comfortTech,spinTech,genBonus
 Run the import:
 
 ```bash
-node pipeline/scripts/ingest.js --type frame --csv path/to/your/frames.csv
+npx tsx pipeline/scripts/ingest.ts --type frame --csv path/to/your/frames.csv
 ```
+
+For interactive prompts (no CSV), use `npm run ingest:frame` instead.
 
 The script will print how many frames were added and skip any that already exist.
 
@@ -185,7 +187,7 @@ shape,identity,notes
 Run the import:
 
 ```bash
-node pipeline/scripts/ingest.js --type string --csv path/to/your/strings.csv
+npx tsx pipeline/scripts/ingest.ts --type string --csv path/to/your/strings.csv
 ```
 
 ---
@@ -198,7 +200,7 @@ After adding any frame or string, regenerate `data.js` so the app picks up the n
 npm run pipeline
 ```
 
-This runs validation → export → canary regression tests in one step. If everything passes, open (or refresh) `index.html` and your new equipment will appear in the selectors.
+This runs **validate** (schemas), then **export:verify** (regenerate `data.js` and run **canary** regression tests). If everything passes, run `npm run dev` or refresh your deployed build — new equipment appears in the selectors.
 
 ### Individual pipeline commands
 
@@ -227,10 +229,10 @@ npm run ingest:frame
 npm run ingest:string
 
 # Add racquets from CSV
-node pipeline/scripts/ingest.js --type frame --csv my-frames.csv
+npx tsx pipeline/scripts/ingest.ts --type frame --csv my-frames.csv
 
 # Add strings from CSV
-node pipeline/scripts/ingest.js --type string --csv my-strings.csv
+npx tsx pipeline/scripts/ingest.ts --type string --csv my-strings.csv
 
 # Desktop GUI for frames (no CLI)
 cd tools/frame-gui && npm install && npm start

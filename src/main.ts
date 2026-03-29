@@ -32,6 +32,7 @@ import * as SharedRecommendations from './ui/shared/recommendations.js';
 import * as SharedPresets from './ui/shared/presets.js';
 import * as SharedHelpers from './ui/shared/helpers.js';
 
+
 const pageLoaders = {
   leaderboard: () => import('./ui/pages/leaderboard.js'),
   findMyBuild: () => import('./ui/pages/find-my-build.js'),
@@ -40,7 +41,8 @@ const pageLoaders = {
   strings: () => import('./ui/pages/strings.js'),
 };
 
-let leaderboardModulePromise = null;
+type LeaderboardModule = typeof import('./ui/pages/leaderboard.js');
+let leaderboardModulePromise: Promise<LeaderboardModule> | null = null;
 
 async function ensureLeaderboardModule() {
   if (!leaderboardModulePromise) {
@@ -54,16 +56,21 @@ async function ensureLeaderboardModule() {
   return leaderboardModulePromise;
 }
 
-function bindLazyFunction(windowKey, loader, exportKey = windowKey) {
-  window[windowKey] = async (...args) => {
+function bindLazyFunction(
+  windowKey: string,
+  loader: () => Promise<Record<string, unknown>>,
+  exportKey: string = windowKey,
+): void {
+  const w = window as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
+  w[windowKey] = async (...args: unknown[]) => {
     const mod = await loader();
     const fn = mod[exportKey];
     if (typeof fn !== 'function') return undefined;
-    return fn(...args);
+    return (fn as (...fnArgs: unknown[]) => unknown)(...args);
   };
 }
 
-function runDigicraftBootSequence() {
+function runDigicraftBootSequence(): void {
   const loader = document.getElementById('dc-boot-loader');
   const batteryTrack = document.getElementById('dc-boot-battery');
   const pctText = document.getElementById('dc-boot-pct');
@@ -75,7 +82,7 @@ function runDigicraftBootSequence() {
   logsContainer.innerHTML = '';
 
   const totalSegments = 10;
-  const segments = [];
+  const segments: HTMLDivElement[] = [];
   for (let i = 0; i < totalSegments; i += 1) {
     const segment = document.createElement('div');
     segment.className = 'flex-1 bg-black/10 dark:bg-white/5 transition-colors duration-75';
@@ -183,7 +190,7 @@ window.confirmRemoveLoadout = MyLoadouts.confirmRemoveLoadout;
   '_fmbSearchDirection',
   '_fmbRankFrames',
   '_fmbRenderFrameCard',
-  '_fmbAction'
+  '_fmbAction',
 ].forEach((key) => bindLazyFunction(key, pageLoaders.findMyBuild));
 
 // Bridge: expose Overview functions to window
@@ -289,7 +296,6 @@ window.compareEditorUpdateTension = ComparePage.updateEditorTension;
 window.compareEditorLoadFromSaved = ComparePage.editorLoadFromSaved;
 
 // Bridge: expose LEGACY Compare functions to window (for backward compatibility)
-// Note: openTuneForSlot uses app.js version (has full UI population logic)
 window.toggleComparisonMode = ComparePage.toggleComparisonMode;
 window.addComparisonSlot = ComparePage.addComparisonSlot;
 window.addComparisonSlotFromHome = ComparePage.addComparisonSlotFromHome;
@@ -305,11 +311,8 @@ window._toggleCompareCardEditor = ComparePage._toggleCompareCardEditor;
 window._compareLoadFromSaved = ComparePage.compareLoadFromSaved;
 window._refreshCompareSlot = ComparePage.refreshCompareSlot;
 window.getSlotColors = ComparePage.getSlotColors;
-// openTuneForSlot not bridged - uses app.js version
-// Several legacy compare helpers still come from app.js; avoid overwriting them here.
 
 // Note: Compare runtime state lives in app-state.ts.
-// app.js still exposes compatibility globals during the migration.
 
 // Bridge: expose Compendium functions to window
 [
@@ -466,12 +469,12 @@ window.throttle = SharedHelpers.throttle;
 Object.defineProperty(window, 'activeLoadout', {
   get: () => getActiveLoadout(),
   set: (v) => setActiveLoadout(v),
-  configurable: true
+  configurable: true,
 });
 Object.defineProperty(window, 'savedLoadouts', {
   get: () => getSavedLoadouts(),
   set: (v) => setSavedLoadouts(v),
-  configurable: true
+  configurable: true,
 });
 
 // Bridge leaderboard exports to window (needed for inline HTML handlers)
@@ -491,9 +494,11 @@ Object.defineProperty(window, 'savedLoadouts', {
   '_lbv2Compare',
 ].forEach((key) => bindLazyFunction(key, ensureLeaderboardModule, key));
 
-window.initLeaderboardApp = async (...args) => {
+window.initLeaderboardApp = async (...args: any[]) => {
   const mod = await ensureLeaderboardModule();
-  return mod.initLeaderboardApp?.(...args);
+  const fn = mod.initLeaderboardApp;
+  if (!fn) return undefined;
+  return (fn as (...a: any[]) => unknown)(...args);
 };
 window._lbv2State = window._lbv2State || { initialized: false };
 
@@ -502,37 +507,32 @@ if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
   console.log('[Main] Explicit window bridge ready');
 }
 
-// Initialize the app immediately (module scripts run after DOMContentLoaded)
-// The DOMContentLoaded listener in app.js won't fire for module scripts
+// Initialize the app immediately (module scripts may run after DOM is already parsed)
 try {
   if (document.readyState === 'loading') {
-    // DOM not ready yet, wait for event
     document.addEventListener('DOMContentLoaded', () => {
-      // DOM ready, init app
       runDigicraftBootSequence();
       Shell.init();
       Theme.handleResponsiveHeader();
       DockCollapse._initDockCollapse();
     });
   } else {
-    // DOM already loaded, init immediately
     runDigicraftBootSequence();
     Shell.init();
     Theme.handleResponsiveHeader();
     DockCollapse._initDockCollapse();
   }
-  
-  // Also run the dock scroll shadow and backdrop handlers from app.js
+
   const dock = document.getElementById('build-dock');
   if (dock) {
-    dock.addEventListener('scroll', function() {
+    dock.addEventListener('scroll', function handleDockScroll() {
       dock.classList.toggle('dock-scrolled', dock.scrollTop > 0);
     }, { passive: true });
   }
-  
+
   const dockBackdrop = document.getElementById('dock-backdrop');
   if (dockBackdrop) {
-    dockBackdrop.addEventListener('click', function() {
+    dockBackdrop.addEventListener('click', function handleDockBackdropClick() {
       const d = document.getElementById('build-dock');
       if (d && d.classList.contains('dock-expanded')) {
         MobileDock.toggleMobileDock();

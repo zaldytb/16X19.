@@ -1,3 +1,5 @@
+> **Archived — phased extraction plan predating removal of root `app.js`.** For current architecture see [`ts-migration-plan.md`](ts-migration-plan.md).
+
 # TypeScript Migration Continuation Plan — Phases 8–12
 
 ## Current State Analysis

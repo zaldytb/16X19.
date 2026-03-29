@@ -83,10 +83,10 @@ function _extractBrand(name: string): string {
 export function _compSwitchTab(tab: string): void {
   document.querySelectorAll<HTMLElement>('.comp-tab-btn').forEach((btn) => {
     if (btn.dataset.compTab === tab) {
-      btn.classList.add('bg-dc-platinum', 'text-dc-void', 'font-bold');
+      btn.classList.add('bg-dc-active-bg', 'text-dc-active-text', 'font-bold');
       btn.classList.remove('bg-transparent', 'text-dc-storm', 'hover:bg-dc-border/50', 'hover:text-dc-platinum');
     } else {
-      btn.classList.remove('bg-dc-platinum', 'text-dc-void', 'font-bold');
+      btn.classList.remove('bg-dc-active-bg', 'text-dc-active-text', 'font-bold');
       btn.classList.add('bg-transparent', 'text-dc-storm', 'hover:bg-dc-border/50', 'hover:text-dc-platinum');
     }
   });

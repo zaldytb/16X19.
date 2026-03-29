@@ -6027,6 +6027,70 @@ textarea:focus-visible {
   color: var(--dc-storm);
 }
 
+/* Bible / Strings browse HUD — theme via data-theme (Tailwind dark: + /opacity breaks with var(--dc-*)) */
+/* Full-opacity sheet so detail/charts from the compendium never bleed through */
+.comp-query-hud {
+  background-color: var(--dc-void);
+  isolation: isolate;
+}
+
+.comp-hud-filter-select {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  background-color: var(--dc-void-lift);
+  color: var(--dc-platinum);
+  border: 1px solid var(--dc-border);
+  font-family: var(--dc-font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.5rem 2rem 0.5rem 0.65rem;
+  cursor: pointer;
+  line-height: 1.3;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235E666C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.45rem center;
+  background-size: 12px;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.comp-hud-filter-select:hover {
+  border-color: var(--dc-border-hover);
+}
+
+.comp-hud-filter-select:focus {
+  outline: none;
+  border-color: var(--dc-accent, #ff4500);
+}
+
+.comp-query-hud option {
+  background-color: var(--dc-void-deep);
+  color: var(--dc-platinum);
+}
+
+[data-theme="light"] .comp-query-hud option {
+  background-color: #fff;
+  color: #1a1a1a;
+}
+
+.comp-query-hud #comp-search::placeholder,
+.comp-query-hud #string-search::placeholder {
+  color: var(--dc-storm);
+  opacity: 0.55;
+}
+
+#comp-frame-list > button,
+#string-list > button {
+  background: var(--dc-void-lift);
+}
+
+#comp-frame-list > button:hover,
+#string-list > button:hover {
+  background: var(--dc-void-deep);
+}
+
 .comp-filters {
   display: flex;
   flex-direction: column;

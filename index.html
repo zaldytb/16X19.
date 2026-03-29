@@ -33,6 +33,8 @@
           'dc-white': 'var(--dc-white)',
           'dc-border': 'var(--dc-border)',
           'dc-border-hover': 'var(--dc-border-hover)',
+          'dc-active-bg': 'var(--dc-active-bg)',
+          'dc-active-text': 'var(--dc-active-text)',
           /* Fixed — strong brand / on-accent contrast in both themes */
           'dc-accent': '#FF4500',
           'dc-red': '#AF0000',
@@ -916,7 +918,7 @@
       <section class="workspace-mode hidden" id="mode-compendium" data-mode="compendium">
 <div class="w-full max-w-7xl mx-auto mb-10 mt-4">
   <div class="grid grid-cols-3 border border-dc-border">
-    <button class="comp-tab-btn bg-dc-platinum text-dc-void font-bold py-4 md:py-5 font-mono text-[10px] md:text-xs uppercase tracking-[0.2em] border-r border-dc-border transition-colors" data-comp-tab="rackets" onclick="_compSwitchTab('rackets')">Rackets</button>
+    <button class="comp-tab-btn bg-dc-active-bg text-dc-active-text font-bold py-4 md:py-5 font-mono text-[10px] md:text-xs uppercase tracking-[0.2em] border-r border-dc-border transition-colors" data-comp-tab="rackets" onclick="_compSwitchTab('rackets')">Rackets</button>
     <button class="comp-tab-btn bg-transparent text-dc-storm hover:bg-dc-border/50 hover:text-dc-platinum py-4 md:py-5 font-mono text-[10px] md:text-xs uppercase tracking-[0.2em] border-r border-dc-border transition-colors" data-comp-tab="strings" onclick="_compSwitchTab('strings')">Strings</button>
     <button class="comp-tab-btn bg-transparent text-dc-storm hover:bg-dc-border/50 hover:text-dc-platinum py-4 md:py-5 font-mono text-[10px] md:text-xs uppercase tracking-[0.2em] transition-colors" data-comp-tab="leaderboard" onclick="_compSwitchTab('leaderboard')">Leaderboard</button>
   </div>
@@ -925,32 +927,32 @@
         <!-- Tab Content: Rackets -->
         <div class="comp-tab-panel" id="comp-tab-rackets">
           <!-- Query HUD Overlay -->
-          <div class="fixed inset-0 z-[100] opacity-0 invisible pointer-events-none transition-all duration-300 flex flex-col p-8 md:p-16 bg-white/95 dark:bg-dc-void/95 backdrop-blur-none [&.active]:opacity-100 [&.active]:visible [&.active]:pointer-events-auto [&.active]:backdrop-blur-xl" id="comp-hud">
-            <button class="absolute top-6 right-6 bg-transparent border-none text-dc-storm dark:text-dc-platinum-dim hover:text-dc-platinum dark:hover:text-dc-platinum text-4xl cursor-pointer z-[110] transition-colors" onclick="_compToggleHud()">×</button>
+          <div class="comp-query-hud fixed inset-0 z-[200] opacity-0 invisible pointer-events-none transition-all duration-300 flex flex-col p-8 md:p-16 [&.active]:opacity-100 [&.active]:visible [&.active]:pointer-events-auto" id="comp-hud">
+            <button class="absolute top-6 right-6 bg-transparent border-none text-dc-storm dark:text-dc-platinum-dim hover:text-dc-platinum dark:hover:text-dc-platinum text-4xl cursor-pointer z-[210] transition-colors" onclick="_compToggleHud()">×</button>
             <input type="text" class="w-full bg-transparent border-0 border-b-2 border-dc-storm focus:border-dc-accent font-mono text-2xl md:text-4xl tracking-tight text-dc-platinum pb-4 mb-8 outline-none transition-colors placeholder:text-dc-storm/50" id="comp-search" placeholder="Search frames...">
             <div class="flex gap-4 flex-wrap mb-8">
-              <select id="comp-filter-brand" class="bg-white dark:bg-dc-void-deep border border-dc-storm/40 dark:border-dc-platinum-dim text-dc-platinum font-mono text-xs px-3 py-2 cursor-pointer hover:border-dc-storm dark:hover:border-dc-platinum transition-colors focus:outline-none focus:border-dc-accent"><option value="">All Brands</option></select>
-              <select id="comp-filter-pattern" class="bg-white dark:bg-dc-void-deep border border-dc-storm/40 dark:border-dc-platinum-dim text-dc-platinum font-mono text-xs px-3 py-2 cursor-pointer hover:border-dc-storm dark:hover:border-dc-platinum transition-colors focus:outline-none focus:border-dc-accent">
+              <select id="comp-filter-brand" class="comp-hud-filter-select"><option value="">All Brands</option></select>
+              <select id="comp-filter-pattern" class="comp-hud-filter-select">
                 <option value="">All Patterns</option>
                 <option value="16x19">16x19</option>
                 <option value="18x20">18x20</option>
                 <option value="16x20">16x20</option>
                 <option value="16x18">16x18</option>
               </select>
-              <select id="comp-filter-stiffness" class="bg-white dark:bg-dc-void-deep border border-dc-storm/40 dark:border-dc-platinum-dim text-dc-platinum font-mono text-xs px-3 py-2 cursor-pointer hover:border-dc-storm dark:hover:border-dc-platinum transition-colors focus:outline-none focus:border-dc-accent">
+              <select id="comp-filter-stiffness" class="comp-hud-filter-select">
                 <option value="">All Stiffness</option>
                 <option value="soft">Soft (&le;59)</option>
                 <option value="medium">Medium (60&ndash;65)</option>
                 <option value="stiff">Stiff (66+)</option>
               </select>
-              <select id="comp-filter-headsize" class="bg-white dark:bg-dc-void-deep border border-dc-storm/40 dark:border-dc-platinum-dim text-dc-platinum font-mono text-xs px-3 py-2 cursor-pointer hover:border-dc-storm dark:hover:border-dc-platinum transition-colors focus:outline-none focus:border-dc-accent">
+              <select id="comp-filter-headsize" class="comp-hud-filter-select">
                 <option value="">All Head Sizes</option>
                 <option value="97">97</option>
                 <option value="98">98</option>
                 <option value="100">100</option>
                 <option value="102">102+</option>
               </select>
-              <select id="comp-filter-weight" class="bg-white dark:bg-dc-void-deep border border-dc-storm/40 dark:border-dc-platinum-dim text-dc-platinum font-mono text-xs px-3 py-2 cursor-pointer hover:border-dc-storm dark:hover:border-dc-platinum transition-colors focus:outline-none focus:border-dc-accent">
+              <select id="comp-filter-weight" class="comp-hud-filter-select">
                 <option value="">All Weights</option>
                 <option value="ultralight">&lt; 285g (Ultra-Light)</option>
                 <option value="light">285-305g (Light)</option>
@@ -977,18 +979,18 @@
         <div class="comp-tab-panel hidden" id="comp-tab-strings">
           
           <!-- String HUD Overlay (mirrors racket HUD) -->
-          <div class="fixed inset-0 z-[100] opacity-0 invisible pointer-events-none transition-all duration-300 flex flex-col p-8 md:p-16 bg-white/95 dark:bg-dc-void/95 backdrop-blur-none [&.active]:opacity-100 [&.active]:visible [&.active]:pointer-events-auto [&.active]:backdrop-blur-xl" id="string-hud">
-            <button class="absolute top-6 right-6 bg-transparent border-none text-dc-storm dark:text-dc-platinum-dim hover:text-dc-platinum dark:hover:text-dc-platinum text-4xl cursor-pointer z-[110] transition-colors" onclick="_stringToggleHud()">×</button>
+          <div class="comp-query-hud fixed inset-0 z-[200] opacity-0 invisible pointer-events-none transition-all duration-300 flex flex-col p-8 md:p-16 [&.active]:opacity-100 [&.active]:visible [&.active]:pointer-events-auto" id="string-hud">
+            <button class="absolute top-6 right-6 bg-transparent border-none text-dc-storm dark:text-dc-platinum-dim hover:text-dc-platinum dark:hover:text-dc-platinum text-4xl cursor-pointer z-[210] transition-colors" onclick="_stringToggleHud()">×</button>
             <input type="text" class="w-full bg-transparent border-0 border-b-2 border-dc-storm focus:border-dc-accent font-mono text-2xl md:text-4xl tracking-tight text-dc-platinum pb-4 mb-8 outline-none transition-colors placeholder:text-dc-storm/50" id="string-search" placeholder="Search strings...">
             <div class="flex gap-4 flex-wrap mb-8">
-              <select id="string-filter-material" class="bg-white dark:bg-dc-void-deep border border-dc-storm/40 dark:border-dc-platinum-dim text-dc-platinum font-mono text-xs px-3 py-2 cursor-pointer hover:border-dc-storm dark:hover:border-dc-platinum transition-colors focus:outline-none focus:border-dc-accent">
+              <select id="string-filter-material" class="comp-hud-filter-select">
                 <option value="">All Materials</option>
                 <option value="Polyester">Polyester</option>
                 <option value="Nylon">Nylon/Multifilament</option>
                 <option value="Synthetic Gut">Synthetic Gut</option>
                 <option value="Natural Gut">Natural Gut</option>
               </select>
-              <select id="string-filter-shape" class="bg-white dark:bg-dc-void-deep border border-dc-storm/40 dark:border-dc-platinum-dim text-dc-platinum font-mono text-xs px-3 py-2 cursor-pointer hover:border-dc-storm dark:hover:border-dc-platinum transition-colors focus:outline-none focus:border-dc-accent">
+              <select id="string-filter-shape" class="comp-hud-filter-select">
                 <option value="">All Shapes</option>
                 <option value="Round">Round</option>
                 <option value="Square">Square</option>
@@ -997,7 +999,7 @@
                 <option value="Octagonal">Octagonal</option>
                 <option value="Rough">Rough/Textured</option>
               </select>
-              <select id="string-filter-stiffness" class="bg-white dark:bg-dc-void-deep border border-dc-storm/40 dark:border-dc-platinum-dim text-dc-platinum font-mono text-xs px-3 py-2 cursor-pointer hover:border-dc-storm dark:hover:border-dc-platinum transition-colors focus:outline-none focus:border-dc-accent">
+              <select id="string-filter-stiffness" class="comp-hud-filter-select">
                 <option value="">All Stiffness</option>
                 <option value="soft">Soft (&lt; 180)</option>
                 <option value="medium">Medium (180-210)</option>

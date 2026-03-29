@@ -208,6 +208,89 @@ export function getSlotColors() {
   return SLOT_COLORS;
 }
 
+export function showQuickAddPrompt(): void {
+  let promptEl = document.getElementById('compare-qa-prompt');
+  if (!promptEl) {
+    promptEl = document.createElement('div');
+    promptEl.id = 'compare-qa-prompt';
+    promptEl.className = 'compare-qa-prompt';
+
+    const slotsEl = document.getElementById(CONTAINER_SLOTS);
+    if (slotsEl?.parentElement) {
+      slotsEl.parentElement.insertBefore(promptEl, slotsEl.nextSibling);
+    }
+  }
+
+  if (!promptEl) return;
+
+  promptEl.innerHTML = `
+    <div class="compare-qa-inner">
+      <p class="compare-qa-title">Add a second setup to compare</p>
+      <p class="compare-qa-sub">Pick a frame and string, or save more loadouts from Racket Bible</p>
+      <div class="compare-qa-fields">
+        <select class="dock-qa-select" id="compare-qa-frame">
+          <option value="">Choose frame...</option>
+        </select>
+        <select class="dock-qa-select" id="compare-qa-string">
+          <option value="">Choose string...</option>
+        </select>
+        <input type="number" class="dock-qa-input" id="compare-qa-tension" value="53" min="30" max="70" style="width:70px">
+        <button class="dock-qa-btn dock-qa-btn-primary" onclick="_compareQuickAdd()" style="flex:none;padding:7px 16px">Add to Compare</button>
+      </div>
+    </div>
+  `;
+
+  const frameSelect = document.getElementById('compare-qa-frame') as HTMLSelectElement | null;
+  const stringSelect = document.getElementById('compare-qa-string') as HTMLSelectElement | null;
+  if (!frameSelect || !stringSelect) return;
+
+  compareRacquets.forEach((racquet) => {
+    const option = document.createElement('option');
+    option.value = racquet.id;
+    option.textContent = racquet.name;
+    frameSelect.appendChild(option);
+  });
+
+  compareStrings.forEach((string) => {
+    const option = document.createElement('option');
+    option.value = string.id;
+    option.textContent = `${string.name} (${string.gauge})`;
+    stringSelect.appendChild(option);
+  });
+}
+
+export function quickAddFromPrompt(): void {
+  const frameId = (document.getElementById('compare-qa-frame') as HTMLSelectElement | null)?.value || '';
+  const stringId = (document.getElementById('compare-qa-string') as HTMLSelectElement | null)?.value || '';
+  const tensionValue = (document.getElementById('compare-qa-tension') as HTMLInputElement | null)?.value || '53';
+  const tension = parseInt(tensionValue, 10) || 53;
+  if (!frameId || !stringId) return;
+
+  const racquet = compareRacquets.find((item) => item.id === frameId);
+  const string = compareStrings.find((item) => item.id === stringId);
+  if (!racquet || !string) return;
+
+  const quickLoadout: Loadout = {
+    id: `compare-quick-${Date.now()}`,
+    name: `${string.name} on ${racquet.name}`,
+    frameId,
+    stringId,
+    isHybrid: false,
+    mainsId: null,
+    crossesId: null,
+    mainsTension: tension,
+    crossesTension: tension,
+    gauge: null,
+    mainsGauge: null,
+    crossesGauge: null,
+    obs: 0,
+    stats: undefined,
+  };
+
+  addLoadoutToPreferredSlot(quickLoadout);
+  document.getElementById('compare-qa-prompt')?.remove();
+}
+
 export function toggleComparisonMode(): void {
   const win = window as any;
   const currentMode = typeof win.currentMode === 'string' ? win.currentMode : null;
@@ -400,6 +483,20 @@ export function addLoadoutToNextAvailableSlot(loadout: Loadout): SlotId | null {
   return emptySlotId;
 }
 
+export function addLoadoutToPreferredSlot(loadout: Loadout): SlotId | null {
+  const emptySlotId = getFirstEmptySlot();
+  if (emptySlotId) {
+    addLoadoutToSlot(emptySlotId, loadout);
+    return emptySlotId;
+  }
+
+  const fallbackSlotId = _currentState.slots[_currentState.slots.length - 1]?.id ?? null;
+  if (!fallbackSlotId) return null;
+
+  addLoadoutToSlot(fallbackSlotId, loadout);
+  return fallbackSlotId;
+}
+
 export function recalcSlot(slotIndex: number): void {
   const slot = getSlotByIndex(slotIndex);
   if (!slot || slot.loadout === null) {
@@ -413,17 +510,35 @@ export function recalcSlot(slotIndex: number): void {
 export function quickAddSaved(loadoutId: string): void {
   const loadout = getSavedLoadouts().find((item) => item.id === loadoutId);
   if (!loadout) return;
+  addLoadoutToPreferredSlot(toTrackedCompareLoadout(loadout));
+}
 
-  const emptySlotId = getFirstEmptySlot();
-  if (emptySlotId) {
-    addLoadoutToSlot(emptySlotId, toTrackedCompareLoadout(loadout));
-    return;
+export function autoFillFromSaved(): void {
+  _currentState.slots.forEach((slot) => {
+    clearSlot(slot.id);
+  });
+
+  const activeLoadout = getActiveLoadout();
+  const savedLoadouts = getSavedLoadouts();
+  const compareCandidates: Loadout[] = [];
+
+  if (activeLoadout) compareCandidates.push({ ...activeLoadout });
+
+  for (const loadout of savedLoadouts) {
+    if (compareCandidates.length >= 3) break;
+    if (activeLoadout && loadout.id === activeLoadout.id) continue;
+    compareCandidates.push({ ...loadout });
   }
 
-  const editingSlotId = _currentState.editingSlotId || _currentState.slots[0]?.id;
-  if (editingSlotId) {
-    addLoadoutToSlot(editingSlotId, toTrackedCompareLoadout(loadout));
+  if (compareCandidates.length < 2 && savedLoadouts.length > 0) {
+    const first = savedLoadouts[0];
+    const alreadyPresent = compareCandidates.some((candidate) => candidate.id === first.id);
+    if (!alreadyPresent) compareCandidates.push({ ...first });
   }
+
+  compareCandidates.slice(0, 3).forEach((candidate) => {
+    addLoadoutToNextAvailableSlot(toTrackedCompareLoadout(candidate));
+  });
 }
 
 export function compareLoadFromSaved(slotIndex: number, loadoutId: string): void {

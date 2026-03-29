@@ -26,7 +26,6 @@ import * as Compendium from './compendium.js';
 import {
   _handleSharedBuildURL,
   _initLandingSearch,
-  _showCompareQuickAddPrompt,
   _syncLegacyModeState,
   hydrateDock,
   populateGaugeDropdown,
@@ -654,7 +653,7 @@ export function switchMode(mode: string): void {
           autoFillCompareFromSaved();
         } else if (getSavedLoadouts().length === 1 || getActiveLoadout()) {
           ComparePage.addComparisonSlotFromHome();
-          _showCompareQuickAddPrompt();
+          ComparePage.showQuickAddPrompt();
         } else {
           ComparePage.addComparisonSlotFromHome();
         }
@@ -667,7 +666,7 @@ export function switchMode(mode: string): void {
           autoFillCompareFromSaved();
         } else if (getSavedLoadouts().length === 1 || getActiveLoadout()) {
           ComparePage.addComparisonSlotFromHome();
-          _showCompareQuickAddPrompt();
+          ComparePage.showQuickAddPrompt();
         } else {
           ComparePage.addComparisonSlotFromHome();
         }

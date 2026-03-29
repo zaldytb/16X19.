@@ -831,6 +831,9 @@ function _dockCompareEdit(slotIndex) {
 }
 
 function _dockCompareRemove(slotIndex) {
+  if (typeof window._dockCompareRemove === 'function' && window._dockCompareRemove !== _dockCompareRemove) {
+    return window._dockCompareRemove(slotIndex);
+  }
   comparisonSlots.splice(slotIndex, 1);
 
   try {
@@ -847,6 +850,9 @@ function _dockCompareRemove(slotIndex) {
 }
 
 function _dockCompareQuickAdd(loadoutId) {
+  if (typeof window._dockCompareQuickAdd === 'function' && window._dockCompareQuickAdd !== _dockCompareQuickAdd) {
+    return window._dockCompareQuickAdd(loadoutId);
+  }
   const lo = savedLoadouts.find(l => l.id === loadoutId);
   if (!lo || comparisonSlots.length >= 3) return;
   _addLoadoutAsSlot(lo);
@@ -2402,54 +2408,11 @@ function toggleComparisonMode() {
   if (typeof window.toggleComparisonMode === 'function' && window.toggleComparisonMode !== toggleComparisonMode) {
     return window.toggleComparisonMode();
   }
-  // Legacy compat — now routes through switchMode
-  if (currentMode === 'compare') {
-    switchMode('overview');
-  } else {
-    switchMode('compare');
-  }
 }
 
 function addComparisonSlotFromHome() {
   if (typeof window.addComparisonSlotFromHome === 'function' && window.addComparisonSlotFromHome !== addComparisonSlotFromHome) {
     return window.addComparisonSlotFromHome();
-  }
-  if (comparisonSlots.length >= 3) return;
-  const setup = getCurrentSetup();
-  const slotData = {
-    id: Date.now(),
-    racquetId: '',
-    stringId: '',
-    isHybrid: false,
-    mainsId: '',
-    crossesId: '',
-    mainsTension: 55,
-    crossesTension: 53,
-    stats: null,
-    identity: null
-  };
-
-  if (setup) {
-    slotData.racquetId = setup.racquet.id;
-    if (setup.stringConfig.isHybrid) {
-      slotData.isHybrid = true;
-      slotData.mainsId = setup.stringConfig.mains.id;
-      slotData.crossesId = setup.stringConfig.crosses.id;
-      slotData.mainsTension = setup.stringConfig.mainsTension;
-      slotData.crossesTension = setup.stringConfig.crossesTension;
-    } else {
-      slotData.isHybrid = false;
-      slotData.stringId = setup.stringConfig.string.id;
-      slotData.mainsTension = setup.stringConfig.mainsTension;
-      slotData.crossesTension = setup.stringConfig.crossesTension;
-    }
-  }
-
-  comparisonSlots.push(slotData);
-  // Render first, then recalc (DOM must exist before deltas render)
-  renderComparisonSlots();
-  if (slotData.racquetId && (slotData.stringId || slotData.mainsId)) {
-    recalcSlot(comparisonSlots.length - 1);
   }
 }
 
@@ -2457,253 +2420,35 @@ function addComparisonSlot() {
   if (typeof window.addComparisonSlot === 'function' && window.addComparisonSlot !== addComparisonSlot) {
     return window.addComparisonSlot();
   }
-  if (comparisonSlots.length >= 3) return;
-
-  const slotIndex = comparisonSlots.length;
-  const slotColor = SLOT_COLORS[slotIndex];
-
-  const slotData = {
-    id: Date.now(),
-    racquetId: '',
-    stringId: '',
-    isHybrid: false,
-    mainsId: '',
-    crossesId: '',
-    mainsTension: 55,
-    crossesTension: 53,
-    stats: null,
-    identity: null
-  };
-
-  comparisonSlots.push(slotData);
-  renderComparisonSlots();
-  renderCompareSummaries();
-  renderCompareVerdict();
-  renderCompareMatrix();
-  try { updateComparisonRadar(); } catch(e) {}
-  // Unconfigured cards auto-open in edit mode — no toggle needed
-  // Just scroll to the new card
-  var newCard = document.querySelector('.compare-summary-card[data-slot-index="' + slotIndex + '"]');
-  if (newCard) requestAnimationFrame(function() { newCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); });
 }
 
 function removeComparisonSlot(index) {
   if (typeof window.removeComparisonSlot === 'function' && window.removeComparisonSlot !== removeComparisonSlot) {
     return window.removeComparisonSlot(index);
   }
-  comparisonSlots.splice(index, 1);
-  renderComparisonSlots();
-  renderCompareSummaries();
-  renderCompareVerdict();
-  renderCompareMatrix();
-  try { updateComparisonRadar(); } catch(e) {}
-  try { renderComparisonDeltas(); } catch(e) {}
-  try { renderDockContextPanel(); } catch(e) {}
 }
 
 function renderComparisonSlots() {
   if (typeof window.renderComparisonSlots === 'function' && window.renderComparisonSlots !== renderComparisonSlots) {
     return window.renderComparisonSlots();
   }
-  // Legacy: editors panel is hidden. Only update add button visibility.
-  const addBtn = $('#btn-add-slot');
-  if (addBtn) addBtn.style.display = comparisonSlots.length >= 3 ? 'none' : '';
 }
 
 function recalcSlot(index) {
   if (typeof window.recalcSlot === 'function' && window.recalcSlot !== recalcSlot) {
     return window.recalcSlot(index);
   }
-  const slot = comparisonSlots[index];
-  const racquet = RACQUETS.find(r => r.id === slot.racquetId);
-
-  let stringConfig = null;
-
-  if (slot.isHybrid) {
-    const mainsData = STRINGS.find(s => s.id === slot.mainsId);
-    const crossesData = STRINGS.find(s => s.id === slot.crossesId);
-    if (racquet && mainsData && crossesData) {
-      stringConfig = {
-        isHybrid: true,
-        mains: mainsData,
-        crosses: crossesData,
-        mainsTension: slot.mainsTension,
-        crossesTension: slot.crossesTension
-      };
-    }
-  } else {
-    const stringData = STRINGS.find(s => s.id === slot.stringId);
-    if (racquet && stringData) {
-      stringConfig = {
-        isHybrid: false,
-        string: stringData,
-        mainsTension: slot.mainsTension,
-        crossesTension: slot.crossesTension
-      };
-    }
-  }
-
-  if (racquet && stringConfig) {
-    slot.stats = predictSetup(racquet, stringConfig);
-    slot.identity = generateIdentity(slot.stats, racquet, stringConfig);
-  } else {
-    slot.stats = null;
-    slot.identity = null;
-  }
-
-  // Partial update: update card OBS/archetype/meta in-place if card exists
-  var card = document.querySelector('.compare-summary-card[data-slot-index="' + index + '"]');
-  if (card && slot.stats) {
-    var scoreRq = RACQUETS.find(r => r.id === slot.racquetId);
-    var scoreCtx = scoreRq ? { avgTension: (slot.mainsTension + slot.crossesTension) / 2, tensionRange: scoreRq.tensionRange } : null;
-    var newObs = computeCompositeScore(slot.stats, scoreCtx).toFixed(1);
-    var archEl = card.querySelector('.compare-summary-archetype');
-    var obsEl = card.querySelector('.compare-summary-score-value');
-    var metaEl = card.querySelector('.compare-summary-meta-compact');
-    if (archEl) archEl.textContent = slot.identity?.archetype || 'Balanced Setup';
-    if (obsEl) { obsEl.textContent = newObs; obsEl.style.color = getObsScoreColor(parseFloat(newObs)); }
-    if (metaEl) {
-      var mp = [];
-      if (scoreRq) mp.push(scoreRq.name);
-      if (slot.isHybrid) {
-        var m2 = STRINGS.find(s => s.id === slot.mainsId);
-        var x2 = STRINGS.find(s => s.id === slot.crossesId);
-        if (m2 && x2) mp.push(m2.name + ' / ' + x2.name);
-      } else {
-        var str2 = STRINGS.find(s => s.id === slot.stringId);
-        if (str2) mp.push(str2.name);
-      }
-      mp.push('M:' + slot.mainsTension + ' / X:' + slot.crossesTension);
-      metaEl.textContent = mp.join(' · ');
-    }
-  } else {
-    // Full re-render needed (e.g. slot became configured or lost stats)
-    renderCompareSummaries();
-  }
-
-  renderComparisonSlots();
-  renderCompareVerdict();
-  renderCompareMatrix();
-  try { updateComparisonRadar(); } catch(e) {}
-  try { renderComparisonDeltas(); } catch(e) {}
-  try { renderDockContextPanel(); } catch(e) {}
 }
-
 function updateComparisonRadar() {
   if (typeof window.updateComparisonRadar === 'function' && window.updateComparisonRadar !== updateComparisonRadar) {
     return window.updateComparisonRadar();
   }
-  const ctx = document.getElementById('comparison-radar-chart').getContext('2d');
-  const datasets = [];
-  const colors = getSlotColors();
-
-  const pointStyles = ['circle', 'rectRot', 'triangle'];
-
-  comparisonSlots.forEach((slot, i) => {
-    if (!slot.stats) return;
-    const color = colors[i];
-    datasets.push({
-      label: `Setup ${color.label}`,
-      data: STAT_KEYS.map(k => slot.stats[k]),
-      backgroundColor: color.bgFaint,
-      borderColor: color.border,
-      borderWidth: 1.8,
-      borderDash: color.borderDash,
-      pointBackgroundColor: color.border,
-      pointBorderColor: 'transparent',
-      pointStyle: pointStyles[i] || 'circle',
-      pointRadius: 3,
-      pointHoverRadius: 5
-    });
-  });
-
-  const isDark = document.documentElement.dataset.theme === 'dark';
-  const gridColor = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)';
-  const angleColor = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)';
-  const labelColor = isDark ? 'rgba(255,255,255,0.38)' : 'rgba(0,0,0,0.36)';
-  const legendColor = isDark ? 'rgba(255,255,255,0.50)' : 'rgba(0,0,0,0.48)';
-
-  if (comparisonRadarChart) {
-    comparisonRadarChart.data.datasets = datasets;
-    comparisonRadarChart.options.scales.r.grid.color = gridColor;
-    comparisonRadarChart.options.scales.r.angleLines.color = angleColor;
-    comparisonRadarChart.options.scales.r.pointLabels.color = labelColor;
-    comparisonRadarChart.options.plugins.legend.labels.color = legendColor;
-    comparisonRadarChart.update('active');
-    return;
-  }
-
-  comparisonRadarChart = new Chart(ctx, {
-    type: 'radar',
-    data: {
-      labels: STAT_LABELS_FULL,
-      datasets
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      plugins: {
-        legend: {
-          display: true,
-          labels: {
-            font: { family: "'Inter', sans-serif", size: 11, weight: 500 },
-            color: legendColor,
-            usePointStyle: true,
-            padding: 16
-          }
-        }
-      },
-      scales: {
-        r: {
-          beginAtZero: true,
-          max: 100,
-          ticks: { stepSize: 25, display: false },
-          grid: { color: gridColor, circular: false, lineWidth: 0.5 },
-          angleLines: { color: angleColor, lineWidth: 0.5 },
-          pointLabels: {
-            font: { family: "'Inter', sans-serif", size: 10, weight: 500 },
-            color: labelColor
-          }
-        }
-      },
-      animation: { duration: 600, easing: 'easeOutQuart' }
-    }
-  });
-  _setAppComparisonRadarChart(comparisonRadarChart);
 }
 
 function renderComparisonDeltas() {
-  const container = $('#comparison-deltas');
-  if (!container) return;
-  const validSlots = comparisonSlots.filter(s => s.stats);
-  if (validSlots.length < 2) {
-    container.innerHTML = '';
-    return;
+  if (typeof window.renderComparisonDeltas === 'function' && window.renderComparisonDeltas !== renderComparisonDeltas) {
+    return window.renderComparisonDeltas();
   }
-
-  let html = '';
-
-  for (let i = 1; i < validSlots.length; i++) {
-    const base = validSlots[0];
-    const comp = validSlots[i];
-    const baseColor = SLOT_COLORS[comparisonSlots.indexOf(base)];
-    const compColor = SLOT_COLORS[comparisonSlots.indexOf(comp)];
-
-    html += `<div class="delta-group">
-      <div class="delta-title">Setup ${compColor.label} vs Setup ${baseColor.label}</div>
-      ${STAT_KEYS.map((key, j) => {
-        const diff = comp.stats[key] - base.stats[key];
-        const cls = diff > 0 ? 'positive' : diff < 0 ? 'negative' : 'neutral';
-        const sign = diff > 0 ? '+' : '';
-        return `<div class="delta-item">
-          <span class="delta-label">${STAT_LABELS[j]}</span>
-          <span class="delta-value ${cls}">${sign}${diff}</span>
-        </div>`;
-      }).join('')}
-    </div>`;
-  }
-
-  container.innerHTML = html;
 }
 
 // ============================================
@@ -2714,568 +2459,49 @@ function renderCompareSummaries() {
   if (typeof window.renderCompareSummaries === 'function' && window.renderCompareSummaries !== renderCompareSummaries) {
     return window.renderCompareSummaries();
   }
-  const container = $('#compare-summaries');
-  const emptyState = $('#compare-empty-state');
-  const validSlots = comparisonSlots.filter(s => s.stats);
-
-  if (comparisonSlots.length === 0) {
-    container.innerHTML = '';
-    emptyState.style.display = '';
-    $('#compare-verdict').style.display = 'none';
-    $('#compare-matrix').style.display = 'none';
-    $('#compare-proof').style.display = 'none';
-    const rd = document.getElementById('compare-details-radar');
-    if (rd) rd.style.display = 'none';
-    return;
-  }
-
-  emptyState.style.display = 'none';
-
-  if (validSlots.length < 2) {
-    $('#compare-verdict').style.display = 'none';
-    $('#compare-matrix').style.display = 'none';
-    $('#compare-proof').style.display = 'none';
-    const rd = document.getElementById('compare-details-radar');
-    if (rd) rd.style.display = 'none';
-  }
-
-  // Track which slots are currently editing (preserve across re-render)
-  var prevEditing = {};
-  container.querySelectorAll('.compare-summary-card.compare-card-editing').forEach(function(el) {
-    var idx = el.dataset.slotIndex;
-    if (idx != null) prevEditing[idx] = true;
-  });
-
-  container.innerHTML = '';
-
-  comparisonSlots.forEach((slot, index) => {
-    const color = SLOT_COLORS[index];
-
-    // Unconfigured placeholder
-    if (!slot.stats) {
-      const div = document.createElement('div');
-      div.className = `compare-summary-card compare-card-editing slot-color-${color.cssClass}`;
-      div.dataset.slotIndex = index;
-      div.style.opacity = '0.85';
-      const quickLoadHTML = _compareBuildLoadFromSavedDropdown(index);
-      div.innerHTML = `
-        <div class="compare-summary-top">
-          <div class="compare-summary-identity">
-            <span class="compare-summary-label slot-label-${color.cssClass}">Setup ${color.label}</span>
-            <div class="compare-summary-archetype" style="font-size:0.82rem;opacity:0.5;">Not configured</div>
-          </div>
-          <button class="compare-card-remove" onclick="removeComparisonSlot(${index})" title="Remove">✕</button>
-        </div>
-        <div class="compare-card-editor" data-slot="${index}">
-          ${quickLoadHTML}
-          <div class="compare-ed-row">
-            <div class="compare-ed-ss-racquet" data-slot="${index}" data-value="${slot.racquetId || ''}"></div>
-          </div>
-          <div class="compare-ed-toggle">
-            <button class="compare-ed-toggle-btn ${slot.isHybrid ? '' : 'active'}" data-slot="${index}" data-mode="full">Full Bed</button>
-            <button class="compare-ed-toggle-btn ${slot.isHybrid ? 'active' : ''}" data-slot="${index}" data-mode="hybrid">Hybrid</button>
-          </div>
-          ${_compareEditorStringHTML(slot, index)}
-        </div>
-      `;
-      container.appendChild(div);
-      _compareInitEditorSS(div, index, slot);
-      return;
-    }
-
-    const racquet = RACQUETS.find(r => r.id === slot.racquetId);
-    const slotTensionCtx = racquet ? { avgTension: (slot.mainsTension + slot.crossesTension) / 2, tensionRange: racquet.tensionRange } : null;
-    const obsScore = computeCompositeScore(slot.stats, slotTensionCtx).toFixed(1);
-    const pct = Math.min(100, Math.max(0, obsScore));
-    const circumference = 2 * Math.PI * 22;
-    const dashOffset = circumference * (1 - pct / 100);
-    const archetype = slot.identity?.archetype || 'Balanced Setup';
-    const isEditing = prevEditing[index];
-
-    // Compact meta
-    let metaParts = [];
-    if (racquet) metaParts.push(racquet.name);
-    if (slot.isHybrid) {
-      const m = STRINGS.find(s => s.id === slot.mainsId);
-      const x = STRINGS.find(s => s.id === slot.crossesId);
-      if (m && x) metaParts.push(m.name + ' / ' + x.name);
-    } else {
-      const str = STRINGS.find(s => s.id === slot.stringId);
-      if (str) metaParts.push(str.name);
-    }
-    metaParts.push('M:' + slot.mainsTension + ' / X:' + slot.crossesTension);
-
-    const div = document.createElement('div');
-    div.className = `compare-summary-card slot-color-${color.cssClass}${isEditing ? ' compare-card-editing' : ''}`;
-    div.dataset.slotIndex = index;
-
-    // Build "Load from My Loadouts" dropdown HTML
-    const loadFromSavedHTML = _compareBuildLoadFromSavedDropdown(index);
-
-    div.innerHTML = `
-      <div class="compare-summary-top">
-        <div class="compare-summary-identity">
-          <span class="compare-summary-label slot-label-${color.cssClass}">Setup ${color.label}</span>
-          <div class="compare-summary-archetype">${archetype}</div>
-        </div>
-        <div class="compare-summary-score">
-          <div class="compare-summary-score-ring compare-ring-sm">
-            <svg width="48" height="48" viewBox="0 0 48 48">
-              <circle cx="24" cy="24" r="22" stroke="var(--border-subtle)" stroke-width="2.5" fill="none" />
-              <circle cx="24" cy="24" r="22" stroke="${color.border}" stroke-width="2.5" fill="none"
-                stroke-dasharray="${circumference}" stroke-dashoffset="${dashOffset}"
-                stroke-linecap="round" transform="rotate(-90 24 24)" />
-            </svg>
-            <span class="compare-summary-score-value" style="color:${getObsScoreColor(parseFloat(obsScore))}">${obsScore}</span>
-          </div>
-        </div>
-      </div>
-      <div class="compare-summary-meta-compact">${metaParts.join(' · ')}</div>
-      ${_isCompareSlotStale(slot) ? '<div class="compare-slot-stale"><span class="compare-stale-text">\u21BB Source loadout changed</span><button class="compare-stale-btn" onclick="_refreshCompareSlot(' + index + ')">Refresh</button></div>' : ''}
-      <div class="compare-card-actions">
-        <button class="compare-action-btn compare-action-edit" onclick="_toggleCompareCardEditor(${index})">
-          <svg viewBox="0 0 16 16" fill="none"><path d="M11.5 1.5l3 3L5 14H2v-3L11.5 1.5z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Edit
-        </button>
-        <button class="compare-action-btn" onclick="openTuneForSlot(${index})">
-          <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.2"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/></svg>
-          Tune
-        </button>
-        <button class="compare-action-btn compare-action-remove" onclick="removeComparisonSlot(${index})">✕</button>
-      </div>
-      <div class="compare-card-editor" data-slot="${index}">
-        ${loadFromSavedHTML}
-        <div class="compare-ed-row">
-          <div class="compare-ed-ss-racquet" data-slot="${index}" data-value="${slot.racquetId || ''}"></div>
-        </div>
-        <div class="compare-ed-toggle">
-          <button class="compare-ed-toggle-btn ${slot.isHybrid ? '' : 'active'}" data-slot="${index}" data-mode="full">Full Bed</button>
-          <button class="compare-ed-toggle-btn ${slot.isHybrid ? 'active' : ''}" data-slot="${index}" data-mode="hybrid">Hybrid</button>
-        </div>
-        ${_compareEditorStringHTML(slot, index)}
-        <button class="compare-ed-done" onclick="_toggleCompareCardEditor(${index})">Done</button>
-      </div>
-    `;
-
-    container.appendChild(div);
-    if (isEditing) _compareInitEditorSS(div, index, slot);
-  });
 }
 
 // Fix 2: Build "Load from My Loadouts" dropdown for compare slot editor
+// Compare legacy inline-editor helpers are intentionally retired.
 function _compareBuildLoadFromSavedDropdown(slotIndex) {
-  if (!savedLoadouts || savedLoadouts.length === 0) return '';
-
-  const options = savedLoadouts.map(function(lo) {
-    const racquet = RACQUETS.find(function(r) { return r.id === lo.frameId; });
-    const frameName = racquet ? racquet.name.split(' ').slice(0, 2).join(' ') : 'Unknown';
-    const label = (lo.name || 'Loadout').length > 30 ? (lo.name || 'Loadout').substring(0, 30) + '...' : (lo.name || 'Loadout');
-    return '<option value="' + lo.id + '">' + label + ' (' + frameName + ')</option>';
-  }).join('');
-
-  return '<div class="compare-ed-quickload">' +
-    '<label class="compare-ed-label">Quick Load</label>' +
-    '<select class="compare-ed-quickload-select" onchange="_compareLoadFromSaved(' + slotIndex + ', this.value)">' +
-      '<option value="">Load from My Loadouts...</option>' +
-      options +
-    '</select>' +
-  '</div>';
+  return '';
 }
 
-// Fix 2: Load a saved loadout into a compare slot
 function _compareLoadFromSaved(slotIndex, loadoutId) {
   if (typeof window._compareLoadFromSaved === 'function' && window._compareLoadFromSaved !== _compareLoadFromSaved) {
     return window._compareLoadFromSaved(slotIndex, loadoutId);
   }
-  if (!loadoutId) return;
-
-  const lo = savedLoadouts.find(function(l) { return l.id === loadoutId; });
-  if (!lo || !comparisonSlots[slotIndex]) return;
-
-  const slot = comparisonSlots[slotIndex];
-  slot.racquetId = lo.frameId;
-  slot.isHybrid = lo.isHybrid || false;
-  slot.mainsTension = lo.mainsTension;
-  slot.crossesTension = lo.crossesTension;
-
-  if (lo.isHybrid) {
-    slot.mainsId = lo.mainsId || '';
-    slot.crossesId = lo.crossesId || '';
-    slot.stringId = '';
-  } else {
-    slot.stringId = lo.stringId || '';
-    slot.mainsId = '';
-    slot.crossesId = '';
-  }
-
-  // Recalculate and re-render
-  recalcSlot(slotIndex);
-  renderCompareSummaries();
-  renderCompareVerdict();
-  renderCompareMatrix();
-  try { updateComparisonRadar(); } catch(e) {}
 }
 
 function _compareEditorStringHTML(slot, index) {
-  if (slot.isHybrid) {
-    return `
-      <div class="compare-ed-hybrid">
-        <div class="compare-ed-hybrid-half">
-          <label class="compare-ed-label">Mains</label>
-          <div class="compare-ed-ss-mains" data-slot="${index}" data-value="${slot.mainsId || ''}"></div>
-          <input type="number" class="text-input compare-ed-tension" data-slot="${index}" data-target="mainsTension" value="${slot.mainsTension}" min="30" max="70">
-        </div>
-        <div class="compare-ed-hybrid-half">
-          <label class="compare-ed-label">Crosses</label>
-          <div class="compare-ed-ss-crosses" data-slot="${index}" data-value="${slot.crossesId || ''}"></div>
-          <input type="number" class="text-input compare-ed-tension" data-slot="${index}" data-target="crossesTension" value="${slot.crossesTension}" min="30" max="70">
-        </div>
-      </div>`;
-  }
-  return `
-    <div class="compare-ed-fullbed">
-      <div class="compare-ed-ss-string" data-slot="${index}" data-value="${slot.stringId || ''}"></div>
-      <div class="compare-ed-tension-row">
-        <div><label class="compare-ed-label">Mains</label><input type="number" class="text-input compare-ed-tension" data-slot="${index}" data-target="mainsTension" value="${slot.mainsTension}" min="30" max="70"></div>
-        <div><label class="compare-ed-label">Crosses</label><input type="number" class="text-input compare-ed-tension" data-slot="${index}" data-target="crossesTension" value="${slot.crossesTension}" min="30" max="70"></div>
-      </div>
-    </div>`;
+  return '';
 }
 
 function _toggleCompareCardEditor(index) {
   if (typeof window._toggleCompareCardEditor === 'function' && window._toggleCompareCardEditor !== _toggleCompareCardEditor) {
     return window._toggleCompareCardEditor(index);
   }
-  var card = document.querySelector('.compare-summary-card[data-slot-index="' + index + '"]');
-  if (!card) return;
-  var wasEditing = card.classList.contains('compare-card-editing');
-  card.classList.toggle('compare-card-editing');
-  if (!wasEditing) {
-    // Becoming editing — init searchable selects
-    _compareInitEditorSS(card, index, comparisonSlots[index]);
-  }
 }
 
-function _compareInitEditorSS(card, index, slot) {
-  // Racquet
-  var rEl = card.querySelector('.compare-ed-ss-racquet');
-  if (rEl && !rEl._ssInit) {
-    createSearchableSelect(rEl, {
-      type: 'racquet',
-      placeholder: 'Select Racquet...',
-      value: rEl.dataset.value || '',
-      onChange: function(val) { comparisonSlots[index].racquetId = val; recalcSlot(index); }
-    });
-    rEl._ssInit = true;
-  }
+function _compareInitEditorSS(card, index, slot) {}
 
-  // Full bed string
-  var sEl = card.querySelector('.compare-ed-ss-string');
-  if (sEl && !sEl._ssInit) {
-    createSearchableSelect(sEl, {
-      type: 'string',
-      placeholder: 'Select String...',
-      value: sEl.dataset.value || '',
-      onChange: function(val) { comparisonSlots[index].stringId = val; recalcSlot(index); }
-    });
-    sEl._ssInit = true;
-  }
-
-  // Hybrid mains
-  var mEl = card.querySelector('.compare-ed-ss-mains');
-  if (mEl && !mEl._ssInit) {
-    createSearchableSelect(mEl, {
-      type: 'string',
-      placeholder: 'Mains...',
-      value: mEl.dataset.value || '',
-      onChange: function(val) { comparisonSlots[index].mainsId = val; recalcSlot(index); }
-    });
-    mEl._ssInit = true;
-  }
-
-  // Hybrid crosses
-  var xEl = card.querySelector('.compare-ed-ss-crosses');
-  if (xEl && !xEl._ssInit) {
-    createSearchableSelect(xEl, {
-      type: 'string',
-      placeholder: 'Crosses...',
-      value: xEl.dataset.value || '',
-      onChange: function(val) { comparisonSlots[index].crossesId = val; recalcSlot(index); }
-    });
-    xEl._ssInit = true;
-  }
-
-  // Tension inputs
-  card.querySelectorAll('.compare-ed-tension').forEach(function(inp) {
-    if (inp._evtInit) return;
-    inp.addEventListener('input', function(e) {
-      var idx = parseInt(e.target.dataset.slot);
-      var target = e.target.dataset.target;
-      comparisonSlots[idx][target] = parseInt(e.target.value) || 55;
-      recalcSlot(idx);
-    });
-    inp._evtInit = true;
-  });
-
-  // Toggle buttons
-  card.querySelectorAll('.compare-ed-toggle-btn').forEach(function(btn) {
-    if (btn._evtInit) return;
-    btn.addEventListener('click', function(e) {
-      var idx = parseInt(e.target.dataset.slot);
-      var mode = e.target.dataset.mode;
-      comparisonSlots[idx].isHybrid = (mode === 'hybrid');
-      recalcSlot(idx);
-    });
-    btn._evtInit = true;
-  });
-}
-
-// Legacy stubs (editors panel replaced by inline card editors)
 function openCompareEditor(idx) { _toggleCompareCardEditor(idx); }
 function closeCompareEditors() {}
 
 function generateCompareVerdict(slotA, slotB) {
-  const a = slotA.stats;
-  const b = slotB.stats;
-  const idA = slotA.identity?.archetype || 'Balanced Setup';
-  const idB = slotB.identity?.archetype || 'Balanced Setup';
-  const colorA = SLOT_COLORS[comparisonSlots.indexOf(slotA)];
-  const colorB = SLOT_COLORS[comparisonSlots.indexOf(slotB)];
-
-  // Compute category wins
-  const categories = [
-    { label: 'Spin', key: 'spin' },
-    { label: 'Power', key: 'power' },
-    { label: 'Control', key: 'control' },
-    { label: 'Comfort', key: 'comfort' },
-    { label: 'Feel', key: 'feel' },
-    { label: 'Launch', key: 'launch' },
-    { label: 'Stability', key: 'stability' },
-    { label: 'Forgiveness', key: 'forgiveness' },
-    { label: 'Durability', key: 'durability' },
-    { label: 'Playability', key: 'playability' }
-  ];
-
-  const winsA = [];
-  const winsB = [];
-  let biggestDiffKey = '';
-  let biggestDiff = 0;
-
-  categories.forEach(cat => {
-    const diff = a[cat.key] - b[cat.key];
-    if (diff > 2) winsA.push(cat.label);
-    else if (diff < -2) winsB.push(cat.label);
-    if (Math.abs(diff) > biggestDiff) {
-      biggestDiff = Math.abs(diff);
-      biggestDiffKey = cat.label;
-    }
-  });
-
-  // Build the main tradeoff sentence
-  const scoreA = computeCompositeScore(a).toFixed(1);
-  const scoreB = computeCompositeScore(b).toFixed(1);
-  const scoreDiff = Math.abs(scoreA - scoreB).toFixed(1);
-
-  let tradeoff = '';
-  if (winsA.length > 0 && winsB.length > 0) {
-    tradeoff = `Setup ${colorA.label} trades ${winsB.slice(0, 2).join(' and ').toLowerCase()} for stronger ${winsA.slice(0, 2).join(' and ').toLowerCase()}. The biggest gap is in ${biggestDiffKey} (${biggestDiff} pts).`;
-  } else if (winsA.length > 0) {
-    tradeoff = `Setup ${colorA.label} leads across most categories, especially in ${biggestDiffKey} (+${biggestDiff}). Setup ${colorB.label} doesn't strongly outperform in any area.`;
-  } else if (winsB.length > 0) {
-    tradeoff = `Setup ${colorB.label} leads across most categories, especially in ${biggestDiffKey} (+${biggestDiff}). Setup ${colorA.label} doesn't strongly outperform in any area.`;
-  } else {
-    tradeoff = `Both setups perform similarly across all categories. The biggest difference is in ${biggestDiffKey} (${biggestDiff} pts) — a marginal gap.`;
-  }
-
-  // Pick A if / Pick B if
-  function buildPickReason(stats, identity) {
-    const traits = [];
-    if (stats.spin >= 70) traits.push('rely on heavy topspin');
-    if (stats.power >= 65) traits.push('want to dictate with pace');
-    if (stats.control >= 72) traits.push('value placement and accuracy');
-    if (stats.comfort >= 70) traits.push('have arm sensitivity');
-    if (stats.feel >= 72) traits.push('play a lot at the net');
-    if (stats.durability >= 78) traits.push('break strings frequently');
-    if (stats.stability >= 68) traits.push('need stability on off-center hits');
-    if (traits.length === 0) traits.push('want a versatile all-court setup');
-    return traits.slice(0, 3);
-  }
-
-  const pickA = buildPickReason(a, slotA.identity);
-  const pickB = buildPickReason(b, slotB.identity);
-
-  return { tradeoff, winsA, winsB, pickA, pickB, colorA, colorB, idA, idB };
+  return null;
 }
 
 function renderCompareVerdict() {
   if (typeof window.renderCompareVerdict === 'function' && window.renderCompareVerdict !== renderCompareVerdict) {
     return window.renderCompareVerdict();
   }
-  const container = $('#compare-verdict');
-  const validSlots = comparisonSlots.filter(s => s.stats);
-
-  if (validSlots.length < 2) {
-    container.style.display = 'none';
-    return;
-  }
-
-  container.style.display = '';
-
-  const categories = [
-    { label: 'Spin', key: 'spin' }, { label: 'Power', key: 'power' },
-    { label: 'Control', key: 'control' }, { label: 'Comfort', key: 'comfort' },
-    { label: 'Feel', key: 'feel' }, { label: 'Launch', key: 'launch' },
-    { label: 'Stability', key: 'stability' }, { label: 'Forgiveness', key: 'forgiveness' },
-    { label: 'Durability', key: 'durability' }, { label: 'Playability', key: 'playability' }
-  ];
-
-  // Per-slot: compute OBS, wins (categories where this slot is highest by >2pts)
-  const slotData = validSlots.map(function(slot) {
-    const idx = comparisonSlots.indexOf(slot);
-    const color = SLOT_COLORS[idx];
-    const racquet = RACQUETS.find(r => r.id === slot.racquetId);
-    const ctx = racquet ? { avgTension: (slot.mainsTension + slot.crossesTension) / 2, tensionRange: racquet.tensionRange } : null;
-    const obs = computeCompositeScore(slot.stats, ctx);
-    return { slot, idx, color, obs, wins: [], stats: slot.stats };
-  });
-
-  // Determine per-category winner (must lead all others by >2)
-  categories.forEach(function(cat) {
-    var vals = slotData.map(function(d) { return d.stats[cat.key]; });
-    var maxVal = Math.max.apply(null, vals);
-    var maxIdx = vals.indexOf(maxVal);
-    var othersMax = Math.max.apply(null, vals.filter(function(v, i) { return i !== maxIdx; }));
-    if (maxVal - othersMax > 2) {
-      slotData[maxIdx].wins.push(cat.label);
-    }
-  });
-
-  // Best OBS
-  var bestObs = slotData.reduce(function(best, d) { return d.obs > best.obs ? d : best; }, slotData[0]);
-
-  // Build tradeoff sentence
-  var tradeoff = '';
-  var slotsWithWins = slotData.filter(function(d) { return d.wins.length > 0; });
-  if (slotsWithWins.length === 0) {
-    tradeoff = 'All setups perform similarly across categories — differences are marginal.';
-  } else {
-    var parts = slotsWithWins.map(function(d) {
-      return 'Setup ' + d.color.label + ' leads in ' + d.wins.slice(0, 3).join(', ').toLowerCase();
-    });
-    tradeoff = parts.join('. ') + '.';
-    if (bestObs.obs > 0) tradeoff += ' Best OBS: Setup ' + bestObs.color.label + ' (' + bestObs.obs.toFixed(1) + ').';
-  }
-
-  // Pick reasons
-  function buildPickReason(stats) {
-    var traits = [];
-    if (stats.spin >= 70) traits.push('rely on heavy topspin');
-    if (stats.power >= 65) traits.push('want to dictate with pace');
-    if (stats.control >= 72) traits.push('value placement and accuracy');
-    if (stats.comfort >= 70) traits.push('have arm sensitivity');
-    if (stats.feel >= 72) traits.push('play a lot at the net');
-    if (stats.durability >= 78) traits.push('break strings frequently');
-    if (stats.stability >= 68) traits.push('need stability on off-center hits');
-    if (traits.length === 0) traits.push('want a versatile all-court setup');
-    return traits.slice(0, 2);
-  }
-
-  var colsHtml = slotData.map(function(d) {
-    var wins = d.wins.length > 0 ? d.wins.map(function(w) { return '<span class="verdict-win-tag">' + w + '</span>'; }).join('') : '<span class="verdict-win-tag" style="opacity:0.4;">No clear wins</span>';
-    var pick = buildPickReason(d.stats);
-    return '<div class="verdict-col">' +
-      '<span class="verdict-col-header slot-label-' + d.color.cssClass + '">Setup ' + d.color.label + '</span>' +
-      '<div class="verdict-wins">' + wins + '</div>' +
-      '<div class="verdict-pick"><strong>Pick ' + d.color.label + '</strong> if you ' + pick.join(', ') + '</div>' +
-      '</div>';
-  }).join('');
-
-  container.innerHTML = `
-    <div class="verdict-header"><h3>Verdict</h3></div>
-    <div class="verdict-tradeoff">${tradeoff}</div>
-    <div class="verdict-columns verdict-cols-${validSlots.length}">${colsHtml}</div>
-  `;
 }
 
 function renderCompareMatrix() {
   if (typeof window.renderCompareMatrix === 'function' && window.renderCompareMatrix !== renderCompareMatrix) {
     return window.renderCompareMatrix();
   }
-  const container = $('#compare-matrix');
-  const proof = $('#compare-proof');
-  const radarDetails = document.getElementById('compare-details-radar');
-  const validSlots = comparisonSlots.filter(s => s.stats);
-
-  if (validSlots.length < 2) {
-    container.style.display = 'none';
-    if (radarDetails) radarDetails.style.display = 'none';
-    proof.style.display = 'none';
-    return;
-  }
-
-  container.style.display = '';
-  proof.style.display = '';
-  if (radarDetails) radarDetails.style.display = '';
-
-  const slotData = validSlots.map(function(slot) {
-    var idx = comparisonSlots.indexOf(slot);
-    return { stats: slot.stats, color: SLOT_COLORS[idx] };
-  });
-
-  const groups = [
-    { title: 'Performance', keys: ['spin', 'power', 'control', 'launch'] },
-    { title: 'Feel & comfort', keys: ['comfort', 'feel', 'stability', 'forgiveness'] },
-    { title: 'Frame dynamics', keys: ['maneuverability'] },
-    { title: 'Longevity', keys: ['durability', 'playability'] }
-  ];
-
-  const keyToLabel = {};
-  STAT_KEYS.forEach((k, i) => keyToLabel[k] = STAT_LABELS[i]);
-
-  // Column headers
-  var headerDots = slotData.map(function(d) {
-    return '<span style="color:' + d.color.border + ';">● ' + d.color.label + '</span>';
-  }).join('');
-
-  let html = `
-    <div class="matrix-header">
-      <h3>Stat-by-stat</h3>
-      <div style="display:flex;gap:12px;font-size:0.68rem;font-weight:600;letter-spacing:0.06em;">
-        ${headerDots}
-      </div>
-    </div>
-  `;
-
-  groups.forEach(group => {
-    html += `<div class="matrix-group"><div class="matrix-group-title">${group.title}</div>`;
-
-    group.keys.forEach(key => {
-      var vals = slotData.map(function(d) { return d.stats[key]; });
-      var maxVal = Math.max.apply(null, vals);
-
-      // Value cells
-      var valCells = slotData.map(function(d) {
-        var isMax = d.stats[key] === maxVal && slotData.length > 1;
-        return '<span class="matrix-val' + (isMax ? ' matrix-val-best' : '') + '" style="color:' + d.color.border + ';">' + d.stats[key] + '</span>';
-      }).join('');
-
-      // Bar overlay (stacked, semi-transparent)
-      var barLayers = slotData.map(function(d, i) {
-        return '<div class="matrix-bar-layer" style="width:' + d.stats[key] + '%;background:' + d.color.border + ';opacity:' + (0.5 - i * 0.12) + ';"></div>';
-      }).join('');
-
-      html += `
-        <div class="matrix-row matrix-row-${slotData.length}col">
-          <span class="matrix-stat-label">${keyToLabel[key] || key}</span>
-          <div class="matrix-bar-cell">${barLayers}</div>
-          ${valCells}
-        </div>`;
-    });
-
-    html += `</div>`;
-  });
-
-  container.innerHTML = html;
 }
 
 
@@ -9238,54 +8464,6 @@ function _applyGaugeSelection(gauge, sectionIdx) {
 // ============================================
 
 function _renderCompareSuggestions() {
-  var container = document.getElementById('compare-suggestions');
-  if (!container) {
-    var slotsContainer = document.getElementById('comparison-slots');
-    if (!slotsContainer) return;
-    container = document.createElement('div');
-    container.id = 'compare-suggestions';
-    container.className = 'compare-suggestions';
-    slotsContainer.parentElement.insertBefore(container, slotsContainer.nextSibling);
-  }
-
-  var suggestions = [];
-  var slotKeys = comparisonSlots.map(function(s) { return s.racquetId + '-' + s.stringId; });
-
-  savedLoadouts.forEach(function(lo) {
-    var key = lo.frameId + '-' + lo.stringId;
-    if (slotKeys.indexOf(key) === -1) {
-      suggestions.push({
-        label: lo.name,
-        obs: lo.obs,
-        frameId: lo.frameId,
-        stringId: lo.stringId,
-        tension: lo.mainsTension,
-        source: lo.source || 'saved'
-      });
-    }
-  });
-
-  if (suggestions.length === 0 && savedLoadouts.length === 0) {
-    container.innerHTML = '<div class="compare-sug-empty">Save loadouts from Racket Bible or Quiz to see quick-add suggestions here</div>';
-    return;
-  }
-
-  if (suggestions.length === 0) {
-    container.innerHTML = '';
-    return;
-  }
-
-  container.innerHTML =
-    '<div class="compare-sug-header">Quick Add from My Loadouts</div>' +
-    '<div class="compare-sug-list">' +
-    suggestions.slice(0, 6).map(function(s) {
-      return '<button class="compare-sug-chip" onclick="_addSuggestionToCompare(\'' + s.frameId + '\',\'' + s.stringId + '\',' + s.tension + ')">' +
-        '<span class="compare-sug-obs">' + (s.obs ? s.obs.toFixed(1) : '\u2014') + '</span>' +
-        '<span class="compare-sug-name">' + s.label + '</span>' +
-        '<span class="compare-sug-source">' + s.source + '</span>' +
-      '</button>';
-    }).join('') +
-    '</div>';
 }
 
 function _addSuggestionToCompare(frameId, stringId, tension) {
@@ -9297,21 +8475,6 @@ function _addSuggestionToCompare(frameId, stringId, tension) {
 // ============================================
 
 function _getCompareSlotTag(slot) {
-  if (activeLoadout && slot.racquetId === activeLoadout.frameId &&
-      slot.stringId === activeLoadout.stringId &&
-      slot.mainsTension === activeLoadout.mainsTension) {
-    return '<span class="slot-tag slot-tag-active">Current Loadout</span>';
-  }
-
-  var match = savedLoadouts.find(function(lo) {
-    return lo.frameId === slot.racquetId &&
-      lo.stringId === slot.stringId &&
-      lo.mainsTension === slot.mainsTension;
-  });
-  if (match) {
-    return '<span class="slot-tag slot-tag-saved">Saved</span>';
-  }
-
   return '';
 }
 
@@ -9320,172 +8483,31 @@ function _getCompareSlotTag(slot) {
 // ============================================
 
 function _addLoadoutAsSlot(lo) {
-  var compareState = window.compareGetState?.();
-  if (lo && lo.stats && compareState?.slots && typeof window.compareSetSlotLoadout === 'function') {
-    var emptySlot = compareState.slots.find(function(slot) { return slot.loadout === null; });
-    var targetSlotId = (emptySlot || compareState.slots[compareState.slots.length - 1])?.id;
-    if (targetSlotId) {
-      window.compareSetSlotLoadout(targetSlotId, lo, lo.stats);
-      return;
-    }
+  if (typeof window.compareAddLoadoutToPreferredSlot === 'function') {
+    return window.compareAddLoadoutToPreferredSlot(lo);
   }
-
-  var racquet = RACQUETS.find(function(r) { return r.id === lo.frameId; });
-  var stringData = lo.isHybrid ? null : STRINGS.find(function(s) { return s.id === lo.stringId; });
-
-  var cfg = lo.isHybrid ? {
-    isHybrid: true,
-    mains: STRINGS.find(function(s) { return s.id === lo.mainsId; }),
-    crosses: STRINGS.find(function(s) { return s.id === lo.crossesId; }),
-    mainsTension: lo.mainsTension,
-    crossesTension: lo.crossesTension
-  } : {
-    isHybrid: false,
-    string: stringData,
-    mainsTension: lo.mainsTension,
-    crossesTension: lo.crossesTension
-  };
-
-  var stats = racquet ? predictSetup(racquet, cfg) : null;
-  var identity = stats ? generateIdentity(stats, racquet, cfg) : null;
-
-  comparisonSlots.push({
-    id: Date.now() + Math.random(),
-    racquetId: lo.frameId,
-    stringId: lo.stringId || '',
-    isHybrid: lo.isHybrid || false,
-    mainsId: lo.mainsId || '',
-    crossesId: lo.crossesId || '',
-    mainsTension: lo.mainsTension,
-    crossesTension: lo.crossesTension,
-    stats: stats,
-    identity: identity,
-    sourceLoadoutId: lo.id || null,
-    snapshotObs: lo.obs || 0
-  });
 }
-
 function _isCompareSlotStale(slot) {
-  if (!slot.sourceLoadoutId) return false;
-  // Check active loadout
-  if (activeLoadout && activeLoadout.id === slot.sourceLoadoutId) {
-    return activeLoadout.mainsTension !== slot.mainsTension ||
-      activeLoadout.crossesTension !== slot.crossesTension ||
-      activeLoadout.stringId !== slot.stringId ||
-      activeLoadout.isHybrid !== slot.isHybrid ||
-      activeLoadout.mainsId !== (slot.mainsId || null) ||
-      activeLoadout.crossesId !== (slot.crossesId || null);
-  }
-  // Check saved loadouts
-  var src = savedLoadouts.find(function(l) { return l.id === slot.sourceLoadoutId; });
-  if (!src) return false;
-  return src.mainsTension !== slot.mainsTension ||
-    src.crossesTension !== slot.crossesTension ||
-    src.stringId !== slot.stringId ||
-    src.isHybrid !== slot.isHybrid ||
-    src.mainsId !== (slot.mainsId || null) ||
-    src.crossesId !== (slot.crossesId || null);
+  return false;
 }
 
 function _refreshCompareSlot(slotIndex) {
   if (typeof window._refreshCompareSlot === 'function' && window._refreshCompareSlot !== _refreshCompareSlot) {
     return window._refreshCompareSlot(slotIndex);
   }
-  var slot = comparisonSlots[slotIndex];
-  if (!slot || !slot.sourceLoadoutId) return;
-  var src = null;
-  if (activeLoadout && activeLoadout.id === slot.sourceLoadoutId) {
-    src = activeLoadout;
-  } else {
-    src = savedLoadouts.find(function(l) { return l.id === slot.sourceLoadoutId; });
-  }
-  if (!src) return;
-
-  // Re-snapshot from source
-  slot.racquetId = src.frameId;
-  slot.stringId = src.stringId || '';
-  slot.isHybrid = src.isHybrid || false;
-  slot.mainsId = src.mainsId || '';
-  slot.crossesId = src.crossesId || '';
-  slot.mainsTension = src.mainsTension;
-  slot.crossesTension = src.crossesTension;
-  slot.snapshotObs = src.obs || 0;
-
-  // Recompute stats
-  recalcSlot(slotIndex);
-
-  // Re-render compare
-  renderCompareSummaries();
-  renderCompareVerdict();
-  renderCompareMatrix();
-  updateComparisonRadar();
 }
 
+
 function _autoFillCompareFromSaved() {
-  var compareState = window.compareGetState?.();
-  if (compareState?.slots && typeof window.compareClearSlot === 'function' && typeof window.compareSetSlotLoadout === 'function') {
-    compareState.slots.forEach(function(slot) {
-      window.compareClearSlot(slot.id);
-    });
-
-    var compareCandidates = [];
-    if (activeLoadout) compareCandidates.push(activeLoadout);
-
-    for (var j = 0; j < savedLoadouts.length && compareCandidates.length < 3; j++) {
-      var candidate = savedLoadouts[j];
-      if (activeLoadout && candidate.id === activeLoadout.id) continue;
-      compareCandidates.push(candidate);
-    }
-
-    if (compareCandidates.length < 2 && savedLoadouts.length > 0) {
-      var fallback = savedLoadouts[0];
-      var exists = compareCandidates.some(function(candidate) { return candidate.id === fallback.id; });
-      if (!exists) compareCandidates.push(fallback);
-    }
-
-    compareCandidates.slice(0, 3).forEach(function(candidate) {
-      if (!candidate || !candidate.stats) return;
-      var latestState = window.compareGetState?.();
-      var emptySlot = latestState?.slots?.find(function(slot) { return slot.loadout === null; });
-      if (emptySlot) window.compareSetSlotLoadout(emptySlot.id, candidate, candidate.stats);
-    });
-    return;
+  if (typeof window.compareAutoFillFromSaved === 'function') {
+    return window.compareAutoFillFromSaved();
   }
-
-  comparisonSlots = [];
-  _setAppComparisonSlots(comparisonSlots);
-  var added = 0;
-
-  if (activeLoadout) {
-    _addLoadoutAsSlot(activeLoadout);
-    added++;
-  }
-
-  for (var i = 0; i < savedLoadouts.length && added < 2; i++) {
-    var lo = savedLoadouts[i];
-    if (activeLoadout && lo.id === activeLoadout.id) continue;
-    _addLoadoutAsSlot(lo);
-    added++;
-  }
-
-  if (added < 2 && savedLoadouts.length > 0) {
-    // QA-018: Don't add a duplicate if the only saved loadout is already in a slot
-    var first = savedLoadouts[0];
-    var alreadyPresent = comparisonSlots.some(function(s) {
-      return s.racquetId === first.frameId && s.stringId === (first.stringId || '') &&
-        s.mainsTension === first.mainsTension && s.isHybrid === (first.isHybrid || false);
-    });
-    if (!alreadyPresent) _addLoadoutAsSlot(first);
-  }
-
-  renderComparisonSlots();
-  renderCompareSummaries();
-  renderCompareVerdict();
-  renderCompareMatrix();
-  updateComparisonRadar();
 }
 
 function _showCompareQuickAddPrompt() {
+  if (typeof window._showCompareQuickAddPrompt === 'function' && window._showCompareQuickAddPrompt !== _showCompareQuickAddPrompt) {
+    return window._showCompareQuickAddPrompt();
+  }
   var promptEl = document.getElementById('compare-qa-prompt');
   if (!promptEl) {
     promptEl = document.createElement('div');
@@ -9526,6 +8548,9 @@ function _showCompareQuickAddPrompt() {
 }
 
 function _compareQuickAdd() {
+  if (typeof window._compareQuickAdd === 'function' && window._compareQuickAdd !== _compareQuickAdd) {
+    return window._compareQuickAdd();
+  }
   var frameId = document.getElementById('compare-qa-frame').value;
   var stringId = document.getElementById('compare-qa-string').value;
   var tension = parseInt(document.getElementById('compare-qa-tension').value) || 53;
@@ -9573,48 +8598,46 @@ function _runDigicraftBootSequence() {
     "> Loading 16x19.core.js...",
     "> Fetching global frame database...",
     "> Booting String Modulator V2...",
-    "> System ready. Diagnostics active."
+    "> Calibrating compare runtime..."
   ];
 
   let currentLog = 0;
   let progress = 0;
+  pushLog();
 
   const bootInterval = setInterval(() => {
-    progress += Math.floor(Math.random() * 15) + 5;
-    if (progress >= 100) progress = 100;
+    progress = Math.min(100, progress + 4);
+    if (pctText) pctText.innerText = progress + "%";
 
-    pctText.innerText = progress + "%";
+    const filled = Math.round((progress / 100) * totalSegments);
+    segments.forEach((seg, index) => {
+      seg.className = index < filled
+        ? "flex-1 bg-dc-accent transition-colors duration-75"
+        : "flex-1 bg-black/10 dark:bg-white/5 transition-colors duration-75";
+    });
 
-    const segmentsToFill = Math.floor((progress / 100) * totalSegments);
-    for (let i = 0; i < totalSegments; i++) {
-      if (i < segmentsToFill) {
-        segments[i].classList.remove('bg-black/10', 'dark:bg-white/5');
-        segments[i].classList.add('bg-dc-accent', 'dark:bg-dc-platinum');
-      }
-    }
-
-    if (progress > 20 && currentLog === 0) pushLog();
-    if (progress > 50 && currentLog === 1) pushLog();
-    if (progress > 80 && currentLog === 2) pushLog();
-    if (progress === 100 && currentLog === 3) pushLog();
+    if (progress > 25 && currentLog === 1) pushLog();
+    if (progress > 50 && currentLog === 2) pushLog();
+    if (progress > 75 && currentLog === 3) pushLog();
 
     if (progress === 100) {
       clearInterval(bootInterval);
       setTimeout(() => {
-        loader.classList.add('opacity-0');
+        loader.classList.add("opacity-0");
         setTimeout(() => loader.remove(), 700);
       }, 400);
     }
   }, 80);
 
   function pushLog() {
-    const logSpan = document.createElement('span');
+    const logSpan = document.createElement("span");
     logSpan.className = "text-dc-storm";
     logSpan.innerText = logs[currentLog];
     logsContainer.appendChild(logSpan);
     currentLog++;
   }
 }
+
 
 document.addEventListener('DOMContentLoaded', () => {
   _init16x19Favicon();
@@ -9643,11 +8666,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-
-// ES Module exports
 export {
-  // Re-export data for other modules
-  RACQUETS,
   STRINGS,
   FRAME_META,
   

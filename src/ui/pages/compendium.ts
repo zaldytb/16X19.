@@ -266,12 +266,12 @@ export function _compRenderRoster(): void {
       const borderClasses = isActive ? 'border-dc-accent' : 'border-dc-platinum-dim hover:border-dc-platinum';
       return `<button class="${baseClasses} ${borderClasses}" data-id="${r.id}" onclick="_compSelectFrame('${r.id}')">
       <div class="flex justify-between items-start gap-2">
-        <span class="text-lg font-semibold leading-tight tracking-tight text-dc-void dark:text-dc-platinum">${r.name.replace(/\s+\d+g$/, '')}</span>
+        <span class="text-lg font-semibold leading-tight tracking-tight text-dc-platinum">${r.name.replace(/\s+\d+g$/, '')}</span>
         <span class="font-mono text-[13px] tracking-[0.15em] text-dc-platinum-dim mt-1">${r.year}</span>
       </div>
       <div class="flex flex-col gap-1">
         <span class="font-mono text-[13px] uppercase tracking-[0.15em] text-dc-accent">${r.identity || r.pattern}</span>
-        <span class="font-mono text-[13px] font-semibold text-dc-void dark:text-dc-platinum">${specs}</span>
+        <span class="font-mono text-[13px] font-semibold text-dc-platinum">${specs}</span>
       </div>
     </button>`;
     })
@@ -338,7 +338,7 @@ export function _compRenderMain(racquet: Racquet): void {
   const consoleHtml: string[] = [];
   pills.bestFor.forEach((p) =>
     consoleHtml.push(
-      `<span class="font-mono text-[13px] font-bold tracking-[0.05em] uppercase text-dc-void dark:text-dc-platinum">[+] ${p.toUpperCase()}</span>`
+      `<span class="font-mono text-[13px] font-bold tracking-[0.05em] uppercase text-dc-platinum">[+] ${p.toUpperCase()}</span>`
     )
   );
   pills.watchOut.forEach((p) =>
@@ -381,7 +381,7 @@ export function _compRenderMain(racquet: Racquet): void {
         <div class="flex items-center gap-4 group" data-stat="${stat.id}">
           <span class="font-mono text-[13px] text-dc-storm group-hover:text-dc-platinum transition-colors uppercase tracking-[0.15em] w-28">${stat.label}</span>
           ${batteryHtml}
-          <span class="font-mono text-[13px] font-bold text-dc-void dark:text-dc-platinum w-8 text-right" id="comp-val-${stat.id}">${val}</span>
+          <span class="font-mono text-[13px] font-bold text-dc-platinum w-8 text-right" id="comp-val-${stat.id}">${val}</span>
         </div>`;
     });
     statsHtml += '</div></div>';
@@ -411,7 +411,7 @@ export function _compRenderMain(racquet: Racquet): void {
     <div class="relative flex flex-col items-start mb-8">
       <div class="absolute top-6 right-6 md:top-8 md:right-8 flex flex-col items-end">
         <span class="font-mono text-[13px] text-dc-storm tracking-[0.2em] mb-1">BASE SCORE</span>
-        <span class="font-mono text-5xl font-semibold leading-[0.85] text-dc-void dark:text-dc-platinum">
+        <span class="font-mono text-5xl font-semibold leading-[0.85] text-dc-platinum">
           ${(() => {
             const fb = calcFrameBase(racquet);
             const baseObs = Math.round(
@@ -435,13 +435,13 @@ export function _compRenderMain(racquet: Racquet): void {
         </div>
       </div>
 
-      <h2 class="text-5xl md:text-[4rem] font-semibold tracking-tight text-dc-void dark:text-dc-platinum leading-none mb-0 pr-[120px] flex items-center gap-3 cursor-pointer group" onclick="_compToggleHud()">
+      <h2 class="text-5xl md:text-[4rem] font-semibold tracking-tight text-dc-platinum leading-none mb-0 pr-[120px] flex items-center gap-3 cursor-pointer group" onclick="_compToggleHud()">
         ${racquet.name.replace(/\s+\d+g$/, ' ' + Math.round((racquet.strungWeight - 13) / 5) * 5 + 'g')}
         <span class="text-2xl text-dc-red opacity-50 group-hover:opacity-100 transition-opacity">&#9662;</span>
       </h2>
 
       <div class="flex items-center gap-2 mt-4 font-mono text-[13px] flex-wrap">
-        <span class="text-dc-void dark:text-dc-platinum">${racquet.year}</span>
+        <span class="text-dc-platinum">${racquet.year}</span>
         <span class="text-dc-accent opacity-60 text-[13px]">//</span>
         <span class="text-dc-storm uppercase tracking-[0.15em]">${racquet.identity || ''}</span>
       </div>
@@ -450,27 +450,27 @@ export function _compRenderMain(racquet: Racquet): void {
 
       <div class="grid grid-cols-3 md:grid-cols-6 gap-8 w-full mt-12 pt-8 border-t border-dc-border">
         <div class="flex flex-col-reverse gap-1.5">
-          <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${racquet.swingweight}</span>
+          <span class="font-mono text-xl font-bold text-dc-platinum leading-none">${racquet.swingweight}</span>
           <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">SWINGWEIGHT</span>
         </div>
         <div class="flex flex-col-reverse gap-1.5">
-          <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${racquet.stiffness}</span>
+          <span class="font-mono text-xl font-bold text-dc-platinum leading-none">${racquet.stiffness}</span>
           <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">STIFFNESS</span>
         </div>
         <div class="flex flex-col-reverse gap-1.5">
-          <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${racquet.pattern}</span>
+          <span class="font-mono text-xl font-bold text-dc-platinum leading-none">${racquet.pattern}</span>
           <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">PATTERN</span>
         </div>
         <div class="flex flex-col-reverse gap-1.5">
-          <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${racquet.headSize}</span>
+          <span class="font-mono text-xl font-bold text-dc-platinum leading-none">${racquet.headSize}</span>
           <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">HEAD SIZE</span>
         </div>
         <div class="flex flex-col-reverse gap-1.5">
-          <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${(racquet as any).balancePts}</span>
+          <span class="font-mono text-xl font-bold text-dc-platinum leading-none">${(racquet as any).balancePts}</span>
           <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">BALANCE</span>
         </div>
         <div class="flex flex-col-reverse gap-1.5">
-          <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${racquet.tensionRange[0]}-${racquet.tensionRange[1]}</span>
+          <span class="font-mono text-xl font-bold text-dc-platinum leading-none">${racquet.tensionRange[0]}-${racquet.tensionRange[1]}</span>
           <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">TENSION</span>
         </div>
       </div>
@@ -492,10 +492,10 @@ export function _compRenderMain(racquet: Racquet): void {
           <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]" id="comp-mains-label">// STRING</span>
           <div id="comp-mains-select" class="comp-string-select-container"></div>
           <div class="grid grid-cols-2 gap-4">
-            <select class="appearance-none bg-transparent border-b border-dc-storm/50 text-dc-void dark:text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%2712%27%20height=%2712%27%20viewBox=%270%200%2024%2024%27%20fill=%27none%27%20stroke=%27%235E666C%27%20stroke-width=%272%27%20stroke-linecap=%27round%27%20stroke-linejoin=%27round%27%3E%3Cpolyline%20points=%276%209%2012%2015%2018%209%27%3E%3C/polyline%3E%3C/svg%3E')] bg-no-repeat bg-right pr-5 cursor-pointer" id="comp-mains-gauge">
+            <select class="appearance-none bg-transparent border-b border-dc-storm/50 text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%2712%27%20height=%2712%27%20viewBox=%270%200%2024%2024%27%20fill=%27none%27%20stroke=%27%235E666C%27%20stroke-width=%272%27%20stroke-linecap=%27round%27%20stroke-linejoin=%27round%27%3E%3Cpolyline%20points=%276%209%2012%2015%2018%209%27%3E%3C/polyline%3E%3C/svg%3E')] bg-no-repeat bg-right pr-5 cursor-pointer" id="comp-mains-gauge">
               <option value="">Gauge...</option>
             </select>
-            <input type="number" class="bg-transparent border-b border-dc-storm/50 text-dc-void dark:text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors" id="comp-mains-tension" value="52" min="30" max="70" step="1">
+            <input type="number" class="bg-transparent border-b border-dc-storm/50 text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors" id="comp-mains-tension" value="52" min="30" max="70" step="1">
           </div>
         </div>
 
@@ -503,29 +503,29 @@ export function _compRenderMain(racquet: Racquet): void {
           <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]" id="comp-crosses-label">// CROSSES</span>
           <div id="comp-crosses-select" class="comp-string-select-container" style="display:none;"></div>
           <div class="grid grid-cols-2 gap-4">
-            <select class="appearance-none bg-transparent border-b border-dc-storm/50 text-dc-void dark:text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%2712%27%20height=%2712%27%20viewBox=%270%200%2024%2024%27%20fill=%27none%27%20stroke=%27%235E666C%27%20stroke-width=%272%27%20stroke-linecap=%27round%27%20stroke-linejoin=%27round%27%3E%3Cpolyline%20points=%276%209%2012%2015%2018%209%27%3E%3C/polyline%3E%3C/svg%3E')] bg-no-repeat bg-right pr-5 cursor-pointer" id="comp-crosses-gauge">
+            <select class="appearance-none bg-transparent border-b border-dc-storm/50 text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%2712%27%20height=%2712%27%20viewBox=%270%200%2024%2024%27%20fill=%27none%27%20stroke=%27%235E666C%27%20stroke-width=%272%27%20stroke-linecap=%27round%27%20stroke-linejoin=%27round%27%3E%3Cpolyline%20points=%276%209%2012%2015%2018%209%27%3E%3C/polyline%3E%3C/svg%3E')] bg-no-repeat bg-right pr-5 cursor-pointer" id="comp-crosses-gauge">
               <option value="">Gauge...</option>
             </select>
-            <input type="number" class="bg-transparent border-b border-dc-storm/50 text-dc-void dark:text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors" id="comp-crosses-tension" value="50" min="30" max="70" step="1">
+            <input type="number" class="bg-transparent border-b border-dc-storm/50 text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors" id="comp-crosses-tension" value="50" min="30" max="70" step="1">
           </div>
         </div>
       </div>
 
       <div class="flex gap-2 mt-2">
-        <button class="flex-1 font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-storm/50 text-dc-void dark:text-dc-platinum hover:bg-dc-storm/20 hover:border-dc-storm transition-colors disabled:opacity-30 disabled:cursor-not-allowed" id="comp-inject-apply" disabled onclick="_compApplyInjection()">Apply</button>
-        <button class="font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-storm/50 text-dc-storm hover:bg-dc-storm/10 hover:text-dc-void dark:hover:text-dc-platinum hover:border-dc-storm transition-colors" onclick="_compClearInjection()">Clear</button>
+        <button class="flex-1 font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-storm/50 text-dc-platinum hover:bg-dc-storm/20 hover:border-dc-storm transition-colors disabled:opacity-30 disabled:cursor-not-allowed" id="comp-inject-apply" disabled onclick="_compApplyInjection()">Apply</button>
+        <button class="font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-storm/50 text-dc-storm hover:bg-dc-storm/10 hover:text-dc-platinum hover:border-dc-storm transition-colors" onclick="_compClearInjection()">Clear</button>
       </div>
     </div>
 
     <div class="mb-12">
-      <h3 class="font-mono text-xs tracking-[0.15em] text-dc-void dark:text-dc-platinum uppercase mb-1">// BASE FRAME PROFILE</h3>
+      <h3 class="font-mono text-xs tracking-[0.15em] text-dc-platinum uppercase mb-1">// BASE FRAME PROFILE</h3>
       <p class="text-xs text-dc-storm mb-6 italic">Frame-only characteristics before string influence</p>
       ${statsHtml}
     </div>
 
     <div class="mb-12">
       <div class="flex items-center justify-between mb-4 pb-2 border-b border-dc-border/50">
-        <h3 class="font-mono text-xs tracking-[0.15em] text-dc-void dark:text-dc-platinum uppercase">//TOP BUILDS</h3>
+        <h3 class="font-mono text-xs tracking-[0.15em] text-dc-platinum uppercase">//TOP BUILDS</h3>
         <div class="flex gap-4 border-b border-transparent pb-0">${sortTabsHtml}</div>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">${cardsHtml}</div>
@@ -796,7 +796,7 @@ export function _compClearPreview(): void {
       delete (track as HTMLElement).dataset.hasPreview;
     }
     const valEl = document.getElementById(`comp-val-${k}`);
-    if (valEl) valEl.innerHTML = `<span class="text-dc-void dark:text-dc-platinum">${baseVal}</span>`;
+    if (valEl) valEl.innerHTML = `<span class="text-dc-platinum">${baseVal}</span>`;
   });
 
   const applyBtn = document.getElementById('comp-inject-apply') as HTMLButtonElement | null;
@@ -875,10 +875,10 @@ export function _compRenderBuildCard(build: BuildWithArchetype, index: number, _
     ? 'relative bg-transparent border border-dc-accent shadow-[0_0_15px_rgba(255,69,0,0.05)] p-5 flex flex-col transition-colors duration-200 col-span-full'
     : 'relative bg-transparent border border-dc-storm/30 hover:border-dc-storm p-5 flex flex-col transition-colors duration-200';
   const badgeHtml = isFeatured
-    ? '<div class="absolute -top-[1px] -left-[1px] bg-dc-accent text-dc-void font-mono text-[10px] font-bold uppercase tracking-widest px-2 py-0.5">BEST OVERALL</div>'
+    ? '<div class="absolute -top-[1px] -left-[1px] bg-dc-accent text-dc-ink font-mono text-[10px] font-bold uppercase tracking-widest px-2 py-0.5">BEST OVERALL</div>'
     : '';
   const reasonHtml = isFeatured
-    ? `<div class="text-xs text-dc-void/80 dark:text-dc-platinum/90 mb-4 pl-3 border-l-2 border-dc-storm italic">${_compGenerateBuildReason(build, frameStats)}</div>`
+    ? `<div class="text-xs text-dc-storm mb-4 pl-3 border-l-2 border-dc-storm italic">${_compGenerateBuildReason(build, frameStats)}</div>`
     : '';
   const isHybrid = build.type === 'hybrid';
   const stringLabel = isHybrid ? build.label || build.string.name : build.string.name;
@@ -897,7 +897,7 @@ export function _compRenderBuildCard(build: BuildWithArchetype, index: number, _
   const statsHtml = statEntries
     .map(
       (st) =>
-        `<span class="font-mono text-[13px] text-dc-storm tracking-widest">[${st.key} <b class="text-xs text-dc-void dark:text-dc-platinum font-semibold ml-0.5">${st.val}</b>]</span>`
+        `<span class="font-mono text-[13px] text-dc-storm tracking-widest">[${st.key} <b class="text-xs text-dc-platinum font-semibold ml-0.5">${st.val}</b>]</span>`
     )
     .join('');
 
@@ -906,15 +906,15 @@ export function _compRenderBuildCard(build: BuildWithArchetype, index: number, _
       ${badgeHtml}
       <div class="flex justify-between items-start my-1.5">
         <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">${build.archetype}</span>
-        <span class="font-mono text-4xl md:text-5xl font-semibold text-dc-void dark:text-dc-platinum leading-[0.8] tracking-tighter">${build.score.toFixed(1)}</span>
+        <span class="font-mono text-4xl md:text-5xl font-semibold text-dc-platinum leading-[0.8] tracking-tighter">${build.score.toFixed(1)}</span>
       </div>
-      <div class="text-base font-semibold text-dc-void dark:text-dc-platinum tracking-tight mb-0.5 pr-12 leading-tight">${stringLabel}</div>
+      <div class="text-base font-semibold text-dc-platinum tracking-tight mb-0.5 pr-12 leading-tight">${stringLabel}</div>
       <div class="font-mono text-[12px] text-dc-storm mb-4">${metaLabel}</div>
       ${reasonHtml}
       <div class="grid grid-cols-3 gap-2 mt-auto mb-4">
-        <button class="bg-transparent border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-void font-mono text-[13px] uppercase tracking-widest py-1.5 transition-colors text-center" onclick="_compAction('setActive', ${index})">Set Active</button>
-        <button class="bg-transparent border border-dc-storm/50 dark:border-dc-storm/30 text-dc-storm hover:border-dc-storm hover:bg-dc-storm/10 hover:text-dc-void dark:hover:text-dc-platinum font-mono text-[13px] uppercase tracking-widest py-1.5 transition-colors text-center" onclick="_compAction('tune', ${index})">Tune</button>
-        <button class="bg-transparent border border-dc-storm/50 dark:border-dc-storm/30 text-dc-storm hover:border-dc-storm hover:bg-dc-storm/10 hover:text-dc-void dark:hover:text-dc-platinum font-mono text-[13px] uppercase tracking-widest py-1.5 transition-colors text-center" onclick="_compAction('save', ${index}, event)">Save</button>
+        <button class="bg-transparent border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-ink font-mono text-[13px] uppercase tracking-widest py-1.5 transition-colors text-center" onclick="_compAction('setActive', ${index})">Set Active</button>
+        <button class="bg-transparent border border-dc-storm/50 dark:border-dc-storm/30 text-dc-storm hover:border-dc-storm hover:bg-dc-storm/10 hover:text-dc-platinum font-mono text-[13px] uppercase tracking-widest py-1.5 transition-colors text-center" onclick="_compAction('tune', ${index})">Tune</button>
+        <button class="bg-transparent border border-dc-storm/50 dark:border-dc-storm/30 text-dc-storm hover:border-dc-storm hover:bg-dc-storm/10 hover:text-dc-platinum font-mono text-[13px] uppercase tracking-widest py-1.5 transition-colors text-center" onclick="_compAction('save', ${index}, event)">Save</button>
       </div>
       <div class="flex flex-wrap gap-3 pt-3 border-t border-dc-storm/30 dark:border-dc-storm/20">${statsHtml}</div>
     </div>

@@ -138,14 +138,14 @@ export function renderOverviewHero(
       <div class="mt-2 pt-6 border-t border-dc-storm/20">
         <div class="flex gap-3">
           <button 
-            class="flex-1 bg-transparent border border-dc-storm/40 dark:border-dc-storm/40 text-dc-void dark:text-dc-platinum font-mono text-[12px] font-bold uppercase tracking-widest py-3 px-4 hover:border-dc-void dark:hover:border-dc-platinum hover:bg-dc-void/5 dark:hover:bg-dc-platinum/5 transition-colors flex items-center justify-center gap-2"
+            class="flex-1 bg-transparent border border-dc-storm/40 dark:border-dc-storm/40 text-dc-platinum font-mono text-[12px] font-bold uppercase tracking-widest py-3 px-4 hover:border-dc-platinum dark:hover:border-dc-platinum hover:bg-dc-void/5 dark:hover:bg-dc-platinum/5 transition-colors flex items-center justify-center gap-2"
             onclick="switchMode('compendium')"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
             //BACK TO BIBLE
           </button>
           <button 
-            class="flex-1 bg-dc-accent text-dc-void font-mono text-[12px] font-bold uppercase tracking-widest py-3 px-4 hover:bg-dc-accent/90 transition-colors flex items-center justify-center gap-2"
+            class="flex-1 bg-dc-accent text-dc-ink font-mono text-[12px] font-bold uppercase tracking-widest py-3 px-4 hover:bg-dc-accent/90 transition-colors flex items-center justify-center gap-2"
             onclick="switchMode('tune')"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v10"/><path d="M21 12h-6m-6 0H1"/></svg>

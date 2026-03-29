@@ -830,7 +830,7 @@ function _renderLbv2Results(results: BuildResult[]): void {
 
         <!-- Primary stat (the ranked one) -->
         <td class="px-3 py-3 w-20 text-right">
-          <span class="font-mono text-[18px] font-bold leading-none ${isFeatured ? 'text-dc-accent' : 'text-dc-white'}">${rankValDisplay}</span>
+          <span class="font-mono text-[18px] font-bold leading-none ${isFeatured ? 'text-dc-accent' : 'text-dc-platinum'}">${rankValDisplay}</span>
           <div class="font-mono text-[7px] uppercase tracking-[0.15em] text-dc-storm mt-0.5 text-right">${statLabel}</div>
         </td>
 
@@ -855,7 +855,7 @@ function _renderLbv2Results(results: BuildResult[]): void {
         <td class="px-3 py-3 w-24">
           <div class="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
-              class="font-mono text-[8px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-void transition-colors"
+              class="font-mono text-[8px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-ink transition-colors"
               onclick="_lbv2View('${entry.racquet.id}','${stringId}',${entry.tension},'${entry.type}','${mainsId}','${crossesId}',${entry.crossesTension})"
             >View</button>
             <button
@@ -1009,7 +1009,7 @@ function _renderLbv2Frames(results: FrameResult[]): void {
           <div class="font-mono text-[9px] text-dc-storm/60 mt-0.5">${specLine}</div>
         </td>
         <td class="px-3 py-3 w-20 text-right">
-          <span class="font-mono text-[18px] font-bold leading-none ${isFeatured ? 'text-dc-accent' : 'text-dc-white'}">${entry.rankVal}</span>
+          <span class="font-mono text-[18px] font-bold leading-none ${isFeatured ? 'text-dc-accent' : 'text-dc-platinum'}">${entry.rankVal}</span>
           <div class="font-mono text-[7px] uppercase tracking-[0.15em] text-dc-storm mt-0.5 text-right">${statLabel}</div>
         </td>
         <td class="px-3 py-3 hidden md:table-cell">
@@ -1018,7 +1018,7 @@ function _renderLbv2Frames(results: FrameResult[]): void {
         <td class="px-3 py-3 w-20">
           <div class="opacity-0 group-hover:opacity-100 transition-opacity">
             <button
-              class="font-mono text-[8px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-void transition-colors"
+              class="font-mono text-[8px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-ink transition-colors"
               onclick="_lbv2ViewFrame('${r.id}')"
             >View</button>
           </div>
@@ -1164,7 +1164,7 @@ function _renderLbv2Strings(results: StringResult[]): void {
           <div class="font-mono text-[9px] text-dc-storm/60 mt-0.5">${specLine}</div>
         </td>
         <td class="px-3 py-3 w-20 text-right">
-          <span class="font-mono text-[18px] font-bold leading-none ${isFeatured ? 'text-dc-accent' : 'text-dc-white'}">${entry.rankVal}</span>
+          <span class="font-mono text-[18px] font-bold leading-none ${isFeatured ? 'text-dc-accent' : 'text-dc-platinum'}">${entry.rankVal}</span>
           <div class="font-mono text-[7px] uppercase tracking-[0.15em] text-dc-storm mt-0.5 text-right">${statLabel}</div>
         </td>
         <td class="px-3 py-3 hidden md:table-cell">
@@ -1173,7 +1173,7 @@ function _renderLbv2Strings(results: StringResult[]): void {
         <td class="px-3 py-3 w-20">
           <div class="opacity-0 group-hover:opacity-100 transition-opacity">
             <button
-              class="font-mono text-[8px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-void transition-colors"
+              class="font-mono text-[8px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-ink transition-colors"
               onclick="_lbv2ViewString('${s.id}')"
             >View</button>
           </div>
@@ -1244,7 +1244,7 @@ function _lbv2ShowCompareWarning(message: string): void {
         <div class="font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-dc-red">Compare Full</div>
       </div>
       <div class="px-5 py-4">
-        <p class="text-[13px] leading-6 text-dc-void dark:text-dc-platinum">${message}</p>
+        <p class="text-[13px] leading-6 text-dc-platinum">${message}</p>
       </div>
       <div class="flex justify-end border-t border-dc-storm/20 px-5 py-4">
         <button

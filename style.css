@@ -3,6 +3,10 @@
    High-Contrast Monochrome × Diagnostic Interface
    ============================================ */
 
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
 :root {
   /* ═══ CORE PALETTE ═══ */
   --dc-void: #1A1A1A;
@@ -5650,6 +5654,14 @@ body {
    ============================================ */
 
 [data-theme="light"] {
+  color-scheme: light;
+
+  /* Native form controls + placeholders (Tailwind opacity on CSS vars is unreliable on CDN) */
+  input::placeholder,
+  textarea::placeholder {
+    color: rgba(94, 102, 108, 0.5);
+  }
+
   /* Backgrounds */
   --dc-void: #F0F2F4;
   --dc-void-deep: #E8EAEC;

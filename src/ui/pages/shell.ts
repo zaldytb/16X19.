@@ -6,7 +6,7 @@ import {
   buildTensionContext,
 } from '../../engine/index.js';
 import type { Loadout, Racquet, StringData, StringConfig } from '../../engine/types.js';
-import { createLoadout as createStateLoadout, loadSavedLoadouts, saveLoadout as stateSaveLoadout, saveLoadout, switchToLoadout as getSwitchedLoadout } from '../../state/loadout.js';
+import { createLoadout as createStateLoadout, loadSavedLoadouts, saveLoadout as stateSaveLoadout, saveLoadout, removeLoadout as stateRemoveLoadout, switchToLoadout as getSwitchedLoadout } from '../../state/loadout.js';
 import { getCurrentSetup, getSetupFromLoadout } from '../../state/setup-sync.js';
 import { getActiveLoadout, getSavedLoadouts, setActiveLoadout, setSavedLoadouts } from '../../state/store.js';
 import {
@@ -403,6 +403,21 @@ export function shareActiveLoadout(): void {
   });
 }
 
+export function shareLoadout(loadoutId: string): void {
+  let loadout = getSavedLoadouts().find((item) => item.id === loadoutId) || null;
+  if (!loadout) {
+    const activeLoadout = getActiveLoadout();
+    if (activeLoadout?.id === loadoutId) {
+      loadout = activeLoadout;
+    }
+  }
+  if (!loadout) return;
+
+  void copyToClipboard(generateShareURL(loadout)).then((copied) => {
+    showShareToast(copied ? 'Link copied to clipboard!' : 'Could not copy link');
+  });
+}
+
 export function exportLoadouts(): void {
   exportLoadoutsToFile(getSavedLoadouts(), showShareToast);
 }
@@ -437,6 +452,11 @@ export function importLoadouts(event: Event): void {
   reader.readAsText(file);
 
   if (input) input.value = '';
+}
+
+export function removeLoadout(loadoutId: string): void {
+  stateRemoveLoadout(loadoutId);
+  renderDockPanel();
 }
 
 export function resetActiveLoadout(): void {

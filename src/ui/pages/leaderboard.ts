@@ -19,32 +19,57 @@ import {
   calcFrameBase,
   calcBaseStringProfile,
 } from '../../engine/composite.js';
-// App-level functions - will be set by init
-let _createLoadout = null;
-let _activateLoadout = null;
-let _switchMode = null;
-let _initCompendium = null;
-let _compSelectFrame = null;
-let _compSwitchTab = null;
-let _stringSelectString = null;
+import { createLoadout } from '../../state/loadout.js';
+import { activateLoadout, switchMode } from '../pages/shell.js';
+import { initCompendium, _compSelectFrame, _compSwitchTab } from '../pages/compendium.js';
+import { _stringSelectString } from '../pages/strings.js';
+
+import type {
+  Racquet,
+  StringData,
+  StringConfig,
+  SetupStats,
+  FrameBaseScores,
+  StringProfileScores,
+  TensionContext,
+  IdentityResult,
+} from '../../engine/types.js';
 
 /**
- * Initialize leaderboard with app-level dependencies
+ * Initialize leaderboard with app-level dependencies — no-op kept for bridge compatibility
  */
-export function initLeaderboardApp(appExports) {
-  _createLoadout = appExports.createLoadout;
-  _activateLoadout = appExports.activateLoadout;
-  _switchMode = appExports.switchMode;
-  _initCompendium = appExports.initCompendium;
-  _compSelectFrame = appExports._compSelectFrame;
-  _compSwitchTab = appExports._compSwitchTab;
-  _stringSelectString = appExports._stringSelectString;
+export function initLeaderboardApp(_appExports: Record<string, unknown>): void {
+  // replaced by direct imports — kept as no-op for bridge compatibility
+}
+
+interface Lbv2State {
+  statKey: string;
+  filterType: 'both' | 'full' | 'hybrid';
+  viewMode: 'builds' | 'frames' | 'strings';
+  frameFilters: {
+    brand: string;
+    pattern: string;
+    headSize: string;
+    weight: string;
+    stiffness: string;
+    year: string;
+  };
+  stringFilters: {
+    brand: string;
+    material: string;
+    shape: string;
+    gauge: string;
+    stiffness: string;
+  };
+  results: unknown;
+  loading: boolean;
+  initialized: boolean;
 }
 
 // Local state for compendium tracking (avoids circular import issues)
 let _lbv2CompendiumInitialized = false;
 
-let _lbv2State = {
+let _lbv2State: Lbv2State = {
   statKey:     'obs',     // which stat (or 'obs') to rank by
   filterType:  'both',    // 'both' | 'full' | 'hybrid'
   viewMode:    'builds',  // 'builds' | 'frames' | 'strings'
@@ -72,7 +97,14 @@ let _lbv2State = {
 
 // ── Stat options shown to the user ───────────────────────────────────────────
 
-const LB_STATS = [
+interface StatOption {
+  key: string;
+  label: string;
+  icon: string;
+  desc: string;
+}
+
+const LB_STATS: StatOption[] = [
   { key: 'obs',            label: 'Best Overall',  icon: '🏆', desc: 'Highest total build score' },
   { key: 'spin',           label: 'Most Spin',     icon: '🌀', desc: 'Maximum topspin potential' },
   { key: 'power',          label: 'Most Power',    icon: '💥', desc: 'Hardest hitting setups'    },
@@ -86,7 +118,7 @@ const LB_STATS = [
 
 // ── Entry point ───────────────────────────────────────────────────────────────
 
-function initLeaderboard() {
+function initLeaderboard(): void {
   _lbv2State.initialized = true;
   const panel = document.getElementById('comp-tab-leaderboard');
   if (!panel) return;
@@ -96,7 +128,7 @@ function initLeaderboard() {
 
 // ── Shell HTML (pure Tailwind) ────────────────────────────────────────────────
 
-function _buildShellHTML() {
+function _buildShellHTML(): string {
   const statPills = LB_STATS.map(s => {
     const active = s.key === _lbv2State.statKey;
     return `<button
@@ -158,11 +190,11 @@ function _buildShellHTML() {
   const ff = _lbv2State.frameFilters;
 
   // Derive brand list dynamically from RACQUETS
-  const brands = typeof RACQUETS !== 'undefined'
-    ? [...new Set(RACQUETS.map(r => r.name.split(' ')[0]))].sort()
+  const brands: string[] = typeof RACQUETS !== 'undefined'
+    ? [...new Set((RACQUETS as unknown as Racquet[]).map((r: Racquet) => r.name.split(' ')[0]))].sort()
     : ['Babolat','Head','Wilson','Yonex','Tecnifibre','Dunlop','Prince','Volkl','Diadem','Solinco','ProKennex'];
 
-  const sel = (id, val, opts, placeholder) =>
+  const sel = (id: string, val: string, opts: Array<{v: string; l: string}>, placeholder: string): string =>
     `<select
       id="${id}"
       class="bg-transparent border border-dc-storm/40 text-dc-storm font-mono text-[9px] px-2 py-1.5 cursor-pointer hover:border-dc-storm focus:border-dc-accent focus:text-dc-platinum transition-colors outline-none"
@@ -220,11 +252,11 @@ function _buildShellHTML() {
   const showStringFilters = _lbv2State.viewMode === 'strings';
   const sf = _lbv2State.stringFilters;
 
-  const stringBrands = typeof STRINGS !== 'undefined'
-    ? [...new Set(STRINGS.map(s => s.name.split(' ')[0]))].sort()
+  const stringBrands: string[] = typeof STRINGS !== 'undefined'
+    ? [...new Set(STRINGS.map((s: StringData) => s.name.split(' ')[0]))].sort()
     : ['Babolat','Solinco','Luxilon','Head','Tecnifibre','Wilson','Yonex','Volkl','Dunlop','Toroline','Grapplesnake','ReString','Diadem'];
 
-  const ssel = (id, val, opts, placeholder) =>
+  const ssel = (id: string, val: string, opts: Array<{v: string; l: string}>, placeholder: string): string =>
     `<select
       id="${id}"
       class="bg-transparent border border-dc-storm/40 text-dc-storm font-mono text-[9px] px-2 py-1.5 cursor-pointer hover:border-dc-storm focus:border-dc-accent focus:text-dc-platinum transition-colors outline-none"
@@ -326,27 +358,28 @@ function _buildShellHTML() {
 
 // ── State setters ─────────────────────────────────────────────────────────────
 
-function _lbv2SetStat(key) {
+function _lbv2SetStat(key: string): void {
   if (_lbv2State.statKey === key) return;
   _lbv2State.statKey = key;
   _lbv2State.results = null;
 
   // Update pill active states
   document.querySelectorAll('.lb2-stat-pill').forEach(btn => {
-    const isActive = btn.dataset.stat === key;
-    btn.className = btn.className
+    const el = btn as HTMLElement;
+    const isActive = el.dataset.stat === key;
+    el.className = el.className
       .replace(/border-dc-accent|text-dc-accent|bg-dc-accent\/5|border-dc-storm\/40|text-dc-storm|hover:border-dc-storm|hover:text-dc-platinum/g, '').trim();
     if (isActive) {
-      btn.classList.add('border-dc-accent', 'text-dc-accent', 'bg-dc-accent/5');
+      el.classList.add('border-dc-accent', 'text-dc-accent', 'bg-dc-accent/5');
     } else {
-      btn.classList.add('border-dc-storm/40', 'text-dc-storm', 'hover:border-dc-storm', 'hover:text-dc-platinum');
+      el.classList.add('border-dc-storm/40', 'text-dc-storm', 'hover:border-dc-storm', 'hover:text-dc-platinum');
     }
   });
 
   _runLbv2();
 }
 
-function _lbv2SetFilter(filterType) {
+function _lbv2SetFilter(filterType: 'both' | 'full' | 'hybrid'): void {
   if (_lbv2State.filterType === filterType) return;
   _lbv2State.filterType = filterType;
   _lbv2State.results = null;
@@ -356,7 +389,7 @@ function _lbv2SetFilter(filterType) {
   _runLbv2();
 }
 
-function _lbv2SetView(viewMode) {
+function _lbv2SetView(viewMode: 'builds' | 'frames' | 'strings'): void {
   if (_lbv2State.viewMode === viewMode) return;
   _lbv2State.viewMode = viewMode;
   _lbv2State.results = null;
@@ -366,10 +399,10 @@ function _lbv2SetView(viewMode) {
   _runLbv2();
 }
 
-function _lbv2SetFrameFilter(key) {
+function _lbv2SetFrameFilter(key: string): void {
   const el = document.getElementById('lb2-ff-' + key);
   if (!el) return;
-  _lbv2State.frameFilters[key] = el.value;
+  ((_lbv2State.frameFilters as Record<string, string>)[key]) = (el as HTMLSelectElement).value;
   _lbv2State.results = null;
   // Re-render shell to update Clear button visibility, then run
   const panel = document.getElementById('comp-tab-leaderboard');
@@ -377,7 +410,7 @@ function _lbv2SetFrameFilter(key) {
   _runLbv2();
 }
 
-function _lbv2ClearFrameFilters() {
+function _lbv2ClearFrameFilters(): void {
   _lbv2State.frameFilters = { brand: '', pattern: '', headSize: '', weight: '', stiffness: '', year: '' };
   _lbv2State.results = null;
   const panel = document.getElementById('comp-tab-leaderboard');
@@ -385,17 +418,17 @@ function _lbv2ClearFrameFilters() {
   _runLbv2();
 }
 
-function _lbv2SetStringFilter(key) {
+function _lbv2SetStringFilter(key: string): void {
   const el = document.getElementById('lb2-sf-' + key);
   if (!el) return;
-  _lbv2State.stringFilters[key] = el.value;
+  ((_lbv2State.stringFilters as Record<string, string>)[key]) = (el as HTMLSelectElement).value;
   _lbv2State.results = null;
   const panel = document.getElementById('comp-tab-leaderboard');
   if (panel) panel.innerHTML = _buildShellHTML();
   _runLbv2();
 }
 
-function _lbv2ClearStringFilters() {
+function _lbv2ClearStringFilters(): void {
   _lbv2State.stringFilters = { brand: '', material: '', shape: '', gauge: '', stiffness: '' };
   _lbv2State.results = null;
   const panel = document.getElementById('comp-tab-leaderboard');
@@ -405,7 +438,7 @@ function _lbv2ClearStringFilters() {
 
 // ── Main runner ───────────────────────────────────────────────────────────────
 
-function _runLbv2() {
+function _runLbv2(): void {
   const resultsEl = document.getElementById('lb2-results');
   if (!resultsEl) return;
 
@@ -420,7 +453,7 @@ function _runLbv2() {
 
   requestAnimationFrame(() => setTimeout(() => {
     try {
-      let results;
+      let results: unknown[];
       if (_lbv2State.viewMode === 'frames') {
         results = _computeLbv2Frames();
       } else if (_lbv2State.viewMode === 'strings') {
@@ -434,47 +467,99 @@ function _runLbv2() {
       if (countEl) countEl.textContent = `${results.length} ${_lbv2State.viewMode}`;
 
       if (_lbv2State.viewMode === 'frames') {
-        _renderLbv2Frames(results);
+        _renderLbv2Frames(results as FrameResult[]);
       } else if (_lbv2State.viewMode === 'strings') {
-        _renderLbv2Strings(results);
+        _renderLbv2Strings(results as StringResult[]);
       } else {
-        _renderLbv2Results(results);
+        _renderLbv2Results(results as BuildResult[]);
       }
     } catch (err) {
       if (resultsEl) resultsEl.innerHTML = `
         <div class="flex items-center justify-center py-16 font-mono text-[11px] text-dc-red/70">
-          Error: ${err.message}
+          Error: ${(err as Error).message}
         </div>`;
       console.error('Leaderboard error:', err);
     }
   }, 16));
 }
 
+// ── Result types ──────────────────────────────────────────────────────────────
+
+interface BuildConfig {
+  isHybrid: boolean;
+  string?: StringData;
+  mains?: StringData;
+  crosses?: StringData;
+  mainsTension: number;
+  crossesTension: number;
+}
+
+interface BestResult {
+  score: number;
+  statVal: number;
+  obs: number;
+  tension: number;
+  stats: SetupStats | null;
+  cfg: BuildConfig;
+}
+
+interface BuildResult {
+  type: 'full' | 'hybrid';
+  racquet: Racquet;
+  string: StringData | null;
+  mains: StringData | null;
+  crosses: StringData | null;
+  tension: number;
+  crossesTension: number;
+  stats: SetupStats;
+  obs: number;
+  rankVal: number;
+  statKey: string;
+  identity: IdentityResult;
+  frameLabel: string;
+  stringLabel: string;
+}
+
+interface FrameResult {
+  racquet: Racquet;
+  frameBase: FrameBaseScores;
+  rankVal: number;
+  statKey: string;
+  frameLabel: string;
+}
+
+interface StringResult {
+  string: StringData;
+  profile: StringProfileScores;
+  rankVal: number;
+  statKey: string;
+}
+
 // ── Computation ───────────────────────────────────────────────────────────────
 
-function _computeLbv2Results() {
+function _computeLbv2Results(): BuildResult[] {
   const statKey    = _lbv2State.statKey;
   const filterType = _lbv2State.filterType;
-  const candidates = [];
+  const candidates: BuildResult[] = [];
 
   // Helper: find optimal tension for a config and return its stat value
-  function scoreConfig(racquet, cfg) {
+  function scoreConfig(racquet: Racquet, cfg: Omit<BuildConfig, 'mainsTension' | 'crossesTension'>): BestResult {
     const sweepMin = Math.max(racquet.tensionRange[0] - 3, 30);
     const sweepMax = Math.min(racquet.tensionRange[1] + 3, 70);
-    let best = { score: -1, statVal: 0, tension: 53, stats: null };
+    let best: BestResult = { score: -1, statVal: 0, obs: 0, tension: 53, stats: null, cfg: { ...cfg, mainsTension: 53, crossesTension: 51 } };
 
     for (let t = sweepMin; t <= sweepMax; t += 2) {
-      const c = Object.assign({}, cfg, {
+      const c: BuildConfig = Object.assign({}, cfg, {
         mainsTension: t,
         crossesTension: cfg.isHybrid ? t - 2 : t,
       });
-      const stats = predictSetup(racquet, c);
+      const stats = predictSetup(racquet, c as StringConfig);
       if (!stats) continue;
-      const tCtx  = buildTensionContext(c, racquet);
+      const tCtx  = buildTensionContext(c as StringConfig, racquet);
       const obs   = computeCompositeScore(stats, tCtx);
-      const rankVal = statKey === 'obs' ? obs : (stats[statKey] || 0);
+      const rankVal = statKey === 'obs' ? obs : ((stats as unknown as Record<string, number>)[statKey] || 0);
       if (rankVal > best.score) {
-        best = { score: rankVal, statVal: statKey === 'obs' ? obs : (stats[statKey] || 0), obs, tension: t, stats, cfg: c };
+        best = { score: rankVal, statVal: statKey === 'obs' ? obs : ((stats as unknown as Record<string, number>)[statKey] || 0), obs, tension: t, stats, cfg: c };
       }
     }
     return best;
@@ -482,8 +567,8 @@ function _computeLbv2Results() {
 
   // ── Full-bed candidates ───────────────────────────────────────────────────
   if (filterType !== 'hybrid') {
-    RACQUETS.forEach(racquet => {
-      STRINGS.forEach(str => {
+    (RACQUETS as unknown as Racquet[]).forEach((racquet: Racquet) => {
+      (STRINGS as StringData[]).forEach((str: StringData) => {
         const cfg = { isHybrid: false, string: str };
         const best = scoreConfig(racquet, cfg);
         if (!best.stats) return;
@@ -500,7 +585,7 @@ function _computeLbv2Results() {
           obs:         +best.obs.toFixed(1),
           rankVal:     best.score,
           statKey,
-          identity:    generateIdentity(best.stats, racquet, best.cfg),
+          identity:    generateIdentity(best.stats, racquet, best.cfg as StringConfig),
           frameLabel:  racquet.name,
           stringLabel: str.name,
         });
@@ -512,7 +597,7 @@ function _computeLbv2Results() {
   if (filterType !== 'full') {
     // Top 12 full-bed strings per racquet + gut/multi as mains candidates
     // Cross pool: slick/round/elastic polys
-    const crossPool = STRINGS.filter(s => {
+    const crossPool = (STRINGS as StringData[]).filter((s: StringData) => {
       const shape = (s.shape || '').toLowerCase();
       return shape.includes('round') || shape.includes('slick') ||
              shape.includes('coated') || s.material === 'Co-Polyester (elastic)' ||
@@ -520,26 +605,26 @@ function _computeLbv2Results() {
     });
 
     // Smart mains set: top strings overall + always gut/multi
-    const globalFull = [];
-    STRINGS.forEach(s => {
+    const globalFull: Array<{id: string; score: number}> = [];
+    (STRINGS as StringData[]).forEach((s: StringData) => {
       const cfg  = { isHybrid: false, string: s };
       const mid  = 53;
-      const sc   = predictSetup(RACQUETS[0], Object.assign({}, cfg, { mainsTension: mid, crossesTension: mid }));
-      if (sc) globalFull.push({ id: s.id, score: sc[statKey] || computeCompositeScore(sc, null) || 0 });
+      const sc   = predictSetup((RACQUETS as unknown as Racquet[])[0], Object.assign({}, cfg, { mainsTension: mid, crossesTension: mid }) as StringConfig);
+      if (sc) globalFull.push({ id: s.id, score: (sc as unknown as Record<string, number>)[statKey] || computeCompositeScore(sc, null as unknown as TensionContext) || 0 });
     });
     globalFull.sort((a, b) => b.score - a.score);
     const topMainsIds = new Set(globalFull.slice(0, 12).map(x => x.id));
-    STRINGS.forEach(s => {
+    (STRINGS as StringData[]).forEach((s: StringData) => {
       if (s.material === 'Natural Gut' || s.material === 'Multifilament') {
         topMainsIds.add(s.id);
       }
     });
 
-    RACQUETS.forEach(racquet => {
+    (RACQUETS as unknown as Racquet[]).forEach((racquet: Racquet) => {
       topMainsIds.forEach(mainsId => {
-        const mains = STRINGS.find(s => s.id === mainsId);
+        const mains = (STRINGS as StringData[]).find((s: StringData) => s.id === mainsId);
         if (!mains) return;
-        crossPool.forEach(cross => {
+        crossPool.forEach((cross: StringData) => {
           if (cross.id === mains.id) return;
           const cfg = { isHybrid: true, mains, crosses: cross };
           const best = scoreConfig(racquet, cfg);
@@ -557,7 +642,7 @@ function _computeLbv2Results() {
             obs:           +best.obs.toFixed(1),
             rankVal:       best.score,
             statKey,
-            identity:      generateIdentity(best.stats, racquet, best.cfg),
+            identity:      generateIdentity(best.stats, racquet, best.cfg as StringConfig),
             frameLabel:    racquet.name,
             stringLabel:   mains.name + ' / ' + cross.name,
           });
@@ -569,12 +654,12 @@ function _computeLbv2Results() {
   // Sort by rankVal desc, then deduplicate (keep best per frame×string key)
   candidates.sort((a, b) => b.rankVal - a.rankVal);
 
-  const seen = new Set();
-  const deduped = [];
+  const seen = new Set<string>();
+  const deduped: BuildResult[] = [];
   for (const c of candidates) {
     const key = c.racquet.id + '|' + (c.type === 'hybrid'
-      ? c.mains.id + '/' + c.crosses.id
-      : c.string.id);
+      ? c.mains!.id + '/' + c.crosses!.id
+      : c.string!.id);
     if (!seen.has(key)) {
       seen.add(key);
       deduped.push(c);
@@ -587,7 +672,7 @@ function _computeLbv2Results() {
 
 // ── Results renderer (pure Tailwind) ─────────────────────────────────────────
 
-function _renderLbv2Results(results) {
+function _renderLbv2Results(results: BuildResult[]): void {
   const resultsEl = document.getElementById('lb2-results');
   if (!resultsEl) return;
 
@@ -620,7 +705,7 @@ function _renderLbv2Results(results) {
 
     // Top 3 stats for this entry
     const topStats = ['spin', 'power', 'control', 'comfort', 'feel', 'stability']
-      .map(k => ({ k, v: entry.stats[k] }))
+      .map(k => ({ k, v: (entry.stats as unknown as Record<string, number>)[k] }))
       .sort((a, b) => b.v - a.v)
       .slice(0, 3)
       .map(({ k, v }) => {
@@ -739,12 +824,12 @@ function _renderLbv2Results(results) {
 // Ranks frames by their base physics stats — no string, no tension.
 // Uses calcFrameBase() directly. Stable sort, all 263 frames.
 
-function _computeLbv2Frames() {
+function _computeLbv2Frames(): FrameResult[] {
   const statKey = _lbv2State.statKey;
   const ff      = _lbv2State.frameFilters;
 
   // Apply filters
-  const filtered = RACQUETS.filter(function(r) {
+  const filtered = (RACQUETS as unknown as Racquet[]).filter(function(r: Racquet) {
     if (ff.brand && !r.name.startsWith(ff.brand)) return false;
     if (ff.pattern && r.pattern !== ff.pattern) return false;
     if (ff.headSize) {
@@ -766,38 +851,40 @@ function _computeLbv2Frames() {
       if (ff.stiffness === 'stiff'  && ra < 66) return false;
     }
     if (ff.year) {
-      if (ff.year === 'older' && r.year > 2023) return false;
-      if (ff.year !== 'older' && r.year !== parseInt(ff.year)) return false;
+      const rYear = r.year as number;
+      if (ff.year === 'older' && rYear > 2023) return false;
+      if (ff.year !== 'older' && rYear !== parseInt(ff.year)) return false;
     }
     return true;
   });
 
-  return filtered.map(function(racquet) {
+  return filtered.map(function(racquet: Racquet): FrameResult {
     const frameBase = calcFrameBase(racquet);
-    const frameObs = statKey === 'obs'
+    const fb = frameBase as unknown as Record<string, number>;
+    const frameObs: number | null = statKey === 'obs'
       ? Math.round((
-          frameBase.spin * 0.15 +
-          frameBase.power * 0.12 +
-          frameBase.control * 0.18 +
-          frameBase.comfort * 0.12 +
-          frameBase.feel * 0.10 +
-          frameBase.stability * 0.12 +
-          frameBase.forgiveness * 0.08 +
-          frameBase.maneuverability * 0.08 +
-          frameBase.launch * 0.05
+          (fb.spin || 0) * 0.15 +
+          (fb.power || 0) * 0.12 +
+          (fb.control || 0) * 0.18 +
+          (fb.comfort || 0) * 0.12 +
+          (fb.feel || 0) * 0.10 +
+          (fb.stability || 0) * 0.12 +
+          (fb.forgiveness || 0) * 0.08 +
+          (fb.maneuverability || 0) * 0.08 +
+          (fb.launch || 0) * 0.05
         ))
       : null;
 
-    const rankVal = statKey === 'obs' ? frameObs : Math.round(frameBase[statKey] || 0);
+    const rankVal = statKey === 'obs' ? frameObs! : Math.round(fb[statKey] || 0);
 
     return { racquet, frameBase, rankVal, statKey, frameLabel: racquet.name };
   })
-  .filter(function(e) { return e.rankVal != null; })
-  .sort(function(a, b) { return b.rankVal - a.rankVal; })
+  .filter(function(e: FrameResult) { return e.rankVal != null; })
+  .sort(function(a: FrameResult, b: FrameResult) { return b.rankVal - a.rankVal; })
   .slice(0, 60);
 }
 
-function _renderLbv2Frames(results) {
+function _renderLbv2Frames(results: FrameResult[]): void {
   const resultsEl = document.getElementById('lb2-results');
   if (!resultsEl) return;
 
@@ -815,10 +902,10 @@ function _renderLbv2Frames(results) {
     .filter(k => k !== _lbv2State.statKey)
     .slice(0, 4);
 
-  const rows = results.slice(0, 50).map(function(entry, i) {
+  const rows = results.slice(0, 50).map(function(entry: FrameResult, i: number) {
     const rank       = i + 1;
     const isFeatured = rank === 1;
-    const fb         = entry.frameBase;
+    const fb         = entry.frameBase as unknown as Record<string, number>;
 
     const specChips = contextStats.map(function(k) {
       const v    = Math.round(fb[k] || 0);
@@ -890,12 +977,12 @@ function _renderLbv2Frames(results) {
 // Ranks strings by their intrinsic profile — no frame, no tension.
 // Uses calcBaseStringProfile() which maps twScore + physical props to stats.
 
-function _computeLbv2Strings() {
+function _computeLbv2Strings(): StringResult[] {
   const statKey = _lbv2State.statKey;
   const sf      = _lbv2State.stringFilters;
 
   // Apply filters
-  const filtered = STRINGS.filter(function(s) {
+  const filtered = (STRINGS as StringData[]).filter(function(s: StringData) {
     if (sf.brand && !s.name.startsWith(sf.brand)) return false;
     if (sf.material && s.material !== sf.material) return false;
     if (sf.shape) {
@@ -903,7 +990,7 @@ function _computeLbv2Strings() {
       if (!shape.includes(sf.shape)) return false;
     }
     if (sf.gauge) {
-      const g = s.gaugeNum || 1.25;
+      const g = (s as unknown as Record<string, number>).gaugeNum || 1.25;
       if (sf.gauge === 'thin'  && g > 1.20) return false;
       if (sf.gauge === 'mid'   && (g <= 1.20 || g >= 1.28)) return false;
       if (sf.gauge === 'thick' && g < 1.28) return false;
@@ -917,31 +1004,33 @@ function _computeLbv2Strings() {
     return true;
   });
 
-  return filtered.map(function(str) {
+  return filtered.map(function(str: StringData): StringResult {
     const profile = calcBaseStringProfile(str);
+    const p = profile as unknown as Record<string, number>;
+    const twScore = (str as unknown as Record<string, Record<string, number>>).twScore;
 
-    const strObs = statKey === 'obs'
+    const strObs: number | null = statKey === 'obs'
       ? Math.round(
-          profile.spin        * 0.15 +
-          profile.power       * 0.12 +
-          profile.control     * 0.18 +
-          profile.comfort     * 0.13 +
-          profile.feel        * 0.12 +
-          profile.durability  * 0.15 +
-          profile.playability * 0.15
+          (p.spin || 0)        * 0.15 +
+          (p.power || 0)       * 0.12 +
+          (p.control || 0)     * 0.18 +
+          (p.comfort || 0)     * 0.13 +
+          (p.feel || 0)        * 0.12 +
+          (p.durability || 0)  * 0.15 +
+          (p.playability || 0) * 0.15
         )
       : null;
 
-    const rankVal = statKey === 'obs' ? strObs : Math.round(profile[statKey] || str.twScore?.[statKey] || 0);
+    const rankVal = statKey === 'obs' ? strObs! : Math.round(p[statKey] || (twScore?.[statKey] || 0));
 
     return { string: str, profile, rankVal, statKey };
   })
-  .filter(function(e) { return e.rankVal != null && e.rankVal > 0; })
-  .sort(function(a, b) { return b.rankVal - a.rankVal; })
+  .filter(function(e: StringResult) { return e.rankVal != null && e.rankVal > 0; })
+  .sort(function(a: StringResult, b: StringResult) { return b.rankVal - a.rankVal; })
   .slice(0, 60);
 }
 
-function _renderLbv2Strings(results) {
+function _renderLbv2Strings(results: StringResult[]): void {
   const resultsEl = document.getElementById('lb2-results');
   if (!resultsEl) return;
 
@@ -958,11 +1047,11 @@ function _renderLbv2Strings(results) {
     .filter(k => k !== _lbv2State.statKey)
     .slice(0, 4);
 
-  const rows = results.slice(0, 50).map(function(entry, i) {
+  const rows = results.slice(0, 50).map(function(entry: StringResult, i: number) {
     const rank       = i + 1;
     const isFeatured = rank === 1;
     const s          = entry.string;
-    const p          = entry.profile;
+    const p          = entry.profile as unknown as Record<string, number>;
 
     const matTag = (function() {
       const m = (s.material || '').toLowerCase();
@@ -1038,35 +1127,34 @@ function _renderLbv2Strings(results) {
 }
 
 
-
-function _lbv2View(racquetId, stringId, tension, type, mainsId, crossesId, crossesTension) {
-  const opts = { source: 'leaderboard' };
+function _lbv2View(racquetId: string, stringId: string, tension: number, type: string, mainsId: string, crossesId: string, crossesTension: number): void {
+  const opts: Record<string, unknown> = { source: 'leaderboard' };
   if (type === 'hybrid') {
     opts.isHybrid = true;
     opts.mainsId = mainsId;
     opts.crossesId = crossesId;
     opts.crossesTension = crossesTension;
   }
-  const lo = _createLoadout(racquetId, type === 'hybrid' ? mainsId : stringId, tension, opts);
-  if (lo) { _activateLoadout(lo); _switchMode('overview'); }
+  const lo = createLoadout(racquetId, type === 'hybrid' ? mainsId : stringId, tension, opts);
+  if (lo) { activateLoadout(lo); switchMode('overview'); }
 }
 
-function _lbv2ViewFrame(racquetId) {
+function _lbv2ViewFrame(racquetId: string): void {
   // Navigate to Racket Bible and select the frame
   if (!_lbv2CompendiumInitialized) {
-    _initCompendium();
+    initCompendium();
     _lbv2CompendiumInitialized = true;
   }
-  if (_compSelectFrame) _compSelectFrame(racquetId);
-  if (_compSwitchTab) _compSwitchTab('rackets');
+  _compSelectFrame(racquetId);
+  _compSwitchTab('rackets');
 }
 
-function _lbv2ViewString(stringId) {
-  if (_compSwitchTab) _compSwitchTab('strings');
-  setTimeout(function() { if (_stringSelectString) _stringSelectString(stringId); }, 120);
+function _lbv2ViewString(stringId: string): void {
+  _compSwitchTab('strings');
+  setTimeout(function() { _stringSelectString(stringId); }, 120);
 }
 
-function _lbv2ShowCompareWarning(message) {
+function _lbv2ShowCompareWarning(message: string): void {
   const existing = document.getElementById('lbv2-compare-warning');
   if (existing) existing.remove();
 
@@ -1091,18 +1179,18 @@ function _lbv2ShowCompareWarning(message) {
     </div>
   `;
 
-  function closeDialog() {
+  function closeDialog(): void {
     overlay.remove();
     document.removeEventListener('keydown', onKeydown);
   }
 
-  function onKeydown(event) {
+  function onKeydown(event: KeyboardEvent): void {
     if (event.key === 'Escape' || event.key === 'Enter') {
       closeDialog();
     }
   }
 
-  overlay.addEventListener('click', function(event) {
+  overlay.addEventListener('click', function(event: Event) {
     if (event.target === overlay) closeDialog();
   });
   overlay.querySelector('#lbv2-compare-warning-close')?.addEventListener('click', closeDialog);
@@ -1110,11 +1198,12 @@ function _lbv2ShowCompareWarning(message) {
   document.body.appendChild(overlay);
 }
 
-function _lbv2Compare(racquetId, stringId, tension, type, mainsId, crossesId, crossesTension) {
-  const compareState = typeof window.compareGetState === 'function'
-    ? window.compareGetState()
+function _lbv2Compare(racquetId: string, stringId: string, tension: number, type: string, mainsId: string, crossesId: string, crossesTension: number): void {
+  const compareState = typeof (window as Window & typeof globalThis & Record<string, unknown>).compareGetState === 'function'
+    ? ((window as Window & typeof globalThis & Record<string, unknown>).compareGetState as () => Record<string, unknown> | null)()
     : null;
-  const emptySlot = compareState?.slots?.find(function(slot) {
+  const slots = (compareState?.slots as Array<{loadout: unknown}> | undefined);
+  const emptySlot = slots?.find(function(slot) {
     return !slot.loadout;
   });
 
@@ -1123,7 +1212,7 @@ function _lbv2Compare(racquetId, stringId, tension, type, mainsId, crossesId, cr
     return;
   }
 
-  const opts = { source: 'leaderboard' };
+  const opts: Record<string, unknown> = { source: 'leaderboard' };
   if (type === 'hybrid') {
     opts.isHybrid = true;
     opts.mainsId = mainsId;
@@ -1131,13 +1220,11 @@ function _lbv2Compare(racquetId, stringId, tension, type, mainsId, crossesId, cr
     opts.crossesTension = crossesTension;
   }
 
-  const loadout = _createLoadout
-    ? _createLoadout(racquetId, type === 'hybrid' ? mainsId : stringId, tension, opts)
-    : null;
+  const loadout = createLoadout(racquetId, type === 'hybrid' ? mainsId : stringId, tension, opts);
   if (!loadout) return;
 
-  if (typeof window.compareAddLoadoutToNextAvailableSlot === 'function') {
-    const slotId = window.compareAddLoadoutToNextAvailableSlot(loadout);
+  if (typeof (window as Window & typeof globalThis & Record<string, unknown>).compareAddLoadoutToNextAvailableSlot === 'function') {
+    const slotId = ((window as Window & typeof globalThis & Record<string, unknown>).compareAddLoadoutToNextAvailableSlot as (lo: unknown) => string | null)(loadout);
     if (!slotId) {
       _lbv2ShowCompareWarning('All 3 compare slots are already filled. Remove one of the existing builds before adding a leaderboard result.');
       return;
@@ -1147,7 +1234,7 @@ function _lbv2Compare(racquetId, stringId, tension, type, mainsId, crossesId, cr
     return;
   }
 
-  if (_switchMode) _switchMode('compare');
+  switchMode('compare');
 }
 
 

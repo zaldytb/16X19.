@@ -510,7 +510,17 @@ export function recalcSlot(slotIndex: number): void {
 export function quickAddSaved(loadoutId: string): void {
   const loadout = getSavedLoadouts().find((item) => item.id === loadoutId);
   if (!loadout) return;
-  addLoadoutToPreferredSlot(toTrackedCompareLoadout(loadout));
+
+  const emptySlotId = getFirstEmptySlot();
+  if (emptySlotId) {
+    addLoadoutToSlot(emptySlotId, toTrackedCompareLoadout(loadout));
+    return;
+  }
+
+  const editingSlotId = _currentState.editingSlotId || _currentState.slots[0]?.id;
+  if (editingSlotId) {
+    addLoadoutToSlot(editingSlotId, toTrackedCompareLoadout(loadout));
+  }
 }
 
 export function autoFillFromSaved(): void {

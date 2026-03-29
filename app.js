@@ -171,6 +171,9 @@ subscribe('savedLoadouts', () => { savedLoadouts = getSavedLoadouts(); });
 // loadSavedLoadouts and persistSavedLoadouts imported from src/state/loadout.js
 
 function createLoadout(frameId, stringId, tension, opts) {
+  if (typeof window.createLoadout === 'function' && window.createLoadout !== createLoadout) {
+    return window.createLoadout(frameId, stringId, tension, opts);
+  }
   opts = opts || {};
   const racquet = RACQUETS.find(r => r.id === frameId);
   const rawStringData = STRINGS.find(s => s.id === stringId);
@@ -236,35 +239,6 @@ function activateLoadout(loadout) {
   if (typeof window.activateLoadout === 'function' && window.activateLoadout !== activateLoadout) {
     return window.activateLoadout(loadout);
   }
-  if (!loadout) return;
-
-  // Fix A: Auto-save dirty loadout before overwriting (QA-007, QA-012)
-  const currentAl = getActiveLoadout();
-  if (currentAl && currentAl._dirty) {
-    saveActiveLoadout();
-  }
-
-  setActiveLoadout(loadout);
-  
-  // Also sync with legacy state module (for backward compat)
-  _stateSetActiveLoadout(loadout);
-  
-  // Persist active loadout ID to localStorage
-  try {
-    if (_store) _store.setItem('tll-active-loadout-id', loadout.id);
-  } catch(e) {}
-  
-  hydrateDock(loadout);
-  renderDockPanel();
-
-  if (currentMode === 'overview') renderDashboard();
-  if (currentMode === 'tune') {
-    const setup = getCurrentSetup();
-    if (setup) initTuneMode(setup);
-  }
-
-  // Fix C: Keep optimizer frame in sync (QA-009)
-  _syncOptimizeFrame(loadout);
 }
 
 function _syncOptimizeFrame(loadout) {
@@ -359,172 +333,18 @@ function commitEditorToLoadout() {
   if (typeof window.commitEditorToLoadout === 'function' && window.commitEditorToLoadout !== commitEditorToLoadout) {
     return window.commitEditorToLoadout();
   }
-  const al = getActiveLoadout();
-  if (!al) return;
-
-  const isHybrid = $('#btn-hybrid').classList.contains('active');
-  const racquetId = ssInstances['select-racquet']?.getValue() || al.frameId;
-
-  if (isHybrid) {
-    al.isHybrid = true;
-    al.mainsId = ssInstances['select-string-mains']?.getValue() || al.mainsId;
-    al.crossesId = ssInstances['select-string-crosses']?.getValue() || al.crossesId;
-    al.mainsTension = parseInt($('#input-tension-mains').value) || al.mainsTension;
-    al.crossesTension = parseInt($('#input-tension-crosses').value) || al.crossesTension;
-    const gm = document.getElementById('gauge-select-mains');
-    const gx = document.getElementById('gauge-select-crosses');
-    al.mainsGauge = (gm && gm.value) ? parseFloat(gm.value) : null;
-    al.crossesGauge = (gx && gx.value) ? parseFloat(gx.value) : null;
-    al.stringId = null;
-    al.gauge = null;
-  } else {
-    al.isHybrid = false;
-    al.stringId = ssInstances['select-string-full']?.getValue() || al.stringId;
-    al.mainsTension = parseInt($('#input-tension-full-mains').value) || al.mainsTension;
-    al.crossesTension = parseInt($('#input-tension-full-crosses').value) || al.crossesTension;
-    const gf = document.getElementById('gauge-select-full');
-    al.gauge = (gf && gf.value) ? parseFloat(gf.value) : null;
-    al.mainsId = null;
-    al.crossesId = null;
-    al.mainsGauge = null;
-    al.crossesGauge = null;
-  }
-
-  al.frameId = racquetId;
-
-  // Recompute derived fields from the loadout (not from DOM)
-  const setup = getSetupFromLoadout(al);
-  if (setup) {
-    const stats = predictSetup(setup.racquet, setup.stringConfig);
-    if (stats) {
-      const tCtx = buildTensionContext(setup.stringConfig, setup.racquet);
-      al.stats = stats;
-      al.obs = +(computeCompositeScore(stats, tCtx)).toFixed(1);
-      al.identity = (generateIdentity(stats, setup.racquet, setup.stringConfig)?.name) || '';
-    }
-
-    // Update name
-    if (!al.isHybrid && setup.stringConfig.string) {
-      al.name = setup.stringConfig.string.name + ' on ' + setup.racquet.name;
-    } else if (al.isHybrid && setup.stringConfig.mains && setup.stringConfig.crosses) {
-      al.name = setup.stringConfig.mains.name + ' / ' + setup.stringConfig.crosses.name + ' on ' + setup.racquet.name;
-    }
-  }
-
-  // Mark dirty if this loadout has a saved counterpart
-  al._dirty = getSavedLoadouts().some(l => l.id === al.id);
-
-  renderDockPanel();
-  renderDashboard();
-  refreshTuneIfActive();
 }
 
 function renderDockPanel() {
   if (typeof window.renderDockPanel === 'function' && window.renderDockPanel !== renderDockPanel) {
     return window.renderDockPanel();
   }
-  var emptyEl = document.getElementById('dock-lo-empty');
-  var activeEl = document.getElementById('dock-lo-active');
-  if (!emptyEl || !activeEl) return;
-
-  const al = getActiveLoadout();
-  if (!al) {
-    emptyEl.classList.remove('hidden');
-    activeEl.classList.add('hidden');
-  } else {
-    emptyEl.classList.add('hidden');
-    activeEl.classList.remove('hidden');
-
-    // OBS value + color
-    var obsVal = document.getElementById('dock-lo-obs-val');
-    var obsRing = document.getElementById('dock-lo-obs-ring');
-    var newDockObs = _numericObs(al.obs);
-    if (obsVal) {
-      if (newDockObs > 0 && _prevObsValues.dock != null && _prevObsValues.dock > 0) {
-        animateOBS(obsVal, _prevObsValues.dock, newDockObs, 400);
-      } else {
-        obsVal.textContent = newDockObs > 0 ? newDockObs.toFixed(1) : '\u2014';
-      }
-    }
-    _prevObsValues.dock = newDockObs;
-
-    if (obsRing && obsVal) {
-      var color = getObsScoreColor(newDockObs);
-      obsRing.style.borderColor = color;
-      obsVal.style.color = color;
-    }
-
-    // Info text
-    var racquet = RACQUETS.find(function(r) { return r.id === al.frameId; });
-    var stringData = al.isHybrid ? null : STRINGS.find(function(s) { return s.id === al.stringId; });
-    var nameEl = document.getElementById('dock-lo-name');
-    var identEl = document.getElementById('dock-lo-identity');
-    var detailsEl = document.getElementById('dock-lo-details');
-    var sourceEl = document.getElementById('dock-lo-source');
-
-    if (nameEl) nameEl.textContent = al.name || '\u2014';
-    if (identEl) identEl.textContent = al.identity || '';
-    if (detailsEl) {
-      var frameName = racquet ? racquet.name.replace(/\s+\d+g$/, '') : '\u2014';
-      var strName = stringData ? stringData.name : (al.isHybrid ? 'Hybrid' : '\u2014');
-      detailsEl.textContent = frameName + ' \u00B7 ' + strName + ' \u00B7 M' + al.mainsTension + '/X' + al.crossesTension;
-    }
-    if (sourceEl) {
-      var labels = { quiz: 'Quiz', compendium: 'Racket Bible', manual: 'Manual', preset: 'Preset', optimize: 'Optimizer', shared: 'Shared' };
-      if (al._dirty) {
-        sourceEl.textContent = '\u270E Modified';
-        sourceEl.className = sourceEl.className.replace('hidden', '');
-        sourceEl.classList.remove('hidden');
-        sourceEl.style.color = 'var(--dc-warn)';
-      } else if (al.source && labels[al.source]) {
-        sourceEl.textContent = labels[al.source];
-        sourceEl.classList.remove('hidden');
-        sourceEl.style.color = '';
-      } else {
-        sourceEl.classList.add('hidden');
-      }
-    }
-
-    // Save button dirty tint (using local al)
-    var saveBtnEl = document.querySelector('#dock-lo-active button[onclick="saveActiveLoadout()"]');
-    if (saveBtnEl) {
-      if (activeLoadout._dirty) {
-        saveBtnEl.style.color = 'var(--dc-warn)';
-        saveBtnEl.title = 'Unsaved changes';
-      } else {
-        saveBtnEl.style.color = '';
-        saveBtnEl.title = 'Save to My Loadouts';
-      }
-    }
-  }
-
-  renderMyLoadouts();
-  renderDockCreateSection();
-  _syncMobileDockBar();
-  _syncDockRail();
-  renderDockContextPanel();
-  renderMobileLoadoutPills();
 }
 
 function renderMobileLoadoutPills() {
-  var container = document.getElementById('mobile-loadout-pills');
-  if (!container) return;
-  if (window.innerWidth > 1024) { container.innerHTML = ''; return; }
-  const sls = getSavedLoadouts();
-  const al = getActiveLoadout();
-  if (!sls || sls.length === 0) { container.innerHTML = ''; return; }
-
-  container.innerHTML = sls.map(function(lo) {
-    var isActive = al && al.id === lo.id;
-    var name = (lo.name || 'Loadout').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    var obsValue = _numericObs(lo.obs);
-    var obs = obsValue > 0 ? obsValue.toFixed(1) : '\u2014';
-    var cls = isActive
-      ? 'bg-[var(--dc-platinum)] text-[var(--dc-void)] border-[var(--dc-platinum)]'
-      : 'bg-transparent text-[var(--dc-storm)] border-[var(--dc-border)] hover:text-[var(--dc-platinum)] hover:border-[var(--dc-storm)]';
-    return '<button class="shrink-0 flex items-center gap-2 px-3 py-1.5 border font-mono text-[10px] font-semibold transition-colors ' + cls + '" onclick="switchToLoadout(\'' + lo.id + '\')">' +
-      name + '<span class="opacity-60">' + obs + '</span></button>';
-  }).join('');
+  if (typeof window.renderMobileLoadoutPills === 'function' && window.renderMobileLoadoutPills !== renderMobileLoadoutPills) {
+    return window.renderMobileLoadoutPills();
+  }
 }
 
 // ============================================
@@ -538,21 +358,6 @@ function renderMobileLoadoutPills() {
 function renderDockContextPanel() {
   if (typeof window.renderDockContextPanel === 'function' && window.renderDockContextPanel !== renderDockContextPanel) {
     return window.renderDockContextPanel();
-  }
-  const container = document.getElementById('dock-context-panel');
-  if (!container) return;
-
-  // Clear mode-specific classes from previous render
-  container.classList.remove('dock-tune-mode');
-
-  switch (currentMode) {
-    case 'compendium': _renderDockPanelBible(container); break;
-    case 'overview':   _renderDockPanelOverview(container); break;
-    case 'tune':       _renderDockPanelTune(container); break;
-    case 'compare':    _renderDockPanelCompare(container); break;
-    case 'optimize':   _renderDockPanelOptimize(container); break;
-    case 'howitworks': _renderDockPanelReference(container); break;
-    default:           _renderDockPanelOverview(container); break;
   }
 }
 
@@ -834,42 +639,12 @@ function _dockCompareRemove(slotIndex) {
   if (typeof window._dockCompareRemove === 'function' && window._dockCompareRemove !== _dockCompareRemove) {
     return window._dockCompareRemove(slotIndex);
   }
-  comparisonSlots.splice(slotIndex, 1);
-
-  try {
-    renderComparisonSlots();
-    renderCompareSummaries();
-    renderCompareVerdict();
-    renderCompareMatrix();
-    updateComparisonRadar();
-  } catch (e) {
-    console.warn('Compare workspace render error after remove:', e);
-  }
-
-  renderDockContextPanel();
 }
 
 function _dockCompareQuickAdd(loadoutId) {
   if (typeof window._dockCompareQuickAdd === 'function' && window._dockCompareQuickAdd !== _dockCompareQuickAdd) {
     return window._dockCompareQuickAdd(loadoutId);
   }
-  const lo = savedLoadouts.find(l => l.id === loadoutId);
-  if (!lo || comparisonSlots.length >= 3) return;
-  _addLoadoutAsSlot(lo);
-
-  // Render workspace (errors here must not block dock update)
-  try {
-    renderComparisonSlots();
-    renderCompareSummaries();
-    renderCompareVerdict();
-    renderCompareMatrix();
-    updateComparisonRadar();
-  } catch (e) {
-    console.warn('Compare workspace render error after quick-add:', e);
-  }
-
-  // Always update dock panel
-  renderDockContextPanel();
 }
 
 function _renderDockPanelOptimize(container) {
@@ -945,94 +720,35 @@ function _renderDockPanelReference(container) {
 
 // === Mobile dock bar sync ===
 function _syncMobileDockBar() {
-  var obsEl = document.getElementById('dock-mob-obs');
-  var labelEl = document.getElementById('dock-mob-label');
-  if (!obsEl || !labelEl) return;
-  
-  const al = getActiveLoadout();
-  if (al) {
-    var newMobObs = _numericObs(al.obs);
-    if (newMobObs > 0 && _prevObsValues.mobile != null && _prevObsValues.mobile > 0) {
-      animateOBS(obsEl, _prevObsValues.mobile, newMobObs, 400);
-    } else {
-      obsEl.textContent = newMobObs > 0 ? newMobObs.toFixed(1) : '';
-    }
-    _prevObsValues.mobile = newMobObs;
-    labelEl.textContent = al.name || 'Active loadout';
-  } else {
-    obsEl.textContent = '';
-    labelEl.textContent = 'No active loadout';
+  if (typeof window._syncMobileDockBar === 'function' && window._syncMobileDockBar !== _syncMobileDockBar) {
+    return window._syncMobileDockBar();
   }
 }
 
 function toggleMobileDock() {
-  var dock = document.getElementById('build-dock');
-  var backdrop = document.getElementById('dock-backdrop');
-  var mobileBar = document.getElementById('dock-mobile-bar');
-  if (!dock) return;
-
-  var isExpanded = dock.classList.toggle('dock-expanded');
-
-  // Toggle backdrop
-  if (backdrop) {
-    if (isExpanded) {
-      backdrop.classList.add('active');
-    } else {
-      backdrop.classList.remove('active');
-    }
-  }
-
-  // Chevron rotation via class
-  if (mobileBar) {
-    mobileBar.classList.toggle('bar-expanded', isExpanded);
+  if (typeof window.toggleMobileDock === 'function' && window.toggleMobileDock !== toggleMobileDock) {
+    return window.toggleMobileDock();
   }
 }
 
 // ═══ DOCK COLLAPSE RAIL ═══
 
 function toggleDockCollapse() {
-  var dock = document.getElementById('build-dock');
-  if (!dock) return;
-  var isCollapsed = dock.classList.toggle('dock-collapsed');
-  document.documentElement.style.setProperty('--dock-w', isCollapsed ? '64px' : '300px');
-  try { localStorage.setItem('dockCollapsed', isCollapsed ? '1' : '0'); } catch(e) {}
-  if (isCollapsed) _syncDockRail();
-  // Dispatch resize after CSS transition for chart reflow
-  setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 320);
+  if (typeof window.toggleDockCollapse === 'function' && window.toggleDockCollapse !== toggleDockCollapse) {
+    return window.toggleDockCollapse();
+  }
 }
 
 function _syncDockRail() {
-  var obsEl = document.getElementById('dock-rail-obs');
-  var countEl = document.getElementById('dock-rail-count');
-  if (obsEl) {
-    var railObs = activeLoadout ? _numericObs(activeLoadout.obs) : 0;
-    if (railObs > 0) {
-      obsEl.textContent = railObs.toFixed(1);
-      obsEl.style.color = getObsScoreColor(railObs);
-    } else {
-      obsEl.textContent = '—';
-      obsEl.style.color = 'var(--dc-storm)';
-    }
-  }
-  if (countEl) {
-    var saved = [];
-    try { saved = JSON.parse(localStorage.getItem('savedLoadouts') || '[]'); } catch(e) {}
-    countEl.textContent = saved.length;
+  if (typeof window._syncDockRail === 'function' && window._syncDockRail !== _syncDockRail) {
+    return window._syncDockRail();
   }
 }
 
 function _initDockCollapse() {
-  try {
-    var collapsed = localStorage.getItem('dockCollapsed') === '1';
-    if (collapsed && window.innerWidth > 1024) {
-      var dock = document.getElementById('build-dock');
-      if (dock) {
-        dock.classList.add('dock-collapsed');
-        document.documentElement.style.setProperty('--dock-w', '64px');
-        _syncDockRail();
-      }
-    }
-  } catch(e) {}
+  if (typeof window._initDockCollapse === 'function' && window._initDockCollapse !== _initDockCollapse) {
+    return window._initDockCollapse();
+  }
 }
 
 
@@ -1143,68 +859,11 @@ function resetActiveLoadout() {
   if (typeof window.resetActiveLoadout === 'function' && window.resetActiveLoadout !== resetActiveLoadout) {
     return window.resetActiveLoadout();
   }
-  setActiveLoadout(null);
-  _stateSetActiveLoadout(null);
-
-  // Clear tune sandbox state
-  tuneState.baseline = null;
-  tuneState.explored = null;
-
-  // Full editor reset — clear all form elements
-  ssInstances['select-racquet']?.setValue('');
-  ssInstances['select-string-full']?.setValue('');
-  ssInstances['select-string-mains']?.setValue('');
-  ssInstances['select-string-crosses']?.setValue('');
-  setHybridMode(false);
-
-  // Reset tension inputs to defaults
-  var tfm = document.getElementById('input-tension-full-mains');
-  var tfx = document.getElementById('input-tension-full-crosses');
-  var thm = document.getElementById('input-tension-mains');
-  var thx = document.getElementById('input-tension-crosses');
-  if (tfm) tfm.value = 55;
-  if (tfx) tfx.value = 53;
-  if (thm) thm.value = 55;
-  if (thx) thx.value = 53;
-
-  // Reset gauge dropdowns
-  ['gauge-select-full', 'gauge-select-mains', 'gauge-select-crosses'].forEach(function(id) {
-    var el = document.getElementById(id);
-    if (el) { el.innerHTML = '<option value="">\u2014</option>'; el.disabled = true; }
-  });
-
-  // Close editor details if open
-  var editor = document.getElementById('dock-editor-section');
-  if (editor) editor.open = false;
-
-  // Hide frame specs
-  var specs = document.getElementById('frame-specs');
-  if (specs) specs.classList.add('hidden');
-
-  renderDockPanel();
-  if (currentMode === 'overview') renderDashboard();
-  if (currentMode === 'tune') refreshTuneIfActive();
 }
 
 function addLoadoutToCompare(loadoutId) {
   if (typeof window.addLoadoutToCompare === 'function' && window.addLoadoutToCompare !== addLoadoutToCompare) {
     return window.addLoadoutToCompare(loadoutId);
-  }
-  var lo = savedLoadouts.find(function(l) { return l.id === loadoutId; });
-  if (!lo) return;
-
-  if (comparisonSlots.length >= 3) comparisonSlots.pop();
-
-  _addLoadoutAsSlot(lo);
-
-  if (currentMode === 'compare') {
-    renderComparisonSlots();
-    renderCompareSummaries();
-    renderCompareVerdict();
-    renderCompareMatrix();
-    updateComparisonRadar();
-  } else {
-    switchMode('compare');
   }
 }
 
@@ -1214,124 +873,8 @@ function renderDockState() {
 
 function switchMode(mode) {
   if (typeof window.switchMode === 'function' && window.switchMode !== switchMode) {
-    const result = window.switchMode(mode);
-    if (typeof window.currentMode === 'string') {
-      _syncLegacyModeState(window.currentMode);
-    }
-    return result;
+    return window.switchMode(mode);
   }
-  if (mode === currentMode) return;
-
-  // On mobile the page itself scrolls (workspace has height:auto/overflow:visible)
-  const workspace = document.getElementById('workspace');
-  const _isMobileScroll = window.innerWidth <= 1024;
-
-  // Save scroll position of current mode
-  if (_isMobileScroll) {
-    scrollPositions[currentMode] = window.scrollY;
-  } else if (workspace) {
-    scrollPositions[currentMode] = workspace.scrollTop;
-  }
-
-  // Hide current mode section
-  const currentSection = document.getElementById('mode-' + currentMode);
-  if (currentSection) currentSection.classList.add('hidden');
-
-  // Update mode switcher buttons
-  document.querySelectorAll('.mode-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.mode === mode);
-  });
-
-  // Sync mobile tab bar active state
-  document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.mode === mode);
-  });
-
-  // On mobile, close the dock overlay when switching modes
-  if (_isMobileScroll) {
-    const dock = document.getElementById('build-dock');
-    if (dock && dock.classList.contains('dock-expanded')) {
-      toggleMobileDock();
-    }
-  }
-
-  const prevMode = currentMode;
-  _syncLegacyModeState(mode);
-
-  // Show new mode section with animation replay
-  const newSection = document.getElementById('mode-' + mode);
-  if (newSection) {
-    newSection.classList.remove('hidden');
-    // Force animation replay by resetting
-    newSection.style.animation = 'none';
-    newSection.offsetHeight; // trigger reflow
-    newSection.style.animation = '';
-  }
-
-  // Restore scroll position
-  requestAnimationFrame(() => {
-    if (_isMobileScroll) {
-      window.scrollTo(0, scrollPositions[mode] || 0);
-    } else if (workspace) {
-      workspace.scrollTop = scrollPositions[mode] || 0;
-    }
-  });
-
-  // Mode-specific initialization
-  if (mode === 'overview') {
-    renderDashboard();
-  } else if (mode === 'tune') {
-    const setup = getCurrentSetup();
-    if (setup) {
-      initTuneMode(setup);
-    }
-  } else if (mode === 'compare') {
-    renderComparisonPresets();
-    if (comparisonSlots.length === 0) {
-      if (savedLoadouts.length >= 2) {
-        _autoFillCompareFromSaved();
-      } else if (savedLoadouts.length === 1 || activeLoadout) {
-        addComparisonSlotFromHome();
-        _showCompareQuickAddPrompt();
-      } else {
-        addComparisonSlotFromHome();
-      }
-    } else {
-      renderComparisonSlots();
-      renderCompareSummaries();
-      renderCompareVerdict();
-      renderCompareMatrix();
-      updateComparisonRadar();
-    }
-    // Wire close-editors button
-    const closeBtn = document.getElementById('compare-editors-close');
-    if (closeBtn) closeBtn.onclick = closeCompareEditors;
-  } else if (mode === 'optimize') {
-    if (!_optimizeInitialized) {
-      initOptimize();
-      _optimizeInitialized = true;
-    }
-  } else if (mode === 'compendium') {
-    if (!_compendiumInitialized) {
-      if (window.initCompendium && window.initCompendium !== initCompendium) {
-        window.initCompendium();
-      } else {
-        initCompendium();
-      }
-      _compendiumInitialized = true;
-    } else {
-      // Re-sync with active loadout to ensure consistency
-      if (window._compSyncWithActiveLoadout && window._compSyncWithActiveLoadout !== _compSyncWithActiveLoadout) {
-        window._compSyncWithActiveLoadout();
-      } else {
-        _compSyncWithActiveLoadout();
-      }
-    }
-  }
-  // howitworks mode needs no special init — it's static content
-
-  // Update dock context panel for new mode
-  renderDockContextPanel();
 }
 
 // ============================================
@@ -1363,20 +906,8 @@ function savePresetsToStorage() {
 let userPresets = loadPresetsFromStorage() || [...DEFAULT_PRESETS];
 
 function getPresetDetail(preset) {
-  const racquet = RACQUETS.find(r => r.id === preset.racquetId);
-  const rName = racquet ? racquet.name : 'Unknown';
-  if (preset.isHybrid) {
-    const mains = STRINGS.find(s => s.id === preset.mainsId);
-    const crosses = STRINGS.find(s => s.id === preset.crossesId);
-    const mName = mains ? mains.name : '?';
-    const xName = crosses ? crosses.name : '?';
-    return `${mName} M:${preset.mainsTension} / ${xName} X:${preset.crossesTension} on ${rName}`;
-  } else {
-    const str = STRINGS.find(s => s.id === preset.stringId);
-    const sName = str ? str.name : '?';
-    const mt = preset.mainsTension ?? preset.tension ?? 55;
-    const xt = preset.crossesTension ?? preset.tension ?? 53;
-    return `${sName} ${mt === xt ? mt + ' lbs' : 'M:' + mt + ' / X:' + xt} on ${rName}`;
+  if (typeof window.getPresetDetail === 'function' && window.getPresetDetail !== getPresetDetail) {
+    return window.getPresetDetail(preset);
   }
 }
 
@@ -1627,36 +1158,9 @@ function renderComparisonPresets() {
 }
 
 function getSlotColors() {
-  // Digicraft Brutalism — Slot A is Artful Red (active), B and C are platinum ghosts
-  return [
-    { 
-      // Slot A: Artful Red — the "active" read
-      border: 'rgba(175, 0, 0, 0.8)', 
-      bg: 'rgba(175, 0, 0, 0.06)', 
-      bgFaint: 'rgba(175, 0, 0, 0.04)', 
-      label: 'A', 
-      cssClass: 'a', 
-      borderDash: [] 
-    },
-    { 
-      // Slot B: Platinum ghost
-      border: 'rgba(220, 223, 226, 0.5)', 
-      bg: 'rgba(220, 223, 226, 0.03)', 
-      bgFaint: 'rgba(220, 223, 226, 0.02)', 
-      label: 'B', 
-      cssClass: 'b', 
-      borderDash: [6, 3] 
-    },
-    { 
-      // Slot C: Faintest platinum
-      border: 'rgba(220, 223, 226, 0.25)', 
-      bg: 'rgba(220, 223, 226, 0.02)', 
-      bgFaint: 'rgba(220, 223, 226, 0.01)', 
-      label: 'C', 
-      cssClass: 'c', 
-      borderDash: [2, 2] 
-    }
-  ];
+  if (typeof window.getSlotColors === 'function' && window.getSlotColors !== getSlotColors) {
+    return window.getSlotColors();
+  }
 }
 let SLOT_COLORS = getSlotColors();
 _setAppSlotColors(SLOT_COLORS);
@@ -1667,97 +1171,20 @@ _setAppSlotColors(SLOT_COLORS);
 // createSearchableSelect and ssInstances imported from './src/ui/components/searchable-select.js'
 
 function populateRacquetDropdown(targetEl) {
-  // targetEl was previously a <select>, now it's a container div
-  // We replace it with the searchable component
-  const wrapper = targetEl;
-  const existingValue = '';
-  ssInstances[wrapper.id] = createSearchableSelect(wrapper, {
-    type: 'racquet',
-    placeholder: 'Select Racquet...',
-    value: existingValue,
-    id: wrapper.id + '-trigger',
-    onChange: (val) => {
-      const r = RACQUETS.find(x => x.id === val);
-      showFrameSpecs(r);
-      if (typeof window._onEditorChange === 'function') {
-        window._onEditorChange();
-      } else if (activeLoadout) {
-        commitEditorToLoadout();
-      } else {
-        renderDashboard();
-      }
-    }
-  });
+  if (typeof window.populateRacquetDropdown === 'function' && window.populateRacquetDropdown !== populateRacquetDropdown) {
+    return window.populateRacquetDropdown(targetEl);
+  }
 }
 
 function populateStringDropdown(targetEl, initialValue) {
-  const wrapper = targetEl;
-  ssInstances[wrapper.id] = createSearchableSelect(wrapper, {
-    type: 'string',
-    placeholder: wrapper.dataset.placeholder || 'Select String...',
-    value: initialValue || '',
-    id: wrapper.id + '-trigger',
-    onChange: (val) => {
-      // Update gauge display
-      const gaugeEl = wrapper.dataset.gaugeTarget ? document.getElementById(wrapper.dataset.gaugeTarget) : null;
-      if (gaugeEl) populateGaugeDropdown(gaugeEl, val);
-      if (typeof window._onEditorChange === 'function') {
-        window._onEditorChange();
-      } else if (activeLoadout) {
-        commitEditorToLoadout();
-      } else {
-        renderDashboard();
-      }
-    }
-  });
+  if (typeof window.populateStringDropdown === 'function' && window.populateStringDropdown !== populateStringDropdown) {
+    return window.populateStringDropdown(targetEl, initialValue);
+  }
 }
 
 function populateGaugeDropdown(el, stringId) {
-  if (!el) return;
-
-  // Handle both old div-based and new select-based gauge elements
-  const isSelect = el.tagName === 'SELECT';
-
-  if (!stringId) {
-    if (isSelect) {
-      el.innerHTML = '<option value="">—</option>';
-      el.disabled = true;
-    } else {
-      el.textContent = '—';
-    }
-    return;
-  }
-
-  const s = STRINGS.find(x => x.id === stringId);
-  if (!s) {
-    if (isSelect) {
-      el.innerHTML = '<option value="">—</option>';
-      el.disabled = true;
-    } else {
-      el.textContent = '—';
-    }
-    return;
-  }
-
-  if (isSelect) {
-    const options = getGaugeOptions(s);
-    const refGauge = s.gaugeNum;
-    el.innerHTML = options.map(g => {
-      const isRef = Math.abs(g - refGauge) < 0.005;
-      let label = GAUGE_LABELS[g];
-      if (!label) {
-        // Build label for non-standard gauges
-        const gNum = g >= 1.30 ? '16' : g >= 1.25 ? '16L' : g >= 1.20 ? '17' : '18';
-        label = `${gNum} (${g.toFixed(2)}mm)`;
-      }
-      const tag = isRef ? ' •' : '';
-      return `<option value="${g}" ${isRef ? 'selected' : ''}>${label}${tag}</option>`;
-    }).join('');
-    el.disabled = false;
-    // Fire change handler to rebuild on gauge change
-    el.onchange = () => { activeLoadout ? commitEditorToLoadout() : renderDashboard(); };
-  } else {
-    el.textContent = s.gauge;
+  if (typeof window.populateGaugeDropdown === 'function' && window.populateGaugeDropdown !== populateGaugeDropdown) {
+    return window.populateGaugeDropdown(el, stringId);
   }
 }
 
@@ -1766,22 +1193,9 @@ function populateGaugeDropdown(el, stringId) {
 // ============================================
 
 function showFrameSpecs(racquet) {
-  const el = $('#frame-specs');
-  if (!racquet) {
-    el.classList.add('hidden');
-    return;
+  if (typeof window.showFrameSpecs === 'function' && window.showFrameSpecs !== showFrameSpecs) {
+    return window.showFrameSpecs(racquet);
   }
-  el.classList.remove('hidden');
-  el.innerHTML = `
-    <div class="frame-spec-item"><span class="frame-spec-label">STRUNG WGHT</span><span class="frame-spec-value">${racquet.strungWeight}g</span></div>
-    <div class="frame-spec-item"><span class="frame-spec-label">SW</span><span class="frame-spec-value">${racquet.swingweight}</span></div>
-    <div class="frame-spec-item"><span class="frame-spec-label">Stiffness</span><span class="frame-spec-value">${racquet.stiffness} RA</span></div>
-    <div class="frame-spec-item"><span class="frame-spec-label">Pattern</span><span class="frame-spec-value">${racquet.pattern}</span></div>
-    <div class="frame-spec-item"><span class="frame-spec-label">Head</span><span class="frame-spec-value">${racquet.headSize} sq in</span></div>
-    <div class="frame-spec-item"><span class="frame-spec-label">Balance</span><span class="frame-spec-value">${racquet.balancePts}</span></div>
-    <div class="frame-spec-item"><span class="frame-spec-label">Beam</span><span class="frame-spec-value">${_formatBeamWidth(racquet.beamWidth)}</span></div>
-    <div class="frame-spec-item"><span class="frame-spec-label">Tension</span><span class="frame-spec-value">${_formatTensionRange(racquet.tensionRange)}</span></div>
-  `;
 }
 
 // ============================================
@@ -1879,142 +1293,18 @@ function _assignStaggerIndices(containerSel) {
   }
 }
 
-function _renderDashboardLegacy() {
-  renderMobileLoadoutPills();
-  const setup = getCurrentSetup();
-
-  if (!setup) {
-    $('#empty-state').classList.remove('hidden');
-    $('#dashboard-content').classList.add('hidden');
-    return;
-  }
-
-  $('#empty-state').classList.add('hidden');
-  $('#dashboard-content').classList.remove('hidden');
-
-  const { racquet, stringConfig } = setup;
-  const stats = predictSetup(racquet, stringConfig);
-  const identity = generateIdentity(stats, racquet, stringConfig);
-  const fitProfile = typeof window.generateFitProfile === 'function'
-    ? window.generateFitProfile(stats, racquet, stringConfig)
-    : generateFitProfile(stats, racquet, stringConfig);
-  const warnings = typeof window.generateWarnings === 'function'
-    ? window.generateWarnings(racquet, stringConfig, stats)
-    : generateWarnings(racquet, stringConfig, stats);
-  const renderOverviewHeroImpl = typeof window.renderOverviewHero === 'function'
-    ? window.renderOverviewHero
-    : renderOverviewHero;
-  const renderStatBarsImpl = typeof window.renderStatBars === 'function'
-    ? window.renderStatBars
-    : renderStatBars;
-  const renderRadarChartImpl = typeof window.renderRadarChart === 'function'
-    ? window.renderRadarChart
-    : renderRadarChart;
-  const renderFitProfileImpl = typeof window.renderFitProfile === 'function'
-    ? window.renderFitProfile
-    : renderFitProfileActive;
-  const renderOCFoundationImpl = typeof window.renderOCFoundation === 'function'
-    ? window.renderOCFoundation
-    : renderOCFoundation;
-  const renderWarningsImpl = typeof window.renderWarnings === 'function'
-    ? window.renderWarnings
-    : renderWarnings;
-
-  // Hero Band (replaces summary + identity + rating cards)
-  renderOverviewHeroImpl(racquet, stringConfig, stats, identity);
-
-  // Stats
-  renderStatBarsImpl(stats);
-  renderRadarChartImpl(stats);
-
-  // Fit
-  renderFitProfileImpl(fitProfile);
-
-  // Progressive depth (foundation now inside Build DNA)
-  renderOCFoundationImpl(racquet, stringConfig, stats);
-
-  // Warnings
-  renderWarningsImpl(warnings);
-
-  // Wave 2: Assign stagger indices to top-level dashboard sections
-  _assignStaggerIndices('#dashboard-content');
-
-  // If Tune mode is open, refresh its panels with the updated setup
-  refreshTuneIfActive();
-}
+function _renderDashboardLegacy() {}
 
 function renderDashboard() {
   if (typeof window.renderDashboard === 'function' && window.renderDashboard !== renderDashboard) {
     return window.renderDashboard();
   }
-  return _renderDashboardLegacy();
 }
 
 function renderOverviewHero(racquet, stringConfig, stats, identity) {
-  const el = $('#overview-hero');
-  const tensionCtx = buildTensionContext(stringConfig, racquet);
-  const score = computeCompositeScore(stats, tensionCtx);
-  const tier = getObsTier(score);
-
-  // String name for meta line
-  let stringName;
-  if (stringConfig.isHybrid) {
-    stringName = `${stringConfig.mains.name} ${stringConfig.mains.gauge} / ${stringConfig.crosses.name} ${stringConfig.crosses.gauge}`;
-  } else {
-    stringName = `${stringConfig.string.name} ${stringConfig.string.gauge}`;
+  if (typeof window.renderOverviewHero === 'function' && window.renderOverviewHero !== renderOverviewHero) {
+    return window.renderOverviewHero(racquet, stringConfig, stats, identity);
   }
-  const tensionLabel = `M${stringConfig.mainsTension} / X${stringConfig.crossesTension}`;
-
-  // Check if S-Rank for special styling
-  const tierClass = tier.label === 'S Rank' ? 's-rank' : '';
-
-  el.innerHTML = `
-    <div class="flex flex-col gap-6">
-      <!-- Score + Identity Row -->
-      <div class="flex flex-col lg:flex-row gap-8 lg:gap-12">
-        <!-- Score Block -->
-        <div class="hero-score shrink-0">
-          <span class="hero-obs-label">System Sync Rating</span>
-          <span class="hero-obs-value">${score.toFixed(1)}</span>
-          <span class="hero-obs-tier ${tierClass}">${tier.label}</span>
-        </div>
-        <!-- Identity Block -->
-        <div class="hero-identity flex-1 min-w-0">
-          <div class="hero-archetype">${identity.archetype}</div>
-          <div class="hero-desc">${identity.description}</div>
-          <div class="hero-terminal">
-            <span class="hero-terminal-value">${racquet.name.replace(/\\s+\\d+g$/, '')}</span><span class="hero-terminal-sep">//</span><span class="hero-terminal-value">${stringName}</span><span class="hero-terminal-sep">//</span><span class="hero-terminal-value">${tensionLabel}</span>
-          </div>
-        </div>
-      </div>
-      <!-- CTA Actions -->
-      <div class="mt-2 pt-6 border-t border-dc-storm/20">
-        <div class="flex gap-3">
-          <button 
-            class="flex-1 bg-transparent border border-dc-storm/40 dark:border-dc-storm/40 text-dc-void dark:text-dc-platinum font-mono text-[12px] font-bold uppercase tracking-widest py-3 px-4 hover:border-dc-void dark:hover:border-dc-platinum hover:bg-dc-void/5 dark:hover:bg-dc-platinum/5 transition-colors flex items-center justify-center gap-2"
-            onclick="switchMode('compendium')"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-            //BACK TO BIBLE
-          </button>
-          <button 
-            class="flex-1 bg-dc-accent text-dc-void font-mono text-[12px] font-bold uppercase tracking-widest py-3 px-4 hover:bg-dc-accent/90 transition-colors flex items-center justify-center gap-2"
-            onclick="switchMode('tune')"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v10"/><path d="M21 12h-6m-6 0H1"/></svg>
-            Tune This Build
-          </button>
-        </div>
-      </div>
-    </div>
-  `;
-
-  // OBS counting animation on hero value
-  var heroObsEl = el.querySelector('.hero-obs-value');
-  if (heroObsEl && _prevObsValues.hero != null) {
-    animateOBS(heroObsEl, _prevObsValues.hero, score, 500);
-  }
-  _prevObsValues.hero = score;
 }
 
 
@@ -2023,381 +1313,72 @@ function renderOverviewHero(racquet, stringConfig, stats, identity) {
 // ============================================
 
 function getRatingDescriptor(score, identity) {
-  const archLower = identity.archetype.toLowerCase();
-  if (score >= 85) return `Elite ${archLower} configuration`;
-  if (score >= 75) return `Strong ${archLower} configuration`;
-  if (score >= 65) return `Solid ${archLower} configuration`;
-  if (score >= 55) return `Moderate ${archLower} configuration`;
-  return `Developing ${archLower} configuration`;
+  if (typeof window.getRatingDescriptor === 'function' && window.getRatingDescriptor !== getRatingDescriptor) {
+    return window.getRatingDescriptor(score, identity);
+  }
 }
 
 
 function renderOCFoundation(racquet, stringConfig, stats) {
-  const el = $('#oc-foundation');
-  const sep = '<span class="oc-sep">/</span>';
-
-  // Get string data
-  let strStiff, strTensionLoss, strSpinPot;
-  if (stringConfig.isHybrid) {
-    // Average mains/crosses for hybrid
-    const m = stringConfig.mains, x = stringConfig.crosses;
-    strStiff = Math.round((m.stiffness + x.stiffness) / 2);
-    strTensionLoss = ((m.tensionLoss + x.tensionLoss) / 2).toFixed(0);
-    strSpinPot = ((m.spinPotential + x.spinPotential) / 2).toFixed(1);
-  } else {
-    const s = stringConfig.string;
-    strStiff = Math.round(s.stiffness);
-    strTensionLoss = s.tensionLoss.toFixed(0);
-    strSpinPot = s.spinPotential.toFixed(1);
+  if (typeof window.renderOCFoundation === 'function' && window.renderOCFoundation !== renderOCFoundation) {
+    return window.renderOCFoundation(racquet, stringConfig, stats);
   }
-
-  el.innerHTML = `
-    <div class="oc-foundation-group">
-      <span class="oc-foundation-group-title">[FRAME]</span>
-      <span class="oc-foundation-group-values">WGHT ${racquet.strungWeight}g strung ${sep} SW ${racquet.swingweight} ${sep} RA ${racquet.stiffness} ${sep} PAT ${racquet.pattern}</span>
-    </div>
-    <div class="oc-foundation-group">
-      <span class="oc-foundation-group-title">[STRNG]</span>
-      <span class="oc-foundation-group-values">STIF ${strStiff} ${sep} LOSS ${strTensionLoss}% ${sep} SPIN ${strSpinPot}</span>
-    </div>
-    <div class="oc-foundation-group">
-      <span class="oc-foundation-group-title">[MODEL]</span>
-      <span class="oc-foundation-group-values">POWR ${stats.power} ${sep} CTRL ${stats.control} ${sep} COMF ${stats.comfort}</span>
-    </div>
-  `;
 }
 
 function renderOCSnapshot(fitProfile) {
-  const el = $('#oc-snapshot');
-  // Take first 2 items from bestFor and first from watchOut
-  const bestForText = fitProfile.bestFor.slice(0, 2).join(', ');
-  const watchOutText = fitProfile.watchOut[0] || 'No major concerns';
-  // Extract sweet spot from tensionRec
-  const sweetSpotMatch = fitProfile.tensionRec.match(/sweet spot: ([^)]+)/);
-  const sweetSpot = sweetSpotMatch ? sweetSpotMatch[1] : fitProfile.tensionRec;
-
-  el.innerHTML = `
-    <div class="oc-snapshot-section">
-      <div class="oc-snapshot-label best-for">Best For</div>
-      <div class="oc-snapshot-value">${bestForText}</div>
-    </div>
-    <div class="oc-snapshot-section">
-      <div class="oc-snapshot-label watch-out">Watch Out</div>
-      <div class="oc-snapshot-value">${watchOutText}</div>
-    </div>
-    <div class="oc-snapshot-section">
-      <div class="oc-snapshot-label sweet-spot">Sweet Spot</div>
-      <div class="oc-snapshot-value">${sweetSpot}</div>
-    </div>
-  `;
+  if (typeof window.renderOCSnapshot === 'function' && window.renderOCSnapshot !== renderOCSnapshot) {
+    return window.renderOCSnapshot(fitProfile);
+  }
 }
 
 // Stat bar grouping for Build DNA
 function _statBarColor(val) {
-  // Digicraft Brutalism — monochrome stat bars, no color coding
-  return 'var(--dc-platinum)';
+  if (typeof window._statBarColor === 'function' && window._statBarColor !== _statBarColor) {
+    return window._statBarColor(val);
+  }
 }
 
 function renderStatBars(stats) {
-  const container = $('#stat-bars');
-  container.innerHTML = '';
-
-  const keyToLabel = {};
-  STAT_KEYS.forEach((k, i) => keyToLabel[k] = STAT_LABELS[i]);
-
-  let barIdx = 0;
-  STAT_GROUPS.forEach(group => {
-    const groupDiv = document.createElement('div');
-    groupDiv.className = 'stat-group';
-    groupDiv.innerHTML = '<div class="stat-group-label">' + group.label + '</div>';
-
-    group.keys.forEach(key => {
-      const value = stats[key];
-      const isHigh = value > 70;
-      const segments = 20;
-      const filledSegments = Math.round((value / 100) * segments);
-      
-      // Generate battery-style segments
-      let segmentsHtml = '';
-      for (let i = 0; i < segments; i++) {
-        let segClass = 'empty';
-        if (i < filledSegments) {
-          segClass = isHigh ? 'high' : 'filled';
-        }
-        segmentsHtml += `<div class="stat-bar-segment ${segClass}" data-seg="${i}"></div>`;
-      }
-      
-      const row = document.createElement('div');
-      row.className = 'stat-row';
-      row.innerHTML = `
-        <div class="stat-row-header">
-          <span class="stat-label">${keyToLabel[key]}</span>
-          <span class="stat-value">${value}</span>
-        </div>
-        <div class="stat-bar-track" data-value="${value}">
-          ${segmentsHtml}
-        </div>
-      `;
-      groupDiv.appendChild(row);
-      barIdx++;
-    });
-
-    container.appendChild(groupDiv);
-  });
-
-  // Animate segments
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      container.querySelectorAll('.stat-bar-track').forEach((track, idx) => {
-        const value = parseFloat(track.dataset.value);
-        const segments = track.querySelectorAll('.stat-bar-segment');
-        const filledCount = Math.round((value / 100) * segments.length);
-        
-        segments.forEach((seg, i) => {
-          setTimeout(() => {
-            if (i < filledCount) {
-              seg.classList.add('active');
-            }
-          }, idx * 40 + i * 15);
-        });
-      });
-    });
-  });
-
-  // Highlights: top 3 + bottom 2
-  renderBuildDNAHighlights(stats);
+  if (typeof window.renderStatBars === 'function' && window.renderStatBars !== renderStatBars) {
+    return window.renderStatBars(stats);
+  }
 }
 
 function renderBuildDNAHighlights(stats) {
-  const el = document.getElementById('build-dna-highlights');
-  if (!el) return;
-
-  const entries = STAT_KEYS.map((k, i) => ({ key: k, label: STAT_LABELS[i], val: stats[k] }));
-  const sorted = [...entries].sort((a, b) => b.val - a.val);
-  const top3 = sorted.slice(0, 3);
-  const bot2 = sorted.slice(-2).reverse();
-
-  // Hardware log format: [+] for strong, [-] for gaps
-  const topLogs = top3.map(s =>
-    '<span class="dna-log-strong">[+] ' + s.label.toUpperCase() + ' ' + s.val + '</span>'
-  ).join('');
-  const botLogs = bot2.map(s =>
-    '<span class="dna-log-gap">[-] ' + s.label.toUpperCase() + ' ' + s.val + '</span>'
-  ).join('');
-
-  el.innerHTML = `
-    <div class="dna-highlights-row">
-      <span class="dna-highlights-label">STRONG</span>${topLogs}
-      <span class="dna-highlights-label">GAP</span>${botLogs}
-    </div>
-  `;
+  if (typeof window.renderBuildDNAHighlights === 'function' && window.renderBuildDNAHighlights !== renderBuildDNAHighlights) {
+    return window.renderBuildDNAHighlights(stats);
+  }
 }
 
 // ---- Ballistic HUD Tooltip Handler ----
 function radarTooltipHandler(context) {
-  // Tooltip element creation
-  let tooltipEl = document.getElementById('chartjs-tooltip');
-  
-  if (!tooltipEl) {
-    tooltipEl = document.createElement('div');
-    tooltipEl.id = 'chartjs-tooltip';
-    tooltipEl.className = 'chartjs-tooltip';
-    document.body.appendChild(tooltipEl);
+  if (typeof window.radarTooltipHandler === 'function' && window.radarTooltipHandler !== radarTooltipHandler) {
+    return window.radarTooltipHandler(context);
   }
-  
-  const tooltip = context.tooltip;
-  
-  // Hide if no tooltip
-  if (tooltip.opacity === 0) {
-    tooltipEl.style.opacity = 0;
-    return;
-  }
-  
-  // Get data
-  const dataPoint = tooltip.dataPoints?.[0];
-  if (!dataPoint) return;
-  
-  const label = dataPoint.label;
-  const value = dataPoint.raw;
-  
-  // Build tooltip content
-  tooltipEl.innerHTML = `
-    <div class="tooltip-label">// ${label}</div>
-    <div class="tooltip-value">
-      <div class="tooltip-marker"></div>
-      <span>${value}</span>
-    </div>
-  `;
-  
-  // Position
-  const position = context.chart.canvas.getBoundingClientRect();
-  tooltipEl.style.opacity = 1;
-  tooltipEl.style.left = (position.left + window.scrollX + tooltip.caretX + 15) + 'px';
-  tooltipEl.style.top = (position.top + window.scrollY + tooltip.caretY - 10) + 'px';
 }
 
 function renderRadarChart(stats) {
-  const ctx = document.getElementById('radar-chart').getContext('2d');
-
-  const data = STAT_KEYS.map(k => stats[k]);
-
-  const isDark = document.documentElement.dataset.theme === 'dark';
-  // Digicraft Brutalism — Artful Red accent
-  const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
-  const angleColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
-  const labelColor = isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.44)';
-  const accentColor = '#AF0000'; // Artful Red
-  const fillColor = 'rgba(175, 0, 0, 0.06)'; // Barely visible tinted fill
-
-  if (currentRadarChart) {
-    currentRadarChart.data.datasets[0].data = data;
-    currentRadarChart.data.datasets[0].borderColor = accentColor;
-    currentRadarChart.data.datasets[0].backgroundColor = fillColor;
-    currentRadarChart.data.datasets[0].pointBackgroundColor = accentColor;
-    currentRadarChart.data.datasets[0].pointBorderColor = 'transparent';
-    currentRadarChart.options.scales.r.grid.color = gridColor;
-    currentRadarChart.options.scales.r.angleLines.color = angleColor;
-    currentRadarChart.options.scales.r.pointLabels.color = labelColor;
-    currentRadarChart.update('active');
-    return;
+  if (typeof window.renderRadarChart === 'function' && window.renderRadarChart !== renderRadarChart) {
+    return window.renderRadarChart(stats);
   }
-
-  currentRadarChart = new Chart(ctx, {
-    type: 'radar',
-    data: {
-      labels: STAT_LABELS_FULL,
-      datasets: [{
-        data,
-        backgroundColor: fillColor,
-        borderColor: accentColor,
-        borderWidth: 2,
-        pointBackgroundColor: accentColor,
-        pointBorderColor: 'transparent',
-        pointRadius: 3,
-        pointHoverRadius: 6,
-        hitRadius: 30
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      layout: {
-        padding: 0
-      },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          enabled: false,
-          external: radarTooltipHandler
-        }
-      },
-      elements: {
-        point: {
-          hitRadius: 30,
-          hoverRadius: 6
-        }
-      },
-      scales: {
-        r: {
-          min: 0,
-          max: 100,
-          ticks: {
-            display: false,
-            stepSize: 20
-          },
-          grid: {
-            color: gridColor,
-            circular: true,
-            lineWidth: 1
-          },
-          angleLines: {
-            color: angleColor,
-            lineWidth: 1
-          },
-          pointLabels: {
-            display: false
-          }
-        }
-      },
-      animation: {
-        duration: 800,
-        easing: 'easeOutQuart'
-      }
-    }
-  });
-  _setAppCurrentRadarChart(currentRadarChart);
 }
 
 function renderFitProfile(fitProfile) {
-  const grid = $('#fit-grid');
-  if (!grid) return;
-  const bestForList = Array.isArray(fitProfile.bestFor) ? fitProfile.bestFor : [];
-  const watchOutList = Array.isArray(fitProfile.watchOut) ? fitProfile.watchOut : [];
-  const bestFor = bestForList.join(', ');
-  const watchOut = watchOutList.length > 0 && watchOutList[0].toLowerCase().indexOf('no major') === -1
-    ? watchOutList.join(', ')
-    : '';
-  const tension = fitProfile.tensionRec || '';
-
-  let parts = [];
-  if (bestFor) parts.push('<span class="dna-fit-label dna-fit-best">Best for:</span> ' + bestFor);
-  if (watchOut) parts.push('<span class="dna-fit-label dna-fit-warn">Watch:</span> ' + watchOut);
-  if (tension) parts.push('<span class="dna-fit-label dna-fit-tension">Sweet spot:</span> ' + tension);
-  if (parts.length === 0) parts.push('<span class="dna-fit-label dna-fit-best">Fit:</span> Versatile all-court setup');
-
-  grid.innerHTML = '<p class="dna-fit-line">' + parts.join(' <span class="dna-fit-sep">·</span> ') + '</p>';
+  if (typeof window.renderFitProfile === 'function' && window.renderFitProfile !== renderFitProfile) {
+    return window.renderFitProfile(fitProfile);
+  }
 }
 
 function renderFitProfileActive(fitProfile) {
-  const grid = $('#fit-grid');
-  if (!grid) return;
-
-  const bestForList = Array.isArray(fitProfile.bestFor) ? fitProfile.bestFor : [];
-  const watchOutList = Array.isArray(fitProfile.watchOut) ? fitProfile.watchOut : [];
-  const bestFor = bestForList.join(', ') || 'Versatile all-court players';
-  const watchOut = watchOutList.length > 0 && watchOutList[0].toLowerCase().indexOf('no major') === -1
-    ? watchOutList.join(', ')
-    : 'No major red flags';
-  const tension = fitProfile.tensionRec || 'Use the frame range midpoint';
-
-  grid.innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;">
-      <div style="display:flex;flex-direction:column;gap:4px;min-width:0;">
-        <span class="dna-fit-label dna-fit-best">Best For</span>
-        <p class="dna-fit-line">${bestFor}</p>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:4px;min-width:0;">
-        <span class="dna-fit-label dna-fit-warn">Watch</span>
-        <p class="dna-fit-line">${watchOut}</p>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:4px;min-width:0;">
-        <span class="dna-fit-label dna-fit-tension">Sweet Spot</span>
-        <p class="dna-fit-line">${tension}</p>
-      </div>
-    </div>
-  `;
+  if (typeof window.renderFitProfile === 'function') {
+    return window.renderFitProfile(fitProfile);
+  }
 }
 
 function renderWarnings(warnings) {
-  const card = $('#warnings-card');
-  const list = $('#warnings-list');
-
-  if (warnings.length === 0) {
-    card.classList.add('hidden');
-    return;
+  if (typeof window.renderWarnings === 'function' && window.renderWarnings !== renderWarnings) {
+    return window.renderWarnings(warnings);
   }
-
-  card.classList.remove('hidden');
-  list.innerHTML = warnings.map(w => `
-    <div class="warning-item">
-      <svg class="warning-icon" width="14" height="14" viewBox="0 0 16 16" fill="none">
-        <path d="M8 2L1 14h14L8 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-        <line x1="8" y1="6" x2="8" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <circle cx="8" cy="12" r="0.8" fill="currentColor"/>
-      </svg>
-      <span>${w}</span>
-    </div>
-  `).join('');
 }
 
 // ============================================
@@ -2556,68 +1537,6 @@ function _handleHybridToggle(toHybrid) {
   if (typeof window._handleHybridToggle === 'function' && window._handleHybridToggle !== _handleHybridToggle) {
     return window._handleHybridToggle(toHybrid);
   }
-  const currentlyHybrid = $('#btn-hybrid').classList.contains('active');
-  if (toHybrid === currentlyHybrid) return;
-
-  // Check if there's a string selection that would be lost
-  let hasSelection = false;
-  let currentStringId = '';
-
-  if (currentlyHybrid) {
-    // Currently hybrid - check if mains or crosses is selected
-    const mainsId = ssInstances['select-string-mains']?.getValue();
-    const crossesId = ssInstances['select-string-crosses']?.getValue();
-    hasSelection = !!(mainsId || crossesId);
-    currentStringId = mainsId || ''; // Use mains as the carry-over
-  } else {
-    // Currently full bed - check if string is selected
-    currentStringId = ssInstances['select-string-full']?.getValue() || '';
-    hasSelection = !!currentStringId;
-  }
-
-  // If no selection, switch silently
-  if (!hasSelection) {
-    setHybridMode(toHybrid);
-    _onEditorChange();
-    return;
-  }
-
-  // Has selection - show confirmation
-  const message = toHybrid
-    ? 'Switching to Hybrid will use your current string as the Mains. Continue?'
-    : 'Switching to Full Bed will use your Mains string for the full bed. Continue?';
-
-  if (!confirm(message)) {
-    // User cancelled - toggle stays in current state
-    return;
-  }
-
-  // User confirmed - perform the switch with pre-populate
-  setHybridMode(toHybrid);
-
-  if (toHybrid && currentStringId) {
-    // Full Bed -> Hybrid: carry string to mains
-    ssInstances['select-string-mains']?.setValue(currentStringId);
-    populateGaugeDropdown(document.getElementById('gauge-select-mains'), currentStringId);
-    // Copy gauge if set
-    const fullGauge = document.getElementById('gauge-select-full');
-    const mainsGauge = document.getElementById('gauge-select-mains');
-    if (fullGauge && fullGauge.value && mainsGauge) {
-      mainsGauge.value = fullGauge.value;
-    }
-  } else if (!toHybrid && currentStringId) {
-    // Hybrid -> Full Bed: carry mains to full bed
-    ssInstances['select-string-full']?.setValue(currentStringId);
-    populateGaugeDropdown(document.getElementById('gauge-select-full'), currentStringId);
-    // Copy gauge if set
-    const mainsGauge = document.getElementById('gauge-select-mains');
-    const fullGauge = document.getElementById('gauge-select-full');
-    if (mainsGauge && mainsGauge.value && fullGauge) {
-      fullGauge.value = mainsGauge.value;
-    }
-  }
-
-  _onEditorChange();
 }
 
 // ============================================
@@ -2644,22 +1563,12 @@ function toggleTuneMode() {
   if (typeof window.toggleTuneMode === 'function' && window.toggleTuneMode !== toggleTuneMode) {
     return window.toggleTuneMode();
   }
-  // Legacy compat — now routes through switchMode
-  if (currentMode === 'tune') {
-    switchMode('overview');
-  } else {
-    const setup = getCurrentSetup();
-    if (!setup) return; // No setup configured — don't open
-    switchMode('tune');
-  }
 }
 
 function closeTuneMode() {
   if (typeof window.closeTuneMode === 'function' && window.closeTuneMode !== closeTuneMode) {
     return window.closeTuneMode();
   }
-  // Legacy compat — now routes through switchMode
-  switchMode('overview');
 }
 
 // dockBuilderPanel is no longer needed — builder stays permanently in build-dock
@@ -2673,23 +1582,12 @@ function refreshTuneIfActive() {
   if (typeof window.refreshTuneIfActive === 'function' && window.refreshTuneIfActive !== refreshTuneIfActive) {
     return window.refreshTuneIfActive();
   }
-  if (currentMode !== 'tune' || _tuneRefreshing) return;
-  _tuneRefreshing = true;
-  try {
-    const setup = getCurrentSetup();
-    if (setup) {
-      initTuneMode(setup);
-    } else {
-      // Setup became invalid — show empty state
-      $('#tune-empty').classList.remove('hidden');
-      $('#tune-panels').classList.add('hidden');
-    }
-  } finally {
-    _tuneRefreshing = false;
-  }
 }
 
 function getHybridBaselineTension(stringConfig, dimension) {
+  if (typeof window.getHybridBaselineTension === 'function' && window.getHybridBaselineTension !== getHybridBaselineTension) {
+    return window.getHybridBaselineTension(stringConfig, dimension);
+  }
   if (dimension === 'mains') return stringConfig.mainsTension;
   if (dimension === 'crosses') return stringConfig.crossesTension;
   // linked: average
@@ -2697,51 +1595,21 @@ function getHybridBaselineTension(stringConfig, dimension) {
 }
 
 function updateSliderLabel() {
-  const val = tuneState.exploredTension;
-  const dim = tuneState.hybridDimension;
-  const setup = getCurrentSetup();
-  const isHybrid = setup && setup.stringConfig.isHybrid;
-  const labelEl = document.querySelector('.slider-current-label');
-  const valueEl = $('#slider-current-value');
-
-  const hasSplitTensions = setup && (setup.stringConfig.mainsTension !== undefined && setup.stringConfig.crossesTension !== undefined);
-  if (hasSplitTensions && dim === 'mains') {
-    labelEl.textContent = 'Exploring Mains';
-    valueEl.textContent = `${val} lbs`;
-  } else if (hasSplitTensions && dim === 'crosses') {
-    labelEl.textContent = 'Exploring Crosses';
-    valueEl.textContent = `${val} lbs`;
-  } else if (hasSplitTensions && dim === 'linked') {
-    const diff = setup.stringConfig.mainsTension - setup.stringConfig.crossesTension;
-    const mainsVal = val;
-    const crossesVal = Math.max(0, val - diff);
-    labelEl.textContent = 'Exploring Linked';
-    valueEl.textContent = `M ${mainsVal} / X ${crossesVal} lbs`;
-  } else {
-    labelEl.textContent = 'Exploring';
-    valueEl.textContent = `${val} lbs`;
+  if (typeof window.updateSliderLabel === 'function' && window.updateSliderLabel !== updateSliderLabel) {
+    return window.updateSliderLabel();
   }
 }
 
 function updateDeltaTitle(stringConfig) {
-  const titleEl = $('#tune-card-delta .tune-card-title');
-  if (!titleEl) return;
-  const dim = tuneState.hybridDimension;
-  const hasSplitTensions = stringConfig && (stringConfig.mainsTension !== undefined && stringConfig.crossesTension !== undefined);
-  if (hasSplitTensions) {
-    if (dim === 'mains') {
-      titleEl.textContent = 'DELTA VS BASELINE — MAINS ONLY';
-    } else if (dim === 'crosses') {
-      titleEl.textContent = 'DELTA VS BASELINE — CROSSES ONLY';
-    } else {
-      titleEl.textContent = 'DELTA VS BASELINE — LINKED';
-    }
-  } else {
-    titleEl.textContent = 'DELTA VS BASELINE';
+  if (typeof window.updateDeltaTitle === 'function' && window.updateDeltaTitle !== updateDeltaTitle) {
+    return window.updateDeltaTitle(stringConfig);
   }
 }
 
 function _tuneStringKey(lo) {
+  if (typeof window._tuneStringKey === 'function' && window._tuneStringKey !== _tuneStringKey) {
+    return window._tuneStringKey(lo);
+  }
   return lo.isHybrid ? (lo.mainsId + '/' + lo.crossesId) : (lo.stringId || '');
 }
 
@@ -2749,375 +1617,29 @@ function initTuneMode(setup) {
   if (typeof window.initTuneMode === 'function' && window.initTuneMode !== initTuneMode) {
     return window.initTuneMode(setup);
   }
-  const { racquet, stringConfig } = setup;
-
-  // --- Snapshot baseline from activeLoadout (the committed state) ---
-  if (activeLoadout && (!tuneState.baseline || tuneState.baseline._loadoutId !== activeLoadout.id || tuneState.baseline._frameId !== activeLoadout.frameId || tuneState.baseline._stringKey !== _tuneStringKey(activeLoadout))) {
-    var tCtx = buildTensionContext(stringConfig, racquet);
-    var bStats = predictSetup(racquet, stringConfig);
-    var bObs = computeCompositeScore(bStats, tCtx);
-    var bIdent = generateIdentity(bStats, racquet, stringConfig);
-    tuneState.baseline = {
-      _loadoutId: activeLoadout.id,
-      _frameId: activeLoadout.frameId,
-      _stringKey: _tuneStringKey(activeLoadout),
-      frameId: activeLoadout.frameId,
-      stringId: activeLoadout.stringId,
-      isHybrid: activeLoadout.isHybrid,
-      mainsId: activeLoadout.mainsId,
-      crossesId: activeLoadout.crossesId,
-      mainsTension: activeLoadout.mainsTension,
-      crossesTension: activeLoadout.crossesTension,
-      gauge: activeLoadout.gauge,
-      mainsGauge: activeLoadout.mainsGauge,
-      crossesGauge: activeLoadout.crossesGauge,
-      stats: bStats,
-      obs: +bObs.toFixed(1),
-      identity: bIdent
-    };
-  }
-
-  // Initialize explored to baseline
-  if (tuneState.baseline) {
-    tuneState.explored = {
-      stats: tuneState.baseline.stats,
-      obs: tuneState.baseline.obs,
-      identity: tuneState.baseline.identity
-    };
-  }
-
-  // Set subtitle
-  let subtitle = racquet.name;
-  if (stringConfig.isHybrid) {
-    subtitle += ` — ${stringConfig.mains.name} / ${stringConfig.crosses.name}`;
-  } else {
-    subtitle += ` — ${stringConfig.string.name}`;
-  }
-  $('#tune-subtitle').textContent = subtitle;
-
-  // Show/hide panels
-  $('#tune-empty').classList.add('hidden');
-  $('#tune-panels').classList.remove('hidden');
-
-  // Set baseline tension from main page, respecting hybrid dimension
-  if (stringConfig.isHybrid) {
-    // Preserve dimension if already set, default to linked
-    if (!['mains','crosses','linked'].includes(tuneState.hybridDimension)) {
-      tuneState.hybridDimension = 'linked';
-    }
-    tuneState.baselineTension = getHybridBaselineTension(stringConfig, tuneState.hybridDimension);
-  } else {
-    // Full Bed now has independent tensions — treat like hybrid for tune purposes
-    if (!['mains','crosses','linked'].includes(tuneState.hybridDimension)) {
-      tuneState.hybridDimension = 'linked';
-    }
-    tuneState.baselineTension = getHybridBaselineTension(stringConfig, tuneState.hybridDimension);
-  }
-  tuneState.exploredTension = tuneState.baselineTension;
-  tuneState.originalTension = tuneState.baselineTension;
-
-  // Configure slider range from racquet (allows exploring beyond optimal window)
-  const sliderMin = Math.max(racquet.tensionRange[0] - 5, 30);
-  const sliderMax = Math.min(racquet.tensionRange[1] + 5, 75);
-  const slider = $('#tune-slider');
-  slider.min = sliderMin;
-  slider.max = sliderMax;
-  slider.value = tuneState.baselineTension;
-  $('#slider-label-min').textContent = sliderMin;
-  $('#slider-label-max').textContent = sliderMax;
-  updateSliderLabel();
-  updateDeltaTitle(stringConfig);
-
-  // Hybrid toggle
-  renderTuneHybridToggle(stringConfig);
-
-  // Run full sweep (generates data for optimal window calculation)
-  runTensionSweep(setup);
-
-  // Calculate optimal window based on racket + string combo
-  calculateOptimalWindow(setup);
-
-  // Render all modules
-  renderOptimalBuildWindow(sliderMin, sliderMax);
-  renderDeltaVsBaseline();
-  renderGaugeExplorer(setup);
-  renderBaselineMarker(sliderMin, sliderMax);
-  renderOptimalZone(sliderMin, sliderMax);
-  renderSweepChart(setup);
-  renderBestValueMove();
-  renderOverallBuildScore(setup, true);
-  renderRecommendedBuilds(setup);
-  renderOriginalTensionMarker();
-
-  // Reset Apply button (explored == baseline on entry)
-  var applyBtn = document.getElementById('tune-apply-btn');
-  if (applyBtn) applyBtn.classList.add('hidden');
 }
 
 function runTensionSweep(setup) {
   if (typeof window.runTensionSweep === 'function' && window.runTensionSweep !== runTensionSweep) {
     return window.runTensionSweep(setup);
   }
-  const { racquet, stringConfig } = setup;
-  const sweepMin = Math.max(racquet.tensionRange[0] - 5, 30);
-  const sweepMax = Math.min(racquet.tensionRange[1] + 5, 75);
-  const results = [];
-
-  for (let t = sweepMin; t <= sweepMax; t++) {
-    let modifiedConfig;
-    if (stringConfig.isHybrid) {
-      const diff = stringConfig.mainsTension - stringConfig.crossesTension;
-      if (tuneState.hybridDimension === 'mains') {
-        modifiedConfig = { ...stringConfig, mainsTension: t };
-      } else if (tuneState.hybridDimension === 'crosses') {
-        modifiedConfig = { ...stringConfig, crossesTension: t };
-      } else {
-        // Linked: maintain the differential
-        modifiedConfig = { ...stringConfig, mainsTension: t, crossesTension: t - diff };
-      }
-    } else {
-      // Full Bed: independent tensions, same dimension logic as hybrid
-      const diff = stringConfig.mainsTension - stringConfig.crossesTension;
-      if (tuneState.hybridDimension === 'mains') {
-        modifiedConfig = { ...stringConfig, mainsTension: t };
-      } else if (tuneState.hybridDimension === 'crosses') {
-        modifiedConfig = { ...stringConfig, crossesTension: t };
-      } else {
-        // Linked: maintain the differential
-        modifiedConfig = { ...stringConfig, mainsTension: t, crossesTension: t - diff };
-      }
-    }
-    const stats = predictSetup(racquet, modifiedConfig);
-    results.push({ tension: t, stats });
-  }
-
-  tuneState.sweepData = results;
-
-  // Also cache baseline stats
-  tuneState.baselineStats = results.find(r => r.tension === tuneState.baselineTension)?.stats
-    || predictSetup(racquet, stringConfig);
 }
 
 function calculateOptimalWindow(setup) {
   if (typeof window.calculateOptimalWindow === 'function' && window.calculateOptimalWindow !== calculateOptimalWindow) {
     return window.calculateOptimalWindow(setup);
   }
-  const { racquet } = setup;
-  const data = tuneState.sweepData;
-  if (!data || data.length === 0) return;
-
-  // Score each tension using the full 10-stat composite + tension sanity penalty
-  const scored = data.map(d => {
-    const s = d.stats;
-    // d.tension is the explored value; compute differential from the sweep's modifiedConfig
-    // In linked mode both move together; in mains/crosses mode only one moves
-    const tCtx = { avgTension: d.tension, tensionRange: racquet.tensionRange, differential: 0 };
-    const score = computeCompositeScore(s, tCtx);
-    return { tension: d.tension, score, stats: s };
-  });
-
-  // Find peak
-  scored.sort((a, b) => b.score - a.score);
-  const anchor = scored[0].tension;
-  const peakScore = scored[0].score;
-
-  // Window = all tensions within 2% of peak score
-  const threshold = peakScore * 0.98;
-  const inWindow = scored.filter(s => s.score >= threshold).map(s => s.tension);
-  const low = Math.min(...inWindow);
-  const high = Math.max(...inWindow);
-
-  // Reason
-  const anchorStats = scored[0].stats;
-  let reason = 'Balanced performance';
-  if (anchorStats.control >= 80) reason = 'Control Anchor — precision peaks here';
-  else if (anchorStats.comfort >= 75) reason = 'Comfort Anchor — arm-friendly sweet spot';
-  else if (anchorStats.spin >= 78) reason = 'Spin Anchor — maximum rotation';
-  else reason = 'Balanced Anchor — best all-round performance';
-
-  tuneState.optimalWindow = { low, high, anchor, reason };
 }
 
 function renderOptimalBuildWindow(sMin, sMax) {
   if (typeof window.renderOptimalBuildWindow === 'function' && window.renderOptimalBuildWindow !== renderOptimalBuildWindow) {
     return window.renderOptimalBuildWindow(sMin, sMax);
   }
-  const container = $('#optimal-content');
-  const w = tuneState.optimalWindow;
-  if (!w) {
-    container.innerHTML = '<p class="tune-muted">No data</p>';
-    return;
-  }
-
-  const anchorStats = tuneState.sweepData.find(d => d.tension === w.anchor)?.stats;
-  if (!anchorStats) return;
-
-  // Use full slider range as scale (allows exploring deviations from optimal)
-  var scaleMin = sMin || w.low - 10;
-  var scaleMax = sMax || w.high + 10;
-  var scaleRange = scaleMax - scaleMin;
-  if (scaleRange <= 0) scaleRange = 1;
-
-  // Optimal window fill position within full range
-  var fillLeft = ((w.low - scaleMin) / scaleRange) * 100;
-  var fillRight = ((w.high - scaleMin) / scaleRange) * 100;
-  var fillWidth = fillRight - fillLeft;
-
-  // Anchor dot position within full range
-  var anchorPct = ((w.anchor - scaleMin) / scaleRange) * 100;
-  anchorPct = Math.max(2, Math.min(98, anchorPct));
-
-  container.innerHTML = `
-    <div class="optimal-range">
-      <div class="optimal-range-visual">
-        <span class="optimal-range-low">${scaleMin}</span>
-        <div class="optimal-range-bar">
-          <div class="optimal-range-fill" style="left:${fillLeft}%;width:${fillWidth}%"></div>
-          <div class="optimal-range-anchor" style="left:${anchorPct}%">
-            <span class="optimal-anchor-label">${w.anchor} lbs</span>
-          </div>
-        </div>
-        <span class="optimal-range-high">${scaleMax}</span>
-      </div>
-      <p class="optimal-reason">${w.reason}</p>
-    </div>
-    <div class="optimal-stats-grid">
-      <div class="optimal-stat">
-        <span class="optimal-stat-label">Control</span>
-        <span class="optimal-stat-value${anchorStats.control > 70 ? ' high' : ''}">${anchorStats.control}</span>
-      </div>
-      <div class="optimal-stat-divider"></div>
-      <div class="optimal-stat">
-        <span class="optimal-stat-label">Comfort</span>
-        <span class="optimal-stat-value${anchorStats.comfort > 70 ? ' high' : ''}">${anchorStats.comfort}</span>
-      </div>
-      <div class="optimal-stat-divider"></div>
-      <div class="optimal-stat">
-        <span class="optimal-stat-label">Spin</span>
-        <span class="optimal-stat-value${anchorStats.spin > 70 ? ' high' : ''}">${anchorStats.spin}</span>
-      </div>
-      <div class="optimal-stat-divider"></div>
-      <div class="optimal-stat">
-        <span class="optimal-stat-label">Power</span>
-        <span class="optimal-stat-value${anchorStats.power > 70 ? ' high' : ''}">${anchorStats.power}</span>
-      </div>
-    </div>
-  `;
 }
 
 function renderDeltaVsBaseline() {
   if (typeof window.renderDeltaVsBaseline === 'function' && window.renderDeltaVsBaseline !== renderDeltaVsBaseline) {
     return window.renderDeltaVsBaseline();
-  }
-  const container = $('#delta-content');
-  const data = tuneState.sweepData;
-  if (!data) return;
-
-  const baselineEntry = data.find(d => d.tension === tuneState.baselineTension);
-  const exploredEntry = data.find(d => d.tension === tuneState.exploredTension);
-  if (!baselineEntry || !exploredEntry) return;
-
-  const base = baselineEntry.stats;
-  const explored = exploredEntry.stats;
-  const deltaKeys = ['control', 'power', 'comfort', 'spin', 'launch', 'feel', 'playability'];
-  const deltaLabels = ['Control', 'Power', 'Comfort', 'Spin', 'Launch', 'Feel', 'Playability'];
-
-  const isAtBaseline = tuneState.exploredTension === tuneState.baselineTension;
-  const setup = getCurrentSetup();
-  const isHybrid = setup && setup.stringConfig.isHybrid;
-  const dim = tuneState.hybridDimension;
-
-  // Build dimension-aware baseline label
-  let baseLabel = `Baseline: ${tuneState.baselineTension} lbs`;
-  let exploreLabel = isAtBaseline ? 'At baseline' : `Exploring: ${tuneState.exploredTension} lbs`;
-  if (isHybrid) {
-    if (dim === 'mains') {
-      baseLabel = `Mains Baseline: ${tuneState.baselineTension} lbs`;
-      exploreLabel = isAtBaseline ? 'At baseline' : `Mains: ${tuneState.exploredTension} lbs`;
-    } else if (dim === 'crosses') {
-      baseLabel = `Crosses Baseline: ${tuneState.baselineTension} lbs`;
-      exploreLabel = isAtBaseline ? 'At baseline' : `Crosses: ${tuneState.exploredTension} lbs`;
-    } else {
-      const diff = setup.stringConfig.mainsTension - setup.stringConfig.crossesTension;
-      baseLabel = `Linked Baseline: M ${tuneState.baselineTension} / X ${Math.max(0, tuneState.baselineTension - diff)} lbs`;
-      if (!isAtBaseline) {
-        exploreLabel = `Linked: M ${tuneState.exploredTension} / X ${Math.max(0, tuneState.exploredTension - diff)} lbs`;
-      }
-    }
-  }
-
-  // Check if this is first render or update
-  const isFirstRender = !container.querySelector('.delta-stats-grid');
-  
-  if (isFirstRender) {
-    // Initial render - create the DOM structure
-    const renderBatteryBar = (value) => {
-      const segments = 20;
-      let segmentsHtml = '';
-      const filledCount = Math.round((value / 100) * segments);
-      
-      for (let i = 0; i < segments; i++) {
-        let segClass = '';
-        if (i < filledCount) {
-          const segValue = (i / segments) * 100;
-          segClass = segValue >= 70 ? 'high' : 'filled';
-        } else {
-          segClass = 'empty';
-        }
-        segmentsHtml += `<div class="stat-bar-segment ${segClass}"></div>`;
-      }
-      
-      return segmentsHtml;
-    };
-
-    container.innerHTML = `
-      <div class="delta-header-row">
-        <span class="delta-baseline-label">${baseLabel}</span>
-        <span class="delta-explored-label" id="delta-explored-label">${exploreLabel}</span>
-      </div>
-      <div class="delta-stats-grid">
-        ${deltaKeys.map((key, i) => {
-          const diff = Math.round(explored[key] - base[key]);
-          const cls = diff > 0 ? 'delta-positive' : diff < 0 ? 'delta-negative' : 'delta-neutral';
-          const sign = diff > 0 ? '+' : '';
-          return `
-            <div class="delta-stat-row" data-stat="${key}">
-              <span class="delta-stat-label">${deltaLabels[i]}</span>
-              <div class="stat-bar-track" id="delta-track-${key}" data-baseline="${base[key]}" data-explored="${explored[key]}">
-                ${renderBatteryBar(explored[key])}
-              </div>
-              <span class="delta-stat-diff ${cls}" id="delta-diff-${key}">${isAtBaseline ? '—' : `${sign}${diff}`}</span>
-            </div>
-          `;
-        }).join('')}
-      </div>
-    `;
-    
-    // Animate the battery bars on first render
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        container.querySelectorAll('.stat-bar-track').forEach((track, idx) => {
-          const exploredValue = parseFloat(track.dataset.explored);
-          const segments = track.querySelectorAll('.stat-bar-segment');
-          const filledCount = Math.round((exploredValue / 100) * segments.length);
-          
-          segments.forEach((seg, i) => {
-            setTimeout(() => {
-              if (i < filledCount) {
-                seg.classList.add('active');
-              }
-            }, idx * 40 + i * 15);
-          });
-        });
-      });
-    });
-  } else {
-    // Update existing DOM - dynamic update like racket bible
-    _updateDeltaBatteryBars(base, explored, isAtBaseline);
-    
-    // Update labels
-    const exploreLabelEl = document.getElementById('delta-explored-label');
-    if (exploreLabelEl) exploreLabelEl.textContent = exploreLabel;
   }
 }
 
@@ -3200,440 +1722,29 @@ function renderGaugeExplorer(setup) {
   if (typeof window.renderGaugeExplorer === 'function' && window.renderGaugeExplorer !== renderGaugeExplorer) {
     return window.renderGaugeExplorer(setup);
   }
-  const container = $('#gauge-explore-content');
-  if (!container) return;
-  if (!setup) { container.innerHTML = ''; return; }
-
-  const { racquet, stringConfig } = setup;
-
-  // Determine which string(s) to explore gauge for
-  // For full bed: explore the single string
-  // For hybrid: explore both mains and crosses
-  const sections = [];
-
-  if (stringConfig.isHybrid) {
-    if (stringConfig.mains) {
-      sections.push({
-        label: 'MAINS',
-        string: stringConfig.mains,
-        tensionKey: 'mainsTension',
-        buildConfig: (gaugedStr) => ({
-          isHybrid: true,
-          mains: gaugedStr,
-          crosses: stringConfig.crosses,
-          mainsTension: stringConfig.mainsTension,
-          crossesTension: stringConfig.crossesTension
-        })
-      });
-    }
-    if (stringConfig.crosses) {
-      sections.push({
-        label: 'CROSSES',
-        string: stringConfig.crosses,
-        tensionKey: 'crossesTension',
-        buildConfig: (gaugedStr) => ({
-          isHybrid: true,
-          mains: stringConfig.mains,
-          crosses: gaugedStr,
-          mainsTension: stringConfig.mainsTension,
-          crossesTension: stringConfig.crossesTension
-        })
-      });
-    }
-  } else {
-    if (stringConfig.string) {
-      sections.push({
-        label: null, // no label needed for single string
-        string: stringConfig.string,
-        buildConfig: (gaugedStr) => ({
-          isHybrid: false,
-          string: gaugedStr,
-          mainsTension: stringConfig.mainsTension,
-          crossesTension: stringConfig.crossesTension
-        })
-      });
-    }
-  }
-
-  if (sections.length === 0) { container.innerHTML = ''; return; }
-
-  // Stats to show in the gauge explorer
-  const gaugeKeys = ['spin', 'power', 'control', 'comfort', 'feel', 'durability', 'playability'];
-  const gaugeLabels = ['Spin', 'Power', 'Control', 'Comfort', 'Feel', 'Durability', 'Playability'];
-
-  let html = '';
-
-  sections.forEach((section, _secIdx) => {
-    const baseStr = section.string;
-    const baseRefGauge = baseStr._gaugeModified ? baseStr._refGauge : baseStr.gaugeNum;
-    // Use the original unmodified string for gauge exploration
-    const originalStr = baseStr._gaugeModified
-      ? STRINGS.find(s => s.id === baseStr.id) || baseStr
-      : baseStr;
-    const currentGauge = baseStr.gaugeNum;
-    const gaugeOptions = getGaugeOptions(originalStr);
-
-    // Compute stats at each gauge
-    const gaugeResults = gaugeOptions.map(g => {
-      const gaugedStr = applyGaugeModifier(originalStr, g);
-      const config = section.buildConfig(gaugedStr);
-      const stats = predictSetup(racquet, config);
-      const tensionCtx = buildTensionContext(config, racquet);
-      const obs = computeCompositeScore(stats, tensionCtx);
-      return { gauge: g, stats, obs: +obs.toFixed(1), isCurrent: Math.abs(g - currentGauge) < 0.005 };
-    });
-
-    const currentResult = gaugeResults.find(r => r.isCurrent);
-    if (!currentResult) return;
-
-    if (section.label) {
-      html += `<div class="gauge-explore-section-label">${section.label}: ${originalStr.name}</div>`;
-    } else {
-      html += `<div class="gauge-explore-section-label">${originalStr.name}</div>`;
-    }
-
-    html += `<div class="gauge-explore-grid" style="--gauge-cols: ${gaugeOptions.length}">`;
-
-    // Header row
-    html += `<div class="gauge-explore-header">`;
-    html += `<span class="gauge-explore-stat-label"></span>`;
-    gaugeResults.forEach(r => {
-      const gaugeLabel = GAUGE_LABELS[r.gauge] || `${r.gauge.toFixed(2)}mm`;
-      // Show short label: just the gauge number like "16" or "17"
-      const shortLabel = r.gauge >= 1.30 ? '16' : r.gauge >= 1.25 ? '16L' : r.gauge >= 1.20 ? '17' : '18';
-      const mmLabel = `${r.gauge.toFixed(2)}`;
-      const currentCls = r.isCurrent ? ' gauge-current' : '';
-      html += `<button class="gauge-explore-col-header${currentCls}" onclick="_applyGaugeSelection(${r.gauge},${_secIdx})" title="${r.isCurrent ? 'Current gauge' : 'Click to apply this gauge'}">
-        <span class="gauge-col-short">${shortLabel}</span>
-        <span class="gauge-col-mm">${mmLabel}</span>
-        ${r.isCurrent ? '<span class="gauge-col-tag">current</span>' : '<span class="gauge-col-tag gauge-col-apply">apply</span>'}
-      </button>`;
-    });
-    html += `</div>`;
-
-    // Stat rows
-    gaugeKeys.forEach((key, i) => {
-      html += `<div class="gauge-explore-row">`;
-      html += `<span class="gauge-explore-stat-label">${gaugeLabels[i]}</span>`;
-      gaugeResults.forEach(r => {
-        const val = r.stats[key];
-        const baseVal = currentResult.stats[key];
-        const diff = val - baseVal;
-        const cls = r.isCurrent ? 'gauge-val-current' : diff > 0 ? 'gauge-val-positive' : diff < 0 ? 'gauge-val-negative' : 'gauge-val-neutral';
-        const diffStr = r.isCurrent ? '' : (diff > 0 ? `+${diff}` : `${diff}`);
-        html += `<span class="gauge-explore-cell ${cls}">
-          <span class="gauge-cell-val">${val}</span>
-          ${diffStr ? `<span class="gauge-cell-diff">${diffStr}</span>` : ''}
-        </span>`;
-      });
-      html += `</div>`;
-    });
-
-    // OBS row
-    html += `<div class="gauge-explore-row gauge-explore-obs-row">`;
-    html += `<span class="gauge-explore-stat-label gauge-obs-label">OBS</span>`;
-    gaugeResults.forEach(r => {
-      const diff = r.obs - currentResult.obs;
-      const cls = r.isCurrent ? 'gauge-val-current' : diff > 0.5 ? 'gauge-val-positive' : diff < -0.5 ? 'gauge-val-negative' : 'gauge-val-neutral';
-      const diffStr = r.isCurrent ? '' : (diff > 0 ? `+${diff.toFixed(1)}` : diff.toFixed(1));
-      html += `<span class="gauge-explore-cell gauge-obs-cell ${cls}">
-        <span class="gauge-cell-val">${r.obs}</span>
-        ${diffStr ? `<span class="gauge-cell-diff">${diffStr}</span>` : ''}
-      </span>`;
-    });
-    html += `</div>`;
-
-    html += `</div>`; // close gauge-explore-grid
-  });
-
-  container.innerHTML = html;
 }
 
 function renderBaselineMarker(sliderMin, sliderMax) {
   if (typeof window.renderBaselineMarker === 'function' && window.renderBaselineMarker !== renderBaselineMarker) {
     return window.renderBaselineMarker(sliderMin, sliderMax);
   }
-  const marker = $('#slider-baseline-marker');
-  const pct = ((tuneState.baselineTension - sliderMin) / (sliderMax - sliderMin)) * 100;
-  marker.style.left = `${pct}%`;
-  marker.title = `Baseline: ${tuneState.baselineTension} lbs`;
 }
 
 function renderOptimalZone(sliderMin, sliderMax) {
   if (typeof window.renderOptimalZone === 'function' && window.renderOptimalZone !== renderOptimalZone) {
     return window.renderOptimalZone(sliderMin, sliderMax);
   }
-  const zone = $('#slider-optimal-zone');
-  const w = tuneState.optimalWindow;
-  if (!w) { zone.style.display = 'none'; return; }
-  const leftPct = ((w.low - sliderMin) / (sliderMax - sliderMin)) * 100;
-  const rightPct = ((w.high - sliderMin) / (sliderMax - sliderMin)) * 100;
-  zone.style.left = `${leftPct}%`;
-  zone.style.width = `${rightPct - leftPct}%`;
-  zone.style.display = '';
-  zone.title = `Optimal: ${w.low}–${w.high} lbs`;
 }
 
 function renderSweepChart(setup) {
   if (typeof window.renderSweepChart === 'function' && window.renderSweepChart !== renderSweepChart) {
     return window.renderSweepChart(setup);
   }
-  const data = tuneState.sweepData;
-  if (!data || data.length === 0) return;
-
-  const ctx = document.getElementById('sweep-chart').getContext('2d');
-  const tensions = data.map(d => d.tension);
-  const isDark = document.documentElement.dataset.theme === 'dark';
-
-  // Digicraft Brutalism — Four distinct colors for sweep chart data viz
-  const curveColors = {
-    control: { border: '#AF0000', fill: 'rgba(175, 0, 0, 0.06)' },    // Artful Red
-    spin:    { border: '#CCFF00', fill: 'rgba(204, 255, 0, 0.04)' },  // Volt
-    power:   { border: '#C8A87C', fill: 'rgba(200, 168, 124, 0.05)' },// Amber
-    comfort: { border: '#A78BFA', fill: 'rgba(167, 139, 250, 0.05)' } // Lavender
-  };
-
-  const datasets = [
-    {
-      label: 'Control',
-      data: data.map(d => d.stats.control),
-      borderColor: curveColors.control.border,
-      backgroundColor: curveColors.control.fill,
-      fill: true,
-      tension: 0.3,
-      borderWidth: 2.5,
-      borderDash: [],
-      pointRadius: 0,
-      pointHoverRadius: 0,
-      pointStyle: false,
-      pointHitRadius: 8
-    },
-    {
-      label: 'Spin',
-      data: data.map(d => d.stats.spin),
-      borderColor: curveColors.spin.border,
-      backgroundColor: curveColors.spin.fill,
-      fill: true,
-      tension: 0.3,
-      borderWidth: 2,
-      borderDash: [],
-      pointRadius: 0,
-      pointHoverRadius: 0,
-      pointStyle: false,
-      pointHitRadius: 8
-    },
-    {
-      label: 'Power',
-      data: data.map(d => d.stats.power),
-      borderColor: curveColors.power.border,
-      backgroundColor: curveColors.power.fill,
-      fill: true,
-      tension: 0.3,
-      borderWidth: 2,
-      borderDash: [],
-      pointRadius: 0,
-      pointHoverRadius: 0,
-      pointStyle: false,
-      pointHitRadius: 8
-    },
-    {
-      label: 'Comfort',
-      data: data.map(d => d.stats.comfort),
-      borderColor: curveColors.comfort.border,
-      backgroundColor: curveColors.comfort.fill,
-      fill: true,
-      tension: 0.3,
-      borderWidth: 2,
-      borderDash: [],
-      pointRadius: 0,
-      pointHoverRadius: 0,
-      pointStyle: false,
-      pointHitRadius: 8
-    }
-  ];
-
-  const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)';
-  const tickColor = isDark ? 'rgba(255,255,255,0.30)' : 'rgba(0,0,0,0.30)';
-  const legendColor = isDark ? 'rgba(255,255,255,0.50)' : 'rgba(0,0,0,0.48)';
-
-  // Annotation lines for baseline and explored
-  const baselinePlugin = {
-    id: 'tuneAnnotations',
-    afterDraw(chart) {
-      const { ctx, chartArea, scales } = chart;
-      const xScale = scales.x;
-      const yScale = scales.y;
-
-      // Baseline marker
-      const bx = xScale.getPixelForValue(tuneState.baselineTension);
-      if (bx >= chartArea.left && bx <= chartArea.right) {
-        ctx.save();
-        ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.20)';
-        ctx.lineWidth = 1;
-        ctx.setLineDash([4, 4]);
-        ctx.beginPath();
-        ctx.moveTo(bx, chartArea.top);
-        ctx.lineTo(bx, chartArea.bottom);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.fillStyle = isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.40)';
-        ctx.font = "500 10px 'Inter', sans-serif";
-        ctx.textAlign = 'center';
-        ctx.fillText('BASELINE', bx, chartArea.top - 6);
-        ctx.restore();
-      }
-
-      // Explored marker
-      if (tuneState.exploredTension !== tuneState.baselineTension) {
-        const ex = xScale.getPixelForValue(tuneState.exploredTension);
-        if (ex >= chartArea.left && ex <= chartArea.right) {
-          ctx.save();
-          // Digicraft Brutalism — monochrome explored marker
-          ctx.strokeStyle = isDark ? 'rgba(220, 223, 226, 0.8)' : 'rgba(26, 26, 26, 0.7)';
-          ctx.lineWidth = 1.5;
-          ctx.setLineDash([]);
-          ctx.beginPath();
-          ctx.moveTo(ex, chartArea.top);
-          ctx.lineTo(ex, chartArea.bottom);
-          ctx.stroke();
-          ctx.fillStyle = isDark ? 'rgba(220, 223, 226, 0.8)' : 'rgba(26, 26, 26, 0.7)';
-          ctx.font = "600 10px 'Inter', sans-serif";
-          ctx.textAlign = 'center';
-          ctx.fillText(`${tuneState.exploredTension} lbs`, ex, chartArea.top - 6);
-          ctx.restore();
-        }
-      }
-
-      // Optimal window shading
-      const w = tuneState.optimalWindow;
-      if (w) {
-        const lx = xScale.getPixelForValue(w.low);
-        const rx = xScale.getPixelForValue(w.high);
-        ctx.save();
-        // Digicraft Brutalism — subtle red tint for optimal window
-        ctx.fillStyle = 'rgba(175, 0, 0, 0.08)';
-        ctx.fillRect(lx, chartArea.top, rx - lx, chartArea.bottom - chartArea.top);
-        ctx.restore();
-      }
-    }
-  };
-
-  if (sweepChart) {
-    sweepChart.data.labels = tensions;
-    sweepChart.data.datasets = datasets;
-    sweepChart.options.scales.x.grid.color = gridColor;
-    sweepChart.options.scales.y.grid.color = gridColor;
-    sweepChart.options.scales.x.ticks.color = tickColor;
-    sweepChart.options.scales.y.ticks.color = tickColor;
-    sweepChart.options.plugins.legend.labels.color = legendColor;
-    sweepChart.update('active');
-    return;
-  }
-
-  sweepChart = new Chart(ctx, {
-    type: 'line',
-    data: { labels: tensions, datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: {
-          display: true,
-          labels: {
-            font: { family: "'JetBrains Mono', monospace", size: 9, weight: 600 },
-            color: legendColor,
-            usePointStyle: true,
-            pointStyle: 'circle',
-            padding: 16,
-            boxWidth: 6,
-            boxHeight: 6,
-            textTransform: 'uppercase'
-          }
-        },
-        tooltip: {
-          backgroundColor: '#1A1A1A',
-          borderColor: 'rgba(255,255,255,0.08)',
-          borderWidth: 0.5,
-          titleColor: '#F0F2F4',
-          titleFont: { family: "'JetBrains Mono', monospace", size: 11, weight: 600 },
-          bodyColor: '#DCDFE2',
-          bodyFont: { family: "'JetBrains Mono', monospace", size: 10 },
-          cornerRadius: 4,
-          padding: 10,
-          displayColors: true,
-          callbacks: {
-            title: (items) => `${items[0].label} lbs`,
-            label: (item) => `  ${item.dataset.label}: ${item.raw}`
-          }
-        }
-      },
-      scales: {
-        x: {
-          title: {
-            display: true,
-            text: 'Tension (lbs)',
-            font: { family: "'Inter', sans-serif", size: 11, weight: 500 },
-            color: tickColor
-          },
-          grid: { color: gridColor, lineWidth: 0.5 },
-          ticks: {
-            font: { family: "'JetBrains Mono', monospace", size: 10 },
-            color: tickColor,
-            stepSize: 2
-          }
-        },
-        y: {
-          min: 0,
-          max: 100,
-          title: {
-            display: true,
-            text: 'Rating',
-            font: { family: "'Inter', sans-serif", size: 11, weight: 500 },
-            color: tickColor
-          },
-          grid: { color: gridColor, lineWidth: 0.5 },
-          ticks: {
-            font: { family: "'JetBrains Mono', monospace", size: 10 },
-            color: tickColor,
-            stepSize: 25
-          }
-        }
-      },
-      animation: { duration: 400, easing: 'easeOutQuart' }
-    },
-    plugins: [baselinePlugin]
-  });
 }
 
 function renderBestValueMove() {
   if (typeof window.renderBestValueMove === 'function' && window.renderBestValueMove !== renderBestValueMove) {
     return window.renderBestValueMove();
-  }
-  const container = $('#slider-best-value');
-  const data = tuneState.sweepData;
-  const w = tuneState.optimalWindow;
-  if (!data || !w) { container.innerHTML = ''; return; }
-
-  const current = tuneState.exploredTension;
-  const isInZone = current >= w.low && current <= w.high;
-
-  if (isInZone) {
-    container.innerHTML = `<div class="best-value-callout best-value-ok">
-      <span class="best-value-icon">●</span>
-      <span>You're in the optimal zone (${w.low}–${w.high} lbs). No adjustment needed.</span>
-    </div>`;
-  } else {
-    const anchor = w.anchor;
-    const diff = anchor - current;
-    const direction = diff > 0 ? 'up' : 'down';
-    const SVG_CHEV_UP = '<svg width="10" height="10" viewBox="0 0 10 10" style="display:inline-block;vertical-align:middle"><path d="M2 7L5 3L8 7" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="square"/></svg>';
-    const SVG_CHEV_DOWN = '<svg width="10" height="10" viewBox="0 0 10 10" style="display:inline-block;vertical-align:middle"><path d="M2 3L5 7L8 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="square"/></svg>';
-    const arrowIcon = diff > 0 ? SVG_CHEV_UP : SVG_CHEV_DOWN;
-    container.innerHTML = `<div class="best-value-callout best-value-move">
-      <span class="best-value-icon">${arrowIcon}</span>
-      <span><strong>Best Value Move:</strong> ${direction} ${Math.abs(diff)} lbs to ${anchor} lbs for peak balanced performance.</span>
-    </div>`;
   }
 }
 
@@ -3668,90 +1779,15 @@ function getObsBadgeStyle(score) {
 let _prevObsValues = { tune: null, hero: null, dock: null, mobile: null };
 
 function animateOBS(el, from, to, duration) {
-  if (!el || isNaN(from) || isNaN(to)) return;
-  if (Math.abs(from - to) < 0.05) { el.textContent = to.toFixed(1); return; }
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    el.textContent = to.toFixed(1);
-    return;
+  if (typeof window.animateOBS === 'function' && window.animateOBS !== animateOBS) {
+    return window.animateOBS(el, from, to, duration);
   }
-  if (el._obsAnim) cancelAnimationFrame(el._obsAnim);
-  duration = duration || 350;
-  var t0 = performance.now();
-  el.textContent = from.toFixed(1);
-  function tick(now) {
-    var p = Math.min((now - t0) / duration, 1);
-    var e = 1 - Math.pow(1 - p, 4); // easeOutQuart
-    el.textContent = (from + (to - from) * e).toFixed(1);
-    if (p < 1) { el._obsAnim = requestAnimationFrame(tick); }
-    else { el._obsAnim = null; }
-  }
-  el._obsAnim = requestAnimationFrame(tick);
 }
 
 function renderOverallBuildScore(setup, animate) {
   if (typeof window.renderOverallBuildScore === 'function' && window.renderOverallBuildScore !== renderOverallBuildScore) {
     return window.renderOverallBuildScore(setup, animate);
   }
-  const container = $('#obs-content');
-  if (!container) return;
-  const { racquet, stringConfig } = setup;
-
-  // Use explored state if in Tune sandbox, else compute fresh
-  var score, stats;
-  if (currentMode === 'tune' && tuneState.explored && tuneState.explored.obs) {
-    score = tuneState.explored.obs;
-    stats = tuneState.explored.stats;
-  } else {
-    stats = predictSetup(racquet, stringConfig);
-    score = computeCompositeScore(stats, buildTensionContext(stringConfig, racquet));
-  }
-
-  const tier = getObsTier(score);
-  const pct = Math.min(Math.max(score / 100, 0), 1) * 100;
-
-  // Delta vs baseline (only in Tune sandbox)
-  var deltaHTML = '';
-  if (currentMode === 'tune' && tuneState.baseline && tuneState.baseline.obs) {
-    var delta = score - tuneState.baseline.obs;
-    if (Math.abs(delta) > 0.05) {
-      var sign = delta > 0 ? '+' : '';
-      var deltaCls = delta > 0 ? 'obs-delta-pos' : 'obs-delta-neg';
-      deltaHTML = `<span class="obs-delta-chip ${deltaCls}">${sign}${delta.toFixed(1)}</span>`;
-    }
-  }
-
-  // 10-segment battery indicator
-  const segments = 10;
-  const filled = Math.min(segments, Math.max(0, Math.ceil(score / 10)));
-  let batteryHTML = '<div class="obs-battery">';
-  for (let i = 0; i < segments; i++) {
-    const isFilled = i < filled;
-    const isTopTier = i >= 8; // Top 2 segments (80-100) get red when filled
-    const segClass = isFilled ? (isTopTier ? 'obs-battery-seg obs-battery-filled obs-battery-top' : 'obs-battery-seg obs-battery-filled') : 'obs-battery-seg';
-    batteryHTML += `<div class="${segClass}"></div>`;
-  }
-  batteryHTML += '</div>';
-
-  const isSRank = tier.label === 'S Rank';
-  const rankClass = isSRank ? 'obs-rank-badge s-rank' : 'obs-rank-badge';
-  
-  container.innerHTML = `
-    <div class="obs-top-row">
-      <div class="obs-score-group">
-        <span class="obs-score-value">${score.toFixed(1)}</span>
-        ${deltaHTML}
-      </div>
-      <span class="${rankClass}">${tier.label}</span>
-    </div>
-    ${batteryHTML}
-  `;
-
-  // OBS counting animation (skip during slider drag)
-  if (animate && _prevObsValues.tune != null) {
-    var obsEl = container.querySelector('.obs-score-value');
-    if (obsEl) animateOBS(obsEl, _prevObsValues.tune, score, 400);
-  }
-  _prevObsValues.tune = score;
 }
 
 // ---- What To Try Next — 3-bucket contextual recommendations ----
@@ -3915,129 +1951,6 @@ function renderWhatToTryNext(setup, allCandidates) {
   if (typeof window.renderWhatToTryNext === 'function' && window.renderWhatToTryNext !== renderWhatToTryNext) {
     return window.renderWhatToTryNext(setup, allCandidates);
   }
-  const container = $('#wttn-content');
-  const { racquet, stringConfig } = setup;
-
-  // Get current stats
-  const currentStats = predictSetup(racquet, stringConfig);
-  const classification = classifySetup(currentStats);
-
-  // Build a key to identify the current build for exclusion
-  let currentBuildKey = null;
-  if (stringConfig.isHybrid) {
-    const mId = stringConfig.mains?.id || stringConfig.mainsId || '';
-    const xId = stringConfig.crosses?.id || stringConfig.crossesId || '';
-    currentBuildKey = `hybrid:${mId}/${xId}`;
-  } else if (stringConfig.string) {
-    currentBuildKey = `full:${stringConfig.string.id}`;
-  }
-
-  function getCandidateKey(c) {
-    if (c.type === 'hybrid') return `hybrid:${c.mainsId}/${c.crossesId}`;
-    return `full:${c.stringId || (c.string && c.string.id) || ''}`;
-  }
-
-  // Filter out the current build and compute deltas for each candidate
-  const scored = allCandidates
-    .filter(c => getCandidateKey(c) !== currentBuildKey)
-    .map(c => {
-      const deltas = computeDeltas(currentStats, c.stats);
-      return {
-        ...c,
-        deltas,
-        closestScore: scoreClosestBetter(currentStats, classification, c.stats, deltas),
-        moreScore: scoreMoreOfWhatYouWant(currentStats, classification, c.stats, deltas),
-        correctiveScore: scoreCorrective(currentStats, classification, c.stats, deltas),
-      };
-    });
-
-  if (scored.length < 3) {
-    container.innerHTML = '<p class="wttn-empty">Not enough alternative builds to generate contextual recommendations.</p>';
-    return;
-  }
-
-  // Step 1: Pick Closest Better Version
-  scored.sort((a, b) => b.closestScore - a.closestScore);
-  const closest = scored[0];
-
-  // Step 2: Pick More of What You Want — penalize candidates similar to closest
-  const DISTINCTNESS_PENALTY = 15;
-  for (const c of scored) {
-    const sim = candidateSimilarity(c.stats, closest.stats);
-    if (sim < 6) c.moreScore -= DISTINCTNESS_PENALTY;
-  }
-  scored.sort((a, b) => b.moreScore - a.moreScore);
-  const more = scored.find(c => getCandidateKey(c) !== getCandidateKey(closest)) || scored[0];
-
-  // Step 3: Pick Corrective Move — penalize candidates similar to both previous picks
-  for (const c of scored) {
-    const simClosest = candidateSimilarity(c.stats, closest.stats);
-    const simMore = candidateSimilarity(c.stats, more.stats);
-    if (simClosest < 6) c.correctiveScore -= DISTINCTNESS_PENALTY;
-    if (simMore < 6) c.correctiveScore -= DISTINCTNESS_PENALTY;
-  }
-  scored.sort((a, b) => b.correctiveScore - a.correctiveScore);
-  const corrective = scored.find(c => getCandidateKey(c) !== getCandidateKey(closest) && getCandidateKey(c) !== getCandidateKey(more)) || scored[0];
-
-  const buckets = [
-    { key: 'closest', title: 'Closest Better Version', pick: closest,
-      icon: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1v14M1 8h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>' },
-    { key: 'more', title: 'More of What You Want', pick: more,
-      icon: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 13L8 3l5 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
-    { key: 'corrective', title: 'Corrective Move', pick: corrective,
-      icon: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 8a6 6 0 1 1 12 0A6 6 0 0 1 2 8z" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>' },
-  ];
-
-  container.innerHTML = buckets.map(b => {
-    const { pick, key, title, icon } = b;
-    const gains = topGains(pick.deltas, 4);
-    const losses = topLosses(pick.deltas, 3);
-    const netDir = generateNetDirection(gains, losses);
-    const why = generateWhySentence(key, gains, losses, classification);
-
-    // Limit to 2-4 gains and 1-3 losses as specified
-    const displayGains = gains.slice(0, 4).filter(g => g.delta >= 1);
-    const displayLosses = losses.slice(0, 3).filter(l => l.delta <= -1);
-
-    return `
-      <div class="wttn-card" data-bucket="${key}">
-        <div class="wttn-bucket-header">
-          <div class="wttn-bucket-icon">${icon}</div>
-          <span class="wttn-bucket-label">${title}</span>
-        </div>
-        <div>
-          <div class="wttn-build-name">${pick.label || (pick.string && pick.string.name) || 'Unknown'} ${pick.gauge ? `<span class="wttn-gauge">${pick.gauge}</span>` : (pick.string ? `<span class="wttn-gauge">${pick.string.gauge}</span>` : '')}</div>
-          <div class="wttn-build-meta">
-            ${pick.type === 'hybrid' ? '<span class="recs-type-badge recs-type-hybrid">HYBRID</span>' : '<span class="recs-type-badge recs-type-full">FULL BED</span>'}
-            <span class="wttn-build-tension">${pick.type === 'hybrid' ? `M:${pick.tension} / X:${pick.tension - 2} lbs` : `${pick.tension} lbs`}</span>
-          </div>
-        </div>
-        <p class="wttn-why">${why}</p>
-        <div class="wttn-deltas">
-          ${displayGains.length > 0 ? `<div class="wttn-delta-row">
-            <span class="wttn-delta-label">Gain</span>
-            <div class="wttn-delta-chips">
-              ${displayGains.map(g => `<span class="wttn-chip wttn-chip-gain">${WTTN_ATTR_LABELS[g.attr]} +${g.delta}</span>`).join('')}
-            </div>
-          </div>` : ''}
-          ${displayLosses.length > 0 ? `<div class="wttn-delta-row">
-            <span class="wttn-delta-label">Give Up</span>
-            <div class="wttn-delta-chips">
-              ${displayLosses.map(l => `<span class="wttn-chip wttn-chip-loss">${WTTN_ATTR_LABELS[l.attr]} ${l.delta}</span>`).join('')}
-            </div>
-          </div>` : ''}
-        </div>
-        <div class="wttn-net">
-          <span class="wttn-net-label">Net</span>
-          <span class="wttn-net-phrase">${netDir}</span>
-        </div>
-        <div class="wttn-action-row">
-          <button class="wttn-apply-btn" onclick="_applyWttnBuild(this)" data-string-id="${pick.stringId || (pick.string ? pick.string.id : '')}" data-tension="${pick.tension}" data-type="${pick.type}" data-mains-id="${pick.mainsId || ''}" data-crosses-id="${pick.crossesId || ''}">Apply</button>
-          <button class="wttn-save-btn" onclick="_saveWttnBuild(this)" data-string-id="${pick.stringId || (pick.string ? pick.string.id : '')}" data-tension="${pick.tension}" data-type="${pick.type}" data-mains-id="${pick.mainsId || ''}" data-crosses-id="${pick.crossesId || ''}" data-frame-id="${setup.racquet.id}">Save</button>
-        </div>
-      </div>
-    `;
-  }).join('');
 }
 
 // ---- Recommended Builds ----
@@ -4045,344 +1958,30 @@ function renderRecommendedBuilds(setup) {
   if (typeof window.renderRecommendedBuilds === 'function' && window.renderRecommendedBuilds !== renderRecommendedBuilds) {
     return window.renderRecommendedBuilds(setup);
   }
-  const container = $('#recs-content');
-  const { racquet, stringConfig } = setup;
-
-  // --- Compute current build OBS for delta display ---
-  const currentStats = predictSetup(racquet, stringConfig);
-  const currentTCtx = buildTensionContext(stringConfig, racquet);
-  const currentOBS = computeCompositeScore(currentStats, currentTCtx);
-
-  const midTension = Math.round((racquet.tensionRange[0] + racquet.tensionRange[1]) / 2);
-  const sweepMin = Math.max(racquet.tensionRange[0] - 3, 30);
-  const sweepMax = Math.min(racquet.tensionRange[1] + 3, 75);
-
-  // Helper: find optimal tension for a config
-  function findOptimalTension(buildConfig) {
-    let bestScore = -1, bestTension = midTension, bestStats = null;
-    for (let t = sweepMin; t <= sweepMax; t += 1) {
-      const cfg = { ...buildConfig };
-      cfg.mainsTension = t;
-      cfg.crossesTension = t - (buildConfig.isHybrid ? 2 : 0); // hybrids: crosses 2 lbs lower
-      const stats = predictSetup(racquet, cfg);
-      if (!stats) continue;
-      const tCtx = buildTensionContext(cfg, racquet);
-      const score = computeCompositeScore(stats, tCtx);
-      if (score > bestScore) {
-        bestScore = score;
-        bestTension = t;
-        bestStats = stats;
-      }
-    }
-    return { score: bestScore, tension: bestTension, stats: bestStats };
-  }
-
-  // --- FULL BED candidates ---
-  const fullBedCandidates = [];
-  STRINGS.forEach(s => {
-    const result = findOptimalTension({ isHybrid: false, string: s });
-    if (result.stats) {
-      fullBedCandidates.push({
-        type: 'full',
-        label: s.name,
-        gauge: (s.gauge || "").replace(/\s*\(.*\)/, ""),
-        material: s.material,
-        tension: result.tension,
-        score: result.score,
-        stats: result.stats,
-        stringId: s.id,
-        string: s
-      });
-    }
-  });
-
-  // --- HYBRID candidates ---
-  // Smart pairing: pick top mains candidates × best cross candidates
-  // Cross selection: round/slick polys for poly mains, soft polys for gut
-  const hybridCandidates = [];
-
-  // Select promising mains strings: top 12 full-bed + any gut/multi
-  fullBedCandidates.sort((a, b) => b.score - a.score);
-  const topMainsIds = new Set(fullBedCandidates.slice(0, 12).map(c => c.stringId));
-  STRINGS.forEach(s => {
-    if (s.material === 'Natural Gut' || s.material === 'Multifilament') topMainsIds.add(s.id);
-  });
-
-  // Select cross candidates: round/slick polys + elastic co-polys
-  const crossCandidates = STRINGS.filter(s => {
-    const shape = (s.shape || '').toLowerCase();
-    const isRoundSlick = shape.includes('round') || shape.includes('slick') || shape.includes('coated');
-    const isElastic = s.material === 'Co-Polyester (elastic)';
-    const isSoftPoly = s.material === 'Polyester' && s.stiffness < 200;
-    return isRoundSlick || isElastic || isSoftPoly;
-  });
-
-  // Sweep hybrids: each mains candidate × each cross candidate
-  topMainsIds.forEach(mainsId => {
-    const mains = STRINGS.find(s => s.id === mainsId);
-    if (!mains) return;
-
-    crossCandidates.forEach(cross => {
-      if (cross.id === mains.id) return; // skip same string
-      const result = findOptimalTension({
-        isHybrid: true, mains, crosses: cross
-      });
-      if (result.stats && result.score > 0) {
-        hybridCandidates.push({
-          type: 'hybrid',
-          label: `${mains.name} / ${cross.name}`,
-          gauge: ((mains.gauge || '').replace(/\s*\(.*\)/, '') + '/' + (cross.gauge || '').replace(/\s*\(.*\)/, '')),
-          material: `${mains.material} / ${cross.material}`,
-          tension: result.tension,
-          score: result.score,
-          stats: result.stats,
-          mainsId: mains.id,
-          crossesId: cross.id,
-          mains, crosses: cross
-        });
-      }
-    });
-  });
-
-  // --- Merge all candidates for WTTN ---
-  const allCandidates = [...fullBedCandidates, ...hybridCandidates];
-  allCandidates.sort((a, b) => b.score - a.score);
-
-  // Identify current setup
-  let currentKey = null;
-  if (stringConfig.isHybrid) {
-    const mId = stringConfig.mains?.id || stringConfig.mainsId;
-    const xId = stringConfig.crosses?.id || stringConfig.crossesId;
-    currentKey = `hybrid:${mId}/${xId}`;
-  } else if (stringConfig.string) {
-    currentKey = `full:${stringConfig.string.id}`;
-  }
-
-  function getCandidateKey(c) {
-    return c.type === 'hybrid' ? `hybrid:${c.mainsId}/${c.crossesId}` : `full:${c.stringId}`;
-  }
-
-  // Check after we compute topFull and topHybrid (moved below)
-  let isCurrentInTop = false;
-
-  // --- Split into top 5 full-bed and top 5 hybrid ---
-  fullBedCandidates.sort((a, b) => b.score - a.score);
-  hybridCandidates.sort((a, b) => b.score - a.score);
-  const topFull = fullBedCandidates.slice(0, 5);
-  const topHybrid = hybridCandidates.slice(0, 5);
-  isCurrentInTop = currentKey && [...topFull, ...topHybrid].some(c => getCandidateKey(c) === currentKey);
-
-  // Helper: render a single recommendation item
-  function renderRecItem(c, rank) {
-    const isCurrent = currentKey === getCandidateKey(c);
-    const delta = c.score - currentOBS;
-    const deltaStr = delta > 0 ? `+${delta.toFixed(1)}` : delta.toFixed(1);
-    const deltaCls = delta > 0.5 ? 'recs-delta-positive' : delta < -0.5 ? 'recs-delta-negative' : 'recs-delta-neutral';
-    const tensionLabel = c.type === 'hybrid'
-      ? `M:${c.tension} / X:${c.tension - 2} lbs`
-      : `${c.tension} lbs`;
-
-    return `
-      <div class="recs-item ${isCurrent ? 'recs-item-current' : ''}">
-        <div class="recs-rank">${rank}</div>
-        <div class="recs-info">
-          <div class="recs-name">${c.label} ${c.gauge ? `<span class="recs-gauge">${c.gauge}</span>` : ''}</div>
-          <div class="recs-meta">
-            <span class="recs-tension-rec">${tensionLabel}</span>
-            ${isCurrent ? '<span class="recs-badge-current">CURRENT</span>' : ''}
-          </div>
-        </div>
-        <div class="recs-composite">
-          <span class="recs-composite-value">${c.score.toFixed(1)}</span>
-          <span class="recs-composite-delta ${deltaCls}">${isCurrent ? 'YOU' : deltaStr}</span>
-        </div>
-        <div class="recs-action-row">
-          <button class="recs-apply-btn" onclick="_applyRecBuild('${racquet.id}','${c.stringId || (c.string ? c.string.id : '')}',${c.tension},'${c.type}','${c.mainsId || ''}','${c.crossesId || ''}')">Apply</button>
-          <button class="recs-save-btn" onclick="_saveRecBuild('${racquet.id}','${c.stringId || (c.string ? c.string.id : '')}',${c.tension},'${c.type}','${c.mainsId || ''}','${c.crossesId || ''}')">Save</button>
-        </div>
-      </div>
-    `;
-  }
-
-  container.innerHTML = `
-    <div class="recs-split">
-      <div class="recs-panel">
-        <div class="recs-panel-header">
-          <span class="recs-panel-title">FULL BED</span>
-          <span class="recs-panel-sub">Single string, both directions</span>
-        </div>
-        <div class="recs-list">
-          ${topFull.map((c, i) => renderRecItem(c, i + 1)).join('')}
-        </div>
-      </div>
-      <div class="recs-panel">
-        <div class="recs-panel-header">
-          <span class="recs-panel-title">HYBRID</span>
-          <span class="recs-panel-sub">Mains / Crosses pairing</span>
-        </div>
-        <div class="recs-list">
-          ${topHybrid.map((c, i) => renderRecItem(c, i + 1)).join('')}
-        </div>
-      </div>
-    </div>
-    <p class="recs-footnote">Composite score across all 11 stats at optimal tension for <strong>${racquet.name.replace(/\\s+\\d+g$/, '')}</strong>. Delta is vs your current build.</p>
-  `;
-
-  // Show "Try a Different String" section
-  const topCombined = [...topFull, ...topHybrid];
-  renderExplorePrompt(setup, isCurrentInTop, topCombined);
-
-  // Render What To Try Next using the full candidates list
-  renderWhatToTryNext(setup, allCandidates);
 }
 
 function renderExplorePrompt(setup, isCurrentInTop, topBuilds) {
   if (typeof window.renderExplorePrompt === 'function' && window.renderExplorePrompt !== renderExplorePrompt) {
     return window.renderExplorePrompt(setup, isCurrentInTop, topBuilds);
   }
-  const row = $('#tune-row-explore');
-  const container = $('#explore-content');
-  const { stringConfig } = setup;
-
-  // If hybrid, always show a subtle nudge to try full-bed top strings
-  if (stringConfig.isHybrid) {
-    row.classList.remove('hidden');
-    container.innerHTML = `
-      <div class="explore-prompt">
-        <div class="explore-icon">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3v14m-5-5l5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
-        <div class="explore-text">
-          <p class="explore-headline">Curious how a full-bed setup compares?</p>
-          <p class="explore-body">Your hybrid is dialed in — but the top-rated strings above are scored as full-bed setups. Try swapping to one of them on the main page and re-enter Tune to see how the response curves shift.</p>
-        </div>
-      </div>
-    `;
-    return;
-  }
-
-  if (isCurrentInTop) {
-    // Current string is already top-rated — hide this section
-    row.classList.add('hidden');
-    container.innerHTML = '';
-    return;
-  }
-
-  // Current string isn't in top 5 — encourage exploration
-  const topName = topBuilds[0]?.string?.name || 'a top-rated string';
-  row.classList.remove('hidden');
-  container.innerHTML = `
-    <div class="explore-prompt">
-      <div class="explore-icon">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M10 7v3l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
-      <div class="explore-text">
-        <p class="explore-headline">Try a different string?</p>
-        <p class="explore-body">Your current string didn't make the top 5 for this frame. Consider switching to <strong>${topName}</strong> or another recommended build above — swap on the main page, then re-enter Tune to compare the tension response curves.</p>
-      </div>
-    </div>
-  `;
 }
 
 function onTuneSliderInput(e) {
   if (typeof window.onTuneSliderInput === 'function' && window.onTuneSliderInput !== onTuneSliderInput) {
     return window.onTuneSliderInput(e);
   }
-  const val = parseInt(e.target.value);
-  tuneState.exploredTension = val;
-  updateSliderLabel();
-
-  // Wave 2: Pulse the displayed value
-  const valueEl = $('#slider-current-value');
-  if (valueEl) {
-    valueEl.classList.remove('slider-value-pulse');
-    valueEl.offsetHeight;
-    valueEl.classList.add('slider-value-pulse');
-  }
-
-  // Recompute explored state from baseline config + new tension
-  _recomputeExploredState();
-
-  // Update delta display
-  renderDeltaVsBaseline();
-
-  // Update best value move message (reflects explored position)
-  renderBestValueMove();
-
-  // Update chart annotation
-  if (sweepChart) sweepChart.update('none');
-
-  // Re-render OBS card with explored state (shows delta vs baseline)
-  var setup = getCurrentSetup();
-  if (setup) renderOverallBuildScore(setup);
 }
 
 // Recompute tuneState.explored from baseline config + current slider tension
 function _recomputeExploredState() {
-  if (!tuneState.baseline) return;
-  var bl = tuneState.baseline;
-  var racquet = RACQUETS.find(function(r) { return r.id === bl.frameId; });
-  if (!racquet) return;
-
-  // Build a stringConfig from baseline config + explored tension
-  var exploredMainsT = bl.mainsTension;
-  var exploredCrossesT = bl.crossesTension;
-  var dim = tuneState.hybridDimension || 'linked';
-  var t = tuneState.exploredTension;
-
-  if (dim === 'linked') {
-    var diff = bl.mainsTension - bl.crossesTension;
-    exploredMainsT = t;
-    exploredCrossesT = Math.max(0, t - diff);
-  } else if (dim === 'mains') {
-    exploredMainsT = t;
-  } else {
-    exploredCrossesT = t;
+  if (typeof window._recomputeExploredState === 'function' && window._recomputeExploredState !== _recomputeExploredState) {
+    return window._recomputeExploredState();
   }
-
-  var sc;
-  if (bl.isHybrid) {
-    var mainsStr = STRINGS.find(function(s) { return s.id === bl.mainsId; });
-    var crossesStr = STRINGS.find(function(s) { return s.id === bl.crossesId; });
-    if (!mainsStr || !crossesStr) return;
-    sc = { isHybrid: true, mains: mainsStr, crosses: crossesStr, mainsTension: exploredMainsT, crossesTension: exploredCrossesT };
-  } else {
-    var str = STRINGS.find(function(s) { return s.id === bl.stringId; });
-    if (!str) return;
-    sc = { isHybrid: false, string: str, mainsTension: exploredMainsT, crossesTension: exploredCrossesT };
-  }
-
-  var stats = predictSetup(racquet, sc);
-  var tCtx = buildTensionContext(sc, racquet);
-  var obs = computeCompositeScore(stats, tCtx);
-  var identity = generateIdentity(stats, racquet, sc);
-
-  tuneState.explored = {
-    stats: stats,
-    obs: +obs.toFixed(1),
-    identity: identity,
-    mainsTension: exploredMainsT,
-    crossesTension: exploredCrossesT
-  };
-
-  // Show/hide apply button
-  _updateTuneApplyButton();
 }
 
 function _updateTuneApplyButton() {
-  var btn = document.getElementById('tune-apply-btn');
-  if (!btn) return;
-  if (!tuneState.baseline || !tuneState.explored) { btn.classList.add('hidden'); return; }
-  var bl = tuneState.baseline;
-  var ex = tuneState.explored;
-  var changed = Math.abs(ex.obs - bl.obs) > 0.05;
-  if (changed) {
-    btn.classList.remove('hidden');
-    var delta = ex.obs - bl.obs;
-    var sign = delta > 0 ? '+' : '';
-    btn.textContent = 'Apply changes (' + sign + delta.toFixed(1) + ' OBS)';
-  } else {
-    btn.classList.add('hidden');
+  if (typeof window._updateTuneApplyButton === 'function' && window._updateTuneApplyButton !== _updateTuneApplyButton) {
+    return window._updateTuneApplyButton();
   }
 }
 
@@ -4390,120 +1989,12 @@ function tuneSandboxCommit() {
   if (typeof window.tuneSandboxCommit === 'function' && window.tuneSandboxCommit !== tuneSandboxCommit) {
     return window.tuneSandboxCommit();
   }
-  if (!tuneState.explored || !activeLoadout) return;
-
-  var bl = tuneState.baseline;
-  if (!bl) return;
-  var dim = tuneState.hybridDimension || 'linked';
-  var diff = bl.mainsTension - bl.crossesTension;
-  var newMainsTension = bl.mainsTension;
-  var newCrossesTension = bl.crossesTension;
-
-  if (dim === 'mains') {
-    newMainsTension = tuneState.exploredTension;
-  } else if (dim === 'crosses') {
-    newCrossesTension = tuneState.exploredTension;
-  } else {
-    newMainsTension = tuneState.exploredTension;
-    newCrossesTension = tuneState.exploredTension - diff;
-  }
-
-  // 1) Update the active loadout model directly (bypass commitEditorToLoadout)
-  activeLoadout.mainsTension = newMainsTension;
-  activeLoadout.crossesTension = newCrossesTension;
-
-  // Recompute derived fields
-  var setup = getSetupFromLoadout(activeLoadout);
-  if (setup) {
-    var stats = predictSetup(setup.racquet, setup.stringConfig);
-    if (stats) {
-      var tCtx = buildTensionContext(setup.stringConfig, setup.racquet);
-      activeLoadout.stats = stats;
-      activeLoadout.obs = +(computeCompositeScore(stats, tCtx)).toFixed(1);
-      activeLoadout.identity = (generateIdentity(stats, setup.racquet, setup.stringConfig)?.name) || '';
-    }
-  }
-  activeLoadout._dirty = getSavedLoadouts().some(function(l) { return l.id === activeLoadout.id; });
-
-  // 2) Sync dock inputs to match the new loadout state
-  if (activeLoadout.isHybrid) {
-    var mInput = document.getElementById('input-tension-mains');
-    var xInput = document.getElementById('input-tension-crosses');
-    if (mInput) mInput.value = newMainsTension;
-    if (xInput) xInput.value = newCrossesTension;
-  } else {
-    var fmInput = document.getElementById('input-tension-full-mains');
-    var fxInput = document.getElementById('input-tension-full-crosses');
-    if (fmInput) fmInput.value = newMainsTension;
-    if (fxInput) fxInput.value = newCrossesTension;
-  }
-
-  // 3) Force-clear tuneState so initTuneMode re-snapshots from the updated loadout
-  tuneState.baseline = null;
-  tuneState.explored = null;
-  tuneState.baselineTension = tuneState.exploredTension;
-
-  // 4) Re-init tune mode with fresh baseline (no stale re-entrant calls)
-  var freshSetup = getCurrentSetup();
-  if (freshSetup) initTuneMode(freshSetup);
-
-  // 5) Ensure apply button is hidden (belt-and-suspenders)
-  var btn = document.getElementById('tune-apply-btn');
-  if (btn) {
-    btn.classList.add('hidden');
-    btn.textContent = 'Apply changes';
-  }
-
-  // 6) Update dock panel and dashboard
-  renderDockPanel();
-  renderDashboard();
 }
 
 function renderTuneHybridToggle(stringConfig) {
   if (typeof window.renderTuneHybridToggle === 'function' && window.renderTuneHybridToggle !== renderTuneHybridToggle) {
     return window.renderTuneHybridToggle(stringConfig);
   }
-  const container = $('#tune-hybrid-toggle');
-  // Show toggle for both hybrid AND Full Bed (which now has independent tensions)
-  const hasSplitTensions = stringConfig.isHybrid || (stringConfig.mainsTension !== undefined && stringConfig.crossesTension !== undefined);
-  if (!hasSplitTensions) {
-    container.innerHTML = '';
-    container.style.display = 'none';
-    return;
-  }
-  container.style.display = 'flex';
-  container.innerHTML = `
-    <button class="tune-dim-btn ${tuneState.hybridDimension === 'linked' ? 'active' : ''}" data-dim="linked">Linked</button>
-    <button class="tune-dim-btn ${tuneState.hybridDimension === 'mains' ? 'active' : ''}" data-dim="mains">Mains</button>
-    <button class="tune-dim-btn ${tuneState.hybridDimension === 'crosses' ? 'active' : ''}" data-dim="crosses">Crosses</button>
-  `;
-  container.querySelectorAll('.tune-dim-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      tuneState.hybridDimension = btn.dataset.dim;
-      container.querySelectorAll('.tune-dim-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      // Re-run sweep with new dimension
-      const setup = getCurrentSetup();
-      if (setup) {
-        // Recalculate baseline for the new dimension
-        tuneState.baselineTension = getHybridBaselineTension(setup.stringConfig, tuneState.hybridDimension);
-        tuneState.exploredTension = tuneState.baselineTension;
-        const slider = $('#tune-slider');
-        slider.value = tuneState.baselineTension;
-        updateSliderLabel();
-        updateDeltaTitle(setup.stringConfig);
-
-        runTensionSweep(setup);
-        calculateOptimalWindow(setup);
-        renderOptimalBuildWindow();
-        renderDeltaVsBaseline();
-        renderBaselineMarker(parseInt(slider.min), parseInt(slider.max));
-        renderOptimalZone(parseInt(slider.min), parseInt(slider.max));
-        renderSweepChart(setup);
-        renderBestValueMove();
-      }
-    });
-  });
 }
 
 // Bi-directional sync: when Tune slider changes, update main tension inputs
@@ -4545,55 +2036,12 @@ function applyExploredTension() {
   if (typeof window.applyExploredTension === 'function' && window.applyExploredTension !== applyExploredTension) {
     return window.applyExploredTension();
   }
-  syncTuneToMain(tuneState.exploredTension);
-  // Re-init with new baseline
-  const setup = getCurrentSetup();
-  if (setup) initTuneMode(setup);
 }
 
 // Compare page entry: open tune for a specific comparison slot
 function openTuneForSlot(slotIndex) {
   if (typeof window.openTuneForSlot === 'function' && window.openTuneForSlot !== openTuneForSlot) {
-    const result = window.openTuneForSlot(slotIndex);
-    if (typeof window.currentMode === 'string') {
-      _syncLegacyModeState(window.currentMode);
-    }
-    return result;
-  }
-  const slot = comparisonSlots[slotIndex];
-  if (!slot || !slot.stats) return;
-
-  // Load slot config into main page first
-  const racquet = RACQUETS.find(r => r.id === slot.racquetId);
-  if (!racquet) return;
-
-  ssInstances['select-racquet']?.setValue(slot.racquetId);
-  showFrameSpecs(racquet);
-
-  if (slot.isHybrid) {
-    setHybridMode(true);
-    ssInstances['select-string-mains']?.setValue(slot.mainsId);
-    populateGaugeDropdown(document.getElementById('gauge-select-mains'), slot.mainsId);
-    $('#input-tension-mains').value = slot.mainsTension;
-    ssInstances['select-string-crosses']?.setValue(slot.crossesId);
-    populateGaugeDropdown(document.getElementById('gauge-select-crosses'), slot.crossesId);
-    $('#input-tension-crosses').value = slot.crossesTension;
-  } else {
-    setHybridMode(false);
-    ssInstances['select-string-full']?.setValue(slot.stringId);
-    populateGaugeDropdown(document.getElementById('gauge-select-full'), slot.stringId);
-    $('#input-tension-full-mains').value = slot.mainsTension;
-    $('#input-tension-full-crosses').value = slot.crossesTension;
-  }
-  renderDashboard();
-
-  // Now switch to tune mode
-  if (currentMode !== 'tune') {
-    switchMode('tune');
-  } else {
-    // Already in tune mode, just re-init
-    const setup = getCurrentSetup();
-    if (setup) initTuneMode(setup);
+    return window.openTuneForSlot(slotIndex);
   }
 }
 
@@ -4656,113 +2104,6 @@ function init() {
   if (typeof window.init === 'function' && window.init !== init) {
     return window.init();
   }
-  // Prevent duplicate event listener attachment
-  if (_initCalled) return;
-  _initCalled = true;
-  
-  // Populate searchable dropdowns (onChange callbacks handle dashboard re-render)
-  populateRacquetDropdown($('#select-racquet'));
-  populateStringDropdown($('#select-string-full'));
-  populateStringDropdown($('#select-string-mains'));
-  populateStringDropdown($('#select-string-crosses'));
-
-  // Tension inputs — route through commitEditorToLoadout when active loadout exists
-  $('#input-tension-full-mains').addEventListener('input', _onEditorChange);
-  $('#input-tension-full-crosses').addEventListener('input', _onEditorChange);
-  $('#input-tension-mains').addEventListener('input', _onEditorChange);
-  $('#input-tension-crosses').addEventListener('input', _onEditorChange);
-
-  // String mode toggle (Fix 3: with confirmation and pre-populate)
-  $('#btn-full').addEventListener('click', () => {
-    _handleHybridToggle(false);
-  });
-  $('#btn-hybrid').addEventListener('click', () => {
-    _handleHybridToggle(true);
-  });
-
-  // Presets (dynamic) — Quick Presets section removed from dock, but keep comparison presets
-  renderComparisonPresets();
-  var _btnSavePreset = document.getElementById('btn-save-preset');
-  if (_btnSavePreset) _btnSavePreset.addEventListener('click', saveCurrentAsPreset);
-
-  // Comparison
-  $('#btn-add-slot').addEventListener('click', addComparisonSlot);
-
-  // Mode switcher buttons
-  document.querySelectorAll('.mode-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const mode = btn.dataset.mode;
-      if (mode) switchMode(mode);
-    });
-  });
-
-  // Mobile tab bar buttons
-  document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const mode = btn.dataset.mode;
-      if (mode) switchMode(mode);
-    });
-  });
-  // Mobile header info button
-  const mobileInfoBtn = document.getElementById('btn-mode-howitworks-mobile');
-  if (mobileInfoBtn) mobileInfoBtn.addEventListener('click', () => switchMode('howitworks'));
-
-  // Tune slider
-  $('#tune-slider').addEventListener('input', onTuneSliderInput);
-
-  // Theme
-  $('#btn-theme').addEventListener('click', toggleTheme);
-
-  // Set initial mode — hide all non-default sections
-  document.getElementById('mode-tune')?.classList.add('hidden');
-  document.getElementById('mode-compare')?.classList.add('hidden');
-  document.getElementById('mode-optimize')?.classList.add('hidden');
-  document.getElementById('mode-compendium')?.classList.add('hidden');
-  document.getElementById('mode-howitworks')?.classList.add('hidden');
-  // Overview stays visible as the default landing page
-
-  // Load saved loadouts from storage via store
-  const storedLoadouts = loadSavedLoadouts();
-  setSavedLoadouts(storedLoadouts);
-  _stateSetSavedLoadouts(storedLoadouts);
-  
-  // Restore active loadout from storage (if exists and not a shared build)
-  try {
-    const activeId = _store ? _store.getItem('tll-active-loadout-id') : null;
-    const sls = getSavedLoadouts();
-    if (activeId && sls.length > 0) {
-      const saved = sls.find(l => l.id === activeId);
-      if (saved) {
-        const al = Object.assign({}, saved);
-        al._dirty = false;
-        setActiveLoadout(al);
-        _stateSetActiveLoadout(al);
-        hydrateDock(al);
-      }
-    }
-  } catch(e) {}
-
-  // Check for shared build URL (must run after data + functions are ready)
-  var hadSharedBuild = _handleSharedBuildURL();
-
-  // Render the dashboard (shows search landing if no setup)
-  renderDashboard();
-
-  // If we loaded a shared build, switch to overview to show it
-  if (hadSharedBuild) {
-    switchMode('overview');
-  }
-
-  // Initialize dock panel
-  renderDockPanel();
-
-  // Initialize landing search
-  _initLandingSearch();
-
-  // Sync mobile tab bar to initial active mode (currentMode defaults to 'overview')
-  document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.mode === currentMode);
-  });
 }
 
 // ============================================
@@ -4925,171 +2266,22 @@ function handleResponsiveHeader() {
 let _optExcludedStringIds = new Set();
 
 function initOptimize() {
-  // --- Searchable frame selector ---
-  const frameSearch = document.getElementById('opt-frame-search');
-  const frameDropdown = document.getElementById('opt-frame-dropdown');
-  const frameValue = document.getElementById('opt-frame-value');
-
-  // Set default to active loadout frame, or current setup frame
-  const currentSetup = getCurrentSetup();
-  if (activeLoadout && activeLoadout.frameId) {
-    const loFrame = RACQUETS.find(r => r.id === activeLoadout.frameId);
-    if (loFrame) {
-      frameSearch.value = loFrame.name;
-      frameValue.value = loFrame.id;
-    } else {
-      frameSearch.value = '';
-      frameValue.value = '';
-    }
-  } else if (currentSetup) {
-    frameSearch.value = currentSetup.racquet.name;
-    frameValue.value = currentSetup.racquet.id;
-  } else {
-    frameSearch.value = '';
-    frameValue.value = '';
-  }
-
-  _initOptSearchable(frameSearch, frameDropdown, frameValue,
-    () => RACQUETS.map(r => ({ id: r.id, name: r.name }))
-  );
-
-  // --- Material filter (multi-select dropdown) ---
-  const materials = [...new Set(STRINGS.map(s => s.material))].sort();
-  const matContainer = document.getElementById('opt-material-checks');
-  materials.forEach(mat => {
-    const item = document.createElement('label');
-    item.className = 'opt-ms-item active';
-    item.innerHTML = `<input type="checkbox" checked value="${mat}"><span>${mat}</span>`;
-    item.addEventListener('click', (e) => {
-      if (e.target.tagName !== 'INPUT') return;
-      item.classList.toggle('active', e.target.checked);
-      _updateOptMSLabel('opt-material-checks', 'opt-material-ms-label', 'material', materials.length);
-    });
-    matContainer.appendChild(item);
-  });
-  _updateOptMSLabel('opt-material-checks', 'opt-material-ms-label', 'material', materials.length);
-
-  // --- Brand filter (multi-select dropdown) ---
-  const brands = [...new Set(STRINGS.map(s => s.name.split(' ')[0]))].sort();
-  const brandContainer = document.getElementById('opt-brand-checks');
-  brands.forEach(brand => {
-    const item = document.createElement('label');
-    item.className = 'opt-ms-item active';
-    item.innerHTML = `<input type="checkbox" checked value="${brand}"><span>${brand}</span>`;
-    item.addEventListener('click', (e) => {
-      if (e.target.tagName !== 'INPUT') return;
-      item.classList.toggle('active', e.target.checked);
-      _updateOptMSLabel('opt-brand-checks', 'opt-brand-ms-label', 'brand', brands.length);
-    });
-    brandContainer.appendChild(item);
-  });
-  _updateOptMSLabel('opt-brand-checks', 'opt-brand-ms-label', 'brand', brands.length);
-
-  // --- Exclude strings searchable ---
-  const exSearch = document.getElementById('opt-exclude-search');
-  const exDropdown = document.getElementById('opt-exclude-dropdown');
-  _initOptSearchable(exSearch, exDropdown, null,
-    () => STRINGS.filter(s => !_optExcludedStringIds.has(s.id)).map(s => ({ id: s.id, name: s.name })),
-    (id, name) => {
-      _optExcludedStringIds.add(id);
-      _renderExcludeTags();
-      exSearch.value = '';
-    }
-  );
-
-  // --- Hybrid lock: show/hide based on setup type ---
-  const lockSection = document.getElementById('opt-hybrid-lock-section');
-  const lockSide = document.getElementById('opt-lock-side');
-  const lockStringWrap = document.getElementById('opt-lock-string-wrap');
-  const lockSearch = document.getElementById('opt-lock-string-search');
-  const lockDropdown = document.getElementById('opt-lock-string-dropdown');
-  const lockValue = document.getElementById('opt-lock-string-value');
-
-  _initOptSearchable(lockSearch, lockDropdown, lockValue,
-    () => STRINGS.map(s => ({ id: s.id, name: s.name }))
-  );
-
-  lockSide.addEventListener('change', () => {
-    lockStringWrap.classList.toggle('hidden', lockSide.value === 'none');
-    if (lockSide.value === 'none') lockValue.value = '';
-  });
-
-  // Show hybrid lock only when type is hybrid or both
-  document.querySelectorAll('.opt-toggle').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.opt-toggle').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const type = btn.dataset.value;
-      lockSection.classList.toggle('hidden', type === 'full');
-    });
-  });
-
-  // Wire run button
-  document.getElementById('opt-run-btn').addEventListener('click', runOptimizer);
-
-  // Wire upgrade mode checkbox
-  document.getElementById('opt-upgrade-mode').addEventListener('change', (e) => {
-    document.getElementById('opt-upgrade-fields').classList.toggle('hidden', !e.target.checked);
-  });
-
-  // Wire sort change to re-sort existing results
-  document.getElementById('opt-sort').addEventListener('change', () => {
-    if (_optLastCandidates && _optLastCandidates.length > 0) {
-      const sortBy = document.getElementById('opt-sort').value;
-      _optLastCandidates.sort((a, b) => {
-        if (sortBy === 'obs') return b.score - a.score;
-        return (b.stats[sortBy] || 0) - (a.stats[sortBy] || 0);
-      });
-      renderOptimizerResults(_optLastCandidates, sortBy, _optLastCurrentOBS);
-    }
-  });
-
-  // Mobile: inject filter toggle button (collapses filter panel on narrow screens)
-  if (!document.getElementById('opt-filter-toggle')) {
-    const toggleBtn = document.createElement('button');
-    toggleBtn.id = 'opt-filter-toggle';
-    toggleBtn.className = 'opt-filter-toggle';
-    toggleBtn.innerHTML = `<span>Filters</span><svg class="opt-filter-toggle-icon" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 4.5h10M4 7h6M6 9.5h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
-    const optLayout = document.querySelector('.opt-layout');
-    const optFilters = document.getElementById('opt-filters');
-    if (optLayout && optFilters) {
-      optLayout.insertBefore(toggleBtn, optFilters);
-      toggleBtn.addEventListener('click', () => {
-        const filters = document.getElementById('opt-filters');
-        const isCollapsed = filters.classList.toggle('opt-filters-collapsed');
-        toggleBtn.classList.toggle('filters-open', !isCollapsed);
-      });
-      // Start collapsed on mobile
-      if (window.matchMedia('(max-width: 1024px)').matches) {
-        optFilters.classList.add('opt-filters-collapsed');
-      }
-    }
+  if (typeof window.initOptimize === 'function' && window.initOptimize !== initOptimize) {
+    return window.initOptimize();
   }
 }
 
 // --- Searchable dropdown helper ---
 // --- Optimizer multi-select dropdown helpers ---
 function _toggleOptMS(msId) {
-  var ms = document.getElementById(msId);
-  if (!ms) return;
-  var dd = ms.querySelector('.opt-ms-dropdown');
-  if (dd) dd.classList.toggle('hidden');
-  // Close other open dropdowns
-  document.querySelectorAll('.opt-multiselect .opt-ms-dropdown').forEach(function(d) {
-    if (d !== dd) d.classList.add('hidden');
-  });
+  if (typeof window._toggleOptMS === 'function' && window._toggleOptMS !== _toggleOptMS) {
+    return window._toggleOptMS(msId);
+  }
 }
 
 function _updateOptMSLabel(containerId, labelId, noun, total) {
-  var checked = document.querySelectorAll('#' + containerId + ' input:checked').length;
-  var el = document.getElementById(labelId);
-  if (!el) return;
-  if (checked === total) {
-    el.textContent = 'All ' + noun + 's';
-  } else if (checked === 0) {
-    el.textContent = 'No ' + noun + 's';
-  } else {
-    el.textContent = checked + ' of ' + total + ' ' + noun + 's';
+  if (typeof window._updateOptMSLabel === 'function' && window._updateOptMSLabel !== _updateOptMSLabel) {
+    return window._updateOptMSLabel(containerId, labelId, noun, total);
   }
 }
 
@@ -5139,34 +2331,18 @@ function _initOptSearchable(inputEl, dropdownEl, hiddenEl, getItems, onSelect) {
 
 // --- Render exclude tags ---
 function _renderExcludeTags() {
-  const container = document.getElementById('opt-exclude-tags');
-  container.innerHTML = Array.from(_optExcludedStringIds).map(id => {
-    const s = STRINGS.find(x => x.id === id);
-    return `<span class="opt-exclude-tag">${s ? s.name : id}<span class="opt-exclude-x" data-id="${id}">×</span></span>`;
-  }).join('');
-  container.querySelectorAll('.opt-exclude-x').forEach(x => {
-    x.addEventListener('click', () => {
-      _optExcludedStringIds.delete(x.dataset.id);
-      _renderExcludeTags();
-    });
-  });
+  if (typeof window._renderExcludeTags === 'function' && window._renderExcludeTags !== _renderExcludeTags) {
+    return window._renderExcludeTags();
+  }
 }
 
 let _optLastCandidates = null;
 let _optLastCurrentOBS = 0;
 
 function runOptimizer() {
-  const resultsEl = document.getElementById('opt-results');
-  const countEl = document.getElementById('opt-results-count');
-
-  // Fix 5: Clear tension filter when running new optimization
-  _optClearTensionFilter();
-
-  // Show loading
-  resultsEl.innerHTML = '<div class="opt-loading">Computing builds…</div>';
-
-  // Use requestAnimationFrame to allow the loading indicator to paint
-  requestAnimationFrame(() => { setTimeout(() => { _runOptimizerCore(resultsEl, countEl); }, 16); });
+  if (typeof window.runOptimizer === 'function' && window.runOptimizer !== runOptimizer) {
+    return window.runOptimizer();
+  }
 }
 
 function _runOptimizerCore(resultsEl, countEl) {
@@ -5388,248 +2564,54 @@ function _runOptimizerCore(resultsEl, countEl) {
 }
 
 function renderOptimizerResults(candidates, sortBy, currentOBS) {
-  const resultsEl = document.getElementById('opt-results');
-
-  if (candidates.length === 0) {
-    resultsEl.innerHTML = `
-      <div class="opt-empty">
-        <p class="opt-empty-title">No builds match your filters</p>
-        <p class="opt-empty-sub">Try relaxing the stat minimums or expanding the tension range.</p>
-      </div>`;
-    return;
+  if (typeof window.renderOptimizerResults === 'function' && window.renderOptimizerResults !== renderOptimizerResults) {
+    return window.renderOptimizerResults(candidates, sortBy, currentOBS);
   }
-
-  // Column highlight class
-  const sortColClass = sortBy === 'obs' ? 'obs' : sortBy;
-
-  // Fix 5: Target tension filter (client-side only)
-  const targetTension = window._optTargetTension || '';
-
-  // Filter candidates by target tension (±1 lb) if specified
-  let displayCandidates = candidates;
-  if (targetTension !== '' && !isNaN(parseInt(targetTension))) {
-    const target = parseInt(targetTension);
-    displayCandidates = candidates.filter(c => Math.abs(c.tension - target) <= 1);
-  }
-
-  const top = displayCandidates.slice(0, 200); // Cap at 200 rows for perf
-
-  // Build tension filter UI
-  let filterHTML = '<div class="opt-tension-filter">' +
-    '<label class="opt-tension-label">Target Tension</label>' +
-    '<input type="number" class="opt-tension-input" id="opt-tension-filter" ' +
-      'value="' + (targetTension !== '' ? targetTension : '') + '" ' +
-      'placeholder="All" min="30" max="70" ' +
-      'onchange="_optApplyTensionFilter(this.value)" ' +
-      'onkeyup="if(event.key===\'Enter\')_optApplyTensionFilter(this.value)">' +
-    '<span class="opt-tension-hint">±1 lb</span>' +
-    '<button class="opt-tension-clear" onclick="_optApplyTensionFilter(\'\')" ' +
-      (targetTension === '' ? 'style="display:none"' : '') + '>Clear</button>' +
-  '</div>';
-
-  let html = filterHTML + '<div class="opt-table-wrap"><table class="opt-table">' +
-    '<thead><tr>' +
-      '<th class="opt-th opt-th-rank">#</th>' +
-      '<th class="opt-th opt-th-type">Type</th>' +
-      '<th class="opt-th opt-th-string">String(s)</th>' +
-      '<th class="opt-th opt-th-num' + (sortColClass === 'obs' ? ' opt-th-active' : '') + '">OBS</th>' +
-      '<th class="opt-th opt-th-num opt-th-delta">&Delta;</th>' +
-      '<th class="opt-th opt-th-gauge">Ga.</th>' +
-      '<th class="opt-th opt-th-tension">Tension</th>' +
-      '<th class="opt-th opt-th-num' + (sortColClass === 'spin' ? ' opt-th-active' : '') + '">Spn</th>' +
-      '<th class="opt-th opt-th-num' + (sortColClass === 'power' ? ' opt-th-active' : '') + '">Pwr</th>' +
-      '<th class="opt-th opt-th-num' + (sortColClass === 'control' ? ' opt-th-active' : '') + '">Ctl</th>' +
-      '<th class="opt-th opt-th-num' + (sortColClass === 'comfort' ? ' opt-th-active' : '') + '">Cmf</th>' +
-      '<th class="opt-th opt-th-num' + (sortColClass === 'feel' ? ' opt-th-active' : '') + '">Fel</th>' +
-      '<th class="opt-th opt-th-num' + (sortColClass === 'durability' ? ' opt-th-active' : '') + '">Dur</th>' +
-      '<th class="opt-th opt-th-num' + (sortColClass === 'playability' ? ' opt-th-active' : '') + '">Ply</th>' +
-      '<th class="opt-th opt-th-actions"></th>' +
-    '</tr></thead><tbody>';
-
-  top.forEach((c, i) => {
-    const delta = c.score - currentOBS;
-    const deltaStr = delta > 0 ? `+${delta.toFixed(1)}` : delta.toFixed(1);
-    const deltaCls = delta > 0.5 ? 'opt-delta-pos' : delta < -0.5 ? 'opt-delta-neg' : 'opt-delta-neutral';
-    const tensionLabel = c.type === 'hybrid' ? `${c.tension}/${c.crossesTension}` : `${c.tension}`;
-    const typeTag = c.type === 'hybrid' ? '<span class="opt-tag-hybrid">H</span>' : '<span class="opt-tag-full">F</span>';
-    const idx = i;
-
-    html += `<tr class="opt-row${i === 0 ? ' opt-row-top' : ''}" data-opt-idx="${idx}">
-      <td class="opt-td opt-td-rank">${i + 1}</td>
-      <td class="opt-td opt-td-type">${typeTag}</td>
-      <td class="opt-td opt-td-string">${c.label}</td>
-      <td class="opt-td opt-td-num opt-td-obs" style="color:${getObsScoreColor(c.score)};font-weight:700">${c.score.toFixed(1)}</td>
-      <td class="opt-td opt-td-num ${deltaCls}">${deltaStr}</td>
-      <td class="opt-td opt-td-gauge">${c.gauge || '—'}</td>
-      <td class="opt-td opt-td-tension">${tensionLabel}</td>
-      <td class="opt-td opt-td-num">${c.stats.spin?.toFixed(0) || '—'}</td>
-      <td class="opt-td opt-td-num">${c.stats.power?.toFixed(0) || '—'}</td>
-      <td class="opt-td opt-td-num">${c.stats.control?.toFixed(0) || '—'}</td>
-      <td class="opt-td opt-td-num">${c.stats.comfort?.toFixed(0) || '—'}</td>
-      <td class="opt-td opt-td-num">${c.stats.feel?.toFixed(0) || '—'}</td>
-      <td class="opt-td opt-td-num">${c.stats.durability?.toFixed(0) || '—'}</td>
-      <td class="opt-td opt-td-num">${c.stats.playability?.toFixed(0) || '—'}</td>
-      <td class="opt-td opt-td-actions">
-        <button class="opt-act-btn" onclick="optActionView(${idx})">View</button>
-        <button class="opt-act-btn" onclick="optActionTune(${idx})">Tune</button>
-        <button class="opt-act-btn" onclick="optActionCompare(${idx})">Compare</button>
-        <button class="opt-act-btn opt-act-save" onclick="optActionSave(${idx})">Save</button>
-      </td>
-    </tr>`;
-  });
-
-  html += '</tbody></table></div>';
-  resultsEl.innerHTML = html;
 }
 
 // Fix 5: Apply target tension filter to optimizer results (client-side only)
 function _optApplyTensionFilter(value) {
-  window._optTargetTension = value;
-  // Re-render with existing candidates
-  if (_optLastCandidates && _optLastCandidates.length > 0) {
-    // Get current sort from active header
-    const sortBy = document.querySelector('.opt-th-active')?.textContent?.toLowerCase() || 'obs';
-    renderOptimizerResults(_optLastCandidates, sortBy, _optLastCurrentOBS || 0);
+  if (typeof window._optApplyTensionFilter === 'function' && window._optApplyTensionFilter !== _optApplyTensionFilter) {
+    return window._optApplyTensionFilter(value);
   }
 }
 
 // Clear tension filter when running new optimization
 function _optClearTensionFilter() {
-  window._optTargetTension = '';
+  if (typeof window._optClearTensionFilter === 'function' && window._optClearTensionFilter !== _optClearTensionFilter) {
+    return window._optClearTensionFilter();
+  }
 }
 
 // --- Row action handlers ---
 
 function _optBuildPresetData(candidate) {
-  const c = candidate;
-  if (c.type === 'hybrid') {
-    return {
-      id: 'opt-' + Date.now(),
-      name: c.label + ' on ' + c.racquet.name,
-      racquetId: c.racquet.id,
-      isHybrid: true,
-      mainsId: c.mainsData.id,
-      crossesId: c.crossesData.id,
-      mainsTension: c.tension,
-      crossesTension: c.crossesTension,
-      stringId: null
-    };
-  } else {
-    return {
-      id: 'opt-' + Date.now(),
-      name: c.label + ' on ' + c.racquet.name,
-      racquetId: c.racquet.id,
-      isHybrid: false,
-      mainsId: null,
-      crossesId: null,
-      mainsTension: c.tension,
-      crossesTension: c.tension,
-      stringId: c.stringData.id
-    };
+  if (typeof window._optBuildPresetData === 'function' && window._optBuildPresetData !== _optBuildPresetData) {
+    return window._optBuildPresetData(candidate);
   }
 }
 
 function optActionView(idx) {
-  const c = _optLastCandidates[idx];
-  if (!c) return;
-  const preset = _optBuildPresetData(c);
-  loadPresetFromData(preset);
-  switchMode('overview');
+  if (typeof window.optActionView === 'function' && window.optActionView !== optActionView) {
+    return window.optActionView(idx);
+  }
 }
 
 function optActionTune(idx) {
-  const c = _optLastCandidates[idx];
-  if (!c) return;
-  const preset = _optBuildPresetData(c);
-  loadPresetFromData(preset);
-  switchMode('tune');
+  if (typeof window.optActionTune === 'function' && window.optActionTune !== optActionTune) {
+    return window.optActionTune(idx);
+  }
 }
 
 function optActionCompare(idx) {
   if (typeof window.optActionCompare === 'function' && window.optActionCompare !== optActionCompare) {
     return window.optActionCompare(idx);
   }
-  const c = _optLastCandidates[idx];
-  if (!c) return;
-  const preset = _optBuildPresetData(c);
-
-  const lo = createLoadout(
-    preset.racquetId,
-    preset.isHybrid ? preset.mainsId : preset.stringId,
-    preset.mainsTension,
-    {
-      source: 'optimize',
-      isHybrid: preset.isHybrid,
-      mainsId: preset.mainsId || null,
-      crossesId: preset.crossesId || null,
-      crossesTension: preset.crossesTension,
-    }
-  );
-
-  const compareState = window.compareGetState?.();
-  if (lo && lo.stats && compareState?.slots && typeof window.compareSetSlotLoadout === 'function') {
-    const emptySlot = compareState.slots.find(function(slot) { return slot.loadout === null; });
-    const targetSlotId = (emptySlot || compareState.slots[compareState.slots.length - 1])?.id;
-    if (targetSlotId) {
-      window.compareSetSlotLoadout(targetSlotId, lo, lo.stats);
-      switchMode('compare');
-      return;
-    }
-  }
-
-  // Legacy fallback
-  if (comparisonSlots.length >= 3) {
-    comparisonSlots.pop(); // remove last to make room
-  }
-  const slotData = {
-    id: Date.now(),
-    racquetId: preset.racquetId,
-    stringId: preset.stringId || '',
-    isHybrid: preset.isHybrid,
-    mainsId: preset.mainsId || '',
-    crossesId: preset.crossesId || '',
-    mainsTension: preset.mainsTension,
-    crossesTension: preset.crossesTension,
-    stats: null,
-    identity: null
-  };
-  comparisonSlots.push(slotData);
-  recalcSlot(comparisonSlots.length - 1);
-  switchMode('compare');
-  renderComparisonSlots();
-  renderCompareSummaries();
-  renderCompareVerdict();
-  renderCompareMatrix();
-  updateComparisonRadar();
 }
 
 function optActionSave(idx) {
-  const c = _optLastCandidates[idx];
-  if (!c) return;
-  const preset = _optBuildPresetData(c);
-  
-  // Create a proper loadout and save it
-  var opts = { source: 'optimize' };
-  if (preset.isHybrid) {
-    opts.isHybrid = true;
-    opts.mainsId = preset.mainsId;
-    opts.crossesId = preset.crossesId;
-    opts.crossesTension = preset.crossesTension;
-  }
-  var lo = createLoadout(preset.racquetId, preset.isHybrid ? preset.mainsId : preset.stringId, preset.mainsTension, opts);
-  if (lo) {
-    saveLoadout(lo);
-  }
-
-  // Flash the save button in the row
-  const btn = document.querySelector(`tr[data-opt-idx="${idx}"] .opt-act-btn:last-child`);
-  if (btn) {
-    btn.textContent = '✓';
-    btn.classList.add('opt-act-saved');
-    setTimeout(() => {
-      btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 15 15" fill="none"><path d="M11.5 1H3.5A1.5 1.5 0 002 2.5v10A1.5 1.5 0 003.5 14h8a1.5 1.5 0 001.5-1.5v-10A1.5 1.5 0 0011.5 1z" stroke="currentColor" stroke-width="1.2"/><path d="M5 1v4h5V1" stroke="currentColor" stroke-width="1.2"/><path d="M5 10h5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>';
-      btn.classList.remove('opt-act-saved');
-    }, 1200);
+  if (typeof window.optActionSave === 'function' && window.optActionSave !== optActionSave) {
+    return window.optActionSave(idx);
   }
 }
 
@@ -5642,92 +2624,38 @@ const _fmbAnswers = { swing: null, ball: null, court: null, painPoints: [], prio
 let _fmbCurrentFrames = []; // stores ranked frame results for index-based action handlers
 
 function openFindMyBuild() {
-  _fmbStep = 1;
-  _fmbAnswers.swing = null;
-  _fmbAnswers.ball = null;
-  _fmbAnswers.court = null;
-  _fmbAnswers.painPoints = [];
-  _fmbAnswers.priorities = [];
-
-  // Reset all option selections
-  document.querySelectorAll('.fmb-option').forEach(b => {
-    b.classList.remove('selected');
-    const badge = b.querySelector('.fmb-priority-badge');
-    if (badge) badge.remove();
-  });
-
-  const wizard = document.getElementById('find-my-build');
-  wizard.classList.remove('hidden');
-
-  // Hide empty state content but keep wizard visible
-  document.getElementById('empty-state').style.display = 'none';
-
-  _fmbShowStep(1);
+  if (typeof window.openFindMyBuild === 'function' && window.openFindMyBuild !== openFindMyBuild) {
+    return window.openFindMyBuild();
+  }
 }
 
 function closeFindMyBuild() {
-  document.getElementById('find-my-build').classList.add('hidden');
-  document.getElementById('empty-state').style.display = '';
+  if (typeof window.closeFindMyBuild === 'function' && window.closeFindMyBuild !== closeFindMyBuild) {
+    return window.closeFindMyBuild();
+  }
 }
 
 function _fmbShowStep(step) {
-  _fmbStep = step;
-  const totalSteps = 5;
-
-  // Update progress bar
-  const pct = step === 'result' ? 100 : (step / totalSteps) * 100;
-  document.getElementById('fmb-progress-fill').style.width = pct + '%';
-
-  // Show/hide steps
-  document.querySelectorAll('.fmb-step').forEach(el => {
-    const s = el.dataset.step;
-    el.classList.toggle('hidden', s !== String(step));
-  });
-
-  // Update nav buttons
-  const backBtn = document.getElementById('fmb-back');
-  const nextBtn = document.getElementById('fmb-next');
-
-  if (step === 'result') {
-    backBtn.style.display = '';
-    nextBtn.style.display = 'none';
-  } else {
-    backBtn.style.display = step === 1 ? 'none' : '';
-    nextBtn.style.display = '';
-    nextBtn.textContent = step === 5 ? 'See Results' : 'Next';
-    _fmbUpdateNextState();
+  if (typeof window._fmbShowStep === 'function' && window._fmbShowStep !== _fmbShowStep) {
+    return window._fmbShowStep(step);
   }
 }
 
 function _fmbUpdateNextState() {
-  const nextBtn = document.getElementById('fmb-next');
-  let canProceed = false;
-
-  if (_fmbStep === 1) canProceed = _fmbAnswers.swing !== null;
-  else if (_fmbStep === 2) canProceed = _fmbAnswers.ball !== null;
-  else if (_fmbStep === 3) canProceed = _fmbAnswers.court !== null;
-  else if (_fmbStep === 4) canProceed = _fmbAnswers.painPoints.length > 0;
-  else if (_fmbStep === 5) canProceed = _fmbAnswers.priorities.length === 3;
-
-  nextBtn.disabled = !canProceed;
+  if (typeof window._fmbUpdateNextState === 'function' && window._fmbUpdateNextState !== _fmbUpdateNextState) {
+    return window._fmbUpdateNextState();
+  }
 }
 
 function fmbBack() {
-  if (_fmbStep === 'result') {
-    _fmbShowStep(5);
-  } else if (_fmbStep > 1) {
-    _fmbShowStep(_fmbStep - 1);
+  if (typeof window.fmbBack === 'function' && window.fmbBack !== fmbBack) {
+    return window.fmbBack();
   }
 }
 
 function fmbNext() {
-  if (_fmbStep < 5) {
-    _fmbShowStep(_fmbStep + 1);
-  } else if (_fmbStep === 5) {
-    // Generate profile and show results
-    const profile = _fmbGenerateProfile(_fmbAnswers);
-    _fmbShowResults(profile);
-    _fmbShowStep('result');
+  if (typeof window.fmbNext === 'function' && window.fmbNext !== fmbNext) {
+    return window.fmbNext();
   }
 }
 
@@ -5796,198 +2724,23 @@ document.addEventListener('click', (e) => {
 });
 
 function _fmbGenerateProfile(answers) {
-  const profile = {
-    statPriorities: {},
-    minThresholds: {},
-    setupPreference: 'both',
-    sortBy: 'obs',
-    notes: []
-  };
-
-  // Q1: Swing style
-  if (answers.swing === 'compact') {
-    profile.minThresholds.maneuverability = 60;
-    profile.notes.push('Compact swing \u2192 prioritizing maneuverable setups');
-  } else if (answers.swing === 'heavy') {
-    profile.minThresholds.stability = 58;
-    profile.notes.push('Heavy swing \u2192 prioritizing stable, high-plow setups');
+  if (typeof window._fmbGenerateProfile === 'function' && window._fmbGenerateProfile !== _fmbGenerateProfile) {
+    return window._fmbGenerateProfile(answers);
   }
-
-  // Q2: Ball shape
-  if (answers.ball === 'flat') {
-    profile.statPriorities.control = 3;
-    profile.statPriorities.power = 2;
-    profile.minThresholds.control = 62;
-  } else if (answers.ball === 'heavy') {
-    profile.statPriorities.spin = 3;
-    profile.minThresholds.spin = 65;
-  } else {
-    profile.statPriorities.spin = 2;
-  }
-
-  // Q3: Court identity
-  if (answers.court === 'baseliner') {
-    profile.statPriorities.durability = (profile.statPriorities.durability || 0) + 1;
-    profile.statPriorities.playability = (profile.statPriorities.playability || 0) + 1;
-  } else if (answers.court === 'touch') {
-    profile.statPriorities.feel = 3;
-    profile.minThresholds.feel = 62;
-  } else if (answers.court === 'firststrike') {
-    profile.statPriorities.power = (profile.statPriorities.power || 0) + 1;
-    profile.statPriorities.control = (profile.statPriorities.control || 0) + 1;
-  }
-
-  // Q4: Pain points
-  answers.painPoints.forEach(p => {
-    if (p === 'arm') { profile.minThresholds.comfort = 60; profile.notes.push('Arm sensitivity \u2192 comfort floor 60'); }
-    if (p === 'breaks') { profile.minThresholds.durability = 65; profile.notes.push('String breaker \u2192 durability floor 65'); }
-    if (p === 'long') { profile.minThresholds.control = 62; profile.notes.push('Ball goes long \u2192 control floor 62'); }
-    if (p === 'pace') { profile.statPriorities.power = 3; }
-    if (p === 'spin') { profile.statPriorities.spin = 3; }
-    if (p === 'dead') { profile.minThresholds.feel = 60; profile.minThresholds.playability = 65; }
-  });
-
-  // Q5: Priorities
-  answers.priorities.forEach((stat, i) => {
-    profile.statPriorities[stat] = Math.max(profile.statPriorities[stat] || 0, 3 - i);
-  });
-
-  // Determine sort key
-  const topStat = Object.entries(profile.statPriorities).sort((a, b) => b[1] - a[1])[0];
-  if (topStat && topStat[0] !== 'obs') profile.sortBy = topStat[0];
-
-  return profile;
 }
 
 function _fmbShowResults(profile) {
-  const summaryEl = document.getElementById('fmb-summary');
-  const directionsEl = document.getElementById('fmb-directions');
-
-  // Build playstyle summary sentence
-  const swingLabels = { compact: 'compact-swing', smooth: 'balanced-swing', heavy: 'heavy-swing' };
-  const ballLabels = { flat: 'flat-hitting', moderate: 'moderate-spin', heavy: 'heavy-topspin' };
-  const courtLabels = { baseliner: 'baseliner', allcourt: 'all-court', firststrike: 'first-strike', touch: 'touch player' };
-
-  const identity = `${courtLabels[_fmbAnswers.court] || 'all-court'} with a ${swingLabels[_fmbAnswers.swing] || 'balanced'}, ${ballLabels[_fmbAnswers.ball] || 'moderate-spin'} game`;
-
-  // Top priorities display
-  const prioLabels = _fmbAnswers.priorities.map(p => p.charAt(0).toUpperCase() + p.slice(1));
-
-  // Thresholds display
-  const threshLines = Object.entries(profile.minThresholds)
-    .map(([k, v]) => `<span class="fmb-thresh-tag">${k.charAt(0).toUpperCase() + k.slice(1)} \u2265 ${v}</span>`)
-    .join('');
-
-  summaryEl.innerHTML = `
-    <div class="fmb-profile-card">
-      <div class="fmb-profile-label">YOUR PROFILE</div>
-      <h3 class="fmb-profile-identity">${identity.charAt(0).toUpperCase() + identity.slice(1)}</h3>
-      <div class="fmb-profile-priorities">
-        <span class="fmb-prio-label">Optimizing for:</span>
-        ${prioLabels.map((p, i) => `<span class="fmb-prio-tag">${i + 1}. ${p}</span>`).join('')}
-      </div>
-      ${threshLines ? `<div class="fmb-profile-thresholds">${threshLines}</div>` : ''}
-      ${profile.notes.length ? `<div class="fmb-profile-notes">${profile.notes.map(n => `<div class="fmb-note">${n}</div>`).join('')}</div>` : ''}
-    </div>
-  `;
-
-  // === Frame-first results: find top 5 matching frames ===
-  const rankedFrames = _fmbRankFrames(profile);
-  _fmbCurrentFrames = rankedFrames; // store for index-based action handlers
-
-  directionsEl.innerHTML = `
-    <div class="fmb-frame-results">
-      <h4 class="fmb-frames-title">Recommended Frames</h4>
-      <p class="fmb-frames-sub">Based on your playstyle profile. Each frame shows its best builds.</p>
-      <div class="fmb-frame-list">
-        ${rankedFrames.map((fr, idx) => _fmbRenderFrameCard(fr, idx)).join('')}
-      </div>
-      <div class="fmb-also-try">
-        <p class="fmb-also-try-text">Want more options?</p>
-        <button class="fmb-dir-btn" onclick="_fmbSearchDirection('closest')">Search All Strings in Optimizer</button>
-      </div>
-    </div>
-  `;
+  if (typeof window._fmbShowResults === 'function' && window._fmbShowResults !== _fmbShowResults) {
+    return window._fmbShowResults(profile);
+  }
 }
 
 let _fmbLastProfile = null;
 
 function _fmbSearchDirection(direction) {
-  const profile = _fmbGenerateProfile(_fmbAnswers);
-  _fmbLastProfile = profile;
-
-  // Ensure optimize mode is initialized
-  if (!_optimizeInitialized) {
-    initOptimize();
-    _optimizeInitialized = true;
+  if (typeof window._fmbSearchDirection === 'function' && window._fmbSearchDirection !== _fmbSearchDirection) {
+    return window._fmbSearchDirection(direction);
   }
-
-  // Build filter values based on direction
-  const mins = { spin: 0, control: 0, power: 0, comfort: 0, feel: 0, durability: 0, playability: 0, stability: 0, maneuverability: 0 };
-  let sortBy = profile.sortBy;
-
-  if (direction === 'closest') {
-    // Strict thresholds, sort by OBS
-    Object.entries(profile.minThresholds).forEach(([k, v]) => {
-      if (mins.hasOwnProperty(k)) mins[k] = v;
-    });
-    sortBy = 'obs';
-  } else if (direction === 'safer') {
-    // Relax thresholds by 5, boost comfort/durability
-    Object.entries(profile.minThresholds).forEach(([k, v]) => {
-      if (mins.hasOwnProperty(k)) mins[k] = Math.max(0, v - 5);
-    });
-    mins.comfort = Math.max(mins.comfort, 55);
-    mins.durability = Math.max(mins.durability, 55);
-    sortBy = 'obs';
-  } else if (direction === 'ceiling') {
-    // Remove comfort/durability floors, sort by #1 priority
-    Object.entries(profile.minThresholds).forEach(([k, v]) => {
-      if (k === 'comfort' || k === 'durability') return;
-      if (mins.hasOwnProperty(k)) mins[k] = v;
-    });
-    sortBy = _fmbAnswers.priorities[0] || profile.sortBy;
-  }
-
-  // Set optimizer filter values
-  const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
-
-  setVal('opt-min-spin', mins.spin);
-  setVal('opt-min-control', mins.control);
-  setVal('opt-min-power', mins.power);
-  setVal('opt-min-comfort', mins.comfort);
-  setVal('opt-min-feel', mins.feel);
-  setVal('opt-min-durability', mins.durability);
-  setVal('opt-min-playability', mins.playability);
-  setVal('opt-min-stability', mins.stability);
-  setVal('opt-min-maneuverability', mins.maneuverability);
-  setVal('opt-sort', sortBy);
-
-  // Set setup type
-  const typeBtn = document.querySelector(`.opt-toggle[data-value="${profile.setupPreference}"]`);
-  if (typeBtn) {
-    document.querySelectorAll('.opt-toggle').forEach(b => b.classList.remove('active'));
-    typeBtn.classList.add('active');
-  }
-
-  // Fix H: Seed optimizer frame from quiz's top-ranked frame (QA-021)
-  if (_fmbCurrentFrames && _fmbCurrentFrames.length > 0) {
-    var topFrame = _fmbCurrentFrames[0].racquet;
-    setVal('opt-frame-search', topFrame.name);
-    var frameValEl = document.getElementById('opt-frame-value');
-    if (frameValEl) frameValEl.value = topFrame.id;
-  }
-
-  // Close wizard
-  closeFindMyBuild();
-
-  // Switch to optimize mode and trigger search
-  switchMode('optimize');
-
-  // Small delay so DOM is ready, then trigger search
-  requestAnimationFrame(() => {
-    document.getElementById('opt-run-btn').click();
-  });
 }
 
 // ============================================
@@ -6021,90 +2774,15 @@ let _stringModState = {
 
 // Tab switching for pill bar
 function _compSwitchTab(tab) {
-  // Update Master Nav UI
-  document.querySelectorAll('.comp-tab-btn').forEach(btn => {
-    if (btn.dataset.compTab === tab) {
-      // Active State
-      btn.classList.add('bg-dc-platinum', 'text-dc-void', 'font-bold');
-      btn.classList.remove('bg-transparent', 'text-dc-storm', 'hover:bg-dc-border/50', 'hover:text-dc-platinum');
-    } else {
-      // Inactive State
-      btn.classList.remove('bg-dc-platinum', 'text-dc-void', 'font-bold');
-      btn.classList.add('bg-transparent', 'text-dc-storm', 'hover:bg-dc-border/50', 'hover:text-dc-platinum');
-    }
-  });
-
-  // Hide all panels
-  document.querySelectorAll('.comp-tab-panel').forEach(panel => {
-    panel.classList.add('hidden');
-  });
-
-  // Show target panel
-  const activePanel = document.getElementById('comp-tab-' + tab);
-  if (activePanel) {
-    activePanel.classList.remove('hidden');
-  }
-
-  // Initialize string compendium on first visit
-  if (tab === 'strings' && !_stringsInitialized) {
-    _stringsInitialized = true;
-
-    // Delay slightly to ensure DOM is ready
-    setTimeout(() => {
-      try {
-        _stringRenderRoster();
-        if (typeof STRINGS !== 'undefined' && STRINGS.length > 0) {
-          _stringSelectedId = STRINGS[0].id;
-          _stringRenderMain(STRINGS[0]);
-        } else {
-          console.error('STRINGS data not available');
-          const main = document.getElementById('string-main');
-          if (main) {
-            main.innerHTML = '<div class="flex flex-col items-center justify-center h-64 text-dc-red"><p class="font-mono text-sm">Error: String database not loaded</p></div>';
-          }
-        }
-        
-        // Wire up string filter events
-        const stringSearch = document.getElementById('string-search');
-        const stringFilterMaterial = document.getElementById('string-filter-material');
-        const stringFilterShape = document.getElementById('string-filter-shape');
-        const stringFilterStiffness = document.getElementById('string-filter-stiffness');
-        
-        if (stringSearch) stringSearch.addEventListener('input', _stringRenderRoster);
-        if (stringFilterMaterial) stringFilterMaterial.addEventListener('change', _stringRenderRoster);
-        if (stringFilterShape) stringFilterShape.addEventListener('change', _stringRenderRoster);
-        if (stringFilterStiffness) stringFilterStiffness.addEventListener('change', _stringRenderRoster);
-      } catch (err) {
-        console.error('String compendium init error:', err);
-      }
-    }, 100);
-  }
-
-  // Sync String Compendium with active loadout on tab switch
-  if (tab === 'strings' && _stringsInitialized) {
-    _stringSyncWithActiveLoadout();
-  }
-
-  // Initialize leaderboard on first visit
-  // Note: _lbv2State is defined in leaderboard.js module
-  if (tab === 'leaderboard' && typeof _lbv2State !== 'undefined' && !_lbv2State.initialized) {
-    // Note: _lbv2State.initialized is set inside initLeaderboard()
-    // Small race window if user clicks twice rapidly (<50ms) - acceptable
-    setTimeout(function() { initLeaderboard(); }, 50);
+  if (typeof window._compSwitchTab === 'function' && window._compSwitchTab !== _compSwitchTab) {
+    return window._compSwitchTab(tab);
   }
 }
 
 // Toggle Query HUD overlay with scroll-lock
 function _compToggleHud() {
-  const hud = document.getElementById('comp-hud');
-  if (hud) {
-    hud.classList.toggle('active');
-    if (hud.classList.contains('active')) {
-      document.getElementById('comp-search').focus();
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+  if (typeof window._compToggleHud === 'function' && window._compToggleHud !== _compToggleHud) {
+    return window._compToggleHud();
   }
 }
 
@@ -6114,939 +2792,153 @@ function _compToggleHud() {
 
 // Toggle String HUD overlay
 function _stringToggleHud() {
-  const hud = document.getElementById('string-hud');
-  if (hud) {
-    hud.classList.toggle('active');
-    if (hud.classList.contains('active')) {
-      document.getElementById('string-search').focus();
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+  if (typeof window._stringToggleHud === 'function' && window._stringToggleHud !== _stringToggleHud) {
+    return window._stringToggleHud();
   }
 }
 
 // Get filtered strings based on search and filters
 function _stringGetFilteredStrings() {
-  const search = (document.getElementById('string-search').value || '').toLowerCase();
-  const material = document.getElementById('string-filter-material').value;
-  const shape = document.getElementById('string-filter-shape').value;
-  const stiffness = document.getElementById('string-filter-stiffness').value;
-
-  return STRINGS.filter(s => {
-    if (search && !s.name.toLowerCase().includes(search)) return false;
-    if (material && !s.material.includes(material)) return false;
-    if (shape && !s.shape.toLowerCase().includes(shape.toLowerCase())) return false;
-    if (stiffness === 'soft' && s.stiffness >= 180) return false;
-    if (stiffness === 'medium' && (s.stiffness < 180 || s.stiffness > 210)) return false;
-    if (stiffness === 'stiff' && s.stiffness <= 210) return false;
-    return true;
-  });
+  if (typeof window._stringGetFilteredStrings === 'function' && window._stringGetFilteredStrings !== _stringGetFilteredStrings) {
+    return window._stringGetFilteredStrings();
+  }
 }
 
 // Sync String Compendium state with active loadout
 function _stringSyncWithActiveLoadout() {
-  const setup = getCurrentSetup();
-  if (!setup) return;
-  
-  const { racquet, stringConfig } = setup;
-  if (!racquet || !stringConfig) return;
-  
-  // Update mod state to match active loadout
-  _stringModState.frameId = racquet.id;
-  _stringModState.mode = stringConfig.isHybrid ? 'hybrid' : 'fullbed';
-  _stringModState.mainsTension = stringConfig.mainsTension;
-  _stringModState.crossesTension = stringConfig.crossesTension;
-  
-  if (stringConfig.isHybrid) {
-    _stringModState.stringId = stringConfig.mains?.id || '';
-    _stringModState.crossesId = stringConfig.crosses?.id || '';
-  } else {
-    _stringModState.stringId = stringConfig.string?.id || '';
-    _stringModState.crossesId = stringConfig.string?.id || '';
-  }
-  
-  // Update selected string and re-render main view
-  const stringId = _stringModState.stringId;
-  if (stringId) {
-    const string = STRINGS.find(s => s.id === stringId);
-    if (string) {
-      _stringSelectedId = stringId;
-      _stringRenderMain(string);
-    }
+  if (typeof window._stringSyncWithActiveLoadout === 'function' && window._stringSyncWithActiveLoadout !== _stringSyncWithActiveLoadout) {
+    return window._stringSyncWithActiveLoadout();
   }
 }
 
 // Render string roster in HUD
 function _stringRenderRoster() {
-  const list = document.getElementById('string-list');
-  const strings = _stringGetFilteredStrings();
-
-  list.innerHTML = strings.map(s => {
-    const isActive = s.id === _stringSelectedId;
-    const baseClasses = "bg-transparent border text-left flex flex-col justify-between gap-4 transition-all duration-200 cursor-pointer p-4";
-    const borderClasses = isActive 
-      ? "border-dc-accent" 
-      : "border-dc-storm dark:border-dc-platinum-dim hover:border-dc-platinum";
-    const archetype = _stringGetArchetype(s);
-    return `<button class="${baseClasses} ${borderClasses}" data-id="${s.id}" onclick="_stringSelectString('${s.id}')">
-      <div class="flex justify-between items-start gap-2">
-        <span class="text-base font-semibold leading-tight tracking-tight text-dc-void dark:text-dc-platinum">${s.name}</span>
-      </div>
-      <div class="flex flex-col gap-1">
-        <span class="font-mono text-[10px] uppercase tracking-[0.15em] text-dc-accent">${archetype}</span>
-        <span class="font-mono text-[12px] text-dc-storm">${s.material} // ${s.shape}</span>
-        <span class="font-mono text-[13px] font-semibold text-dc-void dark:text-dc-platinum">${Math.round(s.stiffness)} lb/in</span>
-      </div>
-    </button>`;
-  }).join('');
+  if (typeof window._stringRenderRoster === 'function' && window._stringRenderRoster !== _stringRenderRoster) {
+    return window._stringRenderRoster();
+  }
 }
 
 // Get string archetype based on twScore
 function _stringGetArchetype(s) {
-  const scores = s.twScore || {};
-  if (scores.spin >= 85 && scores.control >= 80) return 'Spin Control';
-  if (scores.spin >= 85) return 'Spin Focus';
-  if (scores.control >= 85) return 'Control';
-  if (scores.power >= 75) return 'Power';
-  if (scores.comfort >= 80) return 'Comfort';
-  if (scores.durability >= 85) return 'Durability';
-  return 'All-Rounder';
+  if (typeof window._stringGetArchetype === 'function' && window._stringGetArchetype !== _stringGetArchetype) {
+    return window._stringGetArchetype(s);
+  }
 }
 
 // Select string and render main content
 function _stringSelectString(stringId) {
-  // Auto-close HUD on selection
-  const hud = document.getElementById('string-hud');
-  if (hud) {
-    hud.classList.remove('active');
-    document.body.style.overflow = '';
+  if (typeof window._stringSelectString === 'function' && window._stringSelectString !== _stringSelectString) {
+    return window._stringSelectString(stringId);
   }
-  
-  _stringSelectedId = stringId;
-  const string = STRINGS.find(s => s.id === stringId);
-  if (!string) return;
-
-  // Highlight in roster
-  document.querySelectorAll('#string-list > button').forEach(el => {
-    const isActive = el.dataset.id === stringId;
-    el.classList.remove('border-dc-accent', 'border-dc-platinum-dim');
-    el.classList.add(isActive ? 'border-dc-accent' : 'border-dc-platinum-dim');
-  });
-
-  _stringRenderMain(string);
 }
 
 // Generate "Best for" and "Watch out" pills for strings
 function _stringGeneratePills(string) {
-  const scores = string.twScore || {};
-  const bestFor = [];
-  const watchOut = [];
-  
-  if (scores.spin >= 85) bestFor.push('SPIN GENERATION');
-  if (scores.control >= 85) bestFor.push('PRECISION SHOTS');
-  if (scores.power >= 75) bestFor.push('FREE POWER');
-  if (scores.comfort >= 80) bestFor.push('ARM COMFORT');
-  if (scores.durability >= 85) bestFor.push('LONGEVITY');
-  if (scores.playabilityDuration >= 85) bestFor.push('TENSION MAINTENANCE');
-  
-  if (scores.comfort < 60) watchOut.push('STIFF FEEL');
-  if (scores.durability < 60) watchOut.push('FAST BREAKAGE');
-  if (string.tensionLoss > 30) watchOut.push('HIGH TENSION DROP');
-  if (scores.power < 50) watchOut.push('LOW POWER OUTPUT');
-  
-  return { bestFor, watchOut };
+  if (typeof window._stringGeneratePills === 'function' && window._stringGeneratePills !== _stringGeneratePills) {
+    return window._stringGeneratePills(string);
+  }
 }
 
 // Render string battery bars from twScore
 function _stringRenderBatteryBars(string) {
-  const scores = string.twScore || {};
-  const groups = [
-    { title: 'Response', stats: [
-      { id: 'power', label: 'Power', val: scores.power || 50 },
-      { id: 'spin', label: 'Spin', val: scores.spin || 50 },
-      { id: 'control', label: 'Control', val: scores.control || 50 }
-    ]},
-    { title: 'Feel', stats: [
-      { id: 'feel', label: 'Feel', val: scores.feel || 50 },
-      { id: 'comfort', label: 'Comfort', val: scores.comfort || 50 },
-      { id: 'playability', label: 'Playability', val: scores.playabilityDuration || 50 }
-    ]},
-    { title: 'Longevity', stats: [
-      { id: 'durability', label: 'Durability', val: scores.durability || 50 },
-      { id: 'tension', label: 'Tension Loss', val: Math.max(0, 100 - (string.tensionLoss || 0) * 2) }
-    ]}
-  ];
-
-  let html = '<div class="flex flex-col gap-6">';
-  groups.forEach(g => {
-    html += `<div class="flex flex-col">
-      <h4 class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em] border-b border-dc-border pb-2 mb-3">${g.title}</h4>
-      <div class="flex flex-col gap-2.5">`;
-    
-    g.stats.forEach(s => {
-      const pct = Math.max(0, Math.min(100, s.val));
-      const totalSegments = 25;
-      const filledSegments = Math.round((pct / 100) * totalSegments);
-      
-      let batteryHtml = '<div class="flex flex-1 gap-[2px] h-1.5 items-center">';
-      for(let i = 0; i < totalSegments; i++) {
-        const bgClass = i < filledSegments 
-          ? 'bg-dc-void dark:bg-dc-platinum'
-          : 'bg-black/10 dark:bg-white/10';
-        batteryHtml += `<div class="flex-1 h-full rounded-[1px] transition-colors duration-150 ${bgClass}"></div>`;
-      }
-      batteryHtml += '</div>';
-
-      html += `
-        <div class="flex items-center gap-4 group">
-          <span class="font-mono text-[13px] text-dc-storm group-hover:text-dc-platinum transition-colors uppercase tracking-[0.15em] w-28">${s.label}</span>
-          ${batteryHtml}
-          <span class="font-mono text-[13px] font-bold text-dc-void dark:text-dc-platinum w-8 text-right">${Math.round(s.val)}</span>
-        </div>`;
-    });
-    html += `</div></div>`;
-  });
-  html += '</div>';
-  return html;
+  if (typeof window._stringRenderBatteryBars === 'function' && window._stringRenderBatteryBars !== _stringRenderBatteryBars) {
+    return window._stringRenderBatteryBars(string);
+  }
 }
 
 // Find similar strings based on twScore profile
 function _stringFindSimilarStrings(sourceId, limit = 4) {
-  const source = STRINGS.find(s => s.id === sourceId);
-  if (!source) return [];
-  
-  const scores = ['power', 'spin', 'comfort', 'control', 'feel', 'durability'];
-  
-  return STRINGS
-    .filter(s => s.id !== sourceId)
-    .map(s => {
-      const distance = scores.reduce((sum, key) => {
-        const diff = (s.twScore[key] || 50) - (source.twScore[key] || 50);
-        return sum + diff * diff;
-      }, 0);
-      return { string: s, distance };
-    })
-    .sort((a, b) => a.distance - b.distance)
-    .slice(0, limit)
-    .map(r => r.string);
+  if (typeof window._stringFindSimilarStrings === 'function' && window._stringFindSimilarStrings !== _stringFindSimilarStrings) {
+    return window._stringFindSimilarStrings(sourceId, limit);
+  }
 }
 
 // Find best frames for this string
 function _stringFindBestFrames(stringId, limit = 4) {
-  const string = STRINGS.find(s => s.id === stringId);
-  if (!string) return [];
-  
-  const stringConfig = {
-    isHybrid: false,
-    string: string,
-    mains: string,
-    crosses: string,
-    mainsTension: 52,
-    crossesTension: 50
-  };
-  
-  return RACQUETS
-    .map(r => {
-      const stats = predictSetup(r, stringConfig);
-      const tCtx = buildTensionContext(stringConfig, r);
-      const obs = computeCompositeScore(stats, tCtx);
-      return { racquet: r, stats, obs };
-    })
-    .sort((a, b) => b.obs - a.obs)
-    .slice(0, limit);
+  if (typeof window._stringFindBestFrames === 'function' && window._stringFindBestFrames !== _stringFindBestFrames) {
+    return window._stringFindBestFrames(stringId, limit);
+  }
 }
 
 // Render main string content
 function _stringRenderMain(string) {
-  const main = document.getElementById('string-main');
-  if (!main) return;
-  
-  // Clear searchable select instances since DOM will be recreated
-  delete ssInstances['string-mod-frame'];
-  delete ssInstances['string-mod-crosses-string'];
-  
-  const pills = _stringGeneratePills(string);
-  const consoleHtml = [];
-  pills.bestFor.forEach(p => consoleHtml.push(`<span class="font-mono text-[13px] font-bold tracking-[0.05em] uppercase text-dc-void dark:text-dc-platinum">[+] ${p}</span>`));
-  pills.watchOut.forEach(p => consoleHtml.push(`<span class="font-mono text-[13px] font-bold tracking-[0.05em] uppercase text-dc-red">[-] ${p}</span>`));
-  
-  const batteryHtml = _stringRenderBatteryBars(string);
-  const similarStrings = _stringFindSimilarStrings(string.id);
-  const bestFrames = _stringFindBestFrames(string.id);
-  
-  // Similar strings grid
-  const similarHtml = similarStrings.map(s => {
-    const archetype = _stringGetArchetype(s);
-    return `<div class="bg-transparent border border-dc-border hover:border-dc-storm p-4 flex flex-col cursor-pointer transition-colors group" onclick="_stringSelectString('${s.id}')">
-      <div class="flex justify-between items-start mb-2">
-        <span class="font-mono text-[10px] text-dc-storm uppercase tracking-widest group-hover:text-dc-platinum transition-colors">${archetype}</span>
-        <span class="font-mono text-lg font-bold text-dc-void dark:text-dc-platinum">${s.twScore.spin || 0}<span class="text-[13px] text-dc-storm ml-1">SPIN</span></span>
-      </div>
-      <div class="text-sm font-semibold text-dc-void dark:text-dc-platinum mb-1">${s.name}</div>
-      <div class="font-mono text-[13px] text-dc-storm">${s.material} // ${s.shape}</div>
-    </div>`;
-  }).join('');
-  
-  // Best frames grid
-  const framesHtml = bestFrames.map(f => {
-    return `<div class="bg-transparent border border-dc-border hover:border-dc-storm p-4 flex flex-col cursor-pointer transition-colors group" onclick="_compSelectFrame('${f.racquet.id}'); _compSwitchTab('rackets');">
-      <div class="flex justify-between items-start mb-2">
-        <span class="font-mono text-[10px] text-dc-storm uppercase tracking-widest group-hover:text-dc-platinum transition-colors">${f.racquet.identity}</span>
-        <span class="font-mono text-lg font-bold text-dc-accent">${f.obs.toFixed(1)}</span>
-      </div>
-      <div class="text-sm font-semibold text-dc-void dark:text-dc-platinum mb-1">${f.racquet.name.replace(/\\s+\\d+g$/, '')}</div>
-      <div class="font-mono text-[13px] text-dc-storm">${f.racquet.pattern} // ${f.racquet.strungWeight}g strung</div>
-    </div>`;
-  }).join('');
-  
-  // Calculate TWU composite score (similar to OBS for racquets)
-  const twScores = string.twScore || {};
-  const twuComposite = Math.round(
-    (twScores.control || 50) * 0.16 +
-    (twScores.spin || 50) * 0.13 +
-    (twScores.comfort || 50) * 0.13 +
-    (twScores.power || 50) * 0.11 +
-    (twScores.feel || 50) * 0.10 +
-    (twScores.durability || 50) * 0.07 +
-    (twScores.playabilityDuration || 50) * 0.06
-  );
-
-  main.innerHTML = `
-    <!-- String Hero Block -->
-    <div class="relative flex flex-col items-start mb-8">
-      
-      <div class="absolute top-6 right-6 md:top-8 md:right-8 flex flex-col items-end">
-        <span class="font-mono text-[13px] text-dc-storm tracking-[0.2em] mb-1">TWU SCORE</span>
-        <span class="font-mono text-5xl font-semibold leading-[0.85] text-dc-void dark:text-dc-platinum">
-          ${twuComposite}
-        </span>
-      </div>
-      
-      <h2 class="text-5xl md:text-[4rem] font-semibold tracking-tight text-dc-void dark:text-dc-platinum leading-none mb-0 pr-[120px] flex items-center gap-3 cursor-pointer group" onclick="_stringToggleHud()">
-        ${string.name}
-        <span class="text-2xl text-dc-red opacity-50 group-hover:opacity-100 transition-opacity">▼</span>
-      </h2>
-      
-      <div class="flex items-center gap-2 mt-4 font-mono text-[13px] flex-wrap">
-        <span class="text-dc-void dark:text-dc-platinum">${string.material.toUpperCase()}</span>
-        <span class="text-dc-accent opacity-60 text-[13px]">//</span>
-        <span class="text-dc-storm uppercase tracking-[0.15em]">${string.shape}</span>
-      </div>
-      
-      ${string.notes ? `<p class="max-w-[650px] mt-6 text-sm leading-relaxed text-dc-storm">${string.notes}</p>` : ''}
-      
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 w-full mt-12 pt-8 border-t border-dc-border">
-        <div class="flex flex-col-reverse gap-1.5">
-          <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${Math.round(string.stiffness)}</span>
-          <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">STIFFNESS (lb/in)</span>
-        </div>
-        <div class="flex flex-col-reverse gap-1.5">
-          <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${string.spinPotential || '—'}</span>
-          <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">SPIN POTENTIAL</span>
-        </div>
-        <div class="flex flex-col-reverse gap-1.5">
-          <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${string.tensionLoss || '—'}%</span>
-          <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">TENSION LOSS</span>
-        </div>
-        <div class="flex flex-col-reverse gap-1.5">
-          <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${string.stiffness > 200 ? 'High' : string.stiffness > 180 ? 'Med' : 'Low'}</span>
-          <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">SNAPBACK</span>
-        </div>
-      </div>
-
-      ${consoleHtml.length > 0 ? `<div class="flex flex-wrap gap-4 w-full mt-8 p-0">${consoleHtml.join('')}</div>` : ''}
-    </div>
-
-    <!-- String Telemetry -->
-    <div class="mb-12">
-      <h3 class="font-mono text-xs tracking-[0.15em] text-dc-void dark:text-dc-platinum uppercase mb-1">// STRING TELEMETRY</h3>
-      <p class="text-xs text-dc-storm mb-6 italic">Intrinsic characteristics from Tennis Warehouse testing</p>
-      ${batteryHtml}
-    </div>
-
-    <!-- String Modulator Panel (Frame Injection) -->
-    <div class="bg-transparent border border-dc-storm/30 p-5 md:p-6 mb-10 flex flex-col gap-5">
-      
-      <div class="flex justify-between items-center border-b border-dc-storm/30 pb-3 mb-1">
-        <span class="font-mono text-[13px] text-dc-accent uppercase tracking-[0.2em]">//FRAME INJECTION</span>
-        <div class="flex gap-4">
-          <button class="string-mod-mode-btn text-dc-accent border-dc-accent border-b-2 pb-1 font-mono text-[12px] uppercase tracking-widest hover:text-dc-platinum transition-colors" data-mode="fullbed" onclick="_stringSetModMode('fullbed')">Full Bed</button>
-          <button class="string-mod-mode-btn text-dc-storm border-transparent border-b-2 pb-1 font-mono text-[12px] uppercase tracking-widest hover:text-dc-platinum transition-colors" data-mode="hybrid" onclick="_stringSetModMode('hybrid')">Hybrid</button>
-        </div>
-      </div>
-      
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Frame Selector -->
-        <div class="flex flex-col gap-3">
-          <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">// SELECT FRAME</span>
-          <div id="string-mod-frame" data-placeholder="Select Frame..."></div>
-          <p class="text-[12px] text-dc-storm italic">Required: Choose a frame to inject this string into</p>
-        </div>
-        
-        <!-- OBS Preview -->
-        <div class="flex flex-col gap-3">
-          <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">// PROJECTED OBS</span>
-          <div id="string-mod-obs" class="flex items-center">
-            <span class="font-mono text-4xl font-bold text-dc-storm">—</span>
-          </div>
-        </div>
-      </div>
-      
-      <!-- String Selectors Row -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Mains String -->
-        <div class="flex flex-col gap-3">
-          <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">// MAINS STRING</span>
-          <div id="string-mod-mains-name" class="font-mono text-sm text-dc-void dark:text-dc-platinum py-2 border-b border-dc-storm/30">
-            Select a string first
-          </div>
-        </div>
-        
-        <!-- Crosses String (only visible in hybrid mode) -->
-        <div class="flex flex-col gap-3" id="string-mod-crosses-string-col" style="display:none;">
-          <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">// CROSSES STRING</span>
-          <div id="string-mod-crosses-string" data-placeholder="Same as mains..."></div>
-        </div>
-      </div>
-      
-      <!-- Gauge Selector (for mains, crosses uses default or mains gauge) -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="flex flex-col gap-3">
-          <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">// MAINS GAUGE</span>
-          <select id="string-mod-gauge" class="appearance-none bg-dc-white dark:bg-dc-void border-b border-dc-storm/50 text-dc-void dark:text-dc-platinum font-mono text-sm py-2 px-2 outline-none focus:border-dc-accent transition-colors cursor-pointer" onchange="_stringOnGaugeChange(this.value)">
-            <option value="">Default</option>
-          </select>
-        </div>
-        
-        <div class="flex flex-col gap-3" id="string-mod-crosses-gauge-col" style="display:none;">
-          <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">// CROSSES GAUGE</span>
-          <select id="string-mod-crosses-gauge" class="appearance-none bg-dc-white dark:bg-dc-void border-b border-dc-storm/50 text-dc-void dark:text-dc-platinum font-mono text-sm py-2 px-2 outline-none focus:border-dc-accent transition-colors cursor-pointer" onchange="_stringOnCrossesGaugeChange(this.value)">
-            <option value="">Same as mains</option>
-          </select>
-        </div>
-      </div>
-      
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-        <!-- Mains Tension -->
-        <div class="flex flex-col gap-3" id="string-mod-mains-col">
-          <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">// MAINS TENSION</span>
-          <input type="number" id="string-mod-mains-tension" class="bg-transparent border-b border-dc-storm/50 text-dc-void dark:text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors" value="52" min="30" max="70" step="1" oninput="_stringOnTensionChange('mains', this.value)">
-        </div>
-        
-        <!-- Crosses Tension (always visible, but label changes) -->
-        <div class="flex flex-col gap-3" id="string-mod-crosses-col">
-          <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]" id="string-mod-crosses-label">// CROSSES TENSION</span>
-          <input type="number" id="string-mod-crosses-tension" class="bg-transparent border-b border-dc-storm/50 text-dc-void dark:text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors" value="50" min="30" max="70" step="1" oninput="_stringOnTensionChange('crosses', this.value)">
-        </div>
-      </div>
-      
-      <!-- Live Preview Stats -->
-      <div class="border-t border-dc-storm/30 pt-4 mt-2">
-        <h4 class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em] mb-4">// LIVE PREVIEW</h4>
-        <div class="flex flex-col gap-2.5">
-          ${['spin', 'power', 'control', 'feel', 'comfort'].map(stat => `
-            <div class="flex items-center gap-4 group" data-stat="${stat}">
-              <span class="font-mono text-[13px] text-dc-storm group-hover:text-dc-platinum transition-colors uppercase tracking-[0.15em] w-20">${stat}</span>
-              <div class="flex flex-1 gap-[2px] h-1.5 items-center" id="string-track-${stat}">
-                ${Array(25).fill(0).map((_, i) => `<div class="flex-1 h-full rounded-[1px] bg-black/10 dark:bg-white/10"></div>`).join('')}
-              </div>
-              <span class="font-mono text-[13px] font-bold text-dc-void dark:text-dc-platinum w-16 text-right" id="string-val-${stat}">—</span>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-
-      <div class="flex gap-2 mt-2">
-        <button class="flex-1 font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-void transition-colors disabled:opacity-30 disabled:cursor-not-allowed" id="string-mod-add" disabled onclick="_stringAddToLoadout()">Add to Loadout</button>
-        <button class="flex-1 font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-platinum text-dc-void dark:text-dc-platinum hover:bg-dc-platinum hover:text-dc-void dark:hover:text-dc-void transition-colors disabled:opacity-30 disabled:cursor-not-allowed" id="string-mod-activate" disabled onclick="_stringSetActiveLoadout()">Set Active</button>
-        <button class="font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-storm/50 text-dc-storm hover:bg-dc-storm/10 hover:text-dc-void dark:hover:text-dc-platinum hover:border-dc-storm transition-colors" onclick="_stringClearPreview()">Clear</button>
-      </div>
-    </div>
-
-    <!-- Best Paired With (Frames) -->
-    <div class="mb-12">
-      <h3 class="font-mono text-xs tracking-[0.15em] text-dc-void dark:text-dc-platinum uppercase mb-1">// BEST PAIRED WITH</h3>
-      <p class="text-xs text-dc-storm mb-6 italic">Top performing frames with this string (52 lbs)</p>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">${framesHtml}</div>
-    </div>
-
-    <!-- Similar Strings -->
-    <div class="mb-12">
-      <h3 class="font-mono text-xs tracking-[0.15em] text-dc-void dark:text-dc-platinum uppercase mb-1">// SIMILAR STRINGS</h3>
-      <p class="text-xs text-dc-storm mb-6 italic">Alternatives with similar performance profiles</p>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">${similarHtml}</div>
-    </div>
-  `;
-  
-  // Initialize string modulator after rendering
-  _stringInitModulator(string);
+  if (typeof window._stringRenderMain === 'function' && window._stringRenderMain !== _stringRenderMain) {
+    return window._stringRenderMain(string);
+  }
 }
-
 // ============================================
 // STRING MODULATOR (Frame Injection)
 // ============================================
 
 function _stringInitModulator(string) {
-  // Reset state with current string
-  _stringModState.stringId = string.id;
-  _stringModState.crossesId = string.id; // Default to same string
-  _stringModState.gauge = '';
-  _stringModState.crossesGauge = '';
-  _stringModState.frameId = null;
-  _stringModState.baseStats = null;
-  _stringModState.previewStats = null;
-  
-  // Get available gauges for this string
-  const gauges = getGaugeOptions(string);
-  const gaugeOptions = gauges.map(g => `<option value="${g}" ${Math.abs(g - string.gaugeNum) < 0.01 ? 'selected' : ''}>${GAUGE_LABELS[g] || g + 'mm'}</option>`).join('');
-  
-  // Set mains string name display
-  const mainsNameEl = document.getElementById('string-mod-mains-name');
-  if (mainsNameEl) {
-    mainsNameEl.textContent = string.name;
-  }
-  
-  // Set default gauge selection for mains
-  const gaugeSelect = document.getElementById('string-mod-gauge');
-  if (gaugeSelect) {
-    gaugeSelect.innerHTML = '<option value="">Default</option>' + gaugeOptions;
-  }
-  
-  // Create searchable frame selector
-  const frameContainer = document.getElementById('string-mod-frame');
-  if (frameContainer && !ssInstances['string-mod-frame']) {
-    ssInstances['string-mod-frame'] = createSearchableSelect(frameContainer, {
-      type: 'racquet',
-      placeholder: 'Select Frame...',
-      value: '',
-      id: 'string-mod-frame-trigger',
-      onChange: (val) => {
-        _stringOnFrameChange(val);
-      }
-    });
-  } else if (frameContainer && ssInstances['string-mod-frame']) {
-    ssInstances['string-mod-frame'].setValue('');
-  }
-  
-  // Create searchable crosses string selector
-  const crossesContainer = document.getElementById('string-mod-crosses-string');
-  if (crossesContainer && !ssInstances['string-mod-crosses-string']) {
-    // Build options array from strings (excluding current)
-    const crossesOptions = STRINGS.filter(s => s.id !== string.id).map(s => ({
-      value: s.id,
-      label: s.name
-    }));
-    
-    ssInstances['string-mod-crosses-string'] = createSearchableSelect(crossesContainer, {
-      type: 'custom',
-      placeholder: 'Same as mains...',
-      value: '',
-      id: 'string-mod-crosses-string-trigger',
-      options: crossesOptions,
-      onChange: (val) => {
-        _stringOnCrossesStringChange(val);
-      }
-    });
-  } else if (crossesContainer && ssInstances['string-mod-crosses-string']) {
-    // Rebuild options with current string excluded
-    const crossesOptions = STRINGS.filter(s => s.id !== string.id).map(s => ({
-      value: s.id,
-      label: s.name
-    }));
-    ssInstances['string-mod-crosses-string'].setOptions(crossesOptions);
-    ssInstances['string-mod-crosses-string'].setValue('');
-  }
-  
-  // Populate crosses gauge selector (same options)
-  const crossesGaugeSelect = document.getElementById('string-mod-crosses-gauge');
-  if (crossesGaugeSelect) {
-    crossesGaugeSelect.innerHTML = '<option value="">Same as mains</option>' + gaugeOptions;
-  }
-  
-  // Reset mode to fullbed
-  _stringSetModMode('fullbed');
-  
-  // Reset preview
-  _stringClearPreview();
-  
-  // Reset OBS display
-  const obsEl = document.getElementById('string-mod-obs');
-  if (obsEl) {
-    obsEl.innerHTML = '<span class="font-mono text-4xl font-bold text-dc-storm">—</span>';
+  if (typeof window._stringInitModulator === 'function' && window._stringInitModulator !== _stringInitModulator) {
+    return window._stringInitModulator(string);
   }
 }
 
 function _stringSetModMode(mode) {
-  _stringModState.mode = mode;
-  
-  // Update button states
-  document.querySelectorAll('.string-mod-mode-btn').forEach(btn => {
-    const isActive = btn.dataset.mode === mode;
-    btn.classList.remove('text-dc-accent', 'border-dc-accent', 'text-dc-storm', 'border-transparent');
-    if (isActive) {
-      btn.classList.add('text-dc-accent', 'border-dc-accent');
-    } else {
-      btn.classList.add('text-dc-storm', 'border-transparent');
-    }
-  });
-  
-  // Show/hide crosses string selector in hybrid mode
-  const crossesStringCol = document.getElementById('string-mod-crosses-string-col');
-  const crossesGaugeCol = document.getElementById('string-mod-crosses-gauge-col');
-  if (crossesStringCol) {
-    crossesStringCol.style.display = mode === 'hybrid' ? 'block' : 'none';
+  if (typeof window._stringSetModMode === 'function' && window._stringSetModMode !== _stringSetModMode) {
+    return window._stringSetModMode(mode);
   }
-  if (crossesGaugeCol) {
-    crossesGaugeCol.style.display = mode === 'hybrid' ? 'block' : 'none';
-  }
-  
-  // Update crosses label
-  const crossesLabel = document.getElementById('string-mod-crosses-label');
-  if (crossesLabel) {
-    crossesLabel.textContent = mode === 'hybrid' ? '// CROSSES TENSION' : '// CROSSES TENSION';
-  }
-  
-  _stringUpdatePreview();
 }
 
 function _stringOnCrossesStringChange(crossesId) {
-  _stringModState.crossesId = crossesId || _stringModState.stringId;
-  _stringUpdatePreview();
+  if (typeof window._stringOnCrossesStringChange === 'function' && window._stringOnCrossesStringChange !== _stringOnCrossesStringChange) {
+    return window._stringOnCrossesStringChange(crossesId);
+  }
 }
 
 function _stringOnCrossesGaugeChange(gauge) {
-  _stringModState.crossesGauge = gauge || _stringModState.gauge;
-  _stringUpdatePreview();
+  if (typeof window._stringOnCrossesGaugeChange === 'function' && window._stringOnCrossesGaugeChange !== _stringOnCrossesGaugeChange) {
+    return window._stringOnCrossesGaugeChange(gauge);
+  }
 }
 
 function _stringOnFrameChange(frameId) {
-  _stringModState.frameId = frameId;
-  
-  if (frameId) {
-    const racquet = RACQUETS.find(r => r.id === frameId);
-    if (racquet) {
-      // Set default tensions based on frame's tension range
-      const midTension = Math.round((racquet.tensionRange[0] + racquet.tensionRange[1]) / 2);
-      _stringModState.mainsTension = midTension;
-      _stringModState.crossesTension = midTension - 2;
-      
-      // Update tension inputs
-      const mainsInput = document.getElementById('string-mod-mains-tension');
-      const crossesInput = document.getElementById('string-mod-crosses-tension');
-      if (mainsInput) mainsInput.value = midTension;
-      if (crossesInput) crossesInput.value = midTension - 2;
-      
-      // Calculate base stats
-      _stringModState.baseStats = calcFrameBase(racquet);
-      
-      // Store base OBS for delta calculation
-      const fb = _stringModState.baseStats;
-      window._compBaseObs = Math.round(
-        fb.spin * 0.15 +
-        fb.power * 0.12 +
-        fb.control * 0.18 +
-        fb.comfort * 0.12 +
-        fb.feel * 0.10 +
-        fb.stability * 0.12 +
-        fb.forgiveness * 0.08 +
-        fb.maneuverability * 0.08
-      );
-    }
-  } else {
-    _stringModState.baseStats = null;
-    window._compBaseObs = null;
+  if (typeof window._stringOnFrameChange === 'function' && window._stringOnFrameChange !== _stringOnFrameChange) {
+    return window._stringOnFrameChange(frameId);
   }
-  
-  _stringUpdatePreview();
 }
 
 function _stringOnGaugeChange(gauge) {
-  _stringModState.gauge = gauge;
-  _stringUpdatePreview();
+  if (typeof window._stringOnGaugeChange === 'function' && window._stringOnGaugeChange !== _stringOnGaugeChange) {
+    return window._stringOnGaugeChange(gauge);
+  }
 }
 
 function _stringOnTensionChange(type, value) {
-  if (type === 'mains') {
-    _stringModState.mainsTension = parseInt(value) || 52;
-  } else {
-    _stringModState.crossesTension = parseInt(value) || 50;
+  if (typeof window._stringOnTensionChange === 'function' && window._stringOnTensionChange !== _stringOnTensionChange) {
+    return window._stringOnTensionChange(type, value);
   }
-  _stringUpdatePreview();
 }
 
 function _stringUpdatePreview() {
-  const { stringId, crossesId, frameId, mode, gauge, crossesGauge, mainsTension, crossesTension, baseStats } = _stringModState;
-  
-  // Need both string and frame selected
-  if (!stringId || !frameId || !baseStats) {
-    _stringClearPreview();
-    return;
-  }
-  
-  const mainsString = STRINGS.find(s => s.id === stringId);
-  const racquet = RACQUETS.find(r => r.id === frameId);
-  if (!mainsString || !racquet) {
-    _stringClearPreview();
-    return;
-  }
-  
-  // Get crosses string (different in hybrid, same in fullbed)
-  const crossesString = (mode === 'hybrid' && crossesId && crossesId !== stringId) 
-    ? (STRINGS.find(s => s.id === crossesId) || mainsString)
-    : mainsString;
-  
-  // Apply gauge modifiers
-  const mainsWithGauge = gauge ? applyGaugeModifier(mainsString, parseFloat(gauge)) : mainsString;
-  const crossesWithGauge = (mode === 'hybrid' && crossesGauge) 
-    ? applyGaugeModifier(crossesString, parseFloat(crossesGauge))
-    : (crossesString === mainsString ? mainsWithGauge : crossesString);
-  
-  // Build config
-  const cfg = mode === 'hybrid' ? {
-    isHybrid: true,
-    mains: mainsWithGauge,
-    crosses: crossesWithGauge,
-    mainsTension,
-    crossesTension
-  } : {
-    isHybrid: false,
-    string: mainsWithGauge,
-    mainsTension,
-    crossesTension
-  };
-  
-  // Run prediction
-  const previewStats = predictSetup(racquet, cfg);
-  if (!previewStats) return;
-  
-  _stringModState.previewStats = previewStats;
-  
-  // Update battery bars with before/after
-  _stringRenderPreviewBars(baseStats, previewStats);
-  
-  // Enable buttons
-  const addBtn = document.getElementById('string-mod-add');
-  const activateBtn = document.getElementById('string-mod-activate');
-  if (addBtn) addBtn.disabled = false;
-  if (activateBtn) activateBtn.disabled = false;
-  
-  // Update OBS display
-  const tCtx = buildTensionContext(cfg, racquet);
-  const obs = computeCompositeScore(previewStats, tCtx);
-  const obsEl = document.getElementById('string-mod-obs');
-  if (obsEl) {
-    obsEl.innerHTML = `<span class="font-mono text-4xl font-bold text-dc-accent">${obs.toFixed(1)}</span>`;
-  }
-  
-  // Update delta display on racket page (if visible)
-  const baseObs = window._compBaseObs || Math.round(
-    baseStats.spin * 0.15 +
-    baseStats.power * 0.12 +
-    baseStats.control * 0.18 +
-    baseStats.comfort * 0.12 +
-    baseStats.feel * 0.10 +
-    baseStats.stability * 0.12 +
-    baseStats.forgiveness * 0.08 +
-    baseStats.maneuverability * 0.08
-  );
-  const delta = Math.round((obs - baseObs) * 10) / 10;
-  
-  // Update delta on racket page (if visible)
-  const main = document.getElementById('comp-main');
-  let deltaEl = document.getElementById('comp-string-delta');
-  let deltaValEl = document.getElementById('comp-string-delta-value');
-  if (!deltaEl && main) {
-    deltaEl = main.querySelector('#comp-string-delta');
-    deltaValEl = main.querySelector('#comp-string-delta-value');
-  }
-  if (deltaEl && deltaValEl && delta > 0) {
-    deltaValEl.textContent = delta;
-    deltaEl.classList.remove('opacity-0');
-  } else if (deltaEl) {
-    deltaEl.classList.add('opacity-0');
+  if (typeof window._stringUpdatePreview === 'function' && window._stringUpdatePreview !== _stringUpdatePreview) {
+    return window._stringUpdatePreview();
   }
 }
 
 function _stringRenderPreviewBars(baseStats, previewStats) {
-  const statKeys = ['spin', 'power', 'control', 'launch', 'feel', 'comfort', 'stability', 'forgiveness', 'maneuverability'];
-  const segments = 25;
-  
-  statKeys.forEach(k => {
-    const baseVal = baseStats[k] != null ? Math.round(baseStats[k]) : 50;
-    const previewVal = previewStats[k] != null ? Math.round(previewStats[k]) : 50;
-    const baseFilled = Math.round((baseVal / 100) * segments);
-    const previewFilled = Math.round((previewVal / 100) * segments);
-    
-    const track = document.getElementById(`string-track-${k}`);
-    const valEl = document.getElementById(`string-val-${k}`);
-    if (!track) return;
-    
-    // Rebuild segments with preview state
-    let segmentsHtml = '';
-    for (let i = 0; i < segments; i++) {
-      let bgClass = 'bg-black/10 dark:bg-white/10';
-      
-      if (i < baseFilled) {
-        bgClass = 'bg-dc-void dark:bg-dc-platinum';
-      }
-      if (i < previewFilled && previewVal > baseVal) {
-        bgClass = 'bg-dc-red';
-      } else if (i >= previewFilled && i < baseFilled && previewVal < baseVal) {
-        bgClass = 'bg-dc-red/40';
-      }
-      
-      segmentsHtml += `<div class="flex-1 h-full rounded-[1px] transition-colors duration-150 ${bgClass}"></div>`;
-    }
-    track.innerHTML = segmentsHtml;
-    
-    // Update value display
-    if (valEl) {
-      const diff = previewVal - baseVal;
-      let diffColor = 'text-dc-storm';
-      if (diff > 0) diffColor = 'text-dc-red';
-      if (diff < 0) diffColor = 'text-dc-accent';
-      
-      valEl.innerHTML = `
-        <span class="text-dc-storm">${baseVal}</span>
-        <span class="text-dc-storm mx-1">→</span>
-        <span class="${diffColor}">${previewVal}</span>
-      `;
-    }
-  });
+  if (typeof window._stringRenderPreviewBars === 'function' && window._stringRenderPreviewBars !== _stringRenderPreviewBars) {
+    return window._stringRenderPreviewBars(baseStats, previewStats);
+  }
 }
 
 function _stringClearPreview() {
-  const { baseStats } = _stringModState;
-  const segments = 25;
-  
-  const statKeys = ['spin', 'power', 'control', 'launch', 'feel', 'comfort', 'stability', 'forgiveness', 'maneuverability'];
-  
-  statKeys.forEach(k => {
-    const baseVal = baseStats && baseStats[k] != null ? Math.round(baseStats[k]) : 50;
-    const baseFilled = Math.round((baseVal / 100) * segments);
-    
-    const track = document.getElementById(`string-track-${k}`);
-    const valEl = document.getElementById(`string-val-${k}`);
-    if (!track) return;
-    
-    let segmentsHtml = '';
-    for (let i = 0; i < segments; i++) {
-      const bgClass = i < baseFilled ? 'bg-dc-void dark:bg-dc-platinum' : 'bg-black/10 dark:bg-white/10';
-      segmentsHtml += `<div class="flex-1 h-full rounded-[1px] transition-colors duration-150 ${bgClass}"></div>`;
-    }
-    track.innerHTML = segmentsHtml;
-    
-    if (valEl) {
-      valEl.innerHTML = `<span class="text-dc-void dark:text-dc-platinum">${baseVal}</span>`;
-    }
-  });
-  
-  // Disable add button
-  const addBtn = document.getElementById('string-mod-add');
-  if (addBtn) addBtn.disabled = true;
-  
-  // Clear OBS display
-  const obsEl = document.getElementById('string-mod-obs');
-  if (obsEl) obsEl.innerHTML = '<span class="font-mono text-4xl font-bold text-dc-storm">—</span>';
-  
-  // Hide delta display on racket page
-  const deltaEl = document.getElementById('comp-string-delta');
-  if (deltaEl) deltaEl.classList.add('opacity-0');
+  if (typeof window._stringClearPreview === 'function' && window._stringClearPreview !== _stringClearPreview) {
+    return window._stringClearPreview();
+  }
 }
 
 function _stringAddToLoadout() {
-  const { stringId, crossesId, frameId, mode, mainsTension, crossesTension } = _stringModState;
-
-  if (!stringId || !frameId) {
-    alert('Please select both a string and a frame');
-    return;
-  }
-
-  const isHybrid = mode === 'hybrid' && crossesId && crossesId !== stringId;
-
-  const opts = {
-    source: 'string-compendium',
-    crossesTension: isHybrid ? crossesTension : mainsTension,
-  };
-
-  if (isHybrid) {
-    opts.isHybrid   = true;
-    opts.mainsId    = stringId;
-    opts.crossesId  = crossesId;
-  }
-
-  const lo = createLoadout(frameId, stringId, mainsTension, opts);
-  if (!lo) return;
-
-  saveLoadout(lo);
-
-  // Visual feedback
-  const addBtn = document.getElementById('string-mod-add');
-  if (addBtn) {
-    const original = addBtn.textContent;
-    addBtn.textContent = 'Saved ✓';
-    addBtn.disabled = true;
-    setTimeout(function() {
-      addBtn.textContent = original;
-      addBtn.disabled = false;
-    }, 1500);
+  if (typeof window._stringAddToLoadout === 'function' && window._stringAddToLoadout !== _stringAddToLoadout) {
+    return window._stringAddToLoadout();
   }
 }
 
 function _stringSetActiveLoadout() {
-  const { stringId, crossesId, frameId, mode, mainsTension, crossesTension } = _stringModState;
-
-  if (!stringId || !frameId) {
-    alert('Please select both a string and a frame');
-    return;
-  }
-
-  const isHybrid = mode === 'hybrid' && crossesId && crossesId !== stringId;
-
-  const opts = {
-    source: 'string-compendium',
-    crossesTension: isHybrid ? crossesTension : mainsTension,
-  };
-
-  if (isHybrid) {
-    opts.isHybrid  = true;
-    opts.mainsId   = stringId;
-    opts.crossesId = crossesId;
-  }
-
-  // createLoadout computes stats, obs, identity — the full model
-  const lo = createLoadout(frameId, stringId, mainsTension, opts);
-  if (!lo) return;
-
-  // Sync _stringModState so returning to Strings tab is consistent
-  _stringModState.stringId      = stringId;
-  _stringModState.crossesId     = isHybrid ? crossesId : stringId;
-  _stringModState.frameId       = frameId;
-  _stringModState.mode          = isHybrid ? 'hybrid' : 'fullbed';
-  _stringModState.mainsTension  = mainsTension;
-  _stringModState.crossesTension = isHybrid ? crossesTension : mainsTension;
-
-  // Save + activate — activateLoadout calls hydrateDock which
-  // syncs dock editor selects, then renderDashboard reads from
-  // the now-complete loadout model via getSetupFromLoadout()
-  saveLoadout(lo);
-  activateLoadout(lo);
-  
-  // Switch to overview like Frame Compendium
-  switchMode('overview');
-  renderDashboard();
-  
-  // Visual feedback
-  const activateBtn = document.getElementById('string-mod-activate');
-  if (activateBtn) {
-    const originalText = activateBtn.textContent;
-    activateBtn.textContent = 'Active ✓';
-    activateBtn.disabled = true;
-    setTimeout(() => {
-      activateBtn.textContent = originalText;
-      activateBtn.disabled = false;
-    }, 1500);
+  if (typeof window._stringSetActiveLoadout === 'function' && window._stringSetActiveLoadout !== _stringSetActiveLoadout) {
+    return window._stringSetActiveLoadout();
   }
 }
 
@@ -7081,33 +2973,8 @@ function _compGenerateBuildReason(build, frameStats) {
 }
 
 function initCompendium() {
-  // Populate brand filter
-  const brandSel = document.getElementById('comp-filter-brand');
-  const brands = [...new Set(RACQUETS.map(r => _extractBrand(r.name)))].sort();
-  brands.forEach(b => {
-    const o = document.createElement('option');
-    o.value = b;
-    o.textContent = b;
-    brandSel.appendChild(o);
-  });
-
-  // Populate frame list
-  _compRenderRoster();
-
-  // Wire search + filter events
-  document.getElementById('comp-search').addEventListener('input', _compRenderRoster);
-  document.getElementById('comp-filter-brand').addEventListener('change', _compRenderRoster);
-  document.getElementById('comp-filter-pattern').addEventListener('change', _compRenderRoster);
-  document.getElementById('comp-filter-stiffness').addEventListener('change', _compRenderRoster);
-  document.getElementById('comp-filter-headsize').addEventListener('change', _compRenderRoster);
-  document.getElementById('comp-filter-weight').addEventListener('change', _compRenderRoster);
-
-  // Auto-select active racket from loadout, or first frame as fallback
-  const setup = getCurrentSetup();
-  if (setup && setup.racquet) {
-    _compSelectFrame(setup.racquet.id);
-  } else if (RACQUETS.length > 0) {
-    _compSelectFrame(RACQUETS[0].id);
+  if (typeof window.initCompendium === 'function' && window.initCompendium !== initCompendium) {
+    return window.initCompendium();
   }
 }
 
@@ -7125,332 +2992,34 @@ function _extractBrand(name) {
 }
 
 function _compGetFilteredRacquets() {
-  const search = (document.getElementById('comp-search').value || '').toLowerCase();
-  const brand = document.getElementById('comp-filter-brand').value;
-  const pattern = document.getElementById('comp-filter-pattern').value;
-  const stiffness = document.getElementById('comp-filter-stiffness').value;
-  const headsize = document.getElementById('comp-filter-headsize').value;
-  const weight = document.getElementById('comp-filter-weight').value;
-
-  return RACQUETS.filter(r => {
-    if (search && !r.name.toLowerCase().includes(search)) return false;
-    if (brand && !r.name.startsWith(brand)) return false;
-    if (pattern && r.pattern !== pattern) return false;
-    if (stiffness === 'soft' && r.stiffness > 59) return false;
-    if (stiffness === 'medium' && (r.stiffness < 60 || r.stiffness > 65)) return false;
-    if (stiffness === 'stiff' && r.stiffness < 66) return false;
-    if (headsize === '102' && r.headSize < 102) return false;
-    if (headsize && headsize !== '102' && r.headSize !== parseInt(headsize)) return false;
-    // Fix 4: Weight filter (strungWeight in grams)
-    if (weight === 'ultralight' && r.strungWeight >= 285) return false;
-    if (weight === 'light' && (r.strungWeight < 285 || r.strungWeight > 305)) return false;
-    if (weight === 'medium' && (r.strungWeight < 305 || r.strungWeight > 320)) return false;
-    if (weight === 'heavy' && (r.strungWeight < 320 || r.strungWeight > 340)) return false;
-    if (weight === 'tour' && r.strungWeight <= 340) return false;
-    return true;
-  });
+  if (typeof window._compGetFilteredRacquets === 'function' && window._compGetFilteredRacquets !== _compGetFilteredRacquets) {
+    return window._compGetFilteredRacquets();
+  }
 }
 
 function _compRenderRoster() {
-  const list = document.getElementById('comp-frame-list');
-  const racquets = _compGetFilteredRacquets();
-
-  list.innerHTML = racquets.map(r => {
-    const isActive = r.id === _compSelectedRacquetId;
-    const specs = `${r.strungWeight}g strung · ${r.stiffness} RA · ${r.pattern}`;
-    const baseClasses = "bg-transparent border text-left flex flex-col justify-between gap-6 transition-all duration-200 cursor-pointer p-5";
-    const borderClasses = isActive 
-      ? "border-dc-accent" 
-      : "border-dc-platinum-dim hover:border-dc-platinum";
-    return `<button class="${baseClasses} ${borderClasses}" data-id="${r.id}" onclick="_compSelectFrame('${r.id}')">
-      <div class="flex justify-between items-start gap-2">
-        <span class="text-lg font-semibold leading-tight tracking-tight text-dc-void dark:text-dc-platinum">${r.name.replace(/\\s+\\d+g$/, '')}</span>
-        <span class="font-mono text-[13px] tracking-[0.15em] text-dc-platinum-dim mt-1">${r.year}</span>
-      </div>
-      <div class="flex flex-col gap-1">
-        <span class="font-mono text-[13px] uppercase tracking-[0.15em] text-dc-accent">${r.identity || r.pattern}</span>
-        <span class="font-mono text-[13px] font-semibold text-dc-void dark:text-dc-platinum">${specs}</span>
-      </div>
-    </button>`;
-  }).join('');
+  if (typeof window._compRenderRoster === 'function' && window._compRenderRoster !== _compRenderRoster) {
+    return window._compRenderRoster();
+  }
 }
 
 function _compSelectFrame(racquetId) {
-  // Auto-close HUD on selection
-  const hud = document.getElementById('comp-hud');
-  if (hud) {
-    hud.classList.remove('active');
-    document.body.style.overflow = '';
-  }
-  
-  _compSelectedRacquetId = racquetId;
-  const racquet = RACQUETS.find(r => r.id === racquetId);
-  if (!racquet) return;
-
-  // Highlight in roster (Tailwind class injection)
-  document.querySelectorAll('#comp-frame-list > button').forEach(el => {
-    const isActive = el.dataset.id === racquetId;
-    el.classList.remove('border-dc-accent', 'border-dc-platinum-dim');
-    el.classList.add(isActive ? 'border-dc-accent' : 'border-dc-platinum-dim');
-  });
-
-  // Transition: fade out → render → fade in
-  var main = document.getElementById('comp-main');
-  if (main) {
-    main.style.opacity = '0.3';
-    main.style.transition = 'opacity 150ms ease-out';
-    setTimeout(function() {
-      _compRenderMain(racquet);
-      main.style.opacity = '1';
-    }, 150);
-  } else {
-    _compRenderMain(racquet);
+  if (typeof window._compSelectFrame === 'function' && window._compSelectFrame !== _compSelectFrame) {
+    return window._compSelectFrame(racquetId);
   }
 }
 
 // Sync racket bible with active loadout (called when switching back to compendium mode)
 function _compSyncWithActiveLoadout() {
-  const setup = getCurrentSetup();
-  if (!setup || !setup.racquet) return;
-  
-  const activeRacquetId = setup.racquet.id;
-  
-  // If already showing the active racket, just re-init the string injector
-  if (_compSelectedRacquetId === activeRacquetId) {
-    _compInitStringInjector(setup.racquet);
-  } else {
-    // Switch to the active racket
-    _compSelectFrame(activeRacquetId);
+  if (typeof window._compSyncWithActiveLoadout === 'function' && window._compSyncWithActiveLoadout !== _compSyncWithActiveLoadout) {
+    return window._compSyncWithActiveLoadout();
   }
 }
 
 function _compRenderMain(racquet) {
-  const main = document.getElementById('comp-main');
-  const frameBase = calcFrameBase(racquet);
-  const beamStr = Array.isArray(racquet.beamWidth) ? racquet.beamWidth.join('/') + 'mm' : racquet.beamWidth + 'mm';
-  
-  // Sync _stringModState so String Modulator has baseStats for delta calculation
-  _stringModState.frameId = racquet.id;
-  _stringModState.baseStats = frameBase;
-
-  // Generate or cache top builds
-  if (!_compendiumBuildCache[racquet.id]) {
-    _compendiumBuildCache[racquet.id] = _compGenerateTopBuilds(racquet, 6);
+  if (typeof window._compRenderMain === 'function' && window._compRenderMain !== _compRenderMain) {
+    return window._compRenderMain(racquet);
   }
-  const builds = _compendiumBuildCache[racquet.id];
-
-  // Sort builds by current key
-  const sorted = [...builds].sort((a, b) => {
-    if (_compSortKey === 'score') return b.score - a.score;
-    return (b.stats[_compSortKey] || 0) - (a.stats[_compSortKey] || 0);
-  });
-  _compCurrentBuilds = sorted; // store for index-based action handlers
-
-  // Generate hero console output (Tailwind)
-  const pills = _compGenerateHeroPills(frameBase, racquet);
-  const consoleHtml = [];
-  pills.bestFor.forEach(p => consoleHtml.push(`<span class="font-mono text-[13px] font-bold tracking-[0.05em] uppercase text-dc-void dark:text-dc-platinum">[+] ${p.toUpperCase()}</span>`));
-  pills.watchOut.forEach(p => consoleHtml.push(`<span class="font-mono text-[13px] font-bold tracking-[0.05em] uppercase text-dc-red">[-] ${p.toUpperCase()}</span>`));
-
-  // Generate Base Frame Profile Stats (Tailwind Battery UI with preview support)
-  let statsHtml = '<div class="flex flex-col gap-6">';
-  const statGroups = [
-    { title: 'Attack', stats: [ {id: 'spin', label: 'Spin'}, {id: 'power', label: 'Power'}, {id: 'launch', label: 'Launch'} ] },
-    { title: 'Defense', stats: [ {id: 'control', label: 'Control'}, {id: 'stability', label: 'Stability'}, {id: 'forgiveness', label: 'Forgiveness'} ] },
-    { title: 'Touch', stats: [ {id: 'feel', label: 'Feel'}, {id: 'comfort', label: 'Comfort'}, {id: 'maneuverability', label: 'Maneuverability'} ] }
-  ];
-
-  statGroups.forEach(g => {
-    statsHtml += `<div class="flex flex-col">
-      <h4 class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em] border-b border-dc-border pb-2 mb-3">${g.title}</h4>
-      <div class="flex flex-col gap-2.5">`;
-    
-    g.stats.forEach(s => {
-      let val = Math.round(frameBase[s.id]);
-      let pct = Math.max(0, Math.min(100, val));
-      
-      // Battery segment generator (25 segments for preview granularity)
-      const totalSegments = 25;
-      const filledSegments = Math.round((pct / 100) * totalSegments);
-      
-      let batteryHtml = `<div class="flex flex-1 gap-[2px] h-1.5 items-center" id="comp-track-${s.id}" data-base="${val}">`;
-      for(let i = 0; i < totalSegments; i++) {
-        const bgClass = i < filledSegments 
-          ? 'bg-dc-void dark:bg-dc-platinum'
-          : 'bg-black/10 dark:bg-white/10';
-        
-        batteryHtml += `<div class="flex-1 h-full rounded-[1px] transition-colors duration-150 ${bgClass}" data-seg="${i}"></div>`;
-      }
-      batteryHtml += '</div>';
-
-      statsHtml += `
-        <div class="flex items-center gap-4 group" data-stat="${s.id}">
-          <span class="font-mono text-[13px] text-dc-storm group-hover:text-dc-platinum transition-colors uppercase tracking-[0.15em] w-28">${s.label}</span>
-          ${batteryHtml}
-          <span class="font-mono text-[13px] font-bold text-dc-void dark:text-dc-platinum w-8 text-right" id="comp-val-${s.id}">${val}</span>
-        </div>`;
-    });
-    statsHtml += `</div></div>`;
-  });
-  statsHtml += '</div>';
-
-  // Sort tabs
-  const sortOptions = [
-    { key: 'score', label: 'OBS' },
-    { key: 'spin', label: 'Spin' },
-    { key: 'control', label: 'Control' },
-    { key: 'power', label: 'Power' },
-    { key: 'comfort', label: 'Comfort' },
-    { key: 'durability', label: 'Durability' }
-  ];
-  const sortTabsHtml = sortOptions.map(s => {
-    const isActive = _compSortKey === s.key;
-    const baseClasses = "font-mono text-[12px] uppercase tracking-[0.1em] pb-2 transition-colors";
-    const activeClasses = isActive 
-      ? "text-dc-accent border-b-2 border-dc-accent -mb-[9px] pb-[7px]" 
-      : "text-dc-storm hover:text-dc-platinum";
-    return `<button class="${baseClasses} ${activeClasses}" onclick="_compSetSort('${s.key}')">${s.label}</button>`;
-  }).join('');
-
-  // Build cards - pass frameBase for reason generation
-  const cardsHtml = sorted.map((b, i) => _compRenderBuildCard(b, i, racquet, frameBase)).join('');
-
-  main.innerHTML = `
-    <!-- Hero Block -->
-    <div class="relative flex flex-col items-start mb-8">
-      
-      <div class="absolute top-6 right-6 md:top-8 md:right-8 flex flex-col items-end">
-        <span class="font-mono text-[13px] text-dc-storm tracking-[0.2em] mb-1">BASE SCORE</span>
-        <span class="font-mono text-5xl font-semibold leading-[0.85] text-dc-void dark:text-dc-platinum">
-          ${(function() {
-            const fb = calcFrameBase(racquet);
-            const baseObs = Math.round(
-              fb.spin * 0.15 +
-              fb.power * 0.12 +
-              fb.control * 0.18 +
-              fb.comfort * 0.12 +
-              fb.feel * 0.10 +
-              fb.stability * 0.12 +
-              fb.forgiveness * 0.08 +
-              fb.maneuverability * 0.08
-            );
-            // Store baseObs globally for delta calculation
-            window._compBaseObs = baseObs;
-            return baseObs;
-          })()}<span class="text-xl text-dc-storm ml-1">OBS</span>
-        </span>
-        <!-- String injection delta - updated by string modulator -->
-        <div id="comp-string-delta" class="flex items-center gap-1 mt-1 opacity-0 transition-opacity duration-200">
-          <span class="font-mono text-lg font-bold text-dc-red">+</span>
-          <span class="font-mono text-lg font-bold text-dc-red" id="comp-string-delta-value">0</span>
-          <span class="font-mono text-xs text-dc-storm/60 ml-0.5">OBS</span>
-        </div>
-      </div>
-      
-      <h2 class="text-5xl md:text-[4rem] font-semibold tracking-tight text-dc-void dark:text-dc-platinum leading-none mb-0 pr-[120px] flex items-center gap-3 cursor-pointer group" onclick="_compToggleHud()">
-        ${racquet.name.replace(/\s+\d+g$/, ' ' + (Math.round((racquet.strungWeight - 13) / 5) * 5) + 'g')}
-        <span class="text-2xl text-dc-red opacity-50 group-hover:opacity-100 transition-opacity">▼</span>
-      </h2>
-      
-      <div class="flex items-center gap-2 mt-4 font-mono text-[13px] flex-wrap">
-        <span class="text-dc-void dark:text-dc-platinum">${racquet.year}</span>
-        <span class="text-dc-accent opacity-60 text-[13px]">//</span>
-        <span class="text-dc-storm uppercase tracking-[0.15em]">${racquet.identity || ''}</span>
-      </div>
-      
-      ${racquet.notes ? `<p class="max-w-[650px] mt-6 text-sm leading-relaxed text-dc-storm">${racquet.notes}</p>` : ''}
-      
-      <div class="grid grid-cols-3 md:grid-cols-6 gap-8 w-full mt-12 pt-8 border-t border-dc-border">
-        <div class="flex flex-col-reverse gap-1.5">
-          <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${racquet.swingweight}</span>
-          <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">SWINGWEIGHT</span>
-        </div>
-        <div class="flex flex-col-reverse gap-1.5">
-          <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${racquet.stiffness}</span>
-          <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">STIFFNESS</span>
-        </div>
-        <div class="flex flex-col-reverse gap-1.5">
-          <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${racquet.pattern}</span>
-          <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">PATTERN</span>
-        </div>
-        <div class="flex flex-col-reverse gap-1.5">
-          <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${racquet.headSize}</span>
-          <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">HEAD SIZE</span>
-        </div>
-        <div class="flex flex-col-reverse gap-1.5">
-          <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${racquet.balancePts}</span>
-          <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">BALANCE</span>
-        </div>
-        <div class="flex flex-col-reverse gap-1.5">
-          <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${racquet.tensionRange[0]}–${racquet.tensionRange[1]}</span>
-          <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">TENSION</span>
-        </div>
-      </div>
-
-      ${consoleHtml.length > 0 ? `<div class="flex flex-wrap gap-4 w-full mt-8 p-0">${consoleHtml.join('')}</div>` : ''}
-    </div>
-
-    <!-- String Modulator Panel -->
-    <div class="bg-transparent border border-dc-storm/30 p-5 md:p-6 mb-10 flex flex-col gap-5">
-      
-      <div class="flex justify-between items-center border-b border-dc-storm/30 pb-3 mb-1">
-        <span class="font-mono text-[13px] text-dc-accent uppercase tracking-[0.2em]">//STRING MODULATOR</span>
-        <div class="flex gap-4">
-          <button class="comp-inject-mode-btn text-dc-accent border-dc-accent border-b-2 pb-1 font-mono text-[12px] uppercase tracking-widest hover:text-dc-platinum transition-colors" data-mode="fullbed" onclick="_compSetInjectMode('fullbed')">Full Bed</button>
-          <button class="comp-inject-mode-btn text-dc-storm border-transparent border-b-2 pb-1 font-mono text-[12px] uppercase tracking-widest hover:text-dc-platinum transition-colors" data-mode="hybrid" onclick="_compSetInjectMode('hybrid')">Hybrid</button>
-        </div>
-      </div>
-      
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-        <!-- Mains Column -->
-        <div class="flex flex-col gap-3" id="comp-mains-col">
-          <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]" id="comp-mains-label">// STRING</span>
-          <div id="comp-mains-select" class="comp-string-select-container"></div>
-          <div class="grid grid-cols-2 gap-4">
-            <select class="appearance-none bg-transparent border-b border-dc-storm/50 text-dc-void dark:text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%2712%27%20height=%2712%27%20viewBox=%270%200%2024%2024%27%20fill=%27none%27%20stroke=%27%235E666C%27%20stroke-width=%272%27%20stroke-linecap=%27round%27%20stroke-linejoin=%27round%27%3E%3Cpolyline%20points=%276%209%2012%2015%2018%209%27%3E%3C/polyline%3E%3C/svg%3E')] bg-no-repeat bg-right pr-5 cursor-pointer" id="comp-mains-gauge">
-              <option value="">Gauge...</option>
-            </select>
-            <input type="number" class="bg-transparent border-b border-dc-storm/50 text-dc-void dark:text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors" id="comp-mains-tension" value="52" min="30" max="70" step="1">
-          </div>
-        </div>
-        
-        <!-- Crosses Column (hidden string selector in fullbed) -->
-        <div class="flex flex-col gap-3" id="comp-crosses-col">
-          <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]" id="comp-crosses-label">// CROSSES</span>
-          <div id="comp-crosses-select" class="comp-string-select-container" style="display:none;"></div>
-          <div class="grid grid-cols-2 gap-4">
-            <select class="appearance-none bg-transparent border-b border-dc-storm/50 text-dc-void dark:text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%2712%27%20height=%2712%27%20viewBox=%270%200%2024%2024%27%20fill=%27none%27%20stroke=%27%235E666C%27%20stroke-width=%272%27%20stroke-linecap=%27round%27%20stroke-linejoin=%27round%27%3E%3Cpolyline%20points=%276%209%2012%2015%2018%209%27%3E%3C/polyline%3E%3C/svg%3E')] bg-no-repeat bg-right pr-5 cursor-pointer" id="comp-crosses-gauge">
-              <option value="">Gauge...</option>
-            </select>
-            <input type="number" class="bg-transparent border-b border-dc-storm/50 text-dc-void dark:text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors" id="comp-crosses-tension" value="50" min="30" max="70" step="1">
-          </div>
-        </div>
-      </div>
-
-      <div class="flex gap-2 mt-2">
-        <button class="flex-1 font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-storm/50 text-dc-void dark:text-dc-platinum hover:bg-dc-storm/20 hover:border-dc-storm transition-colors disabled:opacity-30 disabled:cursor-not-allowed" id="comp-inject-apply" disabled onclick="_compApplyInjection()">Apply</button>
-        <button class="font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-storm/50 text-dc-storm hover:bg-dc-storm/10 hover:text-dc-void dark:hover:text-dc-platinum hover:border-dc-storm transition-colors" onclick="_compClearInjection()">Clear</button>
-      </div>
-    </div>
-
-    <div class="mb-12">
-      <h3 class="font-mono text-xs tracking-[0.15em] text-dc-void dark:text-dc-platinum uppercase mb-1">// BASE FRAME PROFILE</h3>
-      <p class="text-xs text-dc-storm mb-6 italic">Frame-only characteristics before string influence</p>
-      ${statsHtml}
-    </div>
-
-    <!-- Top Builds -->
-    <div class="mb-12">
-      <div class="flex items-center justify-between mb-4 pb-2 border-b border-dc-border/50">
-        <h3 class="font-mono text-xs tracking-[0.15em] text-dc-void dark:text-dc-platinum uppercase">//TOP BUILDS</h3>
-        <div class="flex gap-4 border-b border-transparent pb-0">${sortTabsHtml}</div>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">${cardsHtml}</div>
-    </div>
-  `;
-  
-  // Initialize string matrix injector searchable selects
-  _compInitStringInjector(racquet);
 }
 
 // Global state for string injection
@@ -7464,531 +3033,92 @@ let _compInjectState = {
 
 // Update mode UI only (for initialization - doesn't modify state)
 function _compUpdateInjectModeUI(mode) {
-  // Update button states - Tailwind class injection
-  document.querySelectorAll('.comp-inject-mode-btn').forEach(btn => {
-    const isActive = btn.dataset.mode === mode;
-    
-    // Strip old state
-    btn.classList.remove('text-dc-accent', 'border-dc-accent', 'text-dc-storm', 'border-transparent');
-    
-    // Apply new state
-    if (isActive) {
-      btn.classList.add('text-dc-accent', 'border-dc-accent');
-    } else {
-      btn.classList.add('text-dc-storm', 'border-transparent');
-    }
-  });
-  
-  const crossesSelect = document.getElementById('comp-crosses-select');
-  const mainsLabel = document.getElementById('comp-mains-label');
-  const crossesLabel = document.getElementById('comp-crosses-label');
-  
-  if (mode === 'hybrid') {
-    // Hybrid: Show crosses string selector, update labels
-    if (crossesSelect) crossesSelect.style.display = 'block';
-    if (mainsLabel) mainsLabel.textContent = '// MAINS';
-    if (crossesLabel) crossesLabel.textContent = '// CROSSES';
-  } else {
-    // Fullbed: Hide crosses string selector, update labels
-    if (crossesSelect) crossesSelect.style.display = 'none';
-    if (mainsLabel) mainsLabel.textContent = '// STRING';
-    if (crossesLabel) crossesLabel.textContent = '// CROSSES';
+  if (typeof window._compUpdateInjectModeUI === 'function' && window._compUpdateInjectModeUI !== _compUpdateInjectModeUI) {
+    return window._compUpdateInjectModeUI(mode);
   }
 }
 
 // Set injection mode (fullbed/hybrid) - for user clicks, modifies state
 function _compSetInjectMode(mode) {
-  _compInjectState.mode = mode;
-  
-  // Update UI
-  _compUpdateInjectModeUI(mode);
-  
-  if (mode === 'hybrid') {
-    // If entering hybrid with no crosses selected, default to mains
-    if (!_compInjectState.crossesId && _compInjectState.mainsId) {
-      _compInjectState.crossesId = _compInjectState.mainsId;
-      // Update the crosses selector UI using the stored instance
-      const crossesInstance = ssInstances['comp-crosses-select'];
-      if (crossesInstance) {
-        crossesInstance.setValue(_compInjectState.mainsId);
-      }
-      // Sync crosses gauge dropdown too
-      _compPopulateGaugeDropdown('comp-crosses-gauge', _compInjectState.mainsId);
-    }
-  } else {
-    // Fullbed: Sync crosses string ID with mains for preview calculation
-    if (_compInjectState.mainsId) {
-      _compInjectState.crossesId = _compInjectState.mainsId;
-      // Update crosses selector to match mains
-      const crossesInstance = ssInstances['comp-crosses-select'];
-      if (crossesInstance) {
-        crossesInstance.setValue(_compInjectState.mainsId);
-      }
-      _compPopulateGaugeDropdown('comp-crosses-gauge', _compInjectState.mainsId);
-    }
+  if (typeof window._compSetInjectMode === 'function' && window._compSetInjectMode !== _compSetInjectMode) {
+    return window._compSetInjectMode(mode);
   }
-  
-  // Re-compute preview immediately
-  _compPreviewStats();
 }
 
 // Initialize searchable selects for string matrix injector
 function _compInitStringInjector(racquet) {
-  _compInjectState.racquet = racquet;
-  _compInjectState.baseStats = calcFrameBase(racquet);
-  
-  const mainsContainer = document.getElementById('comp-mains-select');
-  const crossesContainer = document.getElementById('comp-crosses-select');
-  if (!mainsContainer) return;
-  
-  // Clear containers to prevent duplicate initialization issues
-  mainsContainer.innerHTML = '';
-  if (crossesContainer) crossesContainer.innerHTML = '';
-  
-  // Get active loadout to check if we're viewing the same racket
-  const setup = getCurrentSetup();
-  const isViewingActiveRacket = setup?.racquet?.id === racquet.id;
-  
-  // Only load strings from loadout if viewing the active racket
-  // Otherwise, start fresh (user is exploring a different racket)
-  let isHybrid, mainsId, crossesId, mainsTension, crossesTension;
-  
-  if (isViewingActiveRacket && setup?.stringConfig) {
-    isHybrid = setup.stringConfig.isHybrid || false;
-    mainsId = isHybrid ? setup.stringConfig.mains?.id : setup.stringConfig.string?.id;
-    crossesId = isHybrid ? setup.stringConfig.crosses?.id : setup.stringConfig.string?.id;
-    mainsTension = setup.stringConfig.mainsTension;
-    crossesTension = setup.stringConfig.crossesTension;
-  } else {
-    // Fresh start for new racket exploration
-    isHybrid = false;
-    mainsId = '';
-    crossesId = '';
-  }
-  
-  // Default tensions from racket range if not set
-  const midTension = Math.round((racquet.tensionRange[0] + racquet.tensionRange[1]) / 2);
-  if (!mainsTension) mainsTension = midTension;
-  if (!crossesTension) crossesTension = midTension - 2;
-  
-  // Set initial mode
-  _compInjectState.mode = isHybrid ? 'hybrid' : 'fullbed';
-  _compInjectState.mainsId = mainsId || '';
-  _compInjectState.crossesId = crossesId || mainsId || '';
-  
-  // Ensure crossesId defaults to mainsId in hybrid mode if not set
-  const effectiveCrossesId = crossesId || mainsId || '';
-  
-  // Sync _stringModState for delta calculation consistency
-  _stringModState.frameId = racquet.id;
-  _stringModState.baseStats = calcFrameBase(racquet);
-  _stringModState.mode = isHybrid ? 'hybrid' : 'fullbed';
-  _stringModState.stringId = mainsId || '';
-  _stringModState.crossesId = effectiveCrossesId;
-  _stringModState.mainsTension = mainsTension;
-  _stringModState.crossesTension = crossesTension;
-  
-  // Also ensure _compInjectState.crossesId matches the effective value
-  _compInjectState.crossesId = effectiveCrossesId;
-  
-  // Set tensions from loadout or defaults
-  document.getElementById('comp-mains-tension').value = mainsTension;
-  document.getElementById('comp-crosses-tension').value = crossesTension;
-  
-  // Initialize mains selector with loadout value
-  ssInstances['comp-mains-select'] = createSearchableSelect(mainsContainer, {
-    type: 'string',
-    placeholder: 'Select String...',
-    value: mainsId || '',
-    onChange: (val) => {
-      _compInjectState.mainsId = val;
-      _compPopulateGaugeDropdown('comp-mains-gauge', val);
-      
-      // In fullbed mode, also populate crosses gauge options (same string)
-      if (_compInjectState.mode === 'fullbed' && val) {
-        _compInjectState.crossesId = val;
-        _compPopulateGaugeDropdown('comp-crosses-gauge', val);
-      }
-      
-      _compPreviewStats();
-    }
-  });
-  
-  // Initialize crosses selector with loadout value
-  if (crossesContainer) {
-    ssInstances['comp-crosses-select'] = createSearchableSelect(crossesContainer, {
-      type: 'string',
-      placeholder: 'Select Cross String...',
-      value: effectiveCrossesId,
-      id: 'comp-crosses-select-trigger',
-      onChange: (val) => {
-        _compInjectState.crossesId = val;
-        _compPopulateGaugeDropdown('comp-crosses-gauge', val);
-        _compPreviewStats();
-      }
-    });
-  }
-  
-  // Wire up tension and gauge inputs - all independent
-  ['comp-mains-tension', 'comp-crosses-tension', 'comp-mains-gauge', 'comp-crosses-gauge'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.addEventListener('change', _compPreviewStats);
-      el.addEventListener('input', _compPreviewStats);
-    }
-  });
-  
-  // Set initial mode UI but DON'T let it override our state
-  _compUpdateInjectModeUI(isHybrid ? 'hybrid' : 'fullbed');
-  
-  // Trigger initial preview with loadout values (if any)
-  if (mainsId) {
-    _compPopulateGaugeDropdown('comp-mains-gauge', mainsId);
-    if (isHybrid && effectiveCrossesId) {
-      _compPopulateGaugeDropdown('comp-crosses-gauge', effectiveCrossesId);
-    } else if (!isHybrid && mainsId) {
-      _compPopulateGaugeDropdown('comp-crosses-gauge', mainsId);
-    }
-    _compPreviewStats();
-  } else {
-    // For fresh racket exploration, clear stat bars to base frame values
-    _compClearPreview();
+  if (typeof window._compInitStringInjector === 'function' && window._compInitStringInjector !== _compInitStringInjector) {
+    return window._compInitStringInjector(racquet);
   }
 }
 
 // Populate gauge dropdown for a string
 function _compPopulateGaugeDropdown(selectId, stringId) {
-  const select = document.getElementById(selectId);
-  if (!select || !stringId) return;
-  
-  const string = STRINGS.find(s => s.id === stringId);
-  if (!string) return;
-  
-  const gauges = getGaugeOptions(string);
-  select.innerHTML = '<option value="">Gauge...</option>' + 
-    gauges.map(g => `<option value="${g}" ${Math.abs(g - string.gaugeNum) < 0.01 ? 'selected' : ''}>${GAUGE_LABELS[g] || g + 'mm'}</option>`).join('');
+  if (typeof window._compPopulateGaugeDropdown === 'function' && window._compPopulateGaugeDropdown !== _compPopulateGaugeDropdown) {
+    return window._compPopulateGaugeDropdown(selectId, stringId);
+  }
 }
 
 // Preview stats with string injection
 function _compPreviewStats() {
-  const { racquet, mainsId, crossesId, mode, baseStats } = _compInjectState;
-  if (!racquet || !mainsId) return _compClearPreview();
-  
-  const mainsString = STRINGS.find(s => s.id === mainsId);
-  if (!mainsString) return _compClearPreview();
-  
-  // Get effective crosses string
-  let crossesString = mainsString;
-  if (mode === 'hybrid' && crossesId) {
-    crossesString = STRINGS.find(s => s.id === crossesId) || mainsString;
+  if (typeof window._compPreviewStats === 'function' && window._compPreviewStats !== _compPreviewStats) {
+    return window._compPreviewStats();
   }
-  
-  // Apply gauge modifiers
-  const mainsGauge = document.getElementById('comp-mains-gauge').value;
-  const crossesGauge = document.getElementById('comp-crosses-gauge').value;
-  const mainsWithGauge = mainsGauge ? applyGaugeModifier(mainsString, parseFloat(mainsGauge)) : mainsString;
-  const crossesWithGauge = crossesGauge ? applyGaugeModifier(crossesString, parseFloat(crossesGauge)) : crossesString;
-  
-  // Get tensions
-  const mainsTension = parseInt(document.getElementById('comp-mains-tension').value) || 52;
-  const crossesTension = parseInt(document.getElementById('comp-crosses-tension').value) || 50;
-  
-  const isHybrid = mode === 'hybrid';
-  
-  // Build config for predictSetup
-  const cfg = isHybrid ? {
-    isHybrid: true,
-    mains: mainsWithGauge,
-    crosses: crossesWithGauge,
-    mainsTension,
-    crossesTension
-  } : {
-    isHybrid: false,
-    string: mainsWithGauge,  // Fullbed uses single string
-    mainsTension,
-    crossesTension
-  };
-  
-  // Run prediction
-  const previewStats = predictSetup(racquet, cfg);
-  if (!previewStats) return;
-  
-  // Update stat bars with before/after
-  _compRenderPreviewBars(baseStats, previewStats);
-  
-  // Calculate and update OBS delta display
-  const tCtx = buildTensionContext(cfg, racquet);
-  const obs = computeCompositeScore(previewStats, tCtx);
-  const baseObs = window._compBaseObs || Math.round(
-    baseStats.spin * 0.15 +
-    baseStats.power * 0.12 +
-    baseStats.control * 0.18 +
-    baseStats.comfort * 0.12 +
-    baseStats.feel * 0.10 +
-    baseStats.stability * 0.12 +
-    baseStats.forgiveness * 0.08 +
-    baseStats.maneuverability * 0.08
-  );
-  const delta = Math.round((obs - baseObs) * 10) / 10;
-  
-  // Update delta on racket page
-  const main = document.getElementById('comp-main');
-  let deltaEl = document.getElementById('comp-string-delta');
-  let deltaValEl = document.getElementById('comp-string-delta-value');
-  if (!deltaEl && main) {
-    deltaEl = main.querySelector('#comp-string-delta');
-    deltaValEl = main.querySelector('#comp-string-delta-value');
-  }
-  if (deltaEl && deltaValEl && delta > 0) {
-    deltaValEl.textContent = delta;
-    deltaEl.classList.remove('opacity-0');
-  } else if (deltaEl) {
-    deltaEl.classList.add('opacity-0');
-  }
-  
-  // Enable apply button
-  const applyBtn = document.getElementById('comp-inject-apply');
-  if (applyBtn) applyBtn.disabled = false;
 }
 
 // Render preview bars showing before/after (Tailwind battery style)
 function _compRenderPreviewBars(baseStats, previewStats) {
-  const statKeys = ['spin', 'power', 'control', 'launch', 'feel', 'comfort', 'stability', 'forgiveness', 'maneuverability'];
-  const segments = 25;
-  
-  statKeys.forEach(k => {
-    const baseVal = baseStats[k] != null ? Math.round(baseStats[k]) : 50;
-    const previewVal = previewStats[k] != null ? Math.round(previewStats[k]) : 50;
-    const baseFilled = Math.round((baseVal / 100) * segments);
-    const previewFilled = Math.round((previewVal / 100) * segments);
-    
-    const track = document.getElementById(`comp-track-${k}`);
-    if (!track) return;
-    
-    // Rebuild segments with preview state (Tailwind classes)
-    let segmentsHtml = '';
-    for (let i = 0; i < segments; i++) {
-      let bgClass = 'bg-black/10 dark:bg-white/10'; // empty
-      
-      if (i < baseFilled) {
-        bgClass = 'bg-dc-void dark:bg-dc-platinum'; // base value
-      }
-      if (i < previewFilled && previewVal > baseVal) {
-        bgClass = 'bg-dc-red'; // increased (red)
-      } else if (i >= previewFilled && i < baseFilled && previewVal < baseVal) {
-        bgClass = 'bg-dc-red/40'; // decreased (dark red)
-      }
-      
-      segmentsHtml += `<div class="flex-1 h-full rounded-[1px] transition-colors duration-150 ${bgClass}" data-seg="${i}"></div>`;
-    }
-    track.innerHTML = segmentsHtml;
-    track.dataset.hasPreview = 'true';
-    
-    // Update value display
-    const valEl = document.getElementById(`comp-val-${k}`);
-    if (valEl) {
-      const diff = previewVal - baseVal;
-      let diffColor = 'text-dc-storm';
-      if (diff > 0) diffColor = 'text-dc-red';
-      if (diff < 0) diffColor = 'text-dc-accent';
-      
-      valEl.innerHTML = `
-        <span class="text-dc-storm">${baseVal}</span>
-        <span class="text-dc-storm mx-1">→</span>
-        <span class="${diffColor}">${previewVal}</span>
-      `;
-    }
-  });
+  if (typeof window._compRenderPreviewBars === 'function' && window._compRenderPreviewBars !== _compRenderPreviewBars) {
+    return window._compRenderPreviewBars(baseStats, previewStats);
+  }
 }
 
 // Clear preview and reset to base stats (Tailwind)
 function _compClearPreview() {
-  const { baseStats } = _compInjectState;
-  if (!baseStats) return;
-  
-  const statKeys = ['spin', 'power', 'control', 'launch', 'feel', 'comfort', 'stability', 'forgiveness', 'maneuverability'];
-  const segments = 25;
-  
-  statKeys.forEach(k => {
-    const baseVal = baseStats[k] != null ? Math.round(baseStats[k]) : 50;
-    const baseFilled = Math.round((baseVal / 100) * segments);
-    
-    const track = document.getElementById(`comp-track-${k}`);
-    if (track) {
-      // Reset to base segments only (Tailwind)
-      let segmentsHtml = '';
-      for (let i = 0; i < segments; i++) {
-        const bgClass = i < baseFilled 
-          ? 'bg-dc-void dark:bg-dc-platinum' 
-          : 'bg-black/10 dark:bg-white/10';
-        segmentsHtml += `<div class="flex-1 h-full rounded-[1px] transition-colors duration-150 ${bgClass}" data-seg="${i}"></div>`;
-      }
-      track.innerHTML = segmentsHtml;
-      delete track.dataset.hasPreview;
-    }
-    
-    const valEl = document.getElementById(`comp-val-${k}`);
-    if (valEl) valEl.innerHTML = `<span class="text-dc-void dark:text-dc-platinum">${baseVal}</span>`;
-  });
-  
-  // Disable apply button
-  const applyBtn = document.getElementById('comp-inject-apply');
-  if (applyBtn) applyBtn.disabled = true;
-  
-  // Hide delta display
-  const deltaEl = document.getElementById('comp-string-delta');
-  if (deltaEl) deltaEl.classList.add('opacity-0');
+  if (typeof window._compClearPreview === 'function' && window._compClearPreview !== _compClearPreview) {
+    return window._compClearPreview();
+  }
 }
 
 // Apply injection to create a new loadout
 function _compApplyInjection() {
-  const { racquet, mainsId, crossesId, mode } = _compInjectState;
-  if (!racquet || !mainsId) return;
-  
-  const mainsGauge = document.getElementById('comp-mains-gauge').value;
-  const crossesGauge = document.getElementById('comp-crosses-gauge').value;
-  const mainsTension = parseInt(document.getElementById('comp-mains-tension').value);
-  const crossesTension = parseInt(document.getElementById('comp-crosses-tension').value);
-  
-  const isHybrid = mode === 'hybrid';
-  // In fullbed mode, crosses uses same string as mains but can have different gauge/tension
-  const effectiveCrossesId = isHybrid && crossesId ? crossesId : mainsId;
-  
-  // Create loadout using the app's createLoadout function
-  // Note: For hybrid, we pass mainsId as stringId (2nd param) because createLoadout 
-  // validates that stringId exists even for hybrid. The hybrid logic uses opts.mainsId/crossesId.
-  const lo = createLoadout(racquet.id, mainsId, mainsTension, {
-    isHybrid,
-    mainsId,
-    crossesId: effectiveCrossesId,
-    crossesTension: crossesTension,
-    mainsGauge: mainsGauge || undefined,
-    crossesGauge: crossesGauge || undefined,
-    source: 'bible'
-  });
-  
-  if (lo) {
-    activateLoadout(lo);
-    switchMode('overview');
+  if (typeof window._compApplyInjection === 'function' && window._compApplyInjection !== _compApplyInjection) {
+    return window._compApplyInjection();
   }
 }
 
 // Clear injection and reset all fields
 function _compClearInjection() {
-  _compInjectState.mainsId = '';
-  _compInjectState.crossesId = '';
-  
-  // Clear stored selector instances
-  delete ssInstances['comp-mains-select'];
-  delete ssInstances['comp-crosses-select'];
-  
-  // Reset selectors
-  const mainsContainer = document.getElementById('comp-mains-select');
-  const crossesContainer = document.getElementById('comp-crosses-select');
-  if (mainsContainer) mainsContainer.innerHTML = '';
-  if (crossesContainer) crossesContainer.innerHTML = '';
-  
-  // Reset gauge dropdowns
-  const mainsGauge = document.getElementById('comp-mains-gauge');
-  const crossesGauge = document.getElementById('comp-crosses-gauge');
-  if (mainsGauge) mainsGauge.innerHTML = '<option value="">Gauge...</option>';
-  if (crossesGauge) crossesGauge.innerHTML = '<option value="">Gauge...</option>';
-  
-  // Reset tensions to frame midpoint
-  const { racquet } = _compInjectState;
-  if (racquet) {
-    const midTension = Math.round((racquet.tensionRange[0] + racquet.tensionRange[1]) / 2);
-    document.getElementById('comp-mains-tension').value = midTension;
-    document.getElementById('comp-crosses-tension').value = midTension - 2;
+  if (typeof window._compClearInjection === 'function' && window._compClearInjection !== _compClearInjection) {
+    return window._compClearInjection();
   }
-  
-  // Clear preview
-  _compClearPreview();
-  
-  // Re-initialize selectors
-  if (racquet) _compInitStringInjector(racquet);
 }
 
 function _compGenerateTopBuilds(racquet, count) {
-  return generateTopBuilds(racquet, count);
+  if (typeof window._compGenerateTopBuilds === 'function' && window._compGenerateTopBuilds !== _compGenerateTopBuilds) {
+    return window._compGenerateTopBuilds(racquet, count);
+  }
 }
 
 function _compPickDiverseBuilds(builds, count) {
-  return pickDiverseBuilds(builds, count);
+  if (typeof window._compPickDiverseBuilds === 'function' && window._compPickDiverseBuilds !== _compPickDiverseBuilds) {
+    return window._compPickDiverseBuilds(builds, count);
+  }
 }
 
 // Digicraft Brutalism — monochrome archetype colors imported from presets.js
 const _compArchetypeColors = ARCHETYPE_COLORS;
 
 function _compRenderBuildCard(build, index, racquet, frameStats) {
-  const isFeatured = index === 0;
-  
-  // Tightened padding from p-6 to p-5
-  const cardClasses = isFeatured 
-    ? "relative bg-transparent border border-dc-accent shadow-[0_0_15px_rgba(255,69,0,0.05)] p-5 flex flex-col transition-colors duration-200 col-span-full"
-    : "relative bg-transparent border border-dc-storm/30 hover:border-dc-storm p-5 flex flex-col transition-colors duration-200";
-
-  // Scaled down badge
-  const badgeHtml = isFeatured 
-    ? `<div class="absolute -top-[1px] -left-[1px] bg-dc-accent text-dc-void font-mono text-[10px] font-bold uppercase tracking-widest px-2 py-0.5">BEST OVERALL</div>` 
-    : '';
-
-  // Tighter margins for reason
-  const reasonHtml = isFeatured && frameStats
-    ? `<div class="text-xs text-dc-void/80 dark:text-dc-platinum/90 mb-4 pl-3 border-l-2 border-dc-storm italic">${_compGenerateBuildReason(build, frameStats)}</div>`
-    : '';
-
-  // Build string label and meta
-  const isHybrid = build.type === 'hybrid';
-  const stringLabel = isHybrid ? (build.label || build.string.name) : build.string.name;
-  const metaLabel = isHybrid ? `Hybrid · M:${build.tension} / X:${build.crossesTension}` : `Full Bed · ${build.tension} lbs`;
-  const s = build.stats;
-
-  // Compressed terminal stats - top 3 only
-  const statEntries = [
-    { key: 'SPIN', val: Math.round(s.spin) },
-    { key: 'PWR', val: Math.round(s.power) },
-    { key: 'CTRL', val: Math.round(s.control) },
-    { key: 'CMF', val: Math.round(s.comfort) },
-    { key: 'FEEL', val: Math.round(s.feel) },
-    { key: 'DUR', val: Math.round(s.durability) }
-  ].sort((a, b) => b.val - a.val).slice(0, 3);
-
-  const statsHtml = statEntries.map(st => 
-    `<span class="font-mono text-[13px] text-dc-storm tracking-widest">[${st.key} <b class="text-xs text-dc-void dark:text-dc-platinum font-semibold ml-0.5">${st.val}</b>]</span>`
-  ).join('');
-
-  return `
-    <div class="${cardClasses}">
-      ${badgeHtml}
-      
-      <div class="flex justify-between items-start my-1.5">
-        <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">${build.archetype}</span>
-        <span class="font-mono text-4xl md:text-5xl font-semibold text-dc-void dark:text-dc-platinum leading-[0.8] tracking-tighter">${build.score.toFixed(1)}</span>
-      </div>
-
-      <div class="text-base font-semibold text-dc-void dark:text-dc-platinum tracking-tight mb-0.5 pr-12 leading-tight">${stringLabel}</div>
-      <div class="font-mono text-[12px] text-dc-storm mb-4">${metaLabel}</div>
-
-      ${reasonHtml}
-
-      <div class="grid grid-cols-3 gap-2 mt-auto mb-4">
-        <button class="bg-transparent border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-void font-mono text-[13px] uppercase tracking-widest py-1.5 transition-colors text-center" onclick="_compAction('setActive', ${index})">Set Active</button>
-        <button class="bg-transparent border border-dc-storm/50 dark:border-dc-storm/30 text-dc-storm hover:border-dc-storm hover:bg-dc-storm/10 hover:text-dc-void dark:hover:text-dc-platinum font-mono text-[13px] uppercase tracking-widest py-1.5 transition-colors text-center" onclick="_compAction('tune', ${index})">Tune</button>
-        <button class="bg-transparent border border-dc-storm/50 dark:border-dc-storm/30 text-dc-storm hover:border-dc-storm hover:bg-dc-storm/10 hover:text-dc-void dark:hover:text-dc-platinum font-mono text-[13px] uppercase tracking-widest py-1.5 transition-colors text-center" onclick="_compAction('save', ${index}, event)">Save</button>
-      </div>
-
-      <div class="flex flex-wrap gap-3 pt-3 border-t border-dc-storm/30 dark:border-dc-storm/20">
-        ${statsHtml}
-      </div>
-    </div>
-  `;
+  if (typeof window._compRenderBuildCard === 'function' && window._compRenderBuildCard !== _compRenderBuildCard) {
+    return window._compRenderBuildCard(build, index, racquet, frameStats);
+  }
 }
 
 function _compSetSort(key) {
-  _compSortKey = key;
-  const racquet = RACQUETS.find(r => r.id === _compSelectedRacquetId);
-  if (racquet) _compRenderMain(racquet);
+  if (typeof window._compSetSort === 'function' && window._compSetSort !== _compSetSort) {
+    return window._compSetSort(key);
+  }
 }
 
 // --- Build card action handlers ---
@@ -7996,53 +3126,14 @@ function _compSetSort(key) {
 // Correctly handles both full-bed and hybrid builds.
 
 function _compCreateLoadoutFromBuild(build) {
-  var racquetId = _compSelectedRacquetId;
-  var isHybrid = build.type === 'hybrid';
-  var opts = {
-    source: 'compendium',
-    isHybrid: isHybrid,
-    crossesTension: build.crossesTension || build.tension,
-  };
-  if (isHybrid) {
-    opts.mainsId = build.mainsId;
-    opts.crossesId = build.crossesId;
+  if (typeof window._compCreateLoadoutFromBuild === 'function' && window._compCreateLoadoutFromBuild !== _compCreateLoadoutFromBuild) {
+    return window._compCreateLoadoutFromBuild(build);
   }
-  var stringId = isHybrid ? build.mainsId : build.string.id;
-  return createLoadout(racquetId, stringId, build.tension, opts);
 }
 
 function _compAction(action, buildIndex, evt) {
-  var build = _compCurrentBuilds[buildIndex];
-  if (!build) return;
-
-  if (action === 'save') {
-    var lo = _compCreateLoadoutFromBuild(build);
-    if (lo) {
-      saveLoadout(lo);
-      // Visual feedback
-      var btn = evt && evt.target;
-      if (btn) {
-        btn.textContent = 'Saved \u2713';
-        btn.disabled = true;
-        setTimeout(function() { btn.textContent = 'Save'; btn.disabled = false; }, 1500);
-      }
-    }
-  } else if (action === 'tune') {
-    var lo = _compCreateLoadoutFromBuild(build);
-    if (lo) {
-      saveLoadout(lo); // QA-016: save before tuning so build isn't lost
-      activateLoadout(lo);
-      switchMode('tune');
-    }
-  } else if (action === 'setActive') {
-    var lo = _compCreateLoadoutFromBuild(build);
-    if (lo) {
-      activateLoadout(lo);
-      switchMode('overview');
-      renderDashboard();
-    }
-  } else if (action === 'compare') {
-    _compAddBuildToCompare(build);
+  if (typeof window._compAction === 'function' && window._compAction !== _compAction) {
+    return window._compAction(action, buildIndex, evt);
   }
 }
 
@@ -8050,48 +3141,6 @@ function _compAddBuildToCompare(build) {
   if (typeof window._compAddBuildToCompare === 'function' && window._compAddBuildToCompare !== _compAddBuildToCompare) {
     return window._compAddBuildToCompare(build);
   }
-  var compareLoadout = _compCreateLoadoutFromBuild(build);
-  var compareState = window.compareGetState?.();
-  if (compareLoadout && compareLoadout.stats && compareState?.slots && typeof window.compareSetSlotLoadout === 'function') {
-    var emptySlot = compareState.slots.find(function(slot) { return slot.loadout === null; });
-    var targetSlotId = (emptySlot || compareState.slots[compareState.slots.length - 1])?.id;
-    if (targetSlotId) {
-      window.compareSetSlotLoadout(targetSlotId, compareLoadout, compareLoadout.stats);
-      switchMode('compare');
-      return;
-    }
-  }
-
-  if (comparisonSlots.length >= 3) comparisonSlots.pop();
-
-  var racquetId = _compSelectedRacquetId;
-  var racquet = RACQUETS.find(function(r) { return r.id === racquetId; });
-  if (!racquet) return;
-
-  var isHybrid = build.type === 'hybrid';
-  var stringId = isHybrid ? '' : build.string.id;
-  var cfg;
-  if (isHybrid) {
-    cfg = { isHybrid: true, mains: build.mains, crosses: build.crosses, mainsTension: build.tension, crossesTension: build.crossesTension };
-  } else {
-    cfg = { isHybrid: false, string: build.string, mainsTension: build.tension, crossesTension: build.tension };
-  }
-  var stats = predictSetup(racquet, cfg);
-  var identity = stats ? generateIdentity(stats, racquet, cfg) : null;
-
-  comparisonSlots.push({
-    id: Date.now(),
-    racquetId: racquetId,
-    stringId: stringId,
-    isHybrid: isHybrid,
-    mainsId: isHybrid ? build.mainsId : '',
-    crossesId: isHybrid ? build.crossesId : '',
-    mainsTension: build.tension,
-    crossesTension: build.crossesTension || build.tension,
-    stats: stats,
-    identity: identity
-  });
-  switchMode('compare');
 }
 
 // Legacy scalar-param compare handler — used by _addSuggestionToCompare and _compareQuickAdd
@@ -8100,43 +3149,6 @@ function _compActionCompare(racquetId, stringId, tension) {
   if (typeof window._compActionCompare === 'function' && window._compActionCompare !== _compActionCompare) {
     return window._compActionCompare(racquetId, stringId, tension);
   }
-  var compareLoadout = createLoadout(racquetId, stringId, tension, { source: 'compare' });
-  var compareState = window.compareGetState?.();
-  if (compareLoadout && compareLoadout.stats && compareState?.slots && typeof window.compareSetSlotLoadout === 'function') {
-    var emptySlot = compareState.slots.find(function(slot) { return slot.loadout === null; });
-    var targetSlotId = (emptySlot || compareState.slots[compareState.slots.length - 1])?.id;
-    if (targetSlotId) {
-      window.compareSetSlotLoadout(targetSlotId, compareLoadout, compareLoadout.stats);
-      switchMode('compare');
-      return;
-    }
-  }
-
-  if (comparisonSlots.length >= 3) {
-    comparisonSlots.pop();
-  }
-  const racquet = RACQUETS.find(r => r.id === racquetId);
-  const stringData = STRINGS.find(s => s.id === stringId);
-  if (!racquet || !stringData) return;
-
-  const cfg = { isHybrid: false, string: stringData, mainsTension: tension, crossesTension: tension };
-  const stats = predictSetup(racquet, cfg);
-  const identity = stats ? generateIdentity(stats, racquet, cfg) : null;
-
-  const slotData = {
-    id: Date.now(),
-    racquetId: racquetId,
-    stringId: stringId,
-    isHybrid: false,
-    mainsId: '',
-    crossesId: '',
-    mainsTension: tension,
-    crossesTension: tension,
-    stats: stats,
-    identity: identity
-  };
-  comparisonSlots.push(slotData);
-  switchMode('compare');
 }
 
 // ============================================
@@ -8144,124 +3156,21 @@ function _compActionCompare(racquetId, stringId, tension) {
 // ============================================
 
 function _fmbRankFrames(profile) {
-  const scored = RACQUETS.map(r => {
-    const frameStats = calcFrameBase(r);
-    let score = 0;
-
-    // Check minimum thresholds against frame base stats
-    let meetsAll = true;
-    for (const [stat, min] of Object.entries(profile.minThresholds)) {
-      if (frameStats[stat] !== undefined && frameStats[stat] < min) {
-        meetsAll = false;
-        score -= (min - frameStats[stat]) * 2;
-      }
-    }
-    if (meetsAll) score += 20;
-
-    // Bonus for priority stats
-    for (const [stat, weight] of Object.entries(profile.statPriorities)) {
-      if (frameStats[stat] !== undefined) {
-        score += frameStats[stat] * weight * 0.3;
-      }
-    }
-
-    // Generate top 3 builds for this frame
-    const builds = _compGenerateTopBuilds(r, 3);
-
-    // Boost score by best build OBS
-    if (builds.length > 0) {
-      score += builds[0].score * 0.5;
-    }
-
-    return { racquet: r, frameStats, score, builds };
-  });
-
-  scored.sort((a, b) => b.score - a.score);
-  return scored.slice(0, 5);
+  if (typeof window._fmbRankFrames === 'function' && window._fmbRankFrames !== _fmbRankFrames) {
+    return window._fmbRankFrames(profile);
+  }
 }
 
 function _fmbRenderFrameCard(fr, idx) {
-  const r = fr.racquet;
-  const builds = fr.builds || [];
-
-  const archColors = {
-    'Spin Focus': 'var(--lime-text)',
-    'Control Focus': 'var(--blue-tag)',
-    'Power Focus': 'var(--orange)',
-    'Comfort Build': 'var(--green-tag)',
-    'Feel Build': 'var(--purple)',
-    'Durability Build': 'var(--dc-storm)',
-    'Balanced': 'var(--text-secondary)'
-  };
-
-  const buildCards = builds.map((b, bIdx) => {
-    const borderColor = archColors[b.archetype] || archColors['Balanced'];
-    const isHybrid = b.type === 'hybrid';
-    const stringLabel = isHybrid ? (b.label || b.string.name) : b.string.name;
-    const metaLabel = isHybrid
-      ? `Hybrid &middot; M:${b.tension} / X:${b.crossesTension} lbs`
-      : `Full Bed &middot; ${b.tension} lbs`;
-
-    return `<div class="fmb-build-mini" style="border-left: 3px solid ${borderColor}">
-      <div class="fmb-build-mini-header">
-        <span class="fmb-build-mini-label">${b.archetype || 'Build'}</span>
-        <span class="fmb-build-mini-obs">${b.score.toFixed(1)}</span>
-      </div>
-      <div class="fmb-build-mini-string">${stringLabel}</div>
-      <div class="fmb-build-mini-tension">${metaLabel}</div>
-      <div class="fmb-build-btns">
-        <button class="fmb-build-select" onclick="_fmbAction('activate',${idx},${bIdx})">Activate</button>
-        <button class="fmb-build-save" onclick="_fmbAction('save',${idx},${bIdx},this)">Save</button>
-      </div>
-    </div>`;
-  }).join('');
-
-  return `<div class="fmb-frame-card">
-    <div class="fmb-frame-card-header">
-      <div class="fmb-frame-rank">#${idx + 1}</div>
-      <div class="fmb-frame-info">
-        <div class="fmb-frame-name">${r.name.replace(/\\s+\\d+g$/, '')}</div>
-        <div class="fmb-frame-meta">${r.year} &middot; ${r.identity || ''} &middot; ${r.stiffness} RA &middot; ${r.pattern}</div>
-      </div>
-    </div>
-    <div class="fmb-frame-builds">${buildCards}</div>
-  </div>`;
+  if (typeof window._fmbRenderFrameCard === 'function' && window._fmbRenderFrameCard !== _fmbRenderFrameCard) {
+    return window._fmbRenderFrameCard(fr, idx);
+  }
 }
 
 // Unified FMB action handler — reads full build data by frame+build index
 function _fmbAction(action, frameIdx, buildIdx, btn) {
-  var fr = _fmbCurrentFrames[frameIdx];
-  if (!fr) return;
-  var build = fr.builds[buildIdx];
-  if (!build) return;
-
-  var racquetId = fr.racquet.id;
-  var isHybrid = build.type === 'hybrid';
-  var opts = {
-    source: 'quiz',
-    isHybrid: isHybrid,
-    crossesTension: build.crossesTension || build.tension,
-  };
-  if (isHybrid) {
-    opts.mainsId = build.mainsId;
-    opts.crossesId = build.crossesId;
-  }
-  var stringId = isHybrid ? build.mainsId : build.string.id;
-  var lo = createLoadout(racquetId, stringId, build.tension, opts);
-  if (!lo) return;
-
-  if (action === 'activate') {
-    closeFindMyBuild();
-    activateLoadout(lo);
-    switchMode('overview');
-    renderDashboard();
-  } else if (action === 'save') {
-    saveLoadout(lo);
-    if (btn) {
-      btn.textContent = 'Saved \u2713';
-      btn.disabled = true;
-      setTimeout(function() { btn.textContent = 'Save'; btn.disabled = false; }, 1500);
-    }
+  if (typeof window._fmbAction === 'function' && window._fmbAction !== _fmbAction) {
+    return window._fmbAction(action, frameIdx, buildIdx, btn);
   }
 }
 
@@ -8288,87 +3197,17 @@ function _applyWttnBuild(btn) {
   if (typeof window._applyWttnBuild === 'function' && window._applyWttnBuild !== _applyWttnBuild) {
     return window._applyWttnBuild(btn);
   }
-  var setup = getCurrentSetup();
-  if (!setup) return;
-
-  var stringId = btn.dataset.stringId;
-  var tension = parseInt(btn.dataset.tension);
-  var type = btn.dataset.type;
-  var mainsId = btn.dataset.mainsId;
-  var crossesId = btn.dataset.crossesId;
-
-  var opts = { source: 'manual' };
-  var lo;
-
-  if (type === 'hybrid' && mainsId && crossesId) {
-    opts.isHybrid = true;
-    opts.mainsId = mainsId;
-    opts.crossesId = crossesId;
-    opts.crossesTension = tension - 2;
-    lo = createLoadout(setup.racquet.id, mainsId, tension, opts);
-  } else if (stringId) {
-    lo = createLoadout(setup.racquet.id, stringId, tension, opts);
-  }
-
-  if (lo) {
-    activateLoadout(lo);
-    var newSetup = getCurrentSetup();
-    if (newSetup && currentMode === 'tune') initTuneMode(newSetup);
-  }
-
-  btn.textContent = 'Applied \u2713';
-  btn.disabled = true;
-  setTimeout(function() { btn.textContent = 'Apply'; btn.disabled = false; }, 1500);
 }
 
 function _applyRecBuild(racquetId, stringId, tension, type, mainsId, crossesId) {
   if (typeof window._applyRecBuild === 'function' && window._applyRecBuild !== _applyRecBuild) {
     return window._applyRecBuild(racquetId, stringId, tension, type, mainsId, crossesId);
   }
-  var opts = { source: 'manual' };
-  if (type === 'hybrid' && mainsId && crossesId) {
-    opts.isHybrid = true;
-    opts.mainsId = mainsId;
-    opts.crossesId = crossesId;
-    opts.crossesTension = tension - 2;
-  }
-  var lo = createLoadout(racquetId, type === 'hybrid' ? mainsId : stringId, tension, opts);
-  if (lo) {
-    activateLoadout(lo);
-    var newSetup = getCurrentSetup();
-    if (newSetup && currentMode === 'tune') initTuneMode(newSetup);
-  }
 }
 
 function _saveWttnBuild(btn) {
   if (typeof window._saveWttnBuild === 'function' && window._saveWttnBuild !== _saveWttnBuild) {
     return window._saveWttnBuild(btn);
-  }
-  var frameId = btn.dataset.frameId;
-  var stringId = btn.dataset.stringId;
-  var tension = parseInt(btn.dataset.tension);
-  var type = btn.dataset.type;
-  var mainsId = btn.dataset.mainsId;
-  var crossesId = btn.dataset.crossesId;
-
-  var opts = { source: 'manual' };
-  var lo;
-
-  if (type === 'hybrid' && mainsId && crossesId) {
-    opts.isHybrid = true;
-    opts.mainsId = mainsId;
-    opts.crossesId = crossesId;
-    opts.crossesTension = tension - 2;
-    lo = createLoadout(frameId, mainsId, tension, opts);
-  } else if (stringId) {
-    lo = createLoadout(frameId, stringId, tension, opts);
-  }
-
-  if (lo) {
-    saveLoadout(lo);
-    btn.textContent = 'Saved \u2713';
-    btn.disabled = true;
-    setTimeout(function() { btn.textContent = 'Save'; btn.disabled = false; }, 1500);
   }
 }
 
@@ -8395,26 +3234,6 @@ function renderOriginalTensionMarker() {
   if (typeof window.renderOriginalTensionMarker === 'function' && window.renderOriginalTensionMarker !== renderOriginalTensionMarker) {
     return window.renderOriginalTensionMarker();
   }
-  var slider = document.getElementById('tune-slider');
-  if (!slider) return;
-  var container = slider.parentElement;
-
-  var old = container.querySelector('.tune-original-marker');
-  if (old) old.remove();
-
-  if (!tuneState.originalTension) return;
-
-  var min = parseInt(slider.min);
-  var max = parseInt(slider.max);
-  var pct = ((tuneState.originalTension - min) / (max - min)) * 100;
-
-  var marker = document.createElement('div');
-  marker.className = 'tune-original-marker';
-  marker.style.left = 'calc(' + pct + '% - 1px)';
-  marker.title = 'Original: ' + tuneState.originalTension + ' lbs';
-  marker.innerHTML = '<span class="tune-original-label">Start: ' + tuneState.originalTension + '</span>';
-  container.style.position = 'relative';
-  container.appendChild(marker);
 }
 
 // ============================================

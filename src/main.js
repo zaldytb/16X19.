@@ -10,6 +10,7 @@ import * as App from '../app.js';
 
 // Import state store for window bridge
 import { getActiveLoadout, getSavedLoadouts, setActiveLoadout, setSavedLoadouts } from './state/store.js';
+import { createLoadout as _createLoadoutTS } from './state/loadout.js';
 
 // Import page modules
 import * as Leaderboard from './ui/pages/leaderboard.js';
@@ -66,6 +67,7 @@ window.applyDockEditorChanges = Shell.applyDockEditorChanges;
 window.cancelCompareSlotEditing = Shell.cancelCompareSlotEditing;
 window.addActiveLoadoutToCompare = Shell.addActiveLoadoutToCompare;
 window.init = Shell.init;
+window.createLoadout = _createLoadoutTS;
 
 // Bridge: expose My Loadouts functions to window
 window.renderMyLoadouts = MyLoadouts.renderMyLoadouts;

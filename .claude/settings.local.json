@@ -3,7 +3,9 @@
     "allow": [
       "Bash(cmd.exe /c \"node pipeline/scripts/estimate.js\")",
       "Bash(cmd.exe /c \"where node && node --version\")",
-      "Bash(powershell.exe -NoProfile -Command \"& { node pipeline/scripts/estimate.js }\")"
+      "Bash(powershell.exe -NoProfile -Command \"& { node pipeline/scripts/estimate.js }\")",
+      "Bash(npm run:*)",
+      "Bash(node -e \":*)"
     ]
   }
 }

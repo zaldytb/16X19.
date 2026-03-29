@@ -7340,6 +7340,398 @@ const RACQUETS = [
     "frameProfile": "Oversized Isometric head with Energy Flow Shaft (18mm throat). Maximum forgiveness and comfort.",
     "identity": "Oversized Comfort",
     "notes": "Oversized Muse (107 sq in) for maximum forgiveness. Largest sweet spot in lineup. Even balance compensates for light weight. 56 RA is extremely soft — ideal for arm issues or beginners. 25mm beam adds stability to large head."
+  },
+  {
+    "id": "wilson-clash-100-v3-2025",
+    "name": "Wilson Clash 100 v3 312g",
+    "year": 2025,
+    "headSize": 100,
+    "length": 27,
+    "strungWeight": 312,
+    "balance": 31.98,
+    "balancePts": "7 pts HL",
+    "swingweight": 308,
+    "stiffness": 54,
+    "beamWidth": [
+      24.5,
+      24.5,
+      24.5
+    ],
+    "pattern": "16x19",
+    "powerLevel": "Low-Medium",
+    "strokeStyle": "Medium-Full",
+    "swingSpeed": "Medium-Fast",
+    "tensionRange": [
+      50,
+      60
+    ],
+    "frameProfile": "Constant beam, SI3D layup, Hit Stabilizer, refined shaft/yoke geometry",
+    "identity": "Clash Speed Comfort",
+    "notes": "Third-gen Clash 100. TW strung specs: 312g, 7 pts HL, 308 swingweight, 54 RA — softer and more head-light than v2 for quicker handling. SI3D increases horizontal and vertical bending for pocketing and spin; Hit Stabilizer adds torsional stability."
+  },
+  {
+    "id": "wilson-clash-100-pro-v3-2025",
+    "name": "Wilson Clash 100 Pro v3 323g",
+    "year": 2025,
+    "headSize": 100,
+    "length": 27,
+    "strungWeight": 323,
+    "balance": 31.98,
+    "balancePts": "7 pts HL",
+    "swingweight": 327,
+    "stiffness": 57,
+    "beamWidth": [
+      24.5,
+      24.5,
+      24.5
+    ],
+    "pattern": "16x20",
+    "powerLevel": "Low-Medium",
+    "strokeStyle": "Full",
+    "swingSpeed": "Fast",
+    "tensionRange": [
+      50,
+      60
+    ],
+    "frameProfile": "Heavy Clash platform, SI3D, Hit Stabilizer",
+    "identity": "Clash Pro Flex",
+    "notes": "Pro density 16x20. TW strung: 323g, 7 pts HL, 327 swingweight, 57 RA. Heavier, more stable Clash v3 for advanced players who want flex with a tighter pattern."
+  },
+  {
+    "id": "wilson-clash-100l-v3-2025",
+    "name": "Wilson Clash 100L v3 295g",
+    "year": 2025,
+    "headSize": 100,
+    "length": 27,
+    "strungWeight": 295,
+    "balance": 32.49,
+    "balancePts": "6 pts HL",
+    "swingweight": 301,
+    "stiffness": 54,
+    "beamWidth": [
+      24.5,
+      24.5,
+      24.5
+    ],
+    "pattern": "16x19",
+    "powerLevel": "Medium",
+    "strokeStyle": "Medium",
+    "swingSpeed": "Medium",
+    "tensionRange": [
+      50,
+      60
+    ],
+    "frameProfile": "Light Clash, SI3D, Hit Stabilizer",
+    "identity": "Light Clash Comfort",
+    "notes": "TW strung: 295g, 6 pts HL, 301 swingweight, 54 RA. Lightest standard-head Clash v3 in the main lineup — same comfort story with easier acceleration."
+  },
+  {
+    "id": "wilson-clash-108-v3-2025",
+    "name": "Wilson Clash 108 v3 295g",
+    "year": 2025,
+    "headSize": 108,
+    "length": 27.25,
+    "strungWeight": 295,
+    "balance": 34.29,
+    "balancePts": "1 pt HL",
+    "swingweight": 312,
+    "stiffness": 58,
+    "beamWidth": [
+      24.5,
+      24.5,
+      24.5
+    ],
+    "pattern": "16x19",
+    "powerLevel": "Medium-High",
+    "strokeStyle": "Medium",
+    "swingSpeed": "Medium",
+    "tensionRange": [
+      50,
+      60
+    ],
+    "frameProfile": "Oversized Clash, SI3D, Hit Stabilizer, +0.25in length",
+    "identity": "Oversized Flex",
+    "notes": "TW strung: 295g, 1 pt HL, 312 swingweight, 58 RA, 108 sq in, 27.25in length. Most forgiving Clash v3 — easy power with the line’s flexible feel."
+  },
+  {
+    "id": "wilson-ultra-100-v5-2025",
+    "name": "Wilson Ultra 100 v5 318g",
+    "year": 2025,
+    "headSize": 100,
+    "length": 27,
+    "strungWeight": 318,
+    "balance": 33.02,
+    "balancePts": "4 pts HL",
+    "swingweight": 322,
+    "stiffness": 67,
+    "beamWidth": [
+      24,
+      26.5,
+      24.5
+    ],
+    "pattern": "16x19",
+    "powerLevel": "Medium-High",
+    "strokeStyle": "Medium",
+    "swingSpeed": "Medium",
+    "tensionRange": [
+      50,
+      60
+    ],
+    "frameProfile": "Variable beam, FORTYFIVE, Crush Zone grommets, full carbon handle, parallel drilling",
+    "identity": "Power Spin Ultra",
+    "notes": "TW strung: 318g, 4 pts HL, 322 swingweight, 67 RA — slightly softer than Ultra 100 v4 with refined pocketing and spin. Tightened factory tolerances vs prior gen."
+  },
+  {
+    "id": "wilson-ultra-99-pro-v5-2025",
+    "name": "Wilson Ultra 99 Pro v5 323g",
+    "year": 2025,
+    "headSize": 99,
+    "length": 27,
+    "strungWeight": 323,
+    "balance": 33.45,
+    "balancePts": "3 pts HL",
+    "swingweight": 330,
+    "stiffness": 69,
+    "beamWidth": [
+      22,
+      23.5,
+      21.5
+    ],
+    "pattern": "16x18",
+    "powerLevel": "Medium",
+    "strokeStyle": "Full",
+    "swingSpeed": "Fast",
+    "tensionRange": [
+      50,
+      60
+    ],
+    "frameProfile": "Thin tapered beam, tour-oriented Ultra, FORTYFIVE, carbon handle",
+    "identity": "Tour Ultra",
+    "notes": "TW strung: 323g, 3 pts HL, 330 swingweight, 69 RA, 16x18. De Minaur / Kostyuk class spec — precision head with open pattern for spin."
+  },
+  {
+    "id": "wilson-ultra-100l-v5-2025",
+    "name": "Wilson Ultra 100L v5 295g",
+    "year": 2025,
+    "headSize": 100,
+    "length": 27,
+    "strungWeight": 295,
+    "balance": 32.99,
+    "balancePts": "4 pts HL",
+    "swingweight": 310,
+    "stiffness": 64,
+    "beamWidth": [
+      24,
+      26.5,
+      24.5
+    ],
+    "pattern": "16x19",
+    "powerLevel": "Medium-High",
+    "strokeStyle": "Medium",
+    "swingSpeed": "Medium",
+    "tensionRange": [
+      50,
+      60
+    ],
+    "frameProfile": "Light Ultra, variable beam, FORTYFIVE, Crush Zone",
+    "identity": "Light Power",
+    "notes": "TW strung: 295g, 4 pts HL, 310 swingweight, 64 RA. Easier to swing than Ultra 100 v5 with the same power-family beam concept."
+  },
+  {
+    "id": "wilson-ultra-100ul-v5-2025",
+    "name": "Wilson Ultra 100UL v5 275g",
+    "year": 2025,
+    "headSize": 100,
+    "length": 27,
+    "strungWeight": 275,
+    "balance": 34.8,
+    "balancePts": "2 pts HH",
+    "swingweight": 290,
+    "stiffness": 65,
+    "beamWidth": [
+      24,
+      26.5,
+      24.5
+    ],
+    "pattern": "16x19",
+    "powerLevel": "Medium-High",
+    "strokeStyle": "Compact-Medium",
+    "swingSpeed": "Medium",
+    "tensionRange": [
+      50,
+      60
+    ],
+    "frameProfile": "Ultra-light Ultra, head-mass bias for free power",
+    "identity": "Ultra-Light Power",
+    "notes": "TW strung: 275g, 2 pts HH, 290 swingweight, 65 RA. Entry-weight Ultra v5 — mass pushed slightly headward to offset low static weight."
+  },
+  {
+    "id": "wilson-ultra-111-v5-2025",
+    "name": "Wilson Ultra 111 v5 283g",
+    "year": 2025,
+    "headSize": 111,
+    "length": 27,
+    "strungWeight": 283,
+    "balance": 33.02,
+    "balancePts": "5 pts HL",
+    "swingweight": 290,
+    "stiffness": 66,
+    "beamWidth": [
+      26,
+      27.5,
+      25
+    ],
+    "pattern": "16x18",
+    "powerLevel": "High",
+    "strokeStyle": "Compact",
+    "swingSpeed": "Slow-Medium",
+    "tensionRange": [
+      50,
+      60
+    ],
+    "frameProfile": "Oversized power geometry, wide beam, FORTYFIVE",
+    "identity": "Max Power Ultra",
+    "notes": "TW strung: 283g, 5 pts HL, 290 swingweight, 66 RA, 111 sq in, 16x18. Game-improvement Ultra for easy depth and spin."
+  },
+  {
+    "id": "head-instinct-mp-318g-2024",
+    "name": "Head Instinct MP 318g",
+    "year": 2024,
+    "headSize": 100,
+    "length": 27,
+    "strungWeight": 318,
+    "balance": 32.99,
+    "balancePts": "4 pts HL",
+    "swingweight": 314,
+    "stiffness": 64,
+    "beamWidth": [
+      23,
+      26,
+      23
+    ],
+    "pattern": "16x19",
+    "powerLevel": "Medium-High",
+    "strokeStyle": "Medium",
+    "swingSpeed": "Medium",
+    "tensionRange": [
+      48,
+      57
+    ],
+    "frameProfile": "Power tweener beam, Graphene 360+ with spiral fibers",
+    "identity": "Head Power Line",
+    "notes": "HEAD’s power tweener — strung specs verified against Tennisnerd / TW Europe listing (318g, 314 swingweight, 64 RA, 4 pts HL). Sits between Pure Drive and Ultra 100 on comfort for the category."
+  },
+  {
+    "id": "head-instinct-s-301g-2021",
+    "name": "Head Instinct S 301g",
+    "year": 2021,
+    "headSize": 100,
+    "length": 27,
+    "strungWeight": 301,
+    "balance": 32.99,
+    "balancePts": "4 pts HL",
+    "swingweight": 309,
+    "stiffness": 65,
+    "beamWidth": [
+      23,
+      26,
+      23
+    ],
+    "pattern": "16x19",
+    "powerLevel": "Medium",
+    "strokeStyle": "Medium-Full",
+    "swingSpeed": "Medium-Fast",
+    "tensionRange": [
+      48,
+      57
+    ],
+    "frameProfile": "Lighter Instinct, Graphene 360, power-line beam",
+    "identity": "Light Instinct",
+    "notes": "Strung specs from RacketLogger / retail listings: 301g, 4 pts HL, 309 swingweight, 65 RA. Lighter, faster sibling to Instinct MP with the same 100 sq in power platform."
+  },
+  {
+    "id": "head-instinct-lite-286g-2021",
+    "name": "Head Instinct Lite 286g",
+    "year": 2021,
+    "headSize": 107,
+    "length": 27.2,
+    "strungWeight": 286,
+    "balance": 34,
+    "balancePts": "1 pt HH",
+    "swingweight": 311,
+    "stiffness": 64,
+    "beamWidth": [
+      23,
+      26,
+      23
+    ],
+    "pattern": "16x19",
+    "powerLevel": "High",
+    "strokeStyle": "Compact",
+    "swingSpeed": "Slow-Medium",
+    "tensionRange": [
+      48,
+      57
+    ],
+    "frameProfile": "Oversized Instinct, Graphene 360, easy power",
+    "identity": "Oversized Instinct",
+    "notes": "RacketLogger strung: 286g, 1 pt HH, 311 swingweight, 64 RA, 107 sq in, 27.2in. Game-improvement Instinct for maximum forgiveness and free depth."
+  },
+  {
+    "id": "wilson-burn-100-cv-318g-2017",
+    "name": "Wilson Burn 100 CV 318g",
+    "year": 2017,
+    "headSize": 100,
+    "length": 27,
+    "strungWeight": 318,
+    "balance": 32.99,
+    "balancePts": "4 pts HL",
+    "swingweight": 319,
+    "stiffness": 69,
+    "beamWidth": [
+      23.5,
+      25,
+      23.5
+    ],
+    "pattern": "16x19",
+    "powerLevel": "Medium-High",
+    "strokeStyle": "Medium-Full",
+    "swingSpeed": "Medium-Fast",
+    "tensionRange": [
+      50,
+      60
+    ],
+    "frameProfile": "Spin Effect geometry, Countervail dampening, stiff power beam",
+    "identity": "Burn Power",
+    "notes": "Countervail-era Burn 100 (16x19). Retail / RacketLogger strung: ~318g, 4 pts HL, 319 swingweight, 69 RA. Still common used — spin-friendly tweener with integrated dampening layup."
+  },
+  {
+    "id": "wilson-burn-100s-cv-318g-2017",
+    "name": "Wilson Burn 100S CV 318g",
+    "year": 2017,
+    "headSize": 100,
+    "length": 27,
+    "strungWeight": 318,
+    "balance": 32.99,
+    "balancePts": "4 pts HL",
+    "swingweight": 325,
+    "stiffness": 69,
+    "beamWidth": [
+      23.5,
+      25,
+      23.5
+    ],
+    "pattern": "18x16",
+    "powerLevel": "Medium-High",
+    "strokeStyle": "Medium-Full",
+    "swingSpeed": "Medium-Fast",
+    "tensionRange": [
+      50,
+      60
+    ],
+    "frameProfile": "Spin Effect 18x16, Countervail, high launch",
+    "identity": "Burn Spin",
+    "notes": "Burn 100S Countervail — 18x16 Spin Effect pattern. Strung specs from RacketLogger / retail: ~318g, 325 swingweight, 4 pts HL, 69 RA. Iconic Wilson spin tweener from the CV generation."
   }
 ];
 
@@ -10092,6 +10484,90 @@ const FRAME_META = {
     "comfortTech": 3.5,
     "spinTech": 0.5,
     "genBonus": 2
+  },
+  "wilson-clash-100-v3-2025": {
+    "aeroBonus": 0,
+    "comfortTech": 2.5,
+    "spinTech": 0.25,
+    "genBonus": 0.5
+  },
+  "wilson-clash-100-pro-v3-2025": {
+    "aeroBonus": 0,
+    "comfortTech": 2,
+    "spinTech": 0,
+    "genBonus": 0.5
+  },
+  "wilson-clash-100l-v3-2025": {
+    "aeroBonus": 0,
+    "comfortTech": 2.25,
+    "spinTech": 0.25,
+    "genBonus": 0.5
+  },
+  "wilson-clash-108-v3-2025": {
+    "aeroBonus": 0,
+    "comfortTech": 2,
+    "spinTech": 0,
+    "genBonus": 0.5
+  },
+  "wilson-ultra-100-v5-2025": {
+    "aeroBonus": 0.25,
+    "comfortTech": 0.75,
+    "spinTech": 0.5,
+    "genBonus": 0.5
+  },
+  "wilson-ultra-99-pro-v5-2025": {
+    "aeroBonus": 0.5,
+    "comfortTech": 0.5,
+    "spinTech": 1,
+    "genBonus": 0.5
+  },
+  "wilson-ultra-100l-v5-2025": {
+    "aeroBonus": 0.25,
+    "comfortTech": 0.75,
+    "spinTech": 0.5,
+    "genBonus": 0.5
+  },
+  "wilson-ultra-100ul-v5-2025": {
+    "aeroBonus": 0,
+    "comfortTech": 0.5,
+    "spinTech": 0.25,
+    "genBonus": 0.5
+  },
+  "wilson-ultra-111-v5-2025": {
+    "aeroBonus": 0,
+    "comfortTech": 0.5,
+    "spinTech": 0.25,
+    "genBonus": 0.5
+  },
+  "head-instinct-mp-318g-2024": {
+    "aeroBonus": 0,
+    "comfortTech": 1,
+    "spinTech": 0.5,
+    "genBonus": 0
+  },
+  "head-instinct-s-301g-2021": {
+    "aeroBonus": 0,
+    "comfortTech": 0.75,
+    "spinTech": 0.5,
+    "genBonus": 0
+  },
+  "head-instinct-lite-286g-2021": {
+    "aeroBonus": 0,
+    "comfortTech": 0.75,
+    "spinTech": 0.25,
+    "genBonus": 0
+  },
+  "wilson-burn-100-cv-318g-2017": {
+    "aeroBonus": 0.5,
+    "comfortTech": 1,
+    "spinTech": 1,
+    "genBonus": 0
+  },
+  "wilson-burn-100s-cv-318g-2017": {
+    "aeroBonus": 0.5,
+    "comfortTech": 1,
+    "spinTech": 1.5,
+    "genBonus": 0
   }
 };
 

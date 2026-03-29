@@ -134,6 +134,8 @@ The app remembers your repo root between sessions. See [`tools/frame-gui/README.
 
 > **Windows installer:** A standalone `FrameGuiSetup.exe` can be built with `npm run build:win` from `tools/frame-gui/` — no repo clone required for end users. Node.js must still be installed on their machine for the import features to work.
 
+**End-to-end pipeline (frames → app):** see [Frame-ingestion.md](Frame-ingestion.md) for how `frames.json` is validated, exported to `data.js`, and how `FRAME_META` is derived.
+
 ---
 
 ## Adding a String

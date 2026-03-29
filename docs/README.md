@@ -7,6 +7,7 @@ This folder holds **in-repo** guides you can treat like a lightweight wiki (GitH
 | Doc | Purpose |
 |-----|---------|
 | [Getting-Started.md](Getting-Started.md) | Install Node, run the dev server, ingest frames/strings, run the pipeline |
+| [Frame-ingestion.md](Frame-ingestion.md) | Frames only: `frames.json` → validate → `data.js` + `FRAME_META` |
 | [../README.md](../README.md) | Repository overview, stack, layout, deploy |
 | [../AGENTS.md](../AGENTS.md) | Conventions for contributors and coding agents |
 | [../CLAUDE.md](../CLAUDE.md) | Claude Code commands and critical rules |

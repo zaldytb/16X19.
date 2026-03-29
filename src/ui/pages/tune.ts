@@ -91,8 +91,8 @@ function _applyTuneInteractionFrame(): void {
   const setup = getCurrentSetup();
   if (setup) {
     renderOverallBuildScore(setup, false);
-    renderSweepChart(setup);
   }
+  sweepChart?.update?.('none');
 
   _updateTuneApplyButton();
 }
@@ -1063,6 +1063,28 @@ export function _recomputeExploredState(): void {
   const baseline = tuneState.baseline;
   if (!baseline) return;
 
+  const setup = getCurrentSetup();
+  if (!setup) return;
+
+  const sweepEntry = tuneState.sweepData?.find((entry) => entry.tension === tuneState.exploredTension);
+  if (sweepEntry) {
+    const linkedDiff = baseline.mainsTension - baseline.crossesTension;
+    const exploredConfig =
+      tuneState.hybridDimension === 'linked'
+        ? { ...setup.stringConfig, mainsTension: tuneState.exploredTension, crossesTension: Math.max(0, tuneState.exploredTension - linkedDiff) }
+        : tuneState.hybridDimension === 'mains'
+          ? { ...setup.stringConfig, mainsTension: tuneState.exploredTension }
+          : { ...setup.stringConfig, crossesTension: tuneState.exploredTension };
+    const tCtx = buildTensionContext(exploredConfig as StringConfig, setup.racquet);
+    const obs = computeCompositeScore(sweepEntry.stats, tCtx);
+    tuneState.explored = {
+      stats: sweepEntry.stats,
+      obs: +obs.toFixed(1),
+      identity: tuneState.explored?.identity || baseline.identity
+    };
+    return;
+  }
+
   let mainsTension = baseline.mainsTension;
   let crossesTension = baseline.crossesTension;
 
@@ -1094,13 +1116,13 @@ export function _recomputeExploredState(): void {
     _dirty: false
   };
 
-  const setup = getSetupFromLoadout(snapshotLoadout);
-  if (!setup) return;
+  const exploredSetup = getSetupFromLoadout(snapshotLoadout);
+  if (!exploredSetup) return;
 
-  const stats = predictSetup(setup.racquet, setup.stringConfig);
-  const tCtx = buildTensionContext(setup.stringConfig, setup.racquet);
+  const stats = predictSetup(exploredSetup.racquet, exploredSetup.stringConfig);
+  const tCtx = buildTensionContext(exploredSetup.stringConfig, exploredSetup.racquet);
   const obs = computeCompositeScore(stats, tCtx);
-  const identity = generateIdentity(stats, setup.racquet, setup.stringConfig);
+  const identity = generateIdentity(stats, exploredSetup.racquet, exploredSetup.stringConfig);
 
   tuneState.explored = { stats, obs: +obs.toFixed(1), identity };
 }

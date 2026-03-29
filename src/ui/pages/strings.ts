@@ -55,6 +55,9 @@ interface SaveLikeWindow extends Window {
 let _stringSelectedId: string | null = null;
 let _stringsInitialized = false;
 let _stringFiltersBound = false;
+let _stringPreviewFrame: number | null = null;
+let _stringRosterTimer: number | null = null;
+let _stringLastRosterKey = '';
 
 let _stringModState: StringModState = {
   stringId: null,
@@ -178,13 +181,53 @@ function ensureBaseStatsFromFrame(frameId: string | null): void {
   getAppWindow()._compBaseObs = _stringModState.baseStats ? computeBaseObs(_stringModState.baseStats) : null;
 }
 
+function scheduleStringRosterRender(): void {
+  if (_stringRosterTimer != null) {
+    window.clearTimeout(_stringRosterTimer);
+  }
+  _stringRosterTimer = window.setTimeout(() => {
+    _stringRosterTimer = null;
+    _stringRenderRoster();
+  }, 80);
+}
+
+function scheduleStringPreviewUpdate(): void {
+  if (_stringPreviewFrame != null) return;
+  _stringPreviewFrame = window.requestAnimationFrame(() => {
+    _stringPreviewFrame = null;
+    _stringUpdatePreview();
+  });
+}
+
+function updateStringPreviewTrack(
+  track: HTMLElement,
+  baseFilled: number,
+  previewFilled?: number,
+  deltaDirection?: 'up' | 'down' | null
+): void {
+  if (track.children.length !== 25) {
+    track.innerHTML = Array.from({ length: 25 }, () => '<div class="flex-1 h-full rounded-[1px] transition-colors duration-150"></div>').join('');
+  }
+
+  Array.from(track.children).forEach((segment, index) => {
+    const el = segment as HTMLElement;
+    el.className = 'flex-1 h-full rounded-[1px] transition-colors duration-150';
+
+    let bgClass = 'bg-black/10 dark:bg-white/10';
+    if (index < baseFilled) bgClass = 'bg-dc-void dark:bg-dc-platinum';
+    if (previewFilled != null && deltaDirection === 'up' && index < previewFilled) bgClass = 'bg-dc-red';
+    if (previewFilled != null && deltaDirection === 'down' && index >= previewFilled && index < baseFilled) bgClass = 'bg-dc-red/40';
+
+    el.classList.add(...bgClass.split(' '));
+  });
+}
+
 export function _stringEnsureInitialized(): void {
   if (!_stringFiltersBound) {
-    const rerender = () => _stringRenderRoster();
-    document.getElementById('string-search')?.addEventListener('input', rerender);
-    document.getElementById('string-filter-material')?.addEventListener('change', rerender);
-    document.getElementById('string-filter-shape')?.addEventListener('change', rerender);
-    document.getElementById('string-filter-stiffness')?.addEventListener('change', rerender);
+    document.getElementById('string-search')?.addEventListener('input', scheduleStringRosterRender);
+    document.getElementById('string-filter-material')?.addEventListener('change', _stringRenderRoster);
+    document.getElementById('string-filter-shape')?.addEventListener('change', _stringRenderRoster);
+    document.getElementById('string-filter-stiffness')?.addEventListener('change', _stringRenderRoster);
     _stringFiltersBound = true;
   }
 
@@ -268,6 +311,9 @@ export function _stringRenderRoster(): void {
   if (!list) return;
 
   const strings = _stringGetFilteredStrings();
+  const rosterKey = strings.map((item) => `${item.id}:${item.id === _stringSelectedId ? 1 : 0}`).join('|');
+  if (rosterKey === _stringLastRosterKey) return;
+  _stringLastRosterKey = rosterKey;
   list.innerHTML = strings
     .map((stringItem) => {
       const isActive = stringItem.id === _stringSelectedId;
@@ -736,7 +782,7 @@ export function _stringInitModulator(stringItem: StringData): void {
 
   if (selectedRacquet) {
     ensureBaseStatsFromFrame(selectedFrame);
-    _stringUpdatePreview();
+    scheduleStringPreviewUpdate();
   } else {
     _stringClearPreview();
   }
@@ -765,17 +811,17 @@ export function _stringSetModMode(mode: StringMode): void {
     crossesLabel.textContent = '// CROSSES TENSION';
   }
 
-  _stringUpdatePreview();
+  scheduleStringPreviewUpdate();
 }
 
 export function _stringOnCrossesStringChange(crossesId: string): void {
   _stringModState.crossesId = crossesId || _stringModState.stringId;
-  _stringUpdatePreview();
+  scheduleStringPreviewUpdate();
 }
 
 export function _stringOnCrossesGaugeChange(gauge: string): void {
   _stringModState.crossesGauge = gauge || _stringModState.gauge;
-  _stringUpdatePreview();
+  scheduleStringPreviewUpdate();
 }
 
 export function _stringOnFrameChange(frameId: string): void {
@@ -798,7 +844,7 @@ export function _stringOnFrameChange(frameId: string): void {
     getAppWindow()._compBaseObs = null;
   }
 
-  _stringUpdatePreview();
+  scheduleStringPreviewUpdate();
 }
 
 export function _stringOnGaugeChange(gauge: string): void {
@@ -808,7 +854,7 @@ export function _stringOnGaugeChange(gauge: string): void {
     const crossesGaugeSelect = document.getElementById('string-mod-crosses-gauge') as HTMLSelectElement | null;
     if (crossesGaugeSelect) crossesGaugeSelect.value = gauge || '';
   }
-  _stringUpdatePreview();
+  scheduleStringPreviewUpdate();
 }
 
 export function _stringOnTensionChange(type: 'mains' | 'crosses', value: string): void {
@@ -817,7 +863,7 @@ export function _stringOnTensionChange(type: 'mains' | 'crosses', value: string)
   } else {
     _stringModState.crossesTension = parseInt(value, 10) || 50;
   }
-  _stringUpdatePreview();
+  scheduleStringPreviewUpdate();
 }
 
 export function _stringUpdatePreview(): void {
@@ -885,18 +931,8 @@ export function _stringRenderPreviewBars(baseStats: SetupStats, previewStats: Se
     const valueEl = document.getElementById(`string-val-${key}`);
     if (!track) return;
 
-    let segmentsHtml = '';
-    for (let index = 0; index < segments; index += 1) {
-      let bgClass = 'bg-black/10 dark:bg-white/10';
-      if (index < baseFilled) bgClass = 'bg-dc-void dark:bg-dc-platinum';
-      if (index < previewFilled && previewVal > baseVal) {
-        bgClass = 'bg-dc-red';
-      } else if (index >= previewFilled && index < baseFilled && previewVal < baseVal) {
-        bgClass = 'bg-dc-red/40';
-      }
-      segmentsHtml += `<div class="flex-1 h-full rounded-[1px] transition-colors duration-150 ${bgClass}"></div>`;
-    }
-    track.innerHTML = segmentsHtml;
+    const deltaDirection = previewVal > baseVal ? 'up' : previewVal < baseVal ? 'down' : null;
+    updateStringPreviewTrack(track, baseFilled, previewFilled, deltaDirection);
 
     if (valueEl) {
       let diffColor = 'text-dc-storm';
@@ -923,12 +959,7 @@ export function _stringClearPreview(): void {
     const valueEl = document.getElementById(`string-val-${key}`);
     if (!track) return;
 
-    let segmentsHtml = '';
-    for (let index = 0; index < segments; index += 1) {
-      const bgClass = index < baseFilled ? 'bg-dc-void dark:bg-dc-platinum' : 'bg-black/10 dark:bg-white/10';
-      segmentsHtml += `<div class="flex-1 h-full rounded-[1px] transition-colors duration-150 ${bgClass}"></div>`;
-    }
-    track.innerHTML = segmentsHtml;
+    updateStringPreviewTrack(track, baseFilled);
 
     if (valueEl) {
       valueEl.innerHTML = `<span class="text-dc-void dark:text-dc-platinum">${baseVal}</span>`;

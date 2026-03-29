@@ -30,6 +30,15 @@ interface SearchableSelectInstance {
   _cleanup: () => void;
 }
 
+interface IndexedOption {
+  id: string;
+  groupKey: string;
+  searchText: string;
+  primaryText: string;
+  secondaryText: string;
+  badgeHTML: string;
+}
+
 // Parse brand from racquet name (first word)
 function parseRacquetBrand(name: string): string {
   return name.split(' ')[0];
@@ -73,6 +82,37 @@ function getSortedStrings(): StringData[] {
   });
 }
 
+const SORTED_RACQUETS = getSortedRacquets();
+const SORTED_STRINGS = getSortedStrings();
+
+function buildRacquetIndex(items: Racquet[]): IndexedOption[] {
+  return items.map((racquetItem) => {
+    const wtMatch = racquetItem.name.match(/^(.+?)\s+(\d+g)$/);
+    return {
+      id: racquetItem.id,
+      groupKey: parseRacquetBrand(racquetItem.name),
+      searchText: `${racquetItem.name} ${racquetItem.year || ''} ${racquetItem.pattern || ''}`.toLowerCase(),
+      primaryText: wtMatch ? wtMatch[1] : racquetItem.name,
+      secondaryText: `${racquetItem.year || ''}`,
+      badgeHTML: wtMatch ? `<span class="ss-opt-badge badge-weight">${wtMatch[2]}</span>` : '',
+    };
+  });
+}
+
+function buildStringIndex(items: StringData[]): IndexedOption[] {
+  return items.map((stringItem) => ({
+    id: stringItem.id,
+    groupKey: stringItem.name.split(' ')[0],
+    searchText: `${stringItem.name} ${stringItem.gauge} ${stringItem.material || ''} ${stringItem.gaugeNum || ''} ${stringItem.shape || ''}`.toLowerCase(),
+    primaryText: stringItem.name,
+    secondaryText: `${stringItem.shape || stringItem.material || ''}`,
+    badgeHTML: getStringMaterialBadge(stringItem.material),
+  }));
+}
+
+const RACQUET_INDEXED_OPTIONS = buildRacquetIndex(SORTED_RACQUETS);
+const STRING_INDEXED_OPTIONS = buildStringIndex(SORTED_STRINGS);
+
 function getStringMaterialBadge(material: string | undefined): string {
   if (!material) return '';
   const m = material.toLowerCase();
@@ -109,10 +149,12 @@ export function createSearchableSelect(
 
   let items: (Racquet | StringData | CustomOption)[];
   let customOptions: CustomOption[] | null = options;
+  let indexedOptions: IndexedOption[] = [];
   if (type === 'custom' && options) {
     items = options;
   } else {
-    items = type === 'racquet' ? getSortedRacquets() : getSortedStrings();
+    items = type === 'racquet' ? SORTED_RACQUETS : SORTED_STRINGS;
+    indexedOptions = type === 'racquet' ? RACQUET_INDEXED_OPTIONS : STRING_INDEXED_OPTIONS;
   }
 
   // Build trigger
@@ -187,40 +229,27 @@ export function createSearchableSelect(
     let lastGroup = '';
     let hasResults = false;
 
-    items.forEach(item => {
-      // Build search text
-      let searchText: string, groupKey: string, primaryText: string, secondaryText: string, badgeHTML: string;
-      let itemId: string, itemLabel: string;
+    const sourceItems = type === 'custom'
+      ? items.map((item) => {
+          const customItem = item as CustomOption;
+          return {
+            id: customItem.value,
+            groupKey: '',
+            searchText: customItem.label.toLowerCase(),
+            primaryText: customItem.label,
+            secondaryText: '',
+            badgeHTML: '',
+          } as IndexedOption;
+        })
+      : indexedOptions;
 
-      if (type === 'custom') {
-        const customItem = item as CustomOption;
-        itemId = customItem.value;
-        itemLabel = customItem.label;
-        searchText = customItem.label.toLowerCase();
-        groupKey = '';
-        primaryText = customItem.label;
-        secondaryText = '';
-        badgeHTML = '';
-      } else if (type === 'racquet') {
-        const racquetItem = item as Racquet;
-        itemId = racquetItem.id;
-        searchText = `${racquetItem.name} ${racquetItem.year || ''} ${racquetItem.pattern || ''}`.toLowerCase();
-        groupKey = parseRacquetBrand(racquetItem.name);
-        // Split name: everything before weight suffix becomes primary, weight goes to secondary
-        const wtMatch = racquetItem.name.match(/^(.+?)\s+(\d+g)$/);
-        primaryText = wtMatch ? wtMatch[1] : racquetItem.name;
-        const wtBadge = wtMatch ? `<span class="ss-opt-badge badge-weight">${wtMatch[2]}</span>` : '';
-        secondaryText = `${racquetItem.year || ''}`;
-        badgeHTML = wtBadge;
-      } else {
-        const stringItem = item as StringData;
-        itemId = stringItem.id;
-        searchText = `${stringItem.name} ${stringItem.gauge} ${stringItem.material || ''} ${stringItem.gaugeNum || ''} ${stringItem.shape || ''}`.toLowerCase();
-        groupKey = stringItem.name.split(' ')[0];
-        primaryText = stringItem.name;
-        secondaryText = `${stringItem.shape || stringItem.material || ''}`;
-        badgeHTML = getStringMaterialBadge(stringItem.material);
-      }
+    sourceItems.forEach((item) => {
+      const itemId = item.id;
+      const searchText = item.searchText;
+      const groupKey = item.groupKey;
+      const primaryText = item.primaryText;
+      const secondaryText = item.secondaryText;
+      const badgeHTML = item.badgeHTML;
 
       // Filter
       if (q) {
@@ -382,6 +411,7 @@ export function createSearchableSelect(
       if (type === 'custom') {
         customOptions = newOptions;
         items = newOptions;
+        indexedOptions = [];
         renderOptions();
       }
     },

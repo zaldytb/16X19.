@@ -46,6 +46,9 @@ let _compSortKey: SortKey = 'score';
 let _compCurrentBuilds: BuildWithArchetype[] = [];
 let _compendiumInitWired = false;
 const _compendiumBuildCache: Record<string, BuildWithArchetype[]> = {};
+let _compPreviewFrame: number | null = null;
+let _compRosterTimer: number | null = null;
+let _compLastRosterKey = '';
 
 let _compInjectState: CompInjectState = {
   racquet: null,
@@ -160,7 +163,7 @@ export function initCompendium(): void {
   }
 
   if (!_compendiumInitWired) {
-    document.getElementById('comp-search')?.addEventListener('input', _compRenderRoster);
+    document.getElementById('comp-search')?.addEventListener('input', _compScheduleRosterRender);
     document.getElementById('comp-filter-brand')?.addEventListener('change', _compRenderRoster);
     document.getElementById('comp-filter-pattern')?.addEventListener('change', _compRenderRoster);
     document.getElementById('comp-filter-stiffness')?.addEventListener('change', _compRenderRoster);
@@ -177,6 +180,48 @@ export function initCompendium(): void {
   } else if (RACQUET_DATA.length > 0) {
     _compSelectFrame(RACQUET_DATA[0].id);
   }
+}
+
+function _compScheduleRosterRender(): void {
+  if (_compRosterTimer != null) {
+    window.clearTimeout(_compRosterTimer);
+  }
+  _compRosterTimer = window.setTimeout(() => {
+    _compRosterTimer = null;
+    _compRenderRoster();
+  }, 80);
+}
+
+function _compSchedulePreviewStats(): void {
+  if (_compPreviewFrame != null) return;
+  _compPreviewFrame = window.requestAnimationFrame(() => {
+    _compPreviewFrame = null;
+    _compPreviewStats();
+  });
+}
+
+function _updateSegmentTrack(
+  track: HTMLElement,
+  baseFilled: number,
+  previewFilled?: number,
+  deltaDirection?: 'up' | 'down' | null
+): void {
+  const existingSegments = Array.from(track.children) as HTMLElement[];
+  if (existingSegments.length !== 25) {
+    track.innerHTML = Array.from({ length: 25 }, (_, index) => `<div class="flex-1 h-full rounded-[1px] transition-colors duration-150" data-seg="${index}"></div>`).join('');
+  }
+
+  Array.from(track.children).forEach((segment, index) => {
+    const el = segment as HTMLElement;
+    el.className = 'flex-1 h-full rounded-[1px] transition-colors duration-150';
+
+    let bgClass = 'bg-black/10 dark:bg-white/10';
+    if (index < baseFilled) bgClass = 'bg-dc-void dark:bg-dc-platinum';
+    if (previewFilled != null && deltaDirection === 'up' && index < previewFilled) bgClass = 'bg-dc-red';
+    if (previewFilled != null && deltaDirection === 'down' && index >= previewFilled && index < baseFilled) bgClass = 'bg-dc-red/40';
+
+    el.classList.add(...bgClass.split(' '));
+  });
 }
 
 export function _compGetFilteredRacquets(): Racquet[] {
@@ -209,6 +254,9 @@ export function _compRenderRoster(): void {
   const list = document.getElementById('comp-frame-list');
   if (!list) return;
   const racquets = _compGetFilteredRacquets();
+  const rosterKey = racquets.map((r) => `${r.id}:${r.id === _compSelectedRacquetId ? 1 : 0}`).join('|');
+  if (rosterKey === _compLastRosterKey) return;
+  _compLastRosterKey = rosterKey;
 
   list.innerHTML = racquets
     .map((r) => {
@@ -590,7 +638,7 @@ export function _compInitStringInjector(racquet: Racquet): void {
         _compInjectState.crossesId = val;
         _compPopulateGaugeDropdown('comp-crosses-gauge', val);
       }
-      _compPreviewStats();
+      _compSchedulePreviewStats();
     },
   });
 
@@ -603,16 +651,17 @@ export function _compInitStringInjector(racquet: Racquet): void {
       onChange: (val: string) => {
         _compInjectState.crossesId = val;
         _compPopulateGaugeDropdown('comp-crosses-gauge', val);
-        _compPreviewStats();
+        _compSchedulePreviewStats();
       },
     });
   }
 
   ['comp-mains-tension', 'comp-crosses-tension', 'comp-mains-gauge', 'comp-crosses-gauge'].forEach((id) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.addEventListener('change', _compPreviewStats);
-      el.addEventListener('input', _compPreviewStats);
+    const el = document.getElementById(id) as HTMLElement | null;
+    if (el && !el.dataset.compPreviewBound) {
+      el.addEventListener('change', _compSchedulePreviewStats);
+      el.addEventListener('input', _compSchedulePreviewStats);
+      el.dataset.compPreviewBound = 'true';
     }
   });
 
@@ -625,7 +674,7 @@ export function _compInitStringInjector(racquet: Racquet): void {
     } else {
       _compPopulateGaugeDropdown('comp-crosses-gauge', mainsId);
     }
-    _compPreviewStats();
+    _compSchedulePreviewStats();
   } else {
     _compClearPreview();
   }
@@ -717,16 +766,8 @@ export function _compRenderPreviewBars(baseStats: SetupStats, previewStats: Setu
     const previewFilled = Math.round((previewVal / 100) * segments);
     const track = document.getElementById(`comp-track-${k}`);
     if (!track) return;
-
-    let segmentsHtml = '';
-    for (let i = 0; i < segments; i++) {
-      let bgClass = 'bg-black/10 dark:bg-white/10';
-      if (i < baseFilled) bgClass = 'bg-dc-void dark:bg-dc-platinum';
-      if (i < previewFilled && previewVal > baseVal) bgClass = 'bg-dc-red';
-      else if (i >= previewFilled && i < baseFilled && previewVal < baseVal) bgClass = 'bg-dc-red/40';
-      segmentsHtml += `<div class="flex-1 h-full rounded-[1px] transition-colors duration-150 ${bgClass}" data-seg="${i}"></div>`;
-    }
-    track.innerHTML = segmentsHtml;
+    const deltaDirection = previewVal > baseVal ? 'up' : previewVal < baseVal ? 'down' : null;
+    _updateSegmentTrack(track, baseFilled, previewFilled, deltaDirection);
     (track as HTMLElement).dataset.hasPreview = 'true';
 
     const valEl = document.getElementById(`comp-val-${k}`);
@@ -751,12 +792,7 @@ export function _compClearPreview(): void {
     const baseFilled = Math.round((baseVal / 100) * segments);
     const track = document.getElementById(`comp-track-${k}`);
     if (track) {
-      let segmentsHtml = '';
-      for (let i = 0; i < segments; i++) {
-        const bgClass = i < baseFilled ? 'bg-dc-void dark:bg-dc-platinum' : 'bg-black/10 dark:bg-white/10';
-        segmentsHtml += `<div class="flex-1 h-full rounded-[1px] transition-colors duration-150 ${bgClass}" data-seg="${i}"></div>`;
-      }
-      track.innerHTML = segmentsHtml;
+      _updateSegmentTrack(track, baseFilled);
       delete (track as HTMLElement).dataset.hasPreview;
     }
     const valEl = document.getElementById(`comp-val-${k}`);

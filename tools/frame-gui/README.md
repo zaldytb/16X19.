@@ -77,7 +77,7 @@ Required columns are shown in white; optional columns in grey.
 
 ```bash
 cd tools/frame-gui
-npm install          # installs Electron + electron-builder
+npm install          # installs Electron + electron-builder + TypeScript
 npm run build:win    # produces dist/FrameGuiSetup.exe
 ```
 

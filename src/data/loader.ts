@@ -1,16 +1,16 @@
 // src/data/loader.ts
 // Single source of truth for equipment data imports
-// Re-exports from data.js so modules don't import directly from the root
+// Re-exports from generated data so modules don't import the generated file directly.
 
-import { RACQUETS, STRINGS, FRAME_META } from '../../data.js';
+import { RACQUETS, STRINGS, FRAME_META } from './generated.js';
 import type { Racquet, StringData, FrameMeta } from '../engine/types.js';
 
 export const RACQUET_INDEX = new Map(
-  ((RACQUETS as unknown) as Racquet[]).map((racquet) => [racquet.id, racquet])
+  RACQUETS.map((racquet) => [racquet.id, racquet])
 );
 
 export const STRING_INDEX = new Map(
-  ((STRINGS as unknown) as StringData[]).map((string) => [string.id, string])
+  STRINGS.map((string) => [string.id, string])
 );
 
 export function getRacquetById(id: string | null | undefined): Racquet | undefined {

@@ -325,12 +325,12 @@ export function _stringRenderRoster(): void {
 
       return `<button class="${baseClasses} ${borderClasses}" data-id="${stringItem.id}" onclick="_stringSelectString('${stringItem.id}')">
       <div class="flex justify-between items-start gap-2">
-        <span class="text-base font-semibold leading-tight tracking-tight text-dc-void dark:text-dc-platinum">${stringItem.name}</span>
+        <span class="text-base font-semibold leading-tight tracking-tight text-dc-platinum">${stringItem.name}</span>
       </div>
       <div class="flex flex-col gap-1">
         <span class="font-mono text-[10px] uppercase tracking-[0.15em] text-dc-accent">${archetype}</span>
         <span class="font-mono text-[12px] text-dc-storm">${stringItem.material} // ${stringItem.shape}</span>
-        <span class="font-mono text-[13px] font-semibold text-dc-void dark:text-dc-platinum">${Math.round(stringItem.stiffness)} lb/in</span>
+        <span class="font-mono text-[13px] font-semibold text-dc-platinum">${Math.round(stringItem.stiffness)} lb/in</span>
       </div>
     </button>`;
     })
@@ -437,7 +437,7 @@ export function _stringRenderBatteryBars(stringItem: StringData): string {
         <div class="flex items-center gap-4 group">
           <span class="font-mono text-[13px] text-dc-storm group-hover:text-dc-platinum transition-colors uppercase tracking-[0.15em] w-28">${stat.label}</span>
           ${batteryHtml}
-          <span class="font-mono text-[13px] font-bold text-dc-void dark:text-dc-platinum w-8 text-right">${Math.round(stat.val)}</span>
+          <span class="font-mono text-[13px] font-bold text-dc-platinum w-8 text-right">${Math.round(stat.val)}</span>
         </div>`;
     });
 
@@ -497,7 +497,7 @@ export function _stringRenderMain(stringItem: StringData): void {
   const pills = _stringGeneratePills(stringItem);
   const consoleHtml: string[] = [];
   pills.bestFor.forEach((pill) =>
-    consoleHtml.push(`<span class="font-mono text-[13px] font-bold tracking-[0.05em] uppercase text-dc-void dark:text-dc-platinum">[+] ${pill}</span>`)
+    consoleHtml.push(`<span class="font-mono text-[13px] font-bold tracking-[0.05em] uppercase text-dc-platinum">[+] ${pill}</span>`)
   );
   pills.watchOut.forEach((pill) =>
     consoleHtml.push(`<span class="font-mono text-[13px] font-bold tracking-[0.05em] uppercase text-dc-red">[-] ${pill}</span>`)
@@ -513,9 +513,9 @@ export function _stringRenderMain(stringItem: StringData): void {
       return `<div class="bg-transparent border border-dc-border hover:border-dc-storm p-4 flex flex-col cursor-pointer transition-colors group" onclick="_stringSelectString('${similar.id}')">
       <div class="flex justify-between items-start mb-2">
         <span class="font-mono text-[10px] text-dc-storm uppercase tracking-widest group-hover:text-dc-platinum transition-colors">${archetype}</span>
-        <span class="font-mono text-lg font-bold text-dc-void dark:text-dc-platinum">${similar.twScore.spin || 0}<span class="text-[13px] text-dc-storm ml-1">SPIN</span></span>
+        <span class="font-mono text-lg font-bold text-dc-platinum">${similar.twScore.spin || 0}<span class="text-[13px] text-dc-storm ml-1">SPIN</span></span>
       </div>
-      <div class="text-sm font-semibold text-dc-void dark:text-dc-platinum mb-1">${similar.name}</div>
+      <div class="text-sm font-semibold text-dc-platinum mb-1">${similar.name}</div>
       <div class="font-mono text-[13px] text-dc-storm">${similar.material} // ${similar.shape}</div>
     </div>`;
     })
@@ -528,7 +528,7 @@ export function _stringRenderMain(stringItem: StringData): void {
         <span class="font-mono text-[10px] text-dc-storm uppercase tracking-widest group-hover:text-dc-platinum transition-colors">${getFrameIdentityLabel(frameResult.racquet)}</span>
         <span class="font-mono text-lg font-bold text-dc-accent">${frameResult.obs.toFixed(1)}</span>
       </div>
-      <div class="text-sm font-semibold text-dc-void dark:text-dc-platinum mb-1">${frameResult.racquet.name.replace(/\s+\d+g$/, '')}</div>
+      <div class="text-sm font-semibold text-dc-platinum mb-1">${frameResult.racquet.name.replace(/\s+\d+g$/, '')}</div>
       <div class="font-mono text-[13px] text-dc-storm">${frameResult.racquet.pattern} // ${frameResult.racquet.strungWeight}g strung</div>
     </div>`;
     })
@@ -551,18 +551,18 @@ export function _stringRenderMain(stringItem: StringData): void {
     <div class="relative flex flex-col items-start mb-8">
       <div class="absolute top-6 right-6 md:top-8 md:right-8 flex flex-col items-end">
         <span class="font-mono text-[13px] text-dc-storm tracking-[0.2em] mb-1">TWU SCORE</span>
-        <span class="font-mono text-5xl font-semibold leading-[0.85] text-dc-void dark:text-dc-platinum">
+        <span class="font-mono text-5xl font-semibold leading-[0.85] text-dc-platinum">
           ${twuComposite}
         </span>
       </div>
 
-      <h2 class="text-5xl md:text-[4rem] font-semibold tracking-tight text-dc-void dark:text-dc-platinum leading-none mb-0 pr-[120px] flex items-center gap-3 cursor-pointer group" onclick="_stringToggleHud()">
+      <h2 class="text-5xl md:text-[4rem] font-semibold tracking-tight text-dc-platinum leading-none mb-0 pr-[120px] flex items-center gap-3 cursor-pointer group" onclick="_stringToggleHud()">
         ${stringItem.name}
         <span class="text-2xl text-dc-red opacity-50 group-hover:opacity-100 transition-opacity">&#9660;</span>
       </h2>
 
       <div class="flex items-center gap-2 mt-4 font-mono text-[13px] flex-wrap">
-        <span class="text-dc-void dark:text-dc-platinum">${stringItem.material.toUpperCase()}</span>
+        <span class="text-dc-platinum">${stringItem.material.toUpperCase()}</span>
         <span class="text-dc-accent opacity-60 text-[13px]">//</span>
         <span class="text-dc-storm uppercase tracking-[0.15em]">${stringItem.shape}</span>
       </div>
@@ -571,19 +571,19 @@ export function _stringRenderMain(stringItem: StringData): void {
 
       <div class="grid grid-cols-2 md:grid-cols-4 gap-8 w-full mt-12 pt-8 border-t border-dc-border">
         <div class="flex flex-col-reverse gap-1.5">
-          <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${Math.round(stringItem.stiffness)}</span>
+          <span class="font-mono text-xl font-bold text-dc-platinum leading-none">${Math.round(stringItem.stiffness)}</span>
           <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">STIFFNESS (lb/in)</span>
         </div>
         <div class="flex flex-col-reverse gap-1.5">
-          <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${stringItem.spinPotential || '&mdash;'}</span>
+          <span class="font-mono text-xl font-bold text-dc-platinum leading-none">${stringItem.spinPotential || '&mdash;'}</span>
           <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">SPIN POTENTIAL</span>
         </div>
         <div class="flex flex-col-reverse gap-1.5">
-          <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${stringItem.tensionLoss || '&mdash;'}%</span>
+          <span class="font-mono text-xl font-bold text-dc-platinum leading-none">${stringItem.tensionLoss || '&mdash;'}%</span>
           <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">TENSION LOSS</span>
         </div>
         <div class="flex flex-col-reverse gap-1.5">
-          <span class="font-mono text-xl font-bold text-dc-void dark:text-dc-platinum leading-none">${stringItem.stiffness > 200 ? 'High' : stringItem.stiffness > 180 ? 'Med' : 'Low'}</span>
+          <span class="font-mono text-xl font-bold text-dc-platinum leading-none">${stringItem.stiffness > 200 ? 'High' : stringItem.stiffness > 180 ? 'Med' : 'Low'}</span>
           <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">SNAPBACK</span>
         </div>
       </div>
@@ -592,7 +592,7 @@ export function _stringRenderMain(stringItem: StringData): void {
     </div>
 
     <div class="mb-12">
-      <h3 class="font-mono text-xs tracking-[0.15em] text-dc-void dark:text-dc-platinum uppercase mb-1">// STRING TELEMETRY</h3>
+      <h3 class="font-mono text-xs tracking-[0.15em] text-dc-platinum uppercase mb-1">// STRING TELEMETRY</h3>
       <p class="text-xs text-dc-storm mb-6 italic">Intrinsic characteristics from Tennis Warehouse testing</p>
       ${batteryHtml}
     </div>
@@ -624,7 +624,7 @@ export function _stringRenderMain(stringItem: StringData): void {
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="flex flex-col gap-3">
           <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">// MAINS STRING</span>
-          <div id="string-mod-mains-name" class="font-mono text-sm text-dc-void dark:text-dc-platinum py-2 border-b border-dc-storm/30">
+          <div id="string-mod-mains-name" class="font-mono text-sm text-dc-platinum py-2 border-b border-dc-storm/30">
             Select a string first
           </div>
         </div>
@@ -638,14 +638,14 @@ export function _stringRenderMain(stringItem: StringData): void {
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="flex flex-col gap-3">
           <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">// MAINS GAUGE</span>
-          <select id="string-mod-gauge" class="appearance-none bg-dc-white dark:bg-dc-void border-b border-dc-storm/50 text-dc-void dark:text-dc-platinum font-mono text-sm py-2 px-2 outline-none focus:border-dc-accent transition-colors cursor-pointer" onchange="_stringOnGaugeChange(this.value)">
+          <select id="string-mod-gauge" class="appearance-none bg-white dark:bg-dc-void border-b border-dc-storm/50 text-dc-platinum font-mono text-sm py-2 px-2 outline-none focus:border-dc-accent transition-colors cursor-pointer" onchange="_stringOnGaugeChange(this.value)">
             <option value="">Default</option>
           </select>
         </div>
 
         <div class="flex flex-col gap-3" id="string-mod-crosses-gauge-col" style="display:none;">
           <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">// CROSSES GAUGE</span>
-          <select id="string-mod-crosses-gauge" class="appearance-none bg-dc-white dark:bg-dc-void border-b border-dc-storm/50 text-dc-void dark:text-dc-platinum font-mono text-sm py-2 px-2 outline-none focus:border-dc-accent transition-colors cursor-pointer" onchange="_stringOnCrossesGaugeChange(this.value)">
+          <select id="string-mod-crosses-gauge" class="appearance-none bg-white dark:bg-dc-void border-b border-dc-storm/50 text-dc-platinum font-mono text-sm py-2 px-2 outline-none focus:border-dc-accent transition-colors cursor-pointer" onchange="_stringOnCrossesGaugeChange(this.value)">
             <option value="">Same as mains</option>
           </select>
         </div>
@@ -654,12 +654,12 @@ export function _stringRenderMain(stringItem: StringData): void {
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
         <div class="flex flex-col gap-3" id="string-mod-mains-col">
           <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">// MAINS TENSION</span>
-          <input type="number" id="string-mod-mains-tension" class="bg-transparent border-b border-dc-storm/50 text-dc-void dark:text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors" value="52" min="30" max="70" step="1" oninput="_stringOnTensionChange('mains', this.value)">
+          <input type="number" id="string-mod-mains-tension" class="bg-transparent border-b border-dc-storm/50 text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors" value="52" min="30" max="70" step="1" oninput="_stringOnTensionChange('mains', this.value)">
         </div>
 
         <div class="flex flex-col gap-3" id="string-mod-crosses-col">
           <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]" id="string-mod-crosses-label">// CROSSES TENSION</span>
-          <input type="number" id="string-mod-crosses-tension" class="bg-transparent border-b border-dc-storm/50 text-dc-void dark:text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors" value="50" min="30" max="70" step="1" oninput="_stringOnTensionChange('crosses', this.value)">
+          <input type="number" id="string-mod-crosses-tension" class="bg-transparent border-b border-dc-storm/50 text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors" value="50" min="30" max="70" step="1" oninput="_stringOnTensionChange('crosses', this.value)">
         </div>
       </div>
 
@@ -677,7 +677,7 @@ export function _stringRenderMain(stringItem: StringData): void {
                   .map(() => `<div class="flex-1 h-full rounded-[1px] bg-black/10 dark:bg-white/10"></div>`)
                   .join('')}
               </div>
-              <span class="font-mono text-[13px] font-bold text-dc-void dark:text-dc-platinum w-16 text-right" id="string-val-${stat}">&mdash;</span>
+              <span class="font-mono text-[13px] font-bold text-dc-platinum w-16 text-right" id="string-val-${stat}">&mdash;</span>
             </div>`
             )
             .join('')}
@@ -685,20 +685,20 @@ export function _stringRenderMain(stringItem: StringData): void {
       </div>
 
       <div class="flex gap-2 mt-2">
-        <button class="flex-1 font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-void transition-colors disabled:opacity-30 disabled:cursor-not-allowed" id="string-mod-add" disabled onclick="_stringAddToLoadout()">Add to Loadout</button>
-        <button class="flex-1 font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-platinum text-dc-void dark:text-dc-platinum hover:bg-dc-platinum hover:text-dc-void dark:hover:text-dc-void transition-colors disabled:opacity-30 disabled:cursor-not-allowed" id="string-mod-activate" disabled onclick="_stringSetActiveLoadout()">Set Active</button>
-        <button class="font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-storm/50 text-dc-storm hover:bg-dc-storm/10 hover:text-dc-void dark:hover:text-dc-platinum hover:border-dc-storm transition-colors" onclick="_stringClearPreview()">Clear</button>
+        <button class="flex-1 font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-ink transition-colors disabled:opacity-30 disabled:cursor-not-allowed" id="string-mod-add" disabled onclick="_stringAddToLoadout()">Add to Loadout</button>
+        <button class="flex-1 font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-platinum text-dc-platinum hover:bg-dc-platinum hover:text-dc-void transition-colors disabled:opacity-30 disabled:cursor-not-allowed" id="string-mod-activate" disabled onclick="_stringSetActiveLoadout()">Set Active</button>
+        <button class="font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-storm/50 text-dc-storm hover:bg-dc-storm/10 hover:text-dc-platinum hover:border-dc-storm transition-colors" onclick="_stringClearPreview()">Clear</button>
       </div>
     </div>
 
     <div class="mb-12">
-      <h3 class="font-mono text-xs tracking-[0.15em] text-dc-void dark:text-dc-platinum uppercase mb-1">// BEST PAIRED WITH</h3>
+      <h3 class="font-mono text-xs tracking-[0.15em] text-dc-platinum uppercase mb-1">// BEST PAIRED WITH</h3>
       <p class="text-xs text-dc-storm mb-6 italic">Top performing frames with this string (52 lbs)</p>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">${framesHtml}</div>
     </div>
 
     <div class="mb-12">
-      <h3 class="font-mono text-xs tracking-[0.15em] text-dc-void dark:text-dc-platinum uppercase mb-1">// SIMILAR STRINGS</h3>
+      <h3 class="font-mono text-xs tracking-[0.15em] text-dc-platinum uppercase mb-1">// SIMILAR STRINGS</h3>
       <p class="text-xs text-dc-storm mb-6 italic">Alternatives with similar performance profiles</p>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">${similarHtml}</div>
     </div>
@@ -962,7 +962,7 @@ export function _stringClearPreview(): void {
     updateStringPreviewTrack(track, baseFilled);
 
     if (valueEl) {
-      valueEl.innerHTML = `<span class="text-dc-void dark:text-dc-platinum">${baseVal}</span>`;
+      valueEl.innerHTML = `<span class="text-dc-platinum">${baseVal}</span>`;
     }
   });
 

@@ -662,7 +662,7 @@ function _renderLbv2Results(results) {
         <td class="px-3 py-3 w-24">
           <div class="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
-              class="font-mono text-[8px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-void transition-colors"
+              class="font-mono text-[8px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-ink transition-colors"
               onclick="_lbv2View('${entry.racquet.id}','${stringId}',${entry.tension},'${entry.type}','${mainsId}','${crossesId}',${entry.crossesTension})"
             >View</button>
             <button
@@ -821,7 +821,7 @@ function _renderLbv2Frames(results) {
         <td class="px-3 py-3 w-20">
           <div class="opacity-0 group-hover:opacity-100 transition-opacity">
             <button
-              class="font-mono text-[8px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-void transition-colors"
+              class="font-mono text-[8px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-ink transition-colors"
               onclick="_lbv2ViewFrame('${r.id}')"
             >View</button>
           </div>
@@ -972,7 +972,7 @@ function _renderLbv2Strings(results) {
         <td class="px-3 py-3 w-20">
           <div class="opacity-0 group-hover:opacity-100 transition-opacity">
             <button
-              class="font-mono text-[8px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-void transition-colors"
+              class="font-mono text-[8px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-ink transition-colors"
               onclick="_lbv2ViewString('${s.id}')"
             >View</button>
           </div>

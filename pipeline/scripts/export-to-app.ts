@@ -73,7 +73,7 @@ function main() {
 
   fs.writeFileSync(OUT_FILE, output);
   fs.writeFileSync(GENERATED_TS_FILE, generatedTsOutput);
-  console.log(`✓ data.js written — ${RACQUETS.length} frames, ${STRINGS.length} strings, ${Object.keys(FRAME_META).length} frame meta entries`);
+  console.log(`✓ src/data/generated.ts + data.js written — ${RACQUETS.length} frames, ${STRINGS.length} strings, ${Object.keys(FRAME_META).length} frame meta entries`);
 
   if (isVerify) {
     console.log('\nRunning canary verification...');

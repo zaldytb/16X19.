@@ -145,7 +145,7 @@ Pipeline scripts live in `pipeline/scripts/*.ts` and run with **`tsx`**.
 ## Data pipeline
 
 **Source of truth:** `pipeline/data/frames.json`, `strings.json`, `canaries.json`  
-**Generated:** `data.js` — never hand-edit; regenerate with `npm run export` or `npm run pipeline`.
+**Generated:** `src/data/generated.ts` and compatibility `data.js` — never hand-edit; regenerate with `npm run export` or `npm run pipeline`.
 
 ## Debugging notes
 
@@ -173,7 +173,7 @@ npm run typecheck && npm run canary && npm run build
 
 ## Common pitfalls
 
-1. `data.js` is generated — edit JSON under `pipeline/data/` and re-run the pipeline.  
+1. `src/data/generated.ts` and `data.js` are generated — edit JSON under `pipeline/data/` and re-run the pipeline.  
 2. Tailwind via CDN — avoid risky dynamic class composition; keep existing utility strings when touching TS templates.  
 3. Dark mode: `data-theme="dark"` on `<html>`.  
 4. JSON field name: **`swingweight`** (lowercase `w`).  

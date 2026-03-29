@@ -48,7 +48,7 @@ npm run build
 | State | `src/state/` | Loadouts, setup sync, app/compare UI state |
 | UI | `src/ui/` | Pages, dock, shared renderers |
 | Bridge | `src/main.ts` | `window.*` exports for `onclick` / legacy names |
-| Data | `pipeline/data/*.json` → `npm run export` → `data.js` | Source of truth vs generated bundle import |
+| Data | `pipeline/data/*.json` → `npm run export` → `src/data/generated.ts` + `data.js` | Source of truth vs generated app/compat outputs |
 
 See [AGENTS.md](AGENTS.md) for agent-oriented detail and debugging notes.
 
@@ -59,7 +59,7 @@ See [AGENTS.md](AGENTS.md) for agent-oriented detail and debugging notes.
 ├── index.html
 ├── vite.config.ts
 ├── style.css
-├── data.js                 # generated — do not edit
+├── data.js                 # generated compatibility artifact — do not edit
 ├── src/
 │   ├── main.ts             # Vite entry + window bridge
 │   ├── global.d.ts         # Window typings for the bridge
@@ -113,11 +113,12 @@ The **active loadout** is the source of truth for the live app.
 
 **Generated (never hand-edit):**
 
-- `data.js` — produced by `npm run export` / `npm run pipeline`
+- `src/data/generated.ts` — produced by `npm run export` / `npm run pipeline`, used by the app
+- `data.js` — compatibility artifact produced by `npm run export` / `npm run pipeline`
 
 ```bash
 npm run validate          # schema validation
-npm run export            # JSON → data.js
+npm run export            # JSON → src/data/generated.ts + data.js
 npm run export:verify     # export + canary
 npm run pipeline          # validate + export:verify
 npm run ingest:frame

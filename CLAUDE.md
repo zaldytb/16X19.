@@ -21,9 +21,9 @@ npm run typecheck    # TypeScript check — must be zero errors
 npm run canary       # 5 regression tests — must pass with zero OBS drift
 
 # Data pipeline (when modifying pipeline/data/*.json)
-npm run pipeline     # validate + export:verify (validate, regenerate data.js, run canaries)
+npm run pipeline     # validate + export:verify (validate, regenerate generated app data + data.js, run canaries)
 npm run validate     # Validate frames.json / strings.json against schemas
-npm run export       # Regenerate data.js from JSON source files
+npm run export       # Regenerate src/data/generated.ts and data.js from JSON source files
 npm run canary:baseline  # Re-record expected canary values (after intentional engine changes)
 
 # Data ingestion
@@ -72,11 +72,12 @@ All pages derive their initial state from `getCurrentSetup()`. The active loadou
 
 ### Data layer
 
-- `pipeline/data/frames.json` — racquet database (source of truth, never edit `data.js` directly)
+- `pipeline/data/frames.json` — racquet database (source of truth, never edit generated outputs directly)
 - `pipeline/data/strings.json` — string database (source of truth)
-- `data.js` — **generated file** from `npm run export`; commit after regenerating
+- `src/data/generated.ts` — **generated app data module** from `npm run export`; commit after regenerating
+- `data.js` — **generated compatibility file** from `npm run export`; commit after regenerating
 - `pipeline/schemas/` — JSON schemas used by `npm run validate`
-- `src/data/loader.ts` — imports `RACQUETS`, `STRINGS`, `FRAME_META` from `data.js`
+- `src/data/loader.ts` — imports `RACQUETS`, `STRINGS`, `FRAME_META` from `src/data/generated.ts`
 
 ### UI pages (`src/ui/pages/`)
 
@@ -86,7 +87,7 @@ Route modules include `shell.ts`, `overview.ts`, `tune.ts`, `compare/`, `optimiz
 
 ## Critical rules
 
-- **Never edit `data.js` directly** — it's generated. Modify `pipeline/data/frames.json` or `pipeline/data/strings.json`, then run `npm run pipeline`.
+- **Never edit `src/data/generated.ts` or `data.js` directly** — both are generated. Modify `pipeline/data/frames.json` or `pipeline/data/strings.json`, then run `npm run pipeline`.
 - **Swingweight spelling** — field name in JSON data is `swingweight` (lowercase 'w'), not `swingWeight`.
 - **TypeScript strict mode** — `src/` (engine, state, UI) must pass `npm run typecheck` with zero errors.
 - **Canary tests have zero drift tolerance** — any OBS score change (even 0.1) will fail. If you intentionally change engine math, run `npm run canary:baseline` to re-record.

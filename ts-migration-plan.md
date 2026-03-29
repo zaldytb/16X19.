@@ -17,14 +17,15 @@ Pipeline tooling under **`pipeline/scripts/`** is **`.ts`** and is executed with
 | Types for `window` | `src/global.d.ts` |
 | Vite config | `vite.config.ts` |
 | Data source | `pipeline/data/*.json` |
-| Generated bundle import | `data.js` (from `npm run export`) |
+| Generated app data import | `src/data/generated.ts` (from `npm run export`) |
+| Compatibility artifact | `data.js` (from `npm run export`) |
 
 ## Ownership rules (for agents)
 
 1. **`src/main.ts`** is the single source of which global names map to which implementations.
 2. Prefer fixing behavior in the **TypeScript module**, not by adding parallel globals.
 3. **Do not** switch the SPA from Tailwind **CDN** to a Vite Tailwind plugin without a dedicated parity audit — dynamic class strings in TS must stay unchanged.
-4. **`data.js`** is generated only — edit JSON and run `npm run pipeline` / `npm run export`.
+4. **`src/data/generated.ts`** and **`data.js`** are generated only — edit JSON and run `npm run pipeline` / `npm run export`.
 
 ## Verification
 
@@ -36,7 +37,7 @@ npm run typecheck && npm run canary && npm run build
 
 - Remove or archive historical migration prompts (`codex-migration-prompt.md`, `migration-finish-prompt.md`, `walkthrough.md`) if you no longer need line-level audits of the old monolith.
 - **`pipeline/engine/leaderboard-v2.ts`** — legacy reference; live leaderboard UI is `src/ui/pages/leaderboard.ts`.
-- **`tools/frame-gui`** remains **JavaScript** for Electron (`main.js`); it spawns **`tsx pipeline/scripts/ingest.ts`** for imports.
+- **`tools/frame-gui`** is now an isolated **TypeScript** Electron project; it compiles to `tools/frame-gui/build/` and spawns **`tsx pipeline/scripts/ingest.ts`** for imports.
 - Align any remaining comments in `tools/*.html` that still say `node …/ingest.js` with **`tsx pipeline/scripts/ingest.ts`** (or use **`npm run ingest:frame`** / **`npm run ingest:string`** in docs).
 
 ## Definition of done (met)

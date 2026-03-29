@@ -268,12 +268,37 @@ function _renderDockPanelBible(container: HTMLElement): void {
       stringName = str ? str.name : '\u2014';
     }
 
+    const customName = (al.name || '').trim();
+    const titleLine = customName || frameName;
+    const titleEsc = titleLine.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+    const frameRow = customName
+      ? `<div class="dock-ctx-current-row">
+          <span class="dock-ctx-k">Frame</span>
+          <span class="dock-ctx-v">${frameName}</span>
+        </div>`
+      : '';
+
     container.innerHTML = `
       <div class="dock-ctx-current">
-        <div class="dock-ctx-label">Current build</div>
-        <div class="dock-ctx-current-name">${al.name || frameName}</div>
-        <div class="dock-ctx-current-detail">${stringName} \u00B7 M${al.mainsTension}/X${al.crossesTension}</div>
-        <div class="dock-ctx-current-obs">OBS ${obs}</div>
+        <div class="dock-ctx-current-head">
+          <span class="dock-ctx-label">Current build</span>
+          <div class="dock-ctx-current-obs-block" aria-label="Overall build score">
+            <span class="dock-ctx-current-obs-label">OBS</span>
+            <span class="dock-ctx-current-obs-val">${obs}</span>
+          </div>
+        </div>
+        <div class="dock-ctx-current-body">
+          <div class="dock-ctx-current-name" title="${titleEsc}">${titleLine}</div>
+          ${frameRow}
+          <div class="dock-ctx-current-row">
+            <span class="dock-ctx-k">Strings</span>
+            <span class="dock-ctx-v">${stringName}</span>
+          </div>
+          <div class="dock-ctx-current-row">
+            <span class="dock-ctx-k">Tension</span>
+            <span class="dock-ctx-v dock-ctx-mono">M${al.mainsTension} / X${al.crossesTension}</span>
+          </div>
+        </div>
       </div>
     ` + _dockContextActions([
       { label: '\u2192 View build overview', onclick: "switchMode('overview')" },
@@ -725,12 +750,29 @@ function _renderDockPanelOptimize(container: HTMLElement): void {
 
   const tensionLabel = `M${al.mainsTension} / X${al.crossesTension}`;
 
+  const frameDisp = racquet ? racquet.name.replace(/\s+\d+g$/, '') : '\u2014';
+  const frameDispEsc = frameDisp.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+
   container.innerHTML = `
     <div class="dock-ctx-current">
-      <div class="dock-ctx-label">Optimizing from</div>
-      <div class="dock-ctx-current-name">${racquet ? racquet.name.replace(/\s+\d+g$/, '') : '\u2014'}</div>
-      <div class="dock-ctx-current-detail">${stringName} \u00B7 ${tensionLabel}</div>
-      <div class="dock-ctx-current-obs">OBS ${obs}</div>
+      <div class="dock-ctx-current-head">
+        <span class="dock-ctx-label">Optimizing from</span>
+        <div class="dock-ctx-current-obs-block" aria-label="Overall build score">
+          <span class="dock-ctx-current-obs-label">OBS</span>
+          <span class="dock-ctx-current-obs-val">${obs}</span>
+        </div>
+      </div>
+      <div class="dock-ctx-current-body">
+        <div class="dock-ctx-current-name" title="${frameDispEsc}">${frameDisp}</div>
+        <div class="dock-ctx-current-row">
+          <span class="dock-ctx-k">Strings</span>
+          <span class="dock-ctx-v">${stringName}</span>
+        </div>
+        <div class="dock-ctx-current-row">
+          <span class="dock-ctx-k">Tension</span>
+          <span class="dock-ctx-v dock-ctx-mono">${tensionLabel}</span>
+        </div>
+      </div>
     </div>
   ` + _dockContextActions([
     { label: '\u2192 Back to overview', onclick: "switchMode('overview')" },

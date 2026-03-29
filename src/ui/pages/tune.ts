@@ -23,6 +23,7 @@ import {
   renderWhatToTryNext as renderSharedWhatToTryNext,
   renderExplorePrompt as renderSharedExplorePrompt
 } from '../shared/recommendations.js';
+import { getScoredSetup } from '../../utils/performance.js';
 
 // Window extensions for external dependencies
 interface WindowExt extends Window {
@@ -239,10 +240,7 @@ export function initTuneMode(setup: { racquet: Racquet; stringConfig: StringConf
 
   // Snapshot baseline from activeLoadout
   if (activeLoadout && (!tuneState.baseline || tuneState.baseline._signature !== _tuneLoadoutSignature(activeLoadout))) {
-    const tCtx = buildTensionContext(stringConfig, racquet);
-    const bStats = predictSetup(racquet, stringConfig);
-    const bObs = computeCompositeScore(bStats, tCtx);
-    const bIdent = generateIdentity(bStats, racquet, stringConfig);
+    const baselineScored = getScoredSetup({ racquet, stringConfig });
     tuneState.baseline = {
       _loadoutId: activeLoadout.id,
       _frameId: activeLoadout.frameId,
@@ -257,9 +255,9 @@ export function initTuneMode(setup: { racquet: Racquet; stringConfig: StringConf
       gauge: activeLoadout.gauge ?? undefined,
       mainsGauge: activeLoadout.mainsGauge ?? undefined,
       crossesGauge: activeLoadout.crossesGauge ?? undefined,
-      stats: bStats,
-      obs: +bObs.toFixed(1),
-      identity: bIdent
+      stats: baselineScored.stats,
+      obs: +baselineScored.obs.toFixed(1),
+      identity: baselineScored.identity
     };
   }
 
@@ -1158,10 +1156,10 @@ export function renderOverallBuildScore(
   const inTuneMode = getCurrentMode() === 'tune';
   const stats = inTuneMode && tuneState.explored?.stats
     ? tuneState.explored.stats
-    : predictSetup(setup.racquet, setup.stringConfig);
+    : getScoredSetup(setup).stats;
   const score = inTuneMode && typeof tuneState.explored?.obs === 'number'
     ? tuneState.explored.obs
-    : computeCompositeScore(stats, buildTensionContext(setup.stringConfig, setup.racquet));
+    : getScoredSetup(setup).obs;
 
   const tier = getObsTier(score);
   let deltaHTML = '';

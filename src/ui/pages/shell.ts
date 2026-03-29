@@ -33,6 +33,7 @@ import { renderComparisonPresets } from '../shared/presets.js';
 import { ssInstances } from '../components/searchable-select.js';
 import { showShareToast, copyToClipboard, exportLoadoutsToFile, importLoadoutsFromJSON, parseSharedBuildFromURL, generateShareURL } from '../../utils/share.js';
 import { toggleAppTheme } from '../theme.js';
+import { getScoredSetup } from '../../utils/performance.js';
 
 type CompareSlot = {
   id: number;
@@ -154,8 +155,7 @@ function buildCompareSlotFromLoadout(loadout: Loadout): CompareSlot | null {
   const setup = getSetupFromLoadout(loadout);
   if (!setup) return null;
 
-  const stats = predictSetup(setup.racquet, setup.stringConfig);
-  const identity = generateIdentity(stats, setup.racquet, setup.stringConfig);
+  const scored = getScoredSetup(setup);
 
   return {
     id: Date.now() + Math.random(),
@@ -166,10 +166,10 @@ function buildCompareSlotFromLoadout(loadout: Loadout): CompareSlot | null {
     crossesId: loadout.crossesId || '',
     mainsTension: loadout.mainsTension,
     crossesTension: loadout.crossesTension,
-    stats,
-    identity,
+    stats: scored.stats,
+    identity: scored.identity,
     sourceLoadoutId: loadout.id || null,
-    snapshotObs: loadout.obs || 0,
+    snapshotObs: loadout.obs || scored.obs,
   };
 }
 
@@ -202,7 +202,7 @@ function autoFillCompareFromSaved(): void {
     compareCandidates.slice(0, 3).forEach((candidate) => {
       const setup = getSetupFromLoadout(candidate);
       if (!setup) return;
-      const stats = predictSetup(setup.racquet, setup.stringConfig);
+      const stats = getScoredSetup(setup).stats;
       const latestState = runtimeWin.compareGetState?.();
       const emptySlot = latestState?.slots?.find((slot: any) => slot.loadout === null);
       if (emptySlot) runtimeWin.compareSetSlotLoadout(emptySlot.id, candidate, stats);
@@ -560,15 +560,14 @@ export function commitEditorToLoadout(): void {
 
   const setup = getSetupFromLoadout(baseLoadout);
   if (setup) {
-    const stats = predictSetup(setup.racquet, setup.stringConfig);
-    const tensionContext = buildTensionContext(setup.stringConfig, setup.racquet);
-    baseLoadout.stats = stats;
-    baseLoadout.obs = +computeCompositeScore(stats, tensionContext).toFixed(1);
-    baseLoadout.identity = generateIdentity(stats, setup.racquet, setup.stringConfig)?.name || '';
+    const scored = getScoredSetup(setup);
+    baseLoadout.stats = scored.stats;
+    baseLoadout.obs = +scored.obs.toFixed(1);
+    baseLoadout.identity = scored.identity?.name || '';
     baseLoadout.name = buildLoadoutName(setup.racquet, setup.stringConfig);
 
     if (context.kind === 'compare-slot') {
-      (window as any).compareSetSlotLoadout?.(context.slotId, baseLoadout, stats);
+      (window as any).compareSetSlotLoadout?.(context.slotId, baseLoadout, scored.stats);
       _compareEditorDirty = false;
     } else {
       baseLoadout._dirty = getSavedLoadouts().some((loadout) => loadout.id === baseLoadout.id);
@@ -614,7 +613,7 @@ export function addLoadoutToCompare(loadoutId: string): void {
     const targetSlotId = emptySlot?.id || compareState.slots[compareState.slots.length - 1]?.id;
     const setup = getSetupFromLoadout(loadout);
     if (targetSlotId && setup) {
-      const stats = predictSetup(setup.racquet, setup.stringConfig);
+      const stats = getScoredSetup(setup).stats;
       win.compareSetSlotLoadout(targetSlotId, { ...loadout }, stats);
       setDockEditorContext({ kind: 'compare-overview' });
       _compareEditorDirty = false;
@@ -651,7 +650,7 @@ export function addActiveLoadoutToCompare(): void {
   const targetSlotId = emptySlot?.id || compareState.slots[compareState.slots.length - 1]?.id;
   if (!targetSlotId) return;
 
-  const stats = predictSetup(setup.racquet, setup.stringConfig);
+  const stats = getScoredSetup(setup).stats;
   win.compareSetSlotLoadout(targetSlotId, { ...activeLoadout }, stats);
   setDockEditorContext({ kind: 'compare-overview' });
   _compareEditorDirty = false;

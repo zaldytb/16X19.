@@ -77,6 +77,25 @@ function runDigicraftBootSequence(): void {
   const logsContainer = document.getElementById('dc-boot-logs');
 
   if (!loader || !batteryTrack || !logsContainer) return;
+  const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+  const hasBootedThisSession = (() => {
+    try {
+      return window.sessionStorage.getItem('tll-boot-seen') === '1';
+    } catch (_err) {
+      return false;
+    }
+  })();
+
+  if (reduceMotion || hasBootedThisSession) {
+    loader.remove();
+    return;
+  }
+
+  try {
+    window.sessionStorage.setItem('tll-boot-seen', '1');
+  } catch (_err) {
+    // Ignore storage failures.
+  }
 
   batteryTrack.innerHTML = '';
   logsContainer.innerHTML = '';
@@ -112,7 +131,7 @@ function runDigicraftBootSequence(): void {
   pushLog();
 
   const bootInterval = window.setInterval(() => {
-    progress = Math.min(100, progress + 4);
+    progress = Math.min(100, progress + 8);
     if (pctText) pctText.innerText = `${progress}%`;
 
     const filled = Math.round((progress / 100) * totalSegments);
@@ -131,9 +150,9 @@ function runDigicraftBootSequence(): void {
       window.setTimeout(() => {
         loader.classList.add('opacity-0');
         window.setTimeout(() => loader.remove(), 700);
-      }, 400);
+      }, 120);
     }
-  }, 80);
+  }, 32);
 }
 
 // Bridge: expose all exports to window for inline HTML handlers

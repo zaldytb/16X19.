@@ -84,6 +84,8 @@ function getSortedStrings(): StringData[] {
 
 const SORTED_RACQUETS = getSortedRacquets();
 const SORTED_STRINGS = getSortedStrings();
+const RACQUET_NAME_BY_ID = new Map(SORTED_RACQUETS.map((racquet) => [racquet.id, racquet.name]));
+const STRING_NAME_BY_ID = new Map(SORTED_STRINGS.map((string) => [string.id, string.name]));
 
 function buildRacquetIndex(items: Racquet[]): IndexedOption[] {
   return items.map((racquetItem) => {
@@ -193,6 +195,8 @@ export function createSearchableSelect(
   let selectedValue = value;
   let highlightIndex = -1;
   let flatOptions: HTMLDivElement[] = []; // all visible option elements for keyboard nav
+  let pendingRenderFrame: number | null = null;
+  let lastFilter = '';
 
   function getDisplayText(val: string): string {
     if (!val) return '';
@@ -201,11 +205,9 @@ export function createSearchableSelect(
       return opt ? opt.label : '';
     }
     if (type === 'racquet') {
-      const r = RACQUETS.find(x => x.id === val);
-      return r ? r.name : '';
+      return RACQUET_NAME_BY_ID.get(val) || '';
     } else {
-      const s = STRINGS.find(x => x.id === val);
-      return s ? s.name : '';  // gauge is now a separate selector
+      return STRING_NAME_BY_ID.get(val) || '';  // gauge is now a separate selector
     }
   }
 
@@ -221,13 +223,15 @@ export function createSearchableSelect(
   }
 
   function renderOptions(filter = ''): void {
-    optionsContainer.innerHTML = '';
+    lastFilter = filter;
+    optionsContainer.replaceChildren();
     flatOptions = [];
     highlightIndex = -1;
     const q = filter.toLowerCase().trim();
 
     let lastGroup = '';
     let hasResults = false;
+    const fragment = document.createDocumentFragment();
 
     const sourceItems = type === 'custom'
       ? items.map((item) => {
@@ -265,7 +269,7 @@ export function createSearchableSelect(
         const groupLabel = document.createElement('div');
         groupLabel.className = 'ss-group-label';
         groupLabel.textContent = groupKey;
-        optionsContainer.appendChild(groupLabel);
+        fragment.appendChild(groupLabel);
         lastGroup = groupKey;
       }
 
@@ -294,18 +298,7 @@ export function createSearchableSelect(
         `;
       }
 
-      opt.addEventListener('mouseenter', () => {
-        flatOptions.forEach(o => o.classList.remove('ss-highlighted'));
-        opt.classList.add('ss-highlighted');
-        highlightIndex = flatOptions.indexOf(opt);
-      });
-
-      opt.addEventListener('click', (e) => {
-        e.stopPropagation();
-        selectOption(itemId);
-      });
-
-      optionsContainer.appendChild(opt);
+      fragment.appendChild(opt);
       flatOptions.push(opt);
     });
 
@@ -313,8 +306,21 @@ export function createSearchableSelect(
       const noRes = document.createElement('div');
       noRes.className = 'ss-no-results';
       noRes.textContent = 'No matches found';
-      optionsContainer.appendChild(noRes);
+      fragment.appendChild(noRes);
     }
+
+    optionsContainer.appendChild(fragment);
+  }
+
+  function queueRenderOptions(filter = ''): void {
+    lastFilter = filter;
+    if (pendingRenderFrame != null) {
+      cancelAnimationFrame(pendingRenderFrame);
+    }
+    pendingRenderFrame = requestAnimationFrame(() => {
+      pendingRenderFrame = null;
+      renderOptions(lastFilter);
+    });
   }
 
   function selectOption(val: string): void {
@@ -341,6 +347,10 @@ export function createSearchableSelect(
     container.classList.remove('ss-open');
     searchInput.value = '';
     highlightIndex = -1;
+    if (pendingRenderFrame != null) {
+      cancelAnimationFrame(pendingRenderFrame);
+      pendingRenderFrame = null;
+    }
   }
 
   function isOpen(): boolean {
@@ -359,7 +369,25 @@ export function createSearchableSelect(
 
   // Event: search input
   searchInput.addEventListener('input', () => {
-    renderOptions(searchInput.value);
+    queueRenderOptions(searchInput.value);
+  });
+
+  optionsContainer.addEventListener('mousemove', (e) => {
+    const option = (e.target as HTMLElement | null)?.closest('.ss-option') as HTMLDivElement | null;
+    if (!option) return;
+    const nextIndex = flatOptions.indexOf(option);
+    if (nextIndex < 0 || nextIndex === highlightIndex) return;
+    flatOptions.forEach((entry) => entry.classList.remove('ss-highlighted'));
+    option.classList.add('ss-highlighted');
+    highlightIndex = nextIndex;
+  });
+
+  optionsContainer.addEventListener('click', (e) => {
+    const option = (e.target as HTMLElement | null)?.closest('.ss-option') as HTMLDivElement | null;
+    if (!option) return;
+    e.stopPropagation();
+    const val = option.dataset.value;
+    if (val) selectOption(val);
   });
 
   // Event: keyboard
@@ -412,11 +440,15 @@ export function createSearchableSelect(
         customOptions = newOptions;
         items = newOptions;
         indexedOptions = [];
-        renderOptions();
+        queueRenderOptions(lastFilter);
       }
     },
     _cleanup: () => {
       document.removeEventListener('click', onDocClick);
+      if (pendingRenderFrame != null) {
+        cancelAnimationFrame(pendingRenderFrame);
+        pendingRenderFrame = null;
+      }
     }
   };
 

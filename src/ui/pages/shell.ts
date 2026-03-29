@@ -21,8 +21,7 @@ import {
 import * as Overview from './overview.js';
 import * as Tune from './tune.js';
 import * as ComparePage from './compare/index.js';
-import * as Optimize from './optimize.js';
-import * as Compendium from './compendium.js';
+import { SLOT_COLORS } from './compare/types.js';
 import {
   _handleSharedBuildURL,
   _initLandingSearch,
@@ -86,6 +85,14 @@ let _optimizeInitialized = false;
 let _compendiumInitialized = false;
 let _compareEditorDirty = false;
 let _pendingActiveRefreshFrame: number | null = null;
+
+async function ensureOptimizeModule() {
+  return import('./optimize.js');
+}
+
+async function ensureCompendiumModule() {
+  return import('./compendium.js');
+}
 
 function getCompareSlots(): CompareSlot[] {
   return getComparisonSlots<CompareSlot>();
@@ -676,23 +683,27 @@ export function switchMode(mode: string): void {
       }
     }
   } else if (mode === 'optimize') {
-    if (!_optimizeInitialized) {
-      Optimize.initOptimize();
-      _optimizeInitialized = true;
-    }
-  } else if (mode === 'compendium') {
-    if (!_compendiumInitialized) {
-      if (win.initCompendium && win.initCompendium !== Compendium.initCompendium) {
-        win.initCompendium();
-      } else {
-        Compendium.initCompendium();
+    void ensureOptimizeModule().then((Optimize) => {
+      if (!_optimizeInitialized) {
+        Optimize.initOptimize();
+        _optimizeInitialized = true;
       }
-      _compendiumInitialized = true;
-    } else if (win._compSyncWithActiveLoadout && win._compSyncWithActiveLoadout !== Compendium._compSyncWithActiveLoadout) {
-      win._compSyncWithActiveLoadout();
-    } else {
-      Compendium._compSyncWithActiveLoadout();
-    }
+    });
+  } else if (mode === 'compendium') {
+    void ensureCompendiumModule().then((Compendium) => {
+      if (!_compendiumInitialized) {
+        if (win.initCompendium && win.initCompendium !== Compendium.initCompendium) {
+          win.initCompendium();
+        } else {
+          Compendium.initCompendium();
+        }
+        _compendiumInitialized = true;
+      } else if (win._compSyncWithActiveLoadout && win._compSyncWithActiveLoadout !== Compendium._compSyncWithActiveLoadout) {
+        win._compSyncWithActiveLoadout();
+      } else {
+        Compendium._compSyncWithActiveLoadout();
+      }
+    });
   }
 
   renderDockContextPanel();
@@ -868,7 +879,7 @@ export function init(): void {
   _initCalled = true;
 
   installWindowAppStateBridge();
-  setSlotColors(ComparePage.getSlotColors());
+  setSlotColors(SLOT_COLORS);
   _syncLegacyModeState(getCurrentMode());
 
   const selectRacquet = $('#select-racquet');
@@ -889,7 +900,7 @@ export function init(): void {
   $('#btn-hybrid')?.addEventListener('click', () => _handleHybridToggle(true));
 
   renderComparisonPresets();
-  document.getElementById('btn-add-slot')?.addEventListener('click', ComparePage.addComparisonSlot);
+  document.getElementById('btn-add-slot')?.addEventListener('click', () => ComparePage.addComparisonSlot());
 
   document.querySelectorAll('.mode-btn').forEach((button) => {
     button.addEventListener('click', () => {

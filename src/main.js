@@ -13,15 +13,10 @@ import { getActiveLoadout, getSavedLoadouts, setActiveLoadout, setSavedLoadouts 
 import { createLoadout as _createLoadoutTS } from './state/loadout.js';
 
 // Import page modules
-import * as Leaderboard from './ui/pages/leaderboard.js';
 import * as MyLoadouts from './ui/pages/my-loadouts.js';
-import * as FindMyBuild from './ui/pages/find-my-build.js';
 import * as Overview from './ui/pages/overview.js';
-import * as Optimize from './ui/pages/optimize.js';
 import * as Tune from './ui/pages/tune.js';
 import * as ComparePage from './ui/pages/compare/index.js';
-import * as Compendium from './ui/pages/compendium.js';
-import * as Strings from './ui/pages/strings.js';
 import * as Shell from './ui/pages/shell.js';
 
 // Import dock components
@@ -37,6 +32,37 @@ import * as SharedRenderers from './ui/shared/renderers.js';
 import * as SharedRecommendations from './ui/shared/recommendations.js';
 import * as SharedPresets from './ui/shared/presets.js';
 import * as SharedHelpers from './ui/shared/helpers.js';
+
+const pageLoaders = {
+  leaderboard: () => import('./ui/pages/leaderboard.js'),
+  findMyBuild: () => import('./ui/pages/find-my-build.js'),
+  optimize: () => import('./ui/pages/optimize.js'),
+  compendium: () => import('./ui/pages/compendium.js'),
+  strings: () => import('./ui/pages/strings.js'),
+};
+
+let leaderboardModulePromise = null;
+
+async function ensureLeaderboardModule() {
+  if (!leaderboardModulePromise) {
+    leaderboardModulePromise = pageLoaders.leaderboard().then((mod) => {
+      if (mod._lbv2State) {
+        window._lbv2State = mod._lbv2State;
+      }
+      return mod;
+    });
+  }
+  return leaderboardModulePromise;
+}
+
+function bindLazyFunction(windowKey, loader, exportKey = windowKey) {
+  window[windowKey] = async (...args) => {
+    const mod = await loader();
+    const fn = mod[exportKey];
+    if (typeof fn !== 'function') return undefined;
+    return fn(...args);
+  };
+}
 
 // Bridge: expose all exports to window for inline HTML handlers
 // This maintains backward compatibility with onclick="funcName()" patterns
@@ -74,18 +100,20 @@ window.renderMyLoadouts = MyLoadouts.renderMyLoadouts;
 window.confirmRemoveLoadout = MyLoadouts.confirmRemoveLoadout;
 
 // Bridge: expose Find My Build functions to window
-window.openFindMyBuild = FindMyBuild.openFindMyBuild;
-window.closeFindMyBuild = FindMyBuild.closeFindMyBuild;
-window.fmbBack = FindMyBuild.fmbBack;
-window.fmbNext = FindMyBuild.fmbNext;
-window._fmbShowStep = FindMyBuild._fmbShowStep;
-window._fmbUpdateNextState = FindMyBuild._fmbUpdateNextState;
-window._fmbGenerateProfile = FindMyBuild._fmbGenerateProfile;
-window._fmbShowResults = FindMyBuild._fmbShowResults;
-window._fmbSearchDirection = FindMyBuild._fmbSearchDirection;
-window._fmbRankFrames = FindMyBuild._fmbRankFrames;
-window._fmbRenderFrameCard = FindMyBuild._fmbRenderFrameCard;
-window._fmbAction = FindMyBuild._fmbAction;
+[
+  'openFindMyBuild',
+  'closeFindMyBuild',
+  'fmbBack',
+  'fmbNext',
+  '_fmbShowStep',
+  '_fmbUpdateNextState',
+  '_fmbGenerateProfile',
+  '_fmbShowResults',
+  '_fmbSearchDirection',
+  '_fmbRankFrames',
+  '_fmbRenderFrameCard',
+  '_fmbAction'
+].forEach((key) => bindLazyFunction(key, pageLoaders.findMyBuild));
 
 // Bridge: expose Overview functions to window
 window.renderDashboard = Overview.renderDashboard;
@@ -104,19 +132,21 @@ window.generateFitProfile = Overview.generateFitProfile;
 window.generateWarnings = Overview.generateWarnings;
 
 // Bridge: expose Optimize functions to window
-window.initOptimize = Optimize.initOptimize;
-window.runOptimizer = Optimize.runOptimizer;
-window.renderOptimizerResults = Optimize.renderOptimizerResults;
-window._optApplyTensionFilter = Optimize._optApplyTensionFilter;
-window._optClearTensionFilter = Optimize._optClearTensionFilter;
-window._optBuildPresetData = Optimize._optBuildPresetData;
-window.optActionView = Optimize.optActionView;
-window.optActionTune = Optimize.optActionTune;
-window.optActionCompare = Optimize.optActionCompare;
-window.optActionSave = Optimize.optActionSave;
-window._toggleOptMS = Optimize._toggleOptMS;
-window._updateOptMSLabel = Optimize._updateOptMSLabel;
-window._renderExcludeTags = Optimize._renderExcludeTags;
+[
+  'initOptimize',
+  'runOptimizer',
+  'renderOptimizerResults',
+  '_optApplyTensionFilter',
+  '_optClearTensionFilter',
+  '_optBuildPresetData',
+  'optActionView',
+  'optActionTune',
+  'optActionCompare',
+  'optActionSave',
+  '_toggleOptMS',
+  '_updateOptMSLabel',
+  '_renderExcludeTags',
+].forEach((key) => bindLazyFunction(key, pageLoaders.optimize));
 
 // Bridge: expose Tune functions to window
 window.toggleTuneMode = Tune.toggleTuneMode;
@@ -211,57 +241,61 @@ window.getSlotColors = ComparePage.getSlotColors;
 // app.js still exposes compatibility globals during the migration.
 
 // Bridge: expose Compendium functions to window
-window.initCompendium = Compendium.initCompendium;
-window._compSwitchTab = Compendium._compSwitchTab;
-window._compToggleHud = Compendium._compToggleHud;
-window._compGetFilteredRacquets = Compendium._compGetFilteredRacquets;
-window._compRenderRoster = Compendium._compRenderRoster;
-window._compSelectFrame = Compendium._compSelectFrame;
-window._compSyncWithActiveLoadout = Compendium._compSyncWithActiveLoadout;
-window._compRenderMain = Compendium._compRenderMain;
-window._compUpdateInjectModeUI = Compendium._compUpdateInjectModeUI;
-window._compSetInjectMode = Compendium._compSetInjectMode;
-window._compInitStringInjector = Compendium._compInitStringInjector;
-window._compPopulateGaugeDropdown = Compendium._compPopulateGaugeDropdown;
-window._compPreviewStats = Compendium._compPreviewStats;
-window._compRenderPreviewBars = Compendium._compRenderPreviewBars;
-window._compClearPreview = Compendium._compClearPreview;
-window._compApplyInjection = Compendium._compApplyInjection;
-window._compClearInjection = Compendium._compClearInjection;
-window._compGenerateTopBuilds = Compendium._compGenerateTopBuilds;
-window._compPickDiverseBuilds = Compendium._compPickDiverseBuilds;
-window._compRenderBuildCard = Compendium._compRenderBuildCard;
-window._compSetSort = Compendium._compSetSort;
-window._compCreateLoadoutFromBuild = Compendium._compCreateLoadoutFromBuild;
-window._compAction = Compendium._compAction;
-window._compAddBuildToCompare = Compendium._compAddBuildToCompare;
-window._compActionCompare = Compendium._compActionCompare;
+[
+  'initCompendium',
+  '_compSwitchTab',
+  '_compToggleHud',
+  '_compGetFilteredRacquets',
+  '_compRenderRoster',
+  '_compSelectFrame',
+  '_compSyncWithActiveLoadout',
+  '_compRenderMain',
+  '_compUpdateInjectModeUI',
+  '_compSetInjectMode',
+  '_compInitStringInjector',
+  '_compPopulateGaugeDropdown',
+  '_compPreviewStats',
+  '_compRenderPreviewBars',
+  '_compClearPreview',
+  '_compApplyInjection',
+  '_compClearInjection',
+  '_compGenerateTopBuilds',
+  '_compPickDiverseBuilds',
+  '_compRenderBuildCard',
+  '_compSetSort',
+  '_compCreateLoadoutFromBuild',
+  '_compAction',
+  '_compAddBuildToCompare',
+  '_compActionCompare',
+].forEach((key) => bindLazyFunction(key, pageLoaders.compendium));
 
 // Bridge: expose String Compendium functions to window
-window._stringEnsureInitialized = Strings._stringEnsureInitialized;
-window._stringToggleHud = Strings._stringToggleHud;
-window._stringGetFilteredStrings = Strings._stringGetFilteredStrings;
-window._stringSyncWithActiveLoadout = Strings._stringSyncWithActiveLoadout;
-window._stringRenderRoster = Strings._stringRenderRoster;
-window._stringGetArchetype = Strings._stringGetArchetype;
-window._stringSelectString = Strings._stringSelectString;
-window._stringGeneratePills = Strings._stringGeneratePills;
-window._stringRenderBatteryBars = Strings._stringRenderBatteryBars;
-window._stringFindSimilarStrings = Strings._stringFindSimilarStrings;
-window._stringFindBestFrames = Strings._stringFindBestFrames;
-window._stringRenderMain = Strings._stringRenderMain;
-window._stringInitModulator = Strings._stringInitModulator;
-window._stringSetModMode = Strings._stringSetModMode;
-window._stringOnCrossesStringChange = Strings._stringOnCrossesStringChange;
-window._stringOnCrossesGaugeChange = Strings._stringOnCrossesGaugeChange;
-window._stringOnFrameChange = Strings._stringOnFrameChange;
-window._stringOnGaugeChange = Strings._stringOnGaugeChange;
-window._stringOnTensionChange = Strings._stringOnTensionChange;
-window._stringUpdatePreview = Strings._stringUpdatePreview;
-window._stringRenderPreviewBars = Strings._stringRenderPreviewBars;
-window._stringClearPreview = Strings._stringClearPreview;
-window._stringAddToLoadout = Strings._stringAddToLoadout;
-window._stringSetActiveLoadout = Strings._stringSetActiveLoadout;
+[
+  '_stringEnsureInitialized',
+  '_stringToggleHud',
+  '_stringGetFilteredStrings',
+  '_stringSyncWithActiveLoadout',
+  '_stringRenderRoster',
+  '_stringGetArchetype',
+  '_stringSelectString',
+  '_stringGeneratePills',
+  '_stringRenderBatteryBars',
+  '_stringFindSimilarStrings',
+  '_stringFindBestFrames',
+  '_stringRenderMain',
+  '_stringInitModulator',
+  '_stringSetModMode',
+  '_stringOnCrossesStringChange',
+  '_stringOnCrossesGaugeChange',
+  '_stringOnFrameChange',
+  '_stringOnGaugeChange',
+  '_stringOnTensionChange',
+  '_stringUpdatePreview',
+  '_stringRenderPreviewBars',
+  '_stringClearPreview',
+  '_stringAddToLoadout',
+  '_stringSetActiveLoadout',
+].forEach((key) => bindLazyFunction(key, pageLoaders.strings));
 
 // Bridge: expose dock component functions to window
 window.toggleDockCollapse = DockCollapse.toggleDockCollapse;
@@ -370,16 +404,27 @@ Object.defineProperty(window, 'savedLoadouts', {
 });
 
 // Bridge leaderboard exports to window (needed for inline HTML handlers)
-Object.entries(Leaderboard).forEach(([key, val]) => {
-  if (typeof val === 'function' || key === '_lbv2State') {
-    window[key] = val;
-  }
-});
+[
+  'initLeaderboard',
+  'initLeaderboardApp',
+  '_lbv2SetStat',
+  '_lbv2SetFilter',
+  '_lbv2SetView',
+  '_lbv2SetFrameFilter',
+  '_lbv2ClearFrameFilters',
+  '_lbv2SetStringFilter',
+  '_lbv2ClearStringFilters',
+  '_lbv2View',
+  '_lbv2ViewFrame',
+  '_lbv2ViewString',
+  '_lbv2Compare',
+].forEach((key) => bindLazyFunction(key, ensureLeaderboardModule, key));
 
-// Initialize leaderboard with app dependencies
-if (Leaderboard.initLeaderboardApp) {
-  Leaderboard.initLeaderboardApp(App);
-}
+window.initLeaderboardApp = async (...args) => {
+  const mod = await ensureLeaderboardModule();
+  return mod.initLeaderboardApp?.(...args);
+};
+window._lbv2State = window._lbv2State || { initialized: false };
 
 // Debug: confirm bridge worked (only in development)
 if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {

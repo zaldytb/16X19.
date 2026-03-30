@@ -4,9 +4,11 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RACQUETS } from '../data/loader.js';
-import type { Racquet, Loadout } from '../engine/types.js';
+import type { Racquet } from '../engine/types.js';
 import { generateTopBuilds } from '../state/presets.js';
 import type { Build } from '../state/presets.js';
+import { createLoadout, saveLoadout } from '../state/loadout.js';
+import { activateLoadout } from '../ui/pages/shell.js';
 
 interface FMBAnswers {
   swing: string | null;
@@ -24,6 +26,19 @@ interface FrameResult {
 
 interface FindMyBuildProps {
   onClose: () => void;
+}
+
+function buildToLoadout(frameId: string, build: Build) {
+  const stringId = build.isHybrid
+    ? (build.mains?.id || '')
+    : (build.string?.id || '');
+
+  return createLoadout(frameId, stringId, build.tension, {
+    isHybrid: build.isHybrid,
+    mainsId: build.mains?.id || null,
+    crossesId: build.crosses?.id || null,
+    crossesTension: build.crossesTension,
+  });
 }
 
 const swingOptions = [
@@ -136,58 +151,28 @@ export function FindMyBuild({ onClose }: FindMyBuildProps) {
   }, [step]);
 
   const handleActivateBuild = useCallback((frameId: string, build: Build) => {
-    const win = window as any;
-    const stringId = build.isHybrid
-      ? (build.mains?.id || '')
-      : (build.string?.id || '');
-    const loadout = win.createLoadout?.(
-      frameId,
-      stringId,
-      build.tension,
-      {
-        isHybrid: build.isHybrid,
-        mainsId: build.mains?.id || null,
-        crossesId: build.crosses?.id || null,
-        mainsTension: build.tension,
-        crossesTension: build.crossesTension,
-      }
-    );
+    const loadout = buildToLoadout(frameId, build);
     if (loadout) {
-      win.activateLoadout?.(loadout);
+      activateLoadout(loadout);
       onClose();
     }
   }, [onClose]);
 
   const handleSaveBuild = useCallback((frameId: string, build: Build) => {
-    const win = window as any;
-    const stringId = build.isHybrid
-      ? (build.mains?.id || '')
-      : (build.string?.id || '');
-    const loadout = win.createLoadout?.(
-      frameId,
-      stringId,
-      build.tension,
-      {
-        isHybrid: build.isHybrid,
-        mainsId: build.mains?.id || null,
-        crossesId: build.crosses?.id || null,
-        mainsTension: build.tension,
-        crossesTension: build.crossesTension,
-      }
-    );
+    const loadout = buildToLoadout(frameId, build);
     if (loadout) {
-      win.saveLoadout?.(loadout);
+      saveLoadout(loadout);
     }
   }, []);
 
-  const handleOptimizeFrame = useCallback((frameId: string) => {
-    const win = window as any;
-    const loadout = win.createLoadout?.(frameId, null, 55, {});
+  const handleOptimizeFrame = useCallback((result: FrameResult) => {
+    const topBuild = result.topBuilds[0];
+    const loadout = topBuild ? buildToLoadout(result.racquet.id, topBuild) : null;
     if (loadout) {
-      win.activateLoadout?.(loadout);
-      onClose();
-      navigate('/optimize');
+      activateLoadout(loadout);
     }
+    onClose();
+    navigate('/optimize');
   }, [onClose, navigate]);
 
   return (
@@ -385,7 +370,7 @@ export function FindMyBuild({ onClose }: FindMyBuildProps) {
                       </div>
                       <div className="flex gap-2">
                         <button
-                          onClick={() => handleOptimizeFrame(result.racquet.id)}
+                          onClick={() => handleOptimizeFrame(result)}
                           className="px-3 py-1.5 border border-dc-accent text-dc-accent font-mono text-xs uppercase hover:bg-dc-accent hover:text-dc-ink transition-colors"
                         >
                           Optimize

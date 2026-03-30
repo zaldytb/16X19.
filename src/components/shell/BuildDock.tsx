@@ -1,4 +1,17 @@
 import { useRef } from 'react';
+import { toggleDockCollapse } from '../../ui/components/dock-collapse.js';
+import { toggleMobileDock } from '../../ui/components/mobile-dock.js';
+import { toggleAppTheme } from '../../ui/theme.js';
+import {
+  saveActiveLoadout,
+  shareActiveLoadout,
+  resetActiveLoadout,
+  exportLoadouts,
+  importLoadouts,
+  _handleHybridToggle,
+  cancelCompareSlotEditing,
+  applyDockEditorChanges,
+} from '../../ui/pages/shell.js';
 
 export function BuildDock() {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -7,7 +20,7 @@ export function BuildDock() {
     <>
       <aside className="build-dock" id="build-dock">
         <div className="dock-rail" id="dock-rail">
-          <button className="dock-rail-expand" onClick={() => window.toggleDockCollapse?.()} title="Expand dock">
+          <button className="dock-rail-expand" onClick={() => toggleDockCollapse()} title="Expand dock">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><polyline points="6 4 10 8 6 12"/></svg>
           </button>
           <div className="dock-rail-obs" id="dock-rail-obs">—</div>
@@ -16,7 +29,7 @@ export function BuildDock() {
 
         <div className="builder-panel flex flex-col gap-4 min-w-0" id="builder-panel">
           <div className="flex justify-end">
-            <button className="w-7 h-7 flex items-center justify-center border border-dc-border bg-transparent text-dc-storm hover:text-dc-platinum hover:border-dc-border-hover transition-colors" onClick={() => window.toggleDockCollapse?.()} title="Collapse dock">
+            <button className="w-7 h-7 flex items-center justify-center border border-dc-border bg-transparent text-dc-storm hover:text-dc-platinum hover:border-dc-border-hover transition-colors" onClick={() => toggleDockCollapse()} title="Collapse dock">
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><polyline points="8 2 4 6 8 10"/></svg>
             </button>
           </div>
@@ -41,15 +54,15 @@ export function BuildDock() {
               </div>
 
               <div className="grid grid-cols-3">
-                <button className="flex items-center justify-center gap-1.5 py-2.5 font-mono text-[9px] uppercase tracking-[0.15em] text-dc-storm hover:text-dc-platinum hover:bg-dc-void-lift transition-colors border-r border-dc-border" onClick={() => window.saveActiveLoadout?.()} title="Save to My Loadouts">
+                <button className="flex items-center justify-center gap-1.5 py-2.5 font-mono text-[9px] uppercase tracking-[0.15em] text-dc-storm hover:text-dc-platinum hover:bg-dc-void-lift transition-colors border-r border-dc-border" onClick={() => saveActiveLoadout()} title="Save to My Loadouts">
                   <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M11 13H3a1 1 0 01-1-1V2a1 1 0 011-1h5.5L12 4.5V12a1 1 0 01-1 1z"/><polyline points="8.5 1 8.5 5 12 5"/></svg>
                   Save
                 </button>
-                <button className="flex items-center justify-center gap-1.5 py-2.5 font-mono text-[9px] uppercase tracking-[0.15em] text-dc-storm hover:text-dc-platinum hover:bg-dc-void-lift transition-colors border-r border-dc-border" onClick={() => window.shareActiveLoadout?.()} title="Copy share link">
+                <button className="flex items-center justify-center gap-1.5 py-2.5 font-mono text-[9px] uppercase tracking-[0.15em] text-dc-storm hover:text-dc-platinum hover:bg-dc-void-lift transition-colors border-r border-dc-border" onClick={() => shareActiveLoadout()} title="Copy share link">
                   <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5 9l4-4M9 5v3.5M9 5H5.5" strokeLinecap="round" strokeLinejoin="round"/><rect x="1" y="1" width="12" height="12" rx="2.5"/></svg>
                   Share
                 </button>
-                <button className="flex items-center justify-center gap-1.5 py-2.5 font-mono text-[9px] uppercase tracking-[0.15em] text-dc-storm hover:text-dc-platinum hover:bg-dc-void-lift transition-colors" onClick={() => window.resetActiveLoadout?.()} title="Clear active loadout">
+                <button className="flex items-center justify-center gap-1.5 py-2.5 font-mono text-[9px] uppercase tracking-[0.15em] text-dc-storm hover:text-dc-platinum hover:bg-dc-void-lift transition-colors" onClick={() => resetActiveLoadout()} title="Clear active loadout">
                   <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="1 1 4 1 4 4"/><path d="M3.5 1.5A6 6 0 1 1 1.5 8"/></svg>
                   Reset
                 </button>
@@ -73,14 +86,14 @@ export function BuildDock() {
             </div>
 
             <div className="flex border border-t-0 border-dc-border">
-              <button className="flex-1 flex items-center justify-center gap-1.5 py-2 font-mono text-[9px] uppercase tracking-[0.12em] text-dc-storm hover:text-dc-platinum hover:bg-dc-void-lift transition-colors border-r border-dc-border" onClick={() => window.exportLoadouts?.()}>
+              <button className="flex-1 flex items-center justify-center gap-1.5 py-2 font-mono text-[9px] uppercase tracking-[0.12em] text-dc-storm hover:text-dc-platinum hover:bg-dc-void-lift transition-colors border-r border-dc-border" onClick={() => exportLoadouts()}>
                 <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 2v6M3.5 5.5L6 8l2.5-2.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M2 9v1.5h8V9" strokeLinecap="round"/></svg>
                 Export
               </button>
               <label className="flex-1 flex items-center justify-center gap-1.5 py-2 font-mono text-[9px] uppercase tracking-[0.12em] text-dc-storm hover:text-dc-platinum hover:bg-dc-void-lift transition-colors cursor-pointer">
                 <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 8V2M3.5 4.5L6 2l2.5 2.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M2 9v1.5h8V9" strokeLinecap="round"/></svg>
                 Import
-                <input ref={fileInputRef} type="file" accept=".json" onChange={(event) => window.importLoadouts?.(event)} className="hidden" />
+                <input ref={fileInputRef} type="file" accept=".json" onChange={(event) => importLoadouts(event.nativeEvent)} className="hidden" />
               </label>
             </div>
           </div>
@@ -109,8 +122,8 @@ export function BuildDock() {
                 </span>
 
                 <div className="flex border border-dc-border">
-                  <button className="flex-1 py-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] bg-dc-platinum text-dc-void border-r border-dc-border transition-colors active" data-mode="full" id="btn-full" onClick={() => window._handleHybridToggle?.(false)}>Full Bed</button>
-                  <button className="flex-1 py-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] bg-transparent text-dc-storm hover:text-dc-platinum transition-colors" data-mode="hybrid" id="btn-hybrid" onClick={() => window._handleHybridToggle?.(true)}>Hybrid</button>
+                  <button className="flex-1 py-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] bg-dc-platinum text-dc-void border-r border-dc-border transition-colors active" data-mode="full" id="btn-full" onClick={() => _handleHybridToggle(false)}>Full Bed</button>
+                  <button className="flex-1 py-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] bg-transparent text-dc-storm hover:text-dc-platinum transition-colors" data-mode="hybrid" id="btn-hybrid" onClick={() => _handleHybridToggle(true)}>Hybrid</button>
                 </div>
 
                 <div id="full-bed-config" className="flex flex-col gap-2 pt-1">
@@ -167,8 +180,8 @@ export function BuildDock() {
               <div className="dock-editor-compare-actions hidden" id="dock-editor-compare-actions">
                 <div className="dock-editor-compare-copy" id="dock-editor-compare-copy">Changes stay in the dock until you apply them to this compare slot.</div>
                 <div className="dock-editor-compare-row">
-                  <button className="dock-editor-compare-btn" type="button" onClick={() => window.cancelCompareSlotEditing?.()}>Cancel</button>
-                  <button className="dock-editor-compare-btn dock-editor-compare-btn-primary" id="dock-editor-compare-apply" type="button" onClick={() => window.applyDockEditorChanges?.()} disabled>Apply To Slot</button>
+                  <button className="dock-editor-compare-btn" type="button" onClick={() => cancelCompareSlotEditing()}>Cancel</button>
+                  <button className="dock-editor-compare-btn dock-editor-compare-btn-primary" id="dock-editor-compare-apply" type="button" onClick={() => applyDockEditorChanges()} disabled>Apply To Slot</button>
                 </div>
               </div>
             </div>
@@ -176,7 +189,7 @@ export function BuildDock() {
         </div>
       </aside>
 
-      <div className="dock-mobile-bar" id="dock-mobile-bar" onClick={() => window.toggleMobileDock?.()}>
+      <div className="dock-mobile-bar" id="dock-mobile-bar" onClick={() => toggleMobileDock()}>
         <div className="dock-mob-lead">
           <span className="dock-mob-kicker">Builder</span>
           <div className="dock-mob-summary" id="dock-mob-summary">
@@ -185,7 +198,7 @@ export function BuildDock() {
           </div>
         </div>
         <svg className="dock-mob-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="4 6 8 10 12 6"/></svg>
-        <button className="dock-mob-theme" id="dock-mob-theme" onClick={(event) => { event.stopPropagation(); window.toggleTheme?.(); }} title="Toggle theme">
+        <button className="dock-mob-theme" id="dock-mob-theme" onClick={(event) => { event.stopPropagation(); toggleAppTheme(); }} title="Toggle theme">
           <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="4" stroke="currentColor" strokeWidth="1.5"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.93 4.93l1.41 1.41M13.66 13.66l1.41 1.41M4.93 15.07l1.41-1.41M13.66 6.34l1.41-1.41" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
         </button>
       </div>

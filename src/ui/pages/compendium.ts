@@ -10,10 +10,27 @@ import {
   predictSetup,
 } from '../../engine/index.js';
 import type { Loadout, Racquet, SetupStats } from '../../engine/types.js';
-import { createLoadout } from '../../state/loadout.js';
+import { createLoadout, saveLoadout } from '../../state/loadout.js';
 import { generateBuildReason, generateTopBuilds, pickDiverseBuilds, type Build } from '../../state/presets.js';
 import { getCurrentSetup } from '../../state/setup-sync.js';
 import { createSearchableSelect, ssInstances } from '../components/searchable-select.js';
+import { activateLoadout, switchMode } from './shell.js';
+import { getState as compareGetState, setSlotLoadout as compareSetSlotLoadout } from './compare/index.js';
+import { getCompBaseObs, setCompBaseObs } from './comp-base-obs.js';
+
+// ---------------------------------------------------------------------------
+// Tab-activation callbacks — avoids circular import with strings.ts.
+// Shell.ts registers these during init().
+// ---------------------------------------------------------------------------
+type CompendiumTabCallbacks = {
+  onStringsTabActivate?: () => void;
+};
+
+let _compTabCbs: CompendiumTabCallbacks = {};
+
+export function registerCompendiumTabCallbacks(cbs: CompendiumTabCallbacks): void {
+  _compTabCbs = { ..._compTabCbs, ...cbs };
+}
 
 const RACQUET_DATA = (RACQUETS as unknown) as Racquet[];
 
@@ -33,12 +50,6 @@ interface CompInjectState {
   baseStats: SetupStats | null;
 }
 
-interface CompareWindowExt extends Window {
-  compareGetState?: () => { slots?: Array<{ id: string; loadout: Loadout | null }> };
-  compareSetSlotLoadout?: (slotId: string, loadout: Loadout, stats: SetupStats) => void;
-  createLoadout?: typeof createLoadout;
-}
-
 type BuildWithArchetype = Build & { archetype?: string };
 
 let _compSelectedRacquetId: string | null = null;
@@ -56,11 +67,6 @@ let _compInjectState: CompInjectState = {
   mode: 'fullbed',
   baseStats: null,
 };
-
-function getWindowFn<T extends (...args: any[]) => any>(name: string): T | null {
-  const value = (window as any)[name];
-  return typeof value === 'function' ? (value as T) : null;
-}
 
 function _extractBrand(name: string): string {
   const brandMap: Record<string, string> = {
@@ -98,20 +104,17 @@ export function _compSwitchTab(tab: string): void {
   if (activePanel) activePanel.classList.remove('hidden');
 
   if (tab === 'strings') {
-    getWindowFn('_stringEnsureInitialized')?.();
-    getWindowFn('_stringSyncWithActiveLoadout')?.();
+    _compTabCbs.onStringsTabActivate?.();
   }
 
   if (tab === 'leaderboard') {
     const leaderboardPanel = document.getElementById('comp-tab-leaderboard');
-    const leaderboardShellMounted = !!leaderboardPanel?.querySelector('#lb2-results');
-    const leaderboardState = (window as any)._lbv2State;
-    const shouldInitLeaderboard =
-      typeof leaderboardState !== 'undefined' &&
-      (!leaderboardState.initialized || !leaderboardShellMounted);
-
-    if (shouldInitLeaderboard) {
-      window.setTimeout(() => getWindowFn('initLeaderboard')?.(), 50);
+    if (!leaderboardPanel?.querySelector('#lb2-results')) {
+      import('./leaderboard.js').then((mod) => {
+        if (typeof mod.initLeaderboard === 'function') {
+          mod.initLeaderboard();
+        }
+      });
     }
   }
 }
@@ -196,6 +199,54 @@ export function initCompendium(): void {
   } else if (RACQUET_DATA.length > 0) {
     _compSelectFrame(RACQUET_DATA[0].id);
   }
+
+  _bindCompendiumDelegates();
+}
+
+let _compDelegateBound = false;
+
+function _bindCompendiumDelegates(): void {
+  if (_compDelegateBound) return;
+  _compDelegateBound = true;
+
+  document.addEventListener('click', (e: Event) => {
+    const el = (e.target as Element).closest('[data-comp-action]') as HTMLElement | null;
+    if (!el) return;
+    const action = el.dataset.compAction!;
+
+    switch (action) {
+      case 'selectFrame': {
+        const id = el.dataset.id ?? (el.closest('[data-id]') as HTMLElement | null)?.dataset.id;
+        if (id) _compSelectFrame(id);
+        break;
+      }
+      case 'setSort': {
+        const key = el.dataset.key;
+        if (key) _compSetSort(key as SortKey);
+        break;
+      }
+      case 'toggleHud':
+        _compToggleHud();
+        break;
+      case 'setInjectMode': {
+        const mode = el.dataset.mode;
+        if (mode) _compSetInjectMode(mode as CompMode);
+        break;
+      }
+      case 'applyInjection':
+        _compApplyInjection();
+        break;
+      case 'clearInjection':
+        _compClearInjection();
+        break;
+      case 'buildAction': {
+        const actionName = el.dataset.actionName ?? '';
+        const index = parseInt(el.dataset.index ?? '0', 10);
+        _compAction(actionName, index, e);
+        break;
+      }
+    }
+  });
 }
 
 function _compScheduleRosterRender(): void {
@@ -280,7 +331,7 @@ export function _compRenderRoster(): void {
       const specs = `${r.strungWeight}g strung &middot; ${r.stiffness} RA &middot; ${r.pattern}`;
       const baseClasses = 'bg-transparent border text-left flex flex-col justify-between gap-6 transition-all duration-200 cursor-pointer p-5';
       const borderClasses = isActive ? 'border-dc-accent' : 'border-dc-platinum-dim hover:border-dc-platinum';
-      return `<button class="${baseClasses} ${borderClasses}" data-id="${r.id}" onclick="_compSelectFrame('${r.id}')">
+      return `<button class="${baseClasses} ${borderClasses}" data-id="${r.id}" data-comp-action="selectFrame">
       <div class="flex justify-between items-start gap-2">
         <span class="text-lg font-semibold leading-tight tracking-tight text-dc-platinum">${r.name.replace(/\s+\d+g$/, '')}</span>
         <span class="font-mono text-[13px] tracking-[0.15em] text-dc-platinum-dim mt-1">${r.year}</span>
@@ -419,7 +470,7 @@ export function _compRenderMain(racquet: Racquet): void {
       const isActive = _compSortKey === s.key;
       const baseClasses = 'font-mono text-[12px] uppercase tracking-[0.1em] pb-2 transition-colors';
       const activeClasses = isActive ? 'text-dc-accent border-b-2 border-dc-accent -mb-[9px] pb-[7px]' : 'text-dc-storm hover:text-dc-platinum';
-      return `<button class="${baseClasses} ${activeClasses}" onclick="_compSetSort('${s.key}')">${s.label}</button>`;
+      return `<button class="${baseClasses} ${activeClasses}" data-comp-action="setSort" data-key="${s.key}">${s.label}</button>`;
     })
     .join('');
 
@@ -442,7 +493,7 @@ export function _compRenderMain(racquet: Racquet): void {
                 fb.forgiveness * 0.08 +
                 fb.maneuverability * 0.08
             );
-            (window as any)._compBaseObs = baseObs;
+            setCompBaseObs(baseObs);
             return baseObs;
           })()}<span class="text-xl text-dc-storm ml-1">OBS</span>
         </span>
@@ -453,7 +504,7 @@ export function _compRenderMain(racquet: Racquet): void {
         </div>
       </div>
 
-      <h2 class="text-5xl md:text-[4rem] font-semibold tracking-tight text-dc-platinum leading-none mb-0 pr-[120px] flex items-center gap-3 cursor-pointer group" onclick="_compToggleHud()">
+      <h2 class="text-5xl md:text-[4rem] font-semibold tracking-tight text-dc-platinum leading-none mb-0 pr-[120px] flex items-center gap-3 cursor-pointer group" data-comp-action="toggleHud">
         ${racquet.name.replace(/\s+\d+g$/, ' ' + Math.round((racquet.strungWeight - 13) / 5) * 5 + 'g')}
         <span class="text-2xl text-dc-red opacity-50 group-hover:opacity-100 transition-opacity">&#9662;</span>
       </h2>
@@ -500,8 +551,8 @@ export function _compRenderMain(racquet: Racquet): void {
       <div class="flex justify-between items-center border-b border-dc-storm/30 pb-3 mb-1">
         <span class="font-mono text-[13px] text-dc-accent uppercase tracking-[0.2em]">//STRING MODULATOR</span>
         <div class="flex gap-4">
-          <button class="comp-inject-mode-btn text-dc-accent border-dc-accent border-b-2 pb-1 font-mono text-[12px] uppercase tracking-widest hover:text-dc-platinum transition-colors" data-mode="fullbed" onclick="_compSetInjectMode('fullbed')">Full Bed</button>
-          <button class="comp-inject-mode-btn text-dc-storm border-transparent border-b-2 pb-1 font-mono text-[12px] uppercase tracking-widest hover:text-dc-platinum transition-colors" data-mode="hybrid" onclick="_compSetInjectMode('hybrid')">Hybrid</button>
+          <button class="comp-inject-mode-btn text-dc-accent border-dc-accent border-b-2 pb-1 font-mono text-[12px] uppercase tracking-widest hover:text-dc-platinum transition-colors" data-mode="fullbed" data-comp-action="setInjectMode">Full Bed</button>
+          <button class="comp-inject-mode-btn text-dc-storm border-transparent border-b-2 pb-1 font-mono text-[12px] uppercase tracking-widest hover:text-dc-platinum transition-colors" data-mode="hybrid" data-comp-action="setInjectMode">Hybrid</button>
         </div>
       </div>
 
@@ -530,8 +581,8 @@ export function _compRenderMain(racquet: Racquet): void {
       </div>
 
       <div class="flex gap-2 mt-2">
-        <button class="flex-1 font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-storm/50 text-dc-platinum hover:bg-dc-storm/20 hover:border-dc-storm transition-colors disabled:opacity-30 disabled:cursor-not-allowed" id="comp-inject-apply" disabled onclick="_compApplyInjection()">Apply</button>
-        <button class="font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-storm/50 text-dc-storm hover:bg-dc-storm/10 hover:text-dc-platinum hover:border-dc-storm transition-colors" onclick="_compClearInjection()">Clear</button>
+        <button class="flex-1 font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-storm/50 text-dc-platinum hover:bg-dc-storm/20 hover:border-dc-storm transition-colors disabled:opacity-30 disabled:cursor-not-allowed" id="comp-inject-apply" disabled data-comp-action="applyInjection">Apply</button>
+        <button class="font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-storm/50 text-dc-storm hover:bg-dc-storm/10 hover:text-dc-platinum hover:border-dc-storm transition-colors" data-comp-action="clearInjection">Clear</button>
       </div>
     </div>
 
@@ -742,7 +793,7 @@ export function _compPreviewStats(): void {
   const tCtx = buildTensionContext(cfg, racquet);
   const obs = computeCompositeScore(previewStats, tCtx);
   const baseObs =
-    (window as any)._compBaseObs ||
+    getCompBaseObs() ||
     Math.round(
       baseStats.spin * 0.15 +
         baseStats.power * 0.12 +
@@ -845,8 +896,8 @@ export function _compApplyInjection(): void {
   });
 
   if (lo) {
-    getWindowFn<(loadout: Loadout) => void>('activateLoadout')?.(lo);
-    getWindowFn<(mode: string) => void>('switchMode')?.('overview');
+    activateLoadout(lo);
+    switchMode('overview');
   }
 }
 
@@ -958,9 +1009,9 @@ export function _compRenderBuildCard(build: BuildWithArchetype, index: number, _
       <div class="font-mono text-[12px] text-dc-storm mb-4">${metaLabel}</div>
       ${reasonHtml}
       <div class="grid grid-cols-3 gap-2 mt-auto mb-4">
-        <button class="bg-transparent border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-ink font-mono text-[13px] uppercase tracking-widest py-1.5 transition-colors text-center" onclick="_compAction('setActive', ${index})">Set Active</button>
-        <button class="bg-transparent border border-dc-storm/50 dark:border-dc-storm/30 text-dc-storm hover:border-dc-storm hover:bg-dc-storm/10 hover:text-dc-platinum font-mono text-[13px] uppercase tracking-widest py-1.5 transition-colors text-center" onclick="_compAction('tune', ${index})">Tune</button>
-        <button class="bg-transparent border border-dc-storm/50 dark:border-dc-storm/30 text-dc-storm hover:border-dc-storm hover:bg-dc-storm/10 hover:text-dc-platinum font-mono text-[13px] uppercase tracking-widest py-1.5 transition-colors text-center" onclick="_compAction('save', ${index}, event)">Save</button>
+        <button class="bg-transparent border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-ink font-mono text-[13px] uppercase tracking-widest py-1.5 transition-colors text-center" data-comp-action="buildAction" data-action-name="setActive" data-index="${index}">Set Active</button>
+        <button class="bg-transparent border border-dc-storm/50 dark:border-dc-storm/30 text-dc-storm hover:border-dc-storm hover:bg-dc-storm/10 hover:text-dc-platinum font-mono text-[13px] uppercase tracking-widest py-1.5 transition-colors text-center" data-comp-action="buildAction" data-action-name="tune" data-index="${index}">Tune</button>
+        <button class="bg-transparent border border-dc-storm/50 dark:border-dc-storm/30 text-dc-storm hover:border-dc-storm hover:bg-dc-storm/10 hover:text-dc-platinum font-mono text-[13px] uppercase tracking-widest py-1.5 transition-colors text-center" data-comp-action="buildAction" data-action-name="save" data-index="${index}">Save</button>
       </div>
       <div class="flex flex-wrap gap-3 pt-3 border-t border-dc-storm/30 dark:border-dc-storm/20">${statsHtml}</div>
     </div>
@@ -998,10 +1049,7 @@ export function _compAction(action: string, buildIndex: number, evt?: Event): vo
   if (action === 'save') {
     const lo = _compCreateLoadoutFromBuild(build);
     if (lo) {
-      const saveLoadout = getWindowFn<(loadout: Loadout) => void>('saveLoadout');
-      if (saveLoadout) {
-        saveLoadout(lo);
-      }
+      saveLoadout(lo);
       const btn = evt?.target as HTMLButtonElement | null;
       if (btn) {
         btn.textContent = 'Saved \u2713';
@@ -1015,15 +1063,15 @@ export function _compAction(action: string, buildIndex: number, evt?: Event): vo
   } else if (action === 'tune') {
     const lo = _compCreateLoadoutFromBuild(build);
     if (lo) {
-      getWindowFn<(loadout: Loadout) => void>('saveLoadout')?.(lo);
-      getWindowFn<(loadout: Loadout) => void>('activateLoadout')?.(lo);
-      getWindowFn<(mode: string) => void>('switchMode')?.('tune');
+      saveLoadout(lo);
+      activateLoadout(lo);
+      switchMode('tune');
     }
   } else if (action === 'setActive') {
     const lo = _compCreateLoadoutFromBuild(build);
     if (lo) {
-      getWindowFn<(loadout: Loadout) => void>('activateLoadout')?.(lo);
-      getWindowFn<(mode: string) => void>('switchMode')?.('overview');
+      activateLoadout(lo);
+      switchMode('overview');
     }
   } else if (action === 'compare') {
     _compAddBuildToCompare(build);
@@ -1031,29 +1079,29 @@ export function _compAction(action: string, buildIndex: number, evt?: Event): vo
 }
 
 export function _compAddBuildToCompare(build: BuildWithArchetype): void {
-  const win = window as CompareWindowExt;
   const compareLoadout = _compCreateLoadoutFromBuild(build);
-  const compareState = win.compareGetState?.();
-  if (compareLoadout?.stats && compareState?.slots && typeof win.compareSetSlotLoadout === 'function') {
-    const emptySlot = compareState.slots.find((slot: any) => slot.loadout === null);
-    const targetSlotId = (emptySlot || compareState.slots[compareState.slots.length - 1])?.id;
+  const compareState = compareGetState();
+  if (compareLoadout?.stats && compareState?.slots) {
+    const emptySlot = compareState.slots.find((slot) => slot.loadout === null);
+    const targetSlot = emptySlot || compareState.slots[compareState.slots.length - 1];
+    const targetSlotId = targetSlot?.id;
     if (targetSlotId) {
-      win.compareSetSlotLoadout(targetSlotId, compareLoadout, compareLoadout.stats);
-      getWindowFn<(mode: string) => void>('switchMode')?.('compare');
+      compareSetSlotLoadout(targetSlotId as import('./compare/types.js').SlotId, compareLoadout, compareLoadout.stats);
+      switchMode('compare');
     }
   }
 }
 
 export function _compActionCompare(racquetId: string, stringId: string, tension: number): void {
-  const win = window as CompareWindowExt;
-  const compareLoadout = win.createLoadout?.(racquetId, stringId, tension, { source: 'compare' });
-  const compareState = win.compareGetState?.();
-  if (compareLoadout?.stats && compareState?.slots && typeof win.compareSetSlotLoadout === 'function') {
-    const emptySlot = compareState.slots.find((slot: any) => slot.loadout === null);
-    const targetSlotId = (emptySlot || compareState.slots[compareState.slots.length - 1])?.id;
+  const compareLoadout = createLoadout(racquetId, stringId, tension, { source: 'compare' });
+  const compareState = compareGetState();
+  if (compareLoadout?.stats && compareState?.slots) {
+    const emptySlot = compareState.slots.find((slot) => slot.loadout === null);
+    const targetSlot = emptySlot || compareState.slots[compareState.slots.length - 1];
+    const targetSlotId = targetSlot?.id;
     if (targetSlotId) {
-      win.compareSetSlotLoadout(targetSlotId, compareLoadout, compareLoadout.stats);
-      getWindowFn<(mode: string) => void>('switchMode')?.('compare');
+      compareSetSlotLoadout(targetSlotId as import('./compare/types.js').SlotId, compareLoadout, compareLoadout.stats);
+      switchMode('compare');
     }
   }
 }

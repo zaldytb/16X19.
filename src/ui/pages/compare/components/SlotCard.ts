@@ -64,7 +64,7 @@ function renderEmptySlot(slot: EmptySlot, animationStyle: string): string {
         <div class="compare-slot-add-text">Add build</div>
         <div class="compare-slot-add-sub">to compare</div>
       </div>
-      <button class="compare-slot-add-btn" data-slot-id="${slot.id}" onclick="window.compareAddSlot('${slot.id}')">
+      <button class="compare-slot-add-btn" data-slot-id="${slot.id}" data-compare-action="add">
         + Add
       </button>
     </div>
@@ -90,7 +90,7 @@ function renderConfiguredSlot(slot: CompareSlot, animationStyle: string): string
       <div class="compare-slot-header">
         ${badge}
         <span class="compare-slot-label" style="color: ${color.border}">${label}</span>
-        <button class="compare-slot-remove" onclick="window.compareRemoveSlot('${slot.id}')" title="Remove"></button>
+        <button class="compare-slot-remove" data-slot-id="${slot.id}" data-compare-action="remove" title="Remove"></button>
       </div>
 
       <div class="compare-slot-content">
@@ -104,16 +104,16 @@ function renderConfiguredSlot(slot: CompareSlot, animationStyle: string): string
       </div>
 
       <div class="compare-slot-actions">
-        <button class="compare-slot-action compare-slot-action-primary" onclick="window.compareTuneSlot('${slot.id}')">
+        <button class="compare-slot-action compare-slot-action-primary" data-slot-id="${slot.id}" data-compare-action="tune">
           Tune
         </button>
-        <button class="compare-slot-action" onclick="window.compareSetActiveSlot('${slot.id}')">
+        <button class="compare-slot-action" data-slot-id="${slot.id}" data-compare-action="setActive">
           Set Active
         </button>
-        <button class="compare-slot-action" onclick="window.compareSaveSlot('${slot.id}', this)">
+        <button class="compare-slot-action" data-slot-id="${slot.id}" data-compare-action="save">
           Save
         </button>
-        <button class="compare-slot-edit" onclick="window.compareEditSlot('${slot.id}')">
+        <button class="compare-slot-edit" data-slot-id="${slot.id}" data-compare-action="edit">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
             <path d="M11.5 1.5l3 3L5 14H2v-3L11.5 1.5z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>

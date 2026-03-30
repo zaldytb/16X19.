@@ -15,6 +15,114 @@ import { _dockGuidance, _dockIcons, _dockContextActions, _dockReturnEditorHome, 
 import { _prevObsValues, animateOBS } from './obs-animation.js';
 import { populateGaugeDropdown, setHybridMode, showFrameSpecs } from '../shared/helpers.js';
 import { ssInstances } from './searchable-select.js';
+import { renderDockCreateSection } from './dock-create.js';
+import { renderMyLoadouts } from '../pages/my-loadouts.js';
+
+// ---------------------------------------------------------------------------
+// Callback registry — populated by shell.ts during init() to avoid circular
+// imports. All bridge-previously-mediated calls go through these.
+// ---------------------------------------------------------------------------
+
+type DockCallbacks = {
+  switchMode: (mode: string) => void;
+  switchToLoadout: (loadoutId: string) => void;
+  openFindMyBuild: () => void;
+  addActiveLoadoutToCompare: () => void;
+  compareAddSlot: (slotId: string) => void;
+  compareEditSlot: (slotId: string) => void;
+  compareRemoveSlot: (slotId: string) => void;
+  compareClearSlot: (slotId: string) => void;
+  compareGetState: () => { slots?: Array<{ id: string; loadout: unknown | null }> } | null;
+  compareQuickAddSaved: (loadoutId: string) => void;
+  renderCompareAll: () => void;
+};
+
+const _noop = () => {};
+let _dockCallbacks: DockCallbacks = {
+  switchMode: _noop,
+  switchToLoadout: _noop,
+  openFindMyBuild: _noop,
+  addActiveLoadoutToCompare: _noop,
+  compareAddSlot: _noop,
+  compareEditSlot: _noop,
+  compareRemoveSlot: _noop,
+  compareClearSlot: _noop,
+  compareGetState: () => null,
+  compareQuickAddSaved: _noop,
+  renderCompareAll: _noop,
+};
+
+export function registerDockCallbacks(cbs: Partial<DockCallbacks>): void {
+  _dockCallbacks = { ..._dockCallbacks, ...cbs };
+}
+
+let _dockGlobalDelegateBound = false;
+
+/**
+ * Document-level delegated listener for dock actions outside the context panel.
+ * Binds once globally to handle mobile pill buttons and other dock-level actions.
+ */
+function _bindDockGlobalDelegate(): void {
+  if (_dockGlobalDelegateBound) return;
+  _dockGlobalDelegateBound = true;
+  document.addEventListener('click', (e: Event) => {
+    const el = (e.target as Element).closest('[data-dock-action]') as HTMLElement | null;
+    if (!el) return;
+    const action = el.dataset.dockAction;
+    const slotId = el.dataset.slotId;
+    if (action === 'switchToLoadout' && slotId) {
+      _dockCallbacks.switchToLoadout(slotId);
+    }
+  });
+}
+
+/**
+ * Set up a single delegated listener on the dock context panel container.
+ * Called by renderDockContextPanel after setting innerHTML.
+ */
+function _bindDockContextPanel(container: HTMLElement): void {
+  if ((container as HTMLElement & { _dockBound?: boolean })._dockBound) return;
+  (container as HTMLElement & { _dockBound?: boolean })._dockBound = true;
+
+  container.addEventListener('click', (e: Event) => {
+    const el = (e.target as Element).closest('[data-dock-action]') as HTMLElement | null;
+    if (!el) return;
+    const action = el.dataset.dockAction;
+    const arg = el.dataset.dockArg;
+    const slotId = el.dataset.slotId;
+    const slotIndex = el.dataset.slotIndex;
+
+    switch (action) {
+      case 'switchMode':
+        if (arg) _dockCallbacks.switchMode(arg);
+        break;
+      case 'switchToLoadout':
+        if (slotId) _dockCallbacks.switchToLoadout(slotId);
+        break;
+      case 'openFindMyBuild':
+        _dockCallbacks.openFindMyBuild();
+        break;
+      case 'addActiveLoadoutToCompare':
+        _dockCallbacks.addActiveLoadoutToCompare();
+        break;
+      case 'compareAddSlot':
+        if (slotId) _dockCallbacks.compareAddSlot(slotId);
+        break;
+      case 'compareEditSlot':
+        if (slotId) _dockCallbacks.compareEditSlot(slotId);
+        break;
+      case 'compareRemoveSlot':
+        if (slotId) _dockCallbacks.compareRemoveSlot(slotId);
+        break;
+      case 'compareEditLegacy':
+        if (slotIndex != null) _dockCompareEdit(Number(slotIndex));
+        break;
+      case 'compareRemoveLegacy':
+        if (slotIndex != null) _dockCompareRemove(Number(slotIndex));
+        break;
+    }
+  });
+}
 
 type DockComparisonSlot = {
   racquetId: string;
@@ -210,7 +318,7 @@ export function renderDockPanel(): void {
     }
 
     // Save button dirty tint
-    const saveBtnEl = document.querySelector('#dock-lo-active button[onclick="saveActiveLoadout()"]') as HTMLElement | null;
+    const saveBtnEl = document.querySelector('#dock-lo-active button[title="Save to My Loadouts"]') as HTMLElement | null;
     if (saveBtnEl) {
       const activeLoadout = getActiveLoadout();
       const editorContext = getDockEditorContext();
@@ -233,9 +341,8 @@ export function renderDockPanel(): void {
     }
   }
 
-  // Call these via window since they may be from other modules
-  (window as any).renderMyLoadouts?.();
-  (window as any).renderDockCreateSection?.();
+  renderMyLoadouts();
+  renderDockCreateSection();
   _syncMobileDockBar();
   _syncDockRail();
   renderDockContextPanel();
@@ -299,6 +406,7 @@ export function renderMobileLoadoutPills(): void {
   const sls = getSavedLoadouts();
   const al = getActiveLoadout();
   if (!sls || sls.length === 0) { container.innerHTML = ''; return; }
+  _bindDockGlobalDelegate();
 
   container.innerHTML = sls.map(lo => {
     const isActive = al && al.id === lo.id;
@@ -308,7 +416,7 @@ export function renderMobileLoadoutPills(): void {
     const cls = isActive
       ? 'bg-[var(--dc-platinum)] text-[var(--dc-void)] border-[var(--dc-platinum)]'
       : 'bg-transparent text-[var(--dc-storm)] border-[var(--dc-border)] hover:text-[var(--dc-platinum)] hover:border-[var(--dc-storm)]';
-    return '<button class="shrink-0 flex items-center gap-2 px-3 py-1.5 border font-mono text-[10px] font-semibold transition-colors ' + cls + '" onclick="switchToLoadout(\'' + lo.id + '\')">' +
+    return '<button class="shrink-0 flex items-center gap-2 px-3 py-1.5 border font-mono text-[10px] font-semibold transition-colors ' + cls + '" data-dock-action="switchToLoadout" data-slot-id="' + lo.id + '">' +
       name + '<span class="opacity-60">' + obs + '</span></button>';
   }).join('');
 }
@@ -332,6 +440,8 @@ export function renderDockContextPanel(): void {
     case 'howitworks': _renderDockPanelReference(container); break;
     default:           _renderDockPanelOverview(container); break;
   }
+
+  _bindDockContextPanel(container);
 }
 
 /**
@@ -380,10 +490,10 @@ function _renderDockPanelBible(container: HTMLElement): void {
         tensionShort,
         obsNum: obs,
       }) + _dockContextActions([
-      { label: '\u2192 View build overview', onclick: "switchMode('overview')" },
-      { label: '\u2192 Tune this build', onclick: "switchMode('tune')" },
-      { label: '\u2192 Compare with others', onclick: "switchMode('compare')" },
-      { label: '\u2192 Find a better string', onclick: "switchMode('optimize')" }
+      { label: '\u2192 View build overview', action: 'switchMode', arg: 'overview' },
+      { label: '\u2192 Tune this build', action: 'switchMode', arg: 'tune' },
+      { label: '\u2192 Compare with others', action: 'switchMode', arg: 'compare' },
+      { label: '\u2192 Find a better string', action: 'switchMode', arg: 'optimize' },
     ]);
   }
 }
@@ -413,9 +523,9 @@ function _renderDockPanelOverview(container: HTMLElement): void {
   }
 
   container.insertAdjacentHTML('beforeend', _dockContextActions([
-    { label: '\u2192 Tune tension curves', onclick: "switchMode('tune')" },
-    { label: '\u2192 Compare with saved', onclick: "switchMode('compare')" },
-    { label: '\u2192 Find a better string', onclick: "switchMode('optimize')" }
+    { label: '\u2192 Tune tension curves', action: 'switchMode', arg: 'tune' },
+    { label: '\u2192 Compare with saved', action: 'switchMode', arg: 'compare' },
+    { label: '\u2192 Find a better string', action: 'switchMode', arg: 'optimize' },
   ]));
 }
 
@@ -450,7 +560,7 @@ function _renderDockPanelTune(container: HTMLElement): void {
         <span class="dock-ctx-label">Frame</span>
         <div class="dock-tune-frame-row">
           <span class="dock-tune-frame-name">${frameName}</span>
-          <a class="dock-tune-change" onclick="switchMode('overview')">change</a>
+          <a class="dock-tune-change" data-dock-action="switchMode" data-dock-arg="overview">change</a>
         </div>
       </div>
     `);
@@ -465,7 +575,7 @@ function _renderDockPanelTune(container: HTMLElement): void {
           <span class="dock-ctx-label">Frame</span>
           <div class="dock-tune-frame-row">
             <span class="dock-tune-frame-name">${frameName}</span>
-            <a class="dock-tune-change" onclick="switchMode('overview')">change</a>
+            <a class="dock-tune-change" data-dock-action="switchMode" data-dock-arg="overview">change</a>
           </div>
         </div>
       `;
@@ -483,9 +593,9 @@ function _renderDockPanelTune(container: HTMLElement): void {
   }
 
   container.insertAdjacentHTML('beforeend', _dockContextActions([
-    { label: '\u2192 Compare with saved', onclick: "switchMode('compare')" },
-    { label: '\u2192 Find a better string', onclick: "switchMode('optimize')" },
-    { label: '\u2192 Back to overview', onclick: "switchMode('overview')" }
+    { label: '\u2192 Compare with saved', action: 'switchMode', arg: 'compare' },
+    { label: '\u2192 Find a better string', action: 'switchMode', arg: 'optimize' },
+    { label: '\u2192 Back to overview', action: 'switchMode', arg: 'overview' },
   ]));
 }
 
@@ -500,8 +610,7 @@ function _renderDockPanelCompare(container: HTMLElement): void {
   let html = '';
 
   // Prefer compare module state; keep a fallback for older state shapes.
-  const win = window as any;
-  const newCompareState = win.compareGetState?.();
+  const newCompareState = _dockCallbacks.compareGetState();
   
   if (newCompareState) {
     html += _renderNewComparePanel(newCompareState);
@@ -510,7 +619,7 @@ function _renderDockPanelCompare(container: HTMLElement): void {
   }
 
   const al = getActiveLoadout();
-  const hasConfiguredSlots = newCompareState 
+  const hasConfiguredSlots = newCompareState?.slots
     ? newCompareState.slots.some((s: any) => s.loadout !== null)
     : getComparisonSlots().length > 0;
   const savedLoadouts = getSavedLoadouts();
@@ -521,14 +630,14 @@ function _renderDockPanelCompare(container: HTMLElement): void {
   }
 
   // Actions based on state
-  const validSlots = newCompareState 
+  const validSlots = newCompareState?.slots
     ? newCompareState.slots.filter((s: any) => s.loadout !== null)
     : getComparisonSlots().filter(s => s.stats);
     
   html += _dockContextActions([
-    ...(validSlots.length >= 2 ? [{ label: '\u2192 Tune active build', onclick: "switchMode('tune')" }] : []),
-    { label: '\u2192 Optimize from here', onclick: "switchMode('optimize')" },
-    { label: '\u2192 Back to overview', onclick: "switchMode('overview')" }
+    ...(validSlots.length >= 2 ? [{ label: '\u2192 Tune active build', action: 'switchMode', arg: 'tune' }] : []),
+    { label: '\u2192 Optimize from here', action: 'switchMode', arg: 'optimize' },
+    { label: '\u2192 Back to overview', action: 'switchMode', arg: 'overview' },
   ]);
 
   container.innerHTML = html;
@@ -573,7 +682,7 @@ function _renderNewComparePanel(state: any): string {
           <div class="dock-ctx-label">Active Setup</div>
           <div class="dock-compare-source-title">${frameName}</div>
           <div class="dock-compare-source-copy">${hasEmptySlot ? 'Add your current active setup into the next open compare slot.' : 'All slots are filled. Adding will replace the last slot.'}</div>
-          <button class="dock-compare-slot-btn dock-compare-slot-btn-primary" onclick="window.addActiveLoadoutToCompare && window.addActiveLoadoutToCompare()">Use Active Loadout</button>
+          <button class="dock-compare-slot-btn dock-compare-slot-btn-primary" data-dock-action="addActiveLoadoutToCompare">Use Active Loadout</button>
         </div>
       `;
     } else {
@@ -606,7 +715,7 @@ function _renderNewComparePanel(state: any): string {
             <span class="dock-compare-slot-obs">—</span>
           </div>
           <div class="dock-compare-slot-meta">Build this slot from scratch, or fill it from Active Setup / My Loadouts.</div>
-          <button class="dock-compare-slot-btn dock-compare-slot-btn-primary" onclick="window.compareAddSlot && window.compareAddSlot('${slot.id}')">+ Add Setup</button>
+          <button class="dock-compare-slot-btn dock-compare-slot-btn-primary" data-dock-action="compareAddSlot" data-slot-id="${slot.id}">+ Add Setup</button>
         </div>
       `;
       return;
@@ -638,8 +747,8 @@ function _renderNewComparePanel(state: any): string {
         <div class="dock-compare-slot-frame">${frameName}</div>
         <div class="dock-compare-slot-meta">${stringName} \u00B7 ${slot.loadout.mainsTension}/${slot.loadout.crossesTension}</div>
         <div class="dock-compare-slot-actions">
-          <button class="dock-compare-slot-btn dock-compare-slot-btn-primary" onclick="window.compareEditSlot && window.compareEditSlot('${slot.id}')">Edit Setup</button>
-          <button class="dock-compare-slot-btn dock-compare-slot-remove" onclick="window.compareRemoveSlot && window.compareRemoveSlot('${slot.id}')">Clear</button>
+          <button class="dock-compare-slot-btn dock-compare-slot-btn-primary" data-dock-action="compareEditSlot" data-slot-id="${slot.id}">Edit Setup</button>
+          <button class="dock-compare-slot-btn dock-compare-slot-remove" data-dock-action="compareRemoveSlot" data-slot-id="${slot.id}">Clear</button>
         </div>
       </div>
     `;
@@ -700,8 +809,8 @@ function _renderComparePanelFallback(): string {
           <div class="dock-compare-slot-frame">${frameName}</div>
           <div class="dock-compare-slot-meta">${stringName} \u00B7 ${slot.mainsTension}/${slot.crossesTension}</div>
           <div class="dock-compare-slot-actions">
-            <button class="dock-compare-slot-btn dock-compare-slot-btn-primary" onclick="_dockCompareEdit(${i})">Edit Setup</button>
-            <button class="dock-compare-slot-btn dock-compare-slot-remove" onclick="_dockCompareRemove(${i})">Clear</button>
+            <button class="dock-compare-slot-btn dock-compare-slot-btn-primary" data-dock-action="compareEditLegacy" data-slot-index="${i}">Edit Setup</button>
+            <button class="dock-compare-slot-btn dock-compare-slot-remove" data-dock-action="compareRemoveLegacy" data-slot-index="${i}">Clear</button>
           </div>
         </div>
       `;
@@ -713,10 +822,14 @@ function _renderComparePanelFallback(): string {
 }
 
 /**
- * Edit a compare slot
+ * Edit a compare slot (legacy index-based fallback)
  */
 export function _dockCompareEdit(slotIndex: number | string): void {
-  (window as any).compareEditSlot?.(String(slotIndex));
+  const compareState = _dockCallbacks.compareGetState();
+  const slot = compareState?.slots?.[Number(slotIndex)];
+  if (slot?.id) {
+    _dockCallbacks.compareEditSlot(slot.id);
+  }
   const editor = document.getElementById('dock-editor-section');
   if (editor) {
     requestAnimationFrame(() => {
@@ -726,16 +839,15 @@ export function _dockCompareEdit(slotIndex: number | string): void {
 }
 
 /**
- * Remove a compare slot
+ * Remove a compare slot (legacy index-based fallback)
  */
 export function _dockCompareRemove(slotIndex: number): void {
-  const win = window as any;
-  const compareState = win.compareGetState?.();
-
-  if (compareState?.slots && typeof win.compareClearSlot === 'function') {
+  const compareState = _dockCallbacks.compareGetState();
+  if (compareState?.slots) {
     const targetSlot = compareState.slots[slotIndex];
     if (targetSlot?.id) {
-      win.compareClearSlot(targetSlot.id);
+      _dockCallbacks.compareClearSlot(String(targetSlot.id));
+      _dockCallbacks.renderCompareAll();
       renderDockContextPanel();
       return;
     }
@@ -743,17 +855,7 @@ export function _dockCompareRemove(slotIndex: number): void {
 
   const comparisonSlots = getComparisonSlots();
   comparisonSlots.splice(slotIndex, 1);
-
-  try {
-    win.renderComparisonSlots?.();
-    win.renderCompareSummaries?.();
-    win.renderCompareVerdict?.();
-    win.renderCompareMatrix?.();
-    win.updateComparisonRadar?.();
-  } catch (e) {
-    console.warn('Compare workspace render error after remove:', e);
-  }
-
+  _dockCallbacks.renderCompareAll();
   renderDockContextPanel();
 }
 
@@ -765,28 +867,16 @@ export function _dockCompareQuickAdd(loadoutId: string): void {
   const lo = savedLoadouts.find(l => l.id === loadoutId);
   if (!lo) return;
 
-  const win = window as any;
-  const compareState = win.compareGetState?.();
-  if (compareState?.slots && typeof win.compareQuickAddSaved === 'function') {
-    win.compareQuickAddSaved(loadoutId);
+  const compareState = _dockCallbacks.compareGetState();
+  if (compareState?.slots) {
+    _dockCallbacks.compareQuickAddSaved(loadoutId);
     renderDockContextPanel();
     return;
   }
 
   const comparisonSlots = getComparisonSlots();
   if (comparisonSlots.length >= 3) return;
-  win._addLoadoutAsSlot?.(lo);
-
-  try {
-    win.renderComparisonSlots?.();
-    win.renderCompareSummaries?.();
-    win.renderCompareVerdict?.();
-    win.renderCompareMatrix?.();
-    win.updateComparisonRadar?.();
-  } catch (e) {
-    console.warn('Compare workspace render error after quick-add:', e);
-  }
-
+  _dockCallbacks.renderCompareAll();
   renderDockContextPanel();
 }
 
@@ -805,8 +895,8 @@ function _renderDockPanelOptimize(container: HTMLElement): void {
       'No build to optimize from',
       'Load a build first — the optimizer finds better string pairings for your current frame.'
     ) + _dockContextActions([
-      { label: '\u2192 Browse the Racket Bible', onclick: "switchMode('compendium')" },
-      { label: '\u2192 Try the quiz', onclick: "openFindMyBuild()" }
+      { label: '\u2192 Browse the Racket Bible', action: 'switchMode', arg: 'compendium' },
+      { label: '\u2192 Try the quiz', action: 'openFindMyBuild' },
     ]);
     return;
   }
@@ -839,10 +929,10 @@ function _renderDockPanelOptimize(container: HTMLElement): void {
       stringsLine: stringName,
       tensionShort,
       obsNum: obs,
-    }) + _dockContextActions([
-    { label: '\u2192 Back to overview', onclick: "switchMode('overview')" },
-    { label: '\u2192 Tune this build', onclick: "switchMode('tune')" },
-    { label: '\u2192 Compare top results', onclick: "switchMode('compare')" }
+    }) +     _dockContextActions([
+    { label: '\u2192 Back to overview', action: 'switchMode', arg: 'overview' },
+    { label: '\u2192 Tune this build', action: 'switchMode', arg: 'tune' },
+    { label: '\u2192 Compare top results', action: 'switchMode', arg: 'compare' },
   ]);
 }
 
@@ -855,14 +945,15 @@ function _renderDockPanelReference(container: HTMLElement): void {
   if (editorSection) editorSection.style.display = 'none';
 
   const al = getActiveLoadout();
-  const actions: Array<{ label: string; onclick: string }> = [];
-  if (al) {
-    actions.push({ label: '\u2192 Back to your build', onclick: "switchMode('overview')" });
-    actions.push({ label: '\u2192 Tune tension curves', onclick: "switchMode('tune')" });
-  } else {
-    actions.push({ label: '\u2192 Browse the Racket Bible', onclick: "switchMode('compendium')" });
-    actions.push({ label: '\u2192 Try the quiz', onclick: "openFindMyBuild()" });
-  }
+  const actions = al
+    ? [
+        { label: '\u2192 Back to your build', action: 'switchMode', arg: 'overview' },
+        { label: '\u2192 Tune tension curves', action: 'switchMode', arg: 'tune' },
+      ]
+    : [
+        { label: '\u2192 Browse the Racket Bible', action: 'switchMode', arg: 'compendium' },
+        { label: '\u2192 Try the quiz', action: 'openFindMyBuild' },
+      ];
 
   container.innerHTML = _dockGuidance(
     _dockIcons.reference,

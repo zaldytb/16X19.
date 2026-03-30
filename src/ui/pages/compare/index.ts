@@ -8,7 +8,8 @@ import { buildTensionContext, computeCompositeScore, generateIdentity, predictSe
 import { RACQUETS, STRINGS } from '../../../data/loader.js';
 import { getActiveLoadout, getSavedLoadouts } from '../../../state/store.js';
 import { getCurrentSetup } from '../../../state/setup-sync.js';
-import { getDockEditorContext, setDockEditorContext } from '../../../state/app-state.js';
+import { getDockEditorContext, setDockEditorContext, getCurrentMode } from '../../../state/app-state.js';
+import { saveLoadout } from '../../../state/loadout.js';
 import type { SlotId, Slot } from './types.js';
 import { getSlotColor, SLOT_COLORS } from './types.js';
 import { 
@@ -27,6 +28,21 @@ import { renderSlotEditor, getEditorFormData, mountSlotEditor } from './componen
 import { getCachedValue, measurePerformance } from '../../../utils/performance.js';
 import { syncViews } from '../../../runtime/coordinator.js';
 
+// ---------------------------------------------------------------------------
+// Shell callbacks — registered by shell.ts to avoid circular static imports.
+// ---------------------------------------------------------------------------
+type CompareShellCallbacks = {
+  activateLoadout?: (loadout: Loadout) => void;
+  switchMode?: (mode: string) => void;
+  renderDockContextPanel?: () => void;
+};
+
+let _shellCbs: CompareShellCallbacks = {};
+
+export function registerCompareShellCallbacks(cbs: CompareShellCallbacks): void {
+  _shellCbs = { ..._shellCbs, ...cbs };
+}
+
 // Container IDs
 const CONTAINER_SLOTS = 'compare-slots-container';
 const CONTAINER_RADAR = 'compare-radar-container';
@@ -43,7 +59,7 @@ const compareStrings = STRINGS as unknown as StringData[];
 let _lastSlotsRenderKey = '';
 let _lastRadarRenderKey = '';
 let _lastDiffRenderKey = '';
-let _compareBridgeInstalled = false;
+let _delegateBound = false;
 
 type CompareLoadout = Loadout & {
   sourceLoadoutId?: string | null;
@@ -60,9 +76,9 @@ export function initComparePage(): void {
   
   // Initial render
   render();
-  
-  // Set up window handlers
-  setupWindowHandlers();
+
+  // Set up delegated action listener once
+  _bindCompareDelegates();
 }
 
 /**
@@ -261,7 +277,7 @@ export function showQuickAddPrompt(): void {
           <option value="">Choose string...</option>
         </select>
         <input type="number" class="dock-qa-input" id="compare-qa-tension" value="53" min="30" max="70" style="width:70px">
-        <button class="dock-qa-btn dock-qa-btn-primary" onclick="_compareQuickAdd()" style="flex:none;padding:7px 16px">Add to Compare</button>
+        <button class="dock-qa-btn dock-qa-btn-primary" data-compare-action="quickAdd" style="flex:none;padding:7px 16px">Add to Compare</button>
       </div>
     </div>
   `;
@@ -323,9 +339,8 @@ export function quickAddFromPrompt(): void {
 }
 
 export function toggleComparisonMode(): void {
-  const win = window as any;
-  const currentMode = typeof win.currentMode === 'string' ? win.currentMode : null;
-  win.switchMode?.(currentMode === 'compare' ? 'overview' : 'compare');
+  const mode = getCurrentMode();
+  _shellCbs.switchMode?.(mode === 'compare' ? 'overview' : 'compare');
 }
 
 /**
@@ -429,26 +444,23 @@ export function tuneSlot(slotId: SlotId): void {
   const slot = getSlotById(slotId);
   if (!slot || slot.loadout === null) return;
 
-  const win = window as any;
-  win.activateLoadout?.({ ...slot.loadout, stats: slot.stats });
-  win.switchMode?.('tune');
+  _shellCbs.activateLoadout?.({ ...slot.loadout, stats: slot.stats });
+  _shellCbs.switchMode?.('tune');
 }
 
 export function setActiveSlot(slotId: SlotId): void {
   const slot = getSlotById(slotId);
   if (!slot || slot.loadout === null) return;
 
-  const win = window as any;
-  win.activateLoadout?.({ ...slot.loadout, stats: slot.stats });
-  win.switchMode?.('overview');
+  _shellCbs.activateLoadout?.({ ...slot.loadout, stats: slot.stats });
+  _shellCbs.switchMode?.('overview');
 }
 
 export function saveSlot(slotId: SlotId, button?: HTMLButtonElement | null): void {
   const slot = getSlotById(slotId);
   if (!slot || slot.loadout === null) return;
 
-  const win = window as any;
-  win.saveLoadout?.({ ...slot.loadout, stats: slot.stats, _dirty: false });
+  saveLoadout({ ...slot.loadout, stats: slot.stats, _dirty: false });
 
   if (button) {
     const originalText = button.textContent || 'Save';
@@ -504,7 +516,7 @@ function addLoadoutToSlot(slotId: SlotId, loadout: Loadout): void {
   };
 
   setSlotLoadout(slotId, nextLoadout, stats);
-  (window as any).renderDockContextPanel?.();
+  _shellCbs.renderDockContextPanel?.();
 }
 
 export function addLoadoutToNextAvailableSlot(loadout: Loadout): SlotId | null {
@@ -763,35 +775,59 @@ export function editorLoadFromSaved(loadoutId: string): void {
 }
 
 /**
- * Setup window handlers for inline onclick events
+ * Set up delegated listeners for all compare data-compare-action elements.
+ * Replaces the former setupWindowHandlers() bridge approach.
  */
-function setupWindowHandlers(): void {
-  if (_compareBridgeInstalled) return;
-  const win = window as any;
-  
-  // Slot actions
-  win.compareAddSlot = (slotId: string) => addSlot(slotId as SlotId);
-  win.compareEditSlot = (slotId: string) => editSlot(slotId as SlotId);
-  win.compareRemoveSlot = (slotId: string) => removeSlot(slotId as SlotId);
-  win.compareTuneSlot = (slotId: string) => tuneSlot(slotId as SlotId);
-  win.compareSetActiveSlot = (slotId: string) => setActiveSlot(slotId as SlotId);
-  win.compareSaveSlot = (slotId: string, button?: HTMLButtonElement) => saveSlot(slotId as SlotId, button);
-  win.compareQuickAddSaved = quickAddSaved;
-  
-  // Editor actions
-  win.compareEditorCancel = cancelEditor;
-  win.compareEditorSave = saveEditor;
-  win.compareEditorSetHybrid = setEditorHybrid;
-  win.compareEditorUpdateTension = updateEditorTension;
-  win.compareEditorLoadFromSaved = editorLoadFromSaved;
-  
-  // Diff actions
-  win.compareToggleShowAll = toggleShowAll;
-  _compareBridgeInstalled = true;
+function _bindCompareDelegates(): void {
+  if (_delegateBound) return;
+  _delegateBound = true;
+
+  // Click delegation — handles slot cards, editor buttons, diff battery
+  document.addEventListener('click', (e: Event) => {
+    const el = (e.target as Element).closest('[data-compare-action]') as HTMLElement | null;
+    if (!el) return;
+    const action = el.dataset.compareAction!;
+    const slotId = (el.dataset.slotId || '') as SlotId;
+    const arg = el.dataset.compareArg;
+
+    switch (action) {
+      case 'add': addSlot(slotId); break;
+      case 'edit': editSlot(slotId); break;
+      case 'remove': removeSlot(slotId); break;
+      case 'tune': tuneSlot(slotId); break;
+      case 'setActive': setActiveSlot(slotId); break;
+      case 'save': {
+        const btn = el instanceof HTMLButtonElement ? el : null;
+        saveSlot(slotId, btn);
+        break;
+      }
+      case 'editorCancel': cancelEditor(); break;
+      case 'editorSave': saveEditor(); break;
+      case 'editorSetHybrid': setEditorHybrid(arg === 'true'); break;
+      case 'toggleShowAll': toggleShowAll(); break;
+      case 'quickAdd': quickAddFromPrompt(); break;
+    }
+  });
+
+  // Input delegation — handles tension sliders in editor
+  document.addEventListener('input', (e: Event) => {
+    const el = e.target as HTMLElement;
+    if (el.dataset.compareAction !== 'updateTension' || !el.dataset.compareArg) return;
+    const type = el.dataset.compareArg as 'mains' | 'crosses';
+    updateEditorTension(type, (el as HTMLInputElement).value);
+  });
+
+  // Select change delegation — handles frame/string selects and load-from-saved
+  document.addEventListener('change', (e: Event) => {
+    const el = e.target as HTMLElement;
+    if (el.dataset.compareAction === 'loadFromSaved') {
+      editorLoadFromSaved((el as HTMLSelectElement).value);
+    }
+  });
 }
 
 export function hasCompareBridgeInstalled(): boolean {
-  return _compareBridgeInstalled;
+  return _delegateBound;
 }
 
 // Export public API

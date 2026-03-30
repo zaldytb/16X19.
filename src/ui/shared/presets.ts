@@ -9,6 +9,7 @@ import { getCurrentSetup } from '../../state/setup-sync.js';
 import { getComparisonSlots } from '../../state/app-state.js';
 import { predictSetup, computeCompositeScore, buildTensionContext } from '../../engine/index.js';
 import { createLoadout } from '../../state/loadout.js';
+import { addLoadoutToPreferredSlot, addLoadoutToNextAvailableSlot, getState as compareGetState } from '../pages/compare/index.js';
 
 // Type assertion helper for generated data imports
 type RacquetData = Racquet & Record<string, unknown>;
@@ -356,11 +357,18 @@ type ComparisonSuggestion = {
   loadout: Loadout | null;
 };
 
+type PresetCallbacks = {
+  switchMode?: (mode: string) => void;
+};
+
+let _presetCbs: PresetCallbacks = {};
+
+export function registerPresetCallbacks(cbs: PresetCallbacks): void {
+  _presetCbs = { ..._presetCbs, ...cbs };
+}
+
 function getComparisonSlotKeys(): Set<string> {
-  const win = window as Window & {
-    compareGetState?: () => { slots?: Array<{ loadout?: Loadout | null }> };
-  };
-  const compareState = win.compareGetState?.();
+  const compareState = compareGetState();
   if (compareState?.slots?.length) {
     return new Set(
       compareState.slots
@@ -476,22 +484,9 @@ function addSuggestionToCompare(suggestion: ComparisonSuggestion): void {
   const loadout = suggestion.loadout;
   if (!loadout) return;
 
-  const win = window as Window & {
-    compareAddLoadoutToPreferredSlot?: (loadout: Loadout) => unknown;
-    compareAddLoadoutToNextAvailableSlot?: (loadout: Loadout) => unknown;
-    addLoadoutToCompare?: (loadoutId: string) => void;
-    switchMode?: (mode: string) => void;
-  };
-
-  if (typeof win.compareAddLoadoutToPreferredSlot === 'function') {
-    win.compareAddLoadoutToPreferredSlot({ ...loadout });
-  } else if (typeof win.compareAddLoadoutToNextAvailableSlot === 'function') {
-    win.compareAddLoadoutToNextAvailableSlot({ ...loadout });
-  } else if (suggestion.source === 'saved' && loadout.id && typeof win.addLoadoutToCompare === 'function') {
-    win.addLoadoutToCompare(loadout.id);
-  }
-
-  win.switchMode?.('compare');
+  const slotId = addLoadoutToPreferredSlot({ ...loadout }) ?? addLoadoutToNextAvailableSlot({ ...loadout });
+  if (!slotId) return;
+  _presetCbs.switchMode?.('compare');
 }
 
 export function renderComparisonPresets(): void {

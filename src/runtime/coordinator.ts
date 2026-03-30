@@ -95,13 +95,12 @@ export function syncViews(reason: string, changed: ViewChangeSet): void {
 
   if (plan.compendium) {
     try {
-      (window as Window & {
-        _compSyncWithActiveLoadout?: () => unknown;
-        _stringSyncWithActiveLoadout?: () => unknown;
-      })._compSyncWithActiveLoadout?.();
-      (window as Window & {
-        _stringSyncWithActiveLoadout?: () => unknown;
-      })._stringSyncWithActiveLoadout?.();
+      void import('../ui/pages/compendium.js').then((mod) => {
+        mod._compSyncWithActiveLoadout();
+      });
+      void import('../ui/pages/strings.js').then((mod) => {
+        mod._stringSyncWithActiveLoadout();
+      });
     } catch (error) {
       reportRuntimeIssue('COMPENDIUM_RENDER', `Compendium refresh failed during "${reason}"`, {
         details: error,

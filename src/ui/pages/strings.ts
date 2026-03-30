@@ -9,9 +9,25 @@ import {
   predictSetup,
 } from '../../engine/index.js';
 import type { Racquet, SetupStats, StringConfig, StringData } from '../../engine/types.js';
-import { createLoadout } from '../../state/loadout.js';
+import { createLoadout, saveLoadout } from '../../state/loadout.js';
 import { syncStringCompendiumWithActiveLoadout } from '../../state/setup-sync.js';
 import { createSearchableSelect, ssInstances } from '../components/searchable-select.js';
+import { activateLoadout, switchMode } from './shell.js';
+import { getCompBaseObs, setCompBaseObs } from './comp-base-obs.js';
+
+// ---------------------------------------------------------------------------
+// Cross-module callbacks — avoids circular import with compendium.ts.
+// Shell.ts registers 'goToCompendiumFrame' during init().
+// ---------------------------------------------------------------------------
+type StringCallbacks = {
+  goToCompendiumFrame?: (frameId: string) => void;
+};
+
+let _stringCbs: StringCallbacks = {};
+
+export function registerStringCallbacks(cbs: StringCallbacks): void {
+  _stringCbs = { ..._stringCbs, ...cbs };
+}
 
 const RACQUET_DATA = RACQUETS as unknown as Racquet[];
 const STRING_DATA = STRINGS as unknown as StringData[];
@@ -43,15 +59,6 @@ interface StringModState {
   previewStats: SetupStats | null;
 }
 
-interface SaveLikeWindow extends Window {
-  _compBaseObs?: number | null;
-  activateLoadout?: (loadout: unknown) => void;
-  saveLoadout?: (loadout: unknown) => void;
-  switchMode?: (mode: string) => void;
-  _compSelectFrame?: (frameId: string) => void;
-  _compSwitchTab?: (tab: string) => void;
-}
-
 let _stringSelectedId: string | null = null;
 let _stringsInitialized = false;
 let _stringFiltersBound = false;
@@ -71,10 +78,6 @@ let _stringModState: StringModState = {
   baseStats: null,
   previewStats: null,
 };
-
-function getAppWindow(): SaveLikeWindow {
-  return window as SaveLikeWindow;
-}
 
 function getInputValue(id: string): string {
   return (document.getElementById(id) as HTMLInputElement | HTMLSelectElement | null)?.value || '';
@@ -173,12 +176,12 @@ function ensureBaseStatsFromFrame(frameId: string | null): void {
   const racquet = findRacquetById(frameId);
   if (!racquet) {
     _stringModState.baseStats = null;
-    getAppWindow()._compBaseObs = null;
+    setCompBaseObs(null);
     return;
   }
 
   _stringModState.baseStats = calcFrameBase(racquet);
-  getAppWindow()._compBaseObs = _stringModState.baseStats ? computeBaseObs(_stringModState.baseStats) : null;
+  setCompBaseObs(_stringModState.baseStats ? computeBaseObs(_stringModState.baseStats) : null);
 }
 
 function scheduleStringRosterRender(): void {
@@ -223,6 +226,8 @@ function updateStringPreviewTrack(
 }
 
 export function _stringEnsureInitialized(): void {
+  _bindStringDelegates();
+
   const searchEl = document.getElementById('string-search');
   const materialEl = document.getElementById('string-filter-material');
   const shapeEl = document.getElementById('string-filter-shape');
@@ -279,6 +284,64 @@ export function _stringEnsureInitialized(): void {
     main.innerHTML =
       '<div class="flex flex-col items-center justify-center h-64 text-dc-red"><p class="font-mono text-sm">Error: String database not loaded</p></div>';
   }
+}
+
+let _stringDelegateBound = false;
+
+function _bindStringDelegates(): void {
+  if (_stringDelegateBound) return;
+  _stringDelegateBound = true;
+
+  // Click delegation
+  document.addEventListener('click', (e: Event) => {
+    const el = (e.target as Element).closest('[data-string-action]') as HTMLElement | null;
+    if (!el) return;
+    const action = el.dataset.stringAction!;
+    const arg = el.dataset.stringArg;
+
+    switch (action) {
+      case 'selectString':
+        if (arg) _stringSelectString(arg);
+        break;
+      case 'goToFrame':
+        if (arg) _stringCbs.goToCompendiumFrame?.(arg);
+        break;
+      case 'toggleHud':
+        _stringToggleHud();
+        break;
+      case 'setModMode':
+        if (arg === 'fullbed' || arg === 'hybrid') _stringSetModMode(arg);
+        break;
+      case 'addToLoadout':
+        _stringAddToLoadout();
+        break;
+      case 'setActive':
+        _stringSetActiveLoadout();
+        break;
+      case 'clearPreview':
+        _stringClearPreview();
+        break;
+    }
+  });
+
+  // Input delegation — tension number inputs
+  document.addEventListener('input', (e: Event) => {
+    const el = e.target as HTMLElement;
+    if (el.dataset.stringAction !== 'tensionChange' || !el.dataset.stringArg) return;
+    const type = el.dataset.stringArg as 'mains' | 'crosses';
+    _stringOnTensionChange(type, (el as HTMLInputElement).value);
+  });
+
+  // Change delegation — gauge selects
+  document.addEventListener('change', (e: Event) => {
+    const el = e.target as HTMLElement;
+    const action = el.dataset.stringAction;
+    if (action === 'gaugeChange') {
+      _stringOnGaugeChange((el as HTMLSelectElement).value);
+    } else if (action === 'crossesGaugeChange') {
+      _stringOnCrossesGaugeChange((el as HTMLSelectElement).value);
+    }
+  });
 }
 
 export function _stringToggleHud(): void {
@@ -349,7 +412,7 @@ export function _stringRenderRoster(): void {
         : 'border-dc-storm dark:border-dc-platinum-dim hover:border-dc-platinum';
       const archetype = _stringGetArchetype(stringItem);
 
-      return `<button class="${baseClasses} ${borderClasses}" data-id="${stringItem.id}" onclick="_stringSelectString('${stringItem.id}')">
+      return `<button class="${baseClasses} ${borderClasses}" data-id="${stringItem.id}" data-string-action="selectString" data-string-arg="${stringItem.id}">
       <div class="flex justify-between items-start gap-2">
         <span class="text-base font-semibold leading-tight tracking-tight text-dc-platinum">${stringItem.name}</span>
       </div>
@@ -536,7 +599,7 @@ export function _stringRenderMain(stringItem: StringData): void {
   const similarHtml = similarStrings
     .map((similar) => {
       const archetype = _stringGetArchetype(similar);
-      return `<div class="bg-transparent border border-dc-border hover:border-dc-storm p-4 flex flex-col cursor-pointer transition-colors group" onclick="_stringSelectString('${similar.id}')">
+      return `<div class="bg-transparent border border-dc-border hover:border-dc-storm p-4 flex flex-col cursor-pointer transition-colors group" data-string-action="selectString" data-string-arg="${similar.id}">
       <div class="flex justify-between items-start mb-2">
         <span class="font-mono text-[10px] text-dc-storm uppercase tracking-widest group-hover:text-dc-platinum transition-colors">${archetype}</span>
         <span class="font-mono text-lg font-bold text-dc-platinum">${similar.twScore.spin || 0}<span class="text-[13px] text-dc-storm ml-1">SPIN</span></span>
@@ -549,7 +612,7 @@ export function _stringRenderMain(stringItem: StringData): void {
 
   const framesHtml = bestFrames
     .map((frameResult) => {
-      return `<div class="bg-transparent border border-dc-border hover:border-dc-storm p-4 flex flex-col cursor-pointer transition-colors group" onclick="_compSelectFrame('${frameResult.racquet.id}'); _compSwitchTab('rackets');">
+      return `<div class="bg-transparent border border-dc-border hover:border-dc-storm p-4 flex flex-col cursor-pointer transition-colors group" data-string-action="goToFrame" data-string-arg="${frameResult.racquet.id}">
       <div class="flex justify-between items-start mb-2">
         <span class="font-mono text-[10px] text-dc-storm uppercase tracking-widest group-hover:text-dc-platinum transition-colors">${getFrameIdentityLabel(frameResult.racquet)}</span>
         <span class="font-mono text-lg font-bold text-dc-accent">${frameResult.obs.toFixed(1)}</span>
@@ -582,7 +645,7 @@ export function _stringRenderMain(stringItem: StringData): void {
         </span>
       </div>
 
-      <h2 class="text-5xl md:text-[4rem] font-semibold tracking-tight text-dc-platinum leading-none mb-0 pr-[120px] flex items-center gap-3 cursor-pointer group" onclick="_stringToggleHud()">
+      <h2 class="text-5xl md:text-[4rem] font-semibold tracking-tight text-dc-platinum leading-none mb-0 pr-[120px] flex items-center gap-3 cursor-pointer group" data-string-action="toggleHud">
         ${stringItem.name}
         <span class="text-2xl text-dc-red opacity-50 group-hover:opacity-100 transition-opacity">&#9660;</span>
       </h2>
@@ -627,8 +690,8 @@ export function _stringRenderMain(stringItem: StringData): void {
       <div class="flex justify-between items-center border-b border-dc-storm/30 pb-3 mb-1">
         <span class="font-mono text-[13px] text-dc-accent uppercase tracking-[0.2em]">//FRAME INJECTION</span>
         <div class="flex gap-4">
-          <button class="string-mod-mode-btn text-dc-accent border-dc-accent border-b-2 pb-1 font-mono text-[12px] uppercase tracking-widest hover:text-dc-platinum transition-colors" data-mode="fullbed" onclick="_stringSetModMode('fullbed')">Full Bed</button>
-          <button class="string-mod-mode-btn text-dc-storm border-transparent border-b-2 pb-1 font-mono text-[12px] uppercase tracking-widest hover:text-dc-platinum transition-colors" data-mode="hybrid" onclick="_stringSetModMode('hybrid')">Hybrid</button>
+          <button class="string-mod-mode-btn text-dc-accent border-dc-accent border-b-2 pb-1 font-mono text-[12px] uppercase tracking-widest hover:text-dc-platinum transition-colors" data-mode="fullbed" data-string-action="setModMode" data-string-arg="fullbed">Full Bed</button>
+          <button class="string-mod-mode-btn text-dc-storm border-transparent border-b-2 pb-1 font-mono text-[12px] uppercase tracking-widest hover:text-dc-platinum transition-colors" data-mode="hybrid" data-string-action="setModMode" data-string-arg="hybrid">Hybrid</button>
         </div>
       </div>
 
@@ -664,14 +727,14 @@ export function _stringRenderMain(stringItem: StringData): void {
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="flex flex-col gap-3">
           <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">// MAINS GAUGE</span>
-          <select id="string-mod-gauge" class="appearance-none bg-white dark:bg-dc-void border-b border-dc-storm/50 text-dc-platinum font-mono text-sm py-2 px-2 outline-none focus:border-dc-accent transition-colors cursor-pointer" onchange="_stringOnGaugeChange(this.value)">
+          <select id="string-mod-gauge" class="appearance-none bg-white dark:bg-dc-void border-b border-dc-storm/50 text-dc-platinum font-mono text-sm py-2 px-2 outline-none focus:border-dc-accent transition-colors cursor-pointer" data-string-action="gaugeChange">
             <option value="">Default</option>
           </select>
         </div>
 
         <div class="flex flex-col gap-3" id="string-mod-crosses-gauge-col" style="display:none;">
           <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">// CROSSES GAUGE</span>
-          <select id="string-mod-crosses-gauge" class="appearance-none bg-white dark:bg-dc-void border-b border-dc-storm/50 text-dc-platinum font-mono text-sm py-2 px-2 outline-none focus:border-dc-accent transition-colors cursor-pointer" onchange="_stringOnCrossesGaugeChange(this.value)">
+          <select id="string-mod-crosses-gauge" class="appearance-none bg-white dark:bg-dc-void border-b border-dc-storm/50 text-dc-platinum font-mono text-sm py-2 px-2 outline-none focus:border-dc-accent transition-colors cursor-pointer" data-string-action="crossesGaugeChange">
             <option value="">Same as mains</option>
           </select>
         </div>
@@ -680,12 +743,12 @@ export function _stringRenderMain(stringItem: StringData): void {
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
         <div class="flex flex-col gap-3" id="string-mod-mains-col">
           <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">// MAINS TENSION</span>
-          <input type="number" id="string-mod-mains-tension" class="bg-transparent border-b border-dc-storm/50 text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors" value="52" min="30" max="70" step="1" oninput="_stringOnTensionChange('mains', this.value)">
+          <input type="number" id="string-mod-mains-tension" class="bg-transparent border-b border-dc-storm/50 text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors" value="52" min="30" max="70" step="1" data-string-action="tensionChange" data-string-arg="mains">
         </div>
 
         <div class="flex flex-col gap-3" id="string-mod-crosses-col">
           <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]" id="string-mod-crosses-label">// CROSSES TENSION</span>
-          <input type="number" id="string-mod-crosses-tension" class="bg-transparent border-b border-dc-storm/50 text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors" value="50" min="30" max="70" step="1" oninput="_stringOnTensionChange('crosses', this.value)">
+          <input type="number" id="string-mod-crosses-tension" class="bg-transparent border-b border-dc-storm/50 text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors" value="50" min="30" max="70" step="1" data-string-action="tensionChange" data-string-arg="crosses">
         </div>
       </div>
 
@@ -711,9 +774,9 @@ export function _stringRenderMain(stringItem: StringData): void {
       </div>
 
       <div class="flex gap-2 mt-2">
-        <button class="flex-1 font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-ink transition-colors disabled:opacity-30 disabled:cursor-not-allowed" id="string-mod-add" disabled onclick="_stringAddToLoadout()">Add to Loadout</button>
-        <button class="flex-1 font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-platinum text-dc-platinum hover:bg-dc-platinum hover:text-dc-void transition-colors disabled:opacity-30 disabled:cursor-not-allowed" id="string-mod-activate" disabled onclick="_stringSetActiveLoadout()">Set Active</button>
-        <button class="font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-storm/50 text-dc-storm hover:bg-dc-storm/10 hover:text-dc-platinum hover:border-dc-storm transition-colors" onclick="_stringClearPreview()">Clear</button>
+        <button class="flex-1 font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-ink transition-colors disabled:opacity-30 disabled:cursor-not-allowed" id="string-mod-add" disabled data-string-action="addToLoadout">Add to Loadout</button>
+        <button class="flex-1 font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-platinum text-dc-platinum hover:bg-dc-platinum hover:text-dc-void transition-colors disabled:opacity-30 disabled:cursor-not-allowed" id="string-mod-activate" disabled data-string-action="setActive">Set Active</button>
+        <button class="font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-storm/50 text-dc-storm hover:bg-dc-storm/10 hover:text-dc-platinum hover:border-dc-storm transition-colors" data-string-action="clearPreview">Clear</button>
       </div>
     </div>
 
@@ -867,7 +930,7 @@ export function _stringOnFrameChange(frameId: string): void {
     ensureBaseStatsFromFrame(racquet.id);
   } else {
     _stringModState.baseStats = null;
-    getAppWindow()._compBaseObs = null;
+    setCompBaseObs(null);
   }
 
   scheduleStringPreviewUpdate();
@@ -926,7 +989,7 @@ export function _stringUpdatePreview(): void {
     obsEl.innerHTML = `<span class="font-mono text-4xl font-bold text-dc-accent">${obs.toFixed(1)}</span>`;
   }
 
-  const baseObs = getAppWindow()._compBaseObs || computeBaseObs(baseStats);
+  const baseObs = getCompBaseObs() || computeBaseObs(baseStats);
   const delta = Math.round((obs - baseObs) * 10) / 10;
   const main = document.getElementById('comp-main');
   let deltaEl = document.getElementById('comp-string-delta');
@@ -1026,7 +1089,7 @@ export function _stringAddToLoadout(): void {
   });
   if (!loadout) return;
 
-  getAppWindow().saveLoadout?.(loadout);
+  saveLoadout(loadout);
   setButtonFeedback('string-mod-add', 'Saved ✓');
 }
 
@@ -1050,8 +1113,8 @@ export function _stringSetActiveLoadout(): void {
   });
   if (!loadout) return;
 
-  getAppWindow().saveLoadout?.(loadout);
-  getAppWindow().activateLoadout?.(loadout);
-  getAppWindow().switchMode?.('overview');
+  saveLoadout(loadout);
+  activateLoadout(loadout);
+  switchMode('overview');
   setButtonFeedback('string-mod-activate', 'Active ✓');
 }

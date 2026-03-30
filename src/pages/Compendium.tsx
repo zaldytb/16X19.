@@ -1,4 +1,6 @@
 import { useEffect } from 'react';
+import { initCompendium, _compSwitchTab, _compToggleHud } from '../ui/pages/compendium.js';
+import { _stringToggleHud } from '../ui/pages/strings.js';
 
 interface CompendiumProps {
   initialTab?: 'rackets' | 'strings' | 'leaderboard';
@@ -6,9 +8,9 @@ interface CompendiumProps {
 
 export function Compendium({ initialTab = 'rackets' }: CompendiumProps) {
   useEffect(() => {
-    window.initCompendium?.();
+    initCompendium();
     if (initialTab !== 'rackets') {
-      window._compSwitchTab?.(initialTab);
+      _compSwitchTab(initialTab);
     }
   }, [initialTab]);
 
@@ -16,15 +18,15 @@ export function Compendium({ initialTab = 'rackets' }: CompendiumProps) {
     <section className="workspace-mode" id="mode-compendium" data-mode="compendium">
       <div className="w-full max-w-7xl mx-auto mb-10 mt-4">
         <div className="grid grid-cols-3 border border-dc-border">
-          <button className={`comp-tab-btn py-4 md:py-5 font-mono text-[10px] md:text-xs uppercase tracking-[0.2em] border-r border-dc-border transition-colors ${initialTab === 'rackets' ? 'bg-dc-active-bg text-dc-active-text font-bold' : 'bg-transparent text-dc-storm hover:bg-dc-border/50 hover:text-dc-platinum'}`} data-comp-tab="rackets" onClick={() => window._compSwitchTab?.('rackets')}>Rackets</button>
-          <button className={`comp-tab-btn py-4 md:py-5 font-mono text-[10px] md:text-xs uppercase tracking-[0.2em] border-r border-dc-border transition-colors ${initialTab === 'strings' ? 'bg-dc-active-bg text-dc-active-text font-bold' : 'bg-transparent text-dc-storm hover:bg-dc-border/50 hover:text-dc-platinum'}`} data-comp-tab="strings" onClick={() => window._compSwitchTab?.('strings')}>Strings</button>
-          <button className={`comp-tab-btn py-4 md:py-5 font-mono text-[10px] md:text-xs uppercase tracking-[0.2em] transition-colors ${initialTab === 'leaderboard' ? 'bg-dc-active-bg text-dc-active-text font-bold' : 'bg-transparent text-dc-storm hover:bg-dc-border/50 hover:text-dc-platinum'}`} data-comp-tab="leaderboard" onClick={() => window._compSwitchTab?.('leaderboard')}>Leaderboard</button>
+          <button className={`comp-tab-btn py-4 md:py-5 font-mono text-[10px] md:text-xs uppercase tracking-[0.2em] border-r border-dc-border transition-colors ${initialTab === 'rackets' ? 'bg-dc-active-bg text-dc-active-text font-bold' : 'bg-transparent text-dc-storm hover:bg-dc-border/50 hover:text-dc-platinum'}`} data-comp-tab="rackets" onClick={() => _compSwitchTab('rackets')}>Rackets</button>
+          <button className={`comp-tab-btn py-4 md:py-5 font-mono text-[10px] md:text-xs uppercase tracking-[0.2em] border-r border-dc-border transition-colors ${initialTab === 'strings' ? 'bg-dc-active-bg text-dc-active-text font-bold' : 'bg-transparent text-dc-storm hover:bg-dc-border/50 hover:text-dc-platinum'}`} data-comp-tab="strings" onClick={() => _compSwitchTab('strings')}>Strings</button>
+          <button className={`comp-tab-btn py-4 md:py-5 font-mono text-[10px] md:text-xs uppercase tracking-[0.2em] transition-colors ${initialTab === 'leaderboard' ? 'bg-dc-active-bg text-dc-active-text font-bold' : 'bg-transparent text-dc-storm hover:bg-dc-border/50 hover:text-dc-platinum'}`} data-comp-tab="leaderboard" onClick={() => _compSwitchTab('leaderboard')}>Leaderboard</button>
         </div>
       </div>
 
       <div className={`comp-tab-panel ${initialTab === 'rackets' ? '' : 'hidden'}`} id="comp-tab-rackets">
         <div className="comp-query-hud fixed inset-0 z-[200] opacity-0 invisible pointer-events-none transition-all duration-300 flex flex-col p-8 md:p-16 [&.active]:opacity-100 [&.active]:visible [&.active]:pointer-events-auto" id="comp-hud">
-          <button className="absolute top-6 right-6 bg-transparent border-none text-dc-storm dark:text-dc-platinum-dim hover:text-dc-platinum dark:hover:text-dc-platinum text-4xl cursor-pointer z-[210] transition-colors" onClick={() => window._compToggleHud?.()}>×</button>
+          <button className="absolute top-6 right-6 bg-transparent border-none text-dc-storm dark:text-dc-platinum-dim hover:text-dc-platinum dark:hover:text-dc-platinum text-4xl cursor-pointer z-[210] transition-colors" onClick={() => _compToggleHud()}>×</button>
           <input type="text" className="w-full bg-transparent border-0 border-b-2 border-dc-storm focus:border-dc-accent font-mono text-2xl md:text-4xl tracking-tight text-dc-platinum pb-4 mb-8 outline-none transition-colors placeholder:text-dc-storm/50" id="comp-search" placeholder="Search frames..." />
           <div className="flex gap-4 flex-wrap mb-8">
             <select id="comp-filter-brand" className="comp-hud-filter-select"><option value="">All Brands</option></select>
@@ -72,7 +74,7 @@ export function Compendium({ initialTab = 'rackets' }: CompendiumProps) {
 
       <div className={`comp-tab-panel ${initialTab === 'strings' ? '' : 'hidden'}`} id="comp-tab-strings">
         <div className="comp-query-hud fixed inset-0 z-[200] opacity-0 invisible pointer-events-none transition-all duration-300 flex flex-col p-8 md:p-16 [&.active]:opacity-100 [&.active]:visible [&.active]:pointer-events-auto" id="string-hud">
-          <button className="absolute top-6 right-6 bg-transparent border-none text-dc-storm dark:text-dc-platinum-dim hover:text-dc-platinum dark:hover:text-dc-platinum text-4xl cursor-pointer z-[210] transition-colors" onClick={() => window._stringToggleHud?.()}>×</button>
+          <button className="absolute top-6 right-6 bg-transparent border-none text-dc-storm dark:text-dc-platinum-dim hover:text-dc-platinum dark:hover:text-dc-platinum text-4xl cursor-pointer z-[210] transition-colors" onClick={() => _stringToggleHud()}>×</button>
           <input type="text" className="w-full bg-transparent border-0 border-b-2 border-dc-storm focus:border-dc-accent font-mono text-2xl md:text-4xl tracking-tight text-dc-platinum pb-4 mb-8 outline-none transition-colors placeholder:text-dc-storm/50" id="string-search" placeholder="Search strings..." />
           <div className="flex gap-4 flex-wrap mb-8">
             <select id="string-filter-material" className="comp-hud-filter-select">

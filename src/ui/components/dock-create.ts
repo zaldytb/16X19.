@@ -4,26 +4,14 @@
 import { RACQUETS, STRINGS } from '../../data/loader.js';
 import { getActiveLoadout, getSavedLoadouts } from '../../state/store.js';
 import { getCurrentMode } from '../../state/app-state.js';
-
-// Bridge globals (via window)
-declare const activeLoadout: Loadout | null;
-declare const savedLoadouts: Loadout[];
-
+import { createLoadout, saveLoadout } from '../../state/loadout.js';
+import { activateLoadout, switchMode } from '../pages/shell.js';
+import { renderDashboard } from '../pages/overview.js';
+import { _initQaSearchable } from './searchable-select.js';
 import type { Loadout } from '../../engine/types.js';
 
 // Module-level state
 let _cfCreatingNew = false;
-
-// Bridge functions (called via window)
-interface WindowExt extends Window {
-  createLoadout?: (frameId: string, stringId: string, tension: number, opts?: Record<string, unknown>) => Loadout | null;
-  activateLoadout?: (loadout: Loadout) => void;
-  saveLoadout?: (loadout: Loadout) => void;
-  switchMode?: (mode: string) => void;
-  renderDashboard?: () => void;
-  renderDockCreateSection?: () => void;
-  _initQaSearchable?: (searchId: string, hiddenId: string, dropdownId: string, items: Array<{ id: string; label: string }>) => void;
-}
 
 /**
  * Render the dock create section
@@ -47,10 +35,11 @@ export function renderDockCreateSection(): void {
     if (editorSection) editorSection.style.display = 'none';
   } else if (al && !_cfCreatingNew) {
     container.innerHTML =
-      '<button class="w-full flex items-center justify-center gap-2 py-2.5 border border-dashed border-[var(--dc-border)] font-mono text-[9px] uppercase tracking-[0.15em] text-[var(--dc-storm)] hover:text-[var(--dc-platinum)] hover:border-[var(--dc-border-hover)] transition-colors" onclick="_showNewLoadoutForm()">' +
+      '<button class="w-full flex items-center justify-center gap-2 py-2.5 border border-dashed border-[var(--dc-border)] font-mono text-[9px] uppercase tracking-[0.15em] text-[var(--dc-storm)] hover:text-[var(--dc-platinum)] hover:border-[var(--dc-border-hover)] transition-colors" data-cf-action="showNewLoadoutForm">' +
         '<svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="7" y1="2" x2="7" y2="12"/><line x1="2" y1="7" x2="12" y2="7"/></svg>' +
         'Create New Loadout' +
       '</button>';
+    _bindDockCreateDelegates();
     if (editorSection) editorSection.style.display = '';
   } else if (_cfCreatingNew) {
     container.innerHTML = _renderCreateFormTailwind('New Loadout', true);
@@ -67,12 +56,12 @@ export function _renderCreateFormTailwind(title: string, showCancel: boolean): s
     '<div class="dock-cf-form border border-[var(--dc-border)] bg-[var(--dc-void-deep)] p-4 flex flex-col gap-3">' +
       '<div class="flex items-center justify-between border-b border-[var(--dc-border)] pb-3">' +
         '<span class="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--dc-platinum)]">' + title + '</span>' +
-        (showCancel ? '<a class="font-mono text-[9px] uppercase tracking-widest text-[var(--dc-storm)] hover:text-[var(--dc-platinum)] cursor-pointer transition-colors" href="#" onclick="_hideNewLoadoutForm(); return false;">Cancel</a>' : '') +
+        (showCancel ? '<a class="font-mono text-[9px] uppercase tracking-widest text-[var(--dc-storm)] hover:text-[var(--dc-platinum)] cursor-pointer transition-colors" href="#" data-cf-action="hideNewLoadoutForm">Cancel</a>' : '') +
       '</div>' +
       // Full/Hybrid toggle
       '<div class="flex border border-[var(--dc-border)]">' +
-        '<button class="dock-cf-toggle-btn flex-1 py-2 font-mono text-[9px] font-bold uppercase tracking-[0.12em] bg-[var(--dc-platinum)] text-[var(--dc-void)] border-r border-[var(--dc-border)] transition-colors" data-cf-mode="full" onclick="_cfToggleMode(this)">Full Bed</button>' +
-        '<button class="dock-cf-toggle-btn flex-1 py-2 font-mono text-[9px] font-bold uppercase tracking-[0.12em] bg-transparent text-[var(--dc-storm)] hover:text-[var(--dc-platinum)] transition-colors" data-cf-mode="hybrid" onclick="_cfToggleMode(this)">Hybrid</button>' +
+        '<button class="dock-cf-toggle-btn flex-1 py-2 font-mono text-[9px] font-bold uppercase tracking-[0.12em] bg-[var(--dc-platinum)] text-[var(--dc-void)] border-r border-[var(--dc-border)] transition-colors" data-cf-mode="full" data-cf-action="toggleMode">Full Bed</button>' +
+        '<button class="dock-cf-toggle-btn flex-1 py-2 font-mono text-[9px] font-bold uppercase tracking-[0.12em] bg-transparent text-[var(--dc-storm)] hover:text-[var(--dc-platinum)] transition-colors" data-cf-mode="hybrid" data-cf-action="toggleMode">Hybrid</button>' +
       '</div>' +
       // Body
       '<div class="dock-cf-body flex flex-col gap-3" data-cf-hybrid="false">' +
@@ -98,8 +87,8 @@ export function _renderCreateFormTailwind(title: string, showCancel: boolean): s
       '</div>' +
       // Actions
       '<div class="grid grid-cols-2 gap-2 pt-2 border-t border-[var(--dc-border)]">' +
-        '<button class="py-2.5 font-mono text-[9px] font-bold uppercase tracking-[0.12em] bg-[var(--dc-platinum)] text-[var(--dc-void)] hover:bg-[var(--dc-white)] transition-colors" onclick="_cfActivate()">Set Active</button>' +
-        '<button class="py-2.5 font-mono text-[9px] font-bold uppercase tracking-[0.12em] border border-[var(--dc-border)] text-[var(--dc-storm)] hover:text-[var(--dc-platinum)] hover:border-[var(--dc-border-hover)] bg-transparent transition-colors" onclick="_cfSave()">Save</button>' +
+        '<button class="py-2.5 font-mono text-[9px] font-bold uppercase tracking-[0.12em] bg-[var(--dc-platinum)] text-[var(--dc-void)] hover:bg-[var(--dc-white)] transition-colors" data-cf-action="activate">Set Active</button>' +
+        '<button class="py-2.5 font-mono text-[9px] font-bold uppercase tracking-[0.12em] border border-[var(--dc-border)] text-[var(--dc-storm)] hover:text-[var(--dc-platinum)] hover:border-[var(--dc-border-hover)] bg-transparent transition-colors" data-cf-action="save">Save</button>' +
       '</div>' +
     '</div>'
   );
@@ -164,16 +153,16 @@ export function _wireCreateForm(container: HTMLElement): void {
   const frameItems = RACQUETS.map(r => ({ id: r.id, label: r.name }));
   const stringItems = STRINGS.map(s => ({ id: s.id, label: s.name + ' (' + s.gauge + ')' }));
 
-  const win = window as WindowExt;
-
   // Full bed searchables
-  win._initQaSearchable?.('dock-cf-frame-search', 'dock-cf-frame', 'dock-cf-frame-dropdown', frameItems);
-  win._initQaSearchable?.('dock-cf-string-search', 'dock-cf-string', 'dock-cf-string-dropdown', stringItems);
+  _initQaSearchable('dock-cf-frame-search', 'dock-cf-frame', 'dock-cf-frame-dropdown', frameItems);
+  _initQaSearchable('dock-cf-string-search', 'dock-cf-string', 'dock-cf-string-dropdown', stringItems);
 
   // Hybrid searchables
-  win._initQaSearchable?.('dock-cf-h-frame-search', 'dock-cf-h-frame', 'dock-cf-h-frame-dropdown', frameItems);
-  win._initQaSearchable?.('dock-cf-mains-search', 'dock-cf-mains', 'dock-cf-mains-dropdown', stringItems);
-  win._initQaSearchable?.('dock-cf-crosses-search', 'dock-cf-crosses', 'dock-cf-crosses-dropdown', stringItems);
+  _initQaSearchable('dock-cf-h-frame-search', 'dock-cf-h-frame', 'dock-cf-h-frame-dropdown', frameItems);
+  _initQaSearchable('dock-cf-mains-search', 'dock-cf-mains', 'dock-cf-mains-dropdown', stringItems);
+  _initQaSearchable('dock-cf-crosses-search', 'dock-cf-crosses', 'dock-cf-crosses-dropdown', stringItems);
+
+  _bindDockCreateDelegates();
 }
 
 /**
@@ -186,8 +175,6 @@ export function _cfBuildLoadout(): Loadout | null {
   const hybridSection = form.querySelector('.dock-cf-hybrid') as HTMLElement | null;
   const isHybrid = hybridSection && !hybridSection.classList.contains('hidden');
 
-  const win = window as WindowExt;
-
   if (isHybrid) {
     const frameId = (document.getElementById('dock-cf-h-frame') as HTMLInputElement | null)?.value;
     const mainsId = (document.getElementById('dock-cf-mains') as HTMLInputElement | null)?.value;
@@ -196,7 +183,7 @@ export function _cfBuildLoadout(): Loadout | null {
     const crossesTension = parseInt((document.getElementById('dock-cf-crosses-tension') as HTMLInputElement | null)?.value || '53') || 53;
     if (!frameId || !mainsId || !crossesId) return null;
 
-    return win.createLoadout?.(frameId, mainsId, mainsTension, {
+    return createLoadout(frameId, mainsId, mainsTension, {
       isHybrid: true,
       mainsId,
       crossesId,
@@ -210,7 +197,7 @@ export function _cfBuildLoadout(): Loadout | null {
     const crossesT = parseInt((document.getElementById('dock-cf-tension-x') as HTMLInputElement | null)?.value || '53') || 53;
     if (!frameId || !stringId) return null;
 
-    return win.createLoadout?.(frameId, stringId, mainsT, { source: 'manual', crossesTension: crossesT }) || null;
+    return createLoadout(frameId, stringId, mainsT, { source: 'manual', crossesTension: crossesT }) || null;
   }
 }
 
@@ -228,15 +215,14 @@ export function _cfActivate(): void {
   _cfClearFieldErrors();
 
   _cfCreatingNew = false;
-  const win = window as WindowExt;
-  win.activateLoadout?.(lo);
+  activateLoadout(lo);
   renderDockCreateSection();
 
   if (isFirstLoadout) {
-    win.saveLoadout?.(lo);
-    win.switchMode?.('tune');
+    saveLoadout(lo);
+    switchMode('tune');
   } else if (getCurrentMode() === 'overview') {
-    win.renderDashboard?.();
+    renderDashboard();
   }
 }
 
@@ -252,8 +238,7 @@ export function _cfSave(): void {
   _cfClearFieldErrors();
 
   _cfCreatingNew = false;
-  const win = window as WindowExt;
-  win.saveLoadout?.(lo);
+  saveLoadout(lo);
   renderDockCreateSection();
 }
 
@@ -343,5 +328,40 @@ export function _showNewLoadoutForm(): void {
 export function _hideNewLoadoutForm(): void {
   _cfCreatingNew = false;
   renderDockCreateSection();
+}
+
+// ---------------------------------------------------------------------------
+// Delegated event listener — replaces inline onclick handlers
+// ---------------------------------------------------------------------------
+let _cfDelegateBound = false;
+
+export function _bindDockCreateDelegates(): void {
+  if (_cfDelegateBound) return;
+  _cfDelegateBound = true;
+
+  document.addEventListener('click', (e: Event) => {
+    const el = (e.target as Element).closest('[data-cf-action]') as HTMLElement | null;
+    if (!el) return;
+    const action = el.dataset.cfAction!;
+
+    switch (action) {
+      case 'showNewLoadoutForm':
+        _showNewLoadoutForm();
+        break;
+      case 'hideNewLoadoutForm':
+        e.preventDefault();
+        _hideNewLoadoutForm();
+        break;
+      case 'toggleMode':
+        _cfToggleMode(el);
+        break;
+      case 'activate':
+        _cfActivate();
+        break;
+      case 'save':
+        _cfSave();
+        break;
+    }
+  });
 }
 

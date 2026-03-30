@@ -6,6 +6,51 @@ import type { Loadout } from '../../engine/types.js';
 import { getObsScoreColor } from '../../engine/composite.js';
 import { getActiveLoadout, getSavedLoadouts } from '../../state/store.js';
 
+// ---------------------------------------------------------------------------
+// Callback registry — shell.ts registers cross-module actions here at init.
+// ---------------------------------------------------------------------------
+type MyLoadoutsCallbacks = {
+  switchToLoadout: (id: string) => void;
+  shareLoadout: (id: string) => void;
+  addLoadoutToCompare: (id: string) => void;
+  removeLoadout: (id: string) => void;
+};
+
+const _noop = (_id?: string) => { void _id; };
+let _myLoadoutsCbs: MyLoadoutsCallbacks = {
+  switchToLoadout: _noop,
+  shareLoadout: _noop,
+  addLoadoutToCompare: _noop,
+  removeLoadout: _noop,
+};
+
+export function registerMyLoadoutsCallbacks(cbs: Partial<MyLoadoutsCallbacks>): void {
+  _myLoadoutsCbs = { ..._myLoadoutsCbs, ...cbs };
+}
+
+let _listenerBound = false;
+
+function _bindMyLoadoutsListeners(): void {
+  if (_listenerBound) return;
+  const list = document.getElementById('dock-myl-list');
+  if (!list) return;
+  _listenerBound = true;
+  list.addEventListener('click', (e: Event) => {
+    const btn = (e.target as Element).closest('[data-lo-action]') as HTMLElement | null;
+    if (!btn) return;
+    const action = btn.dataset.loAction;
+    const id = btn.dataset.id ?? '';
+    switch (action) {
+      case 'switchToLoadout': _myLoadoutsCbs.switchToLoadout(id); break;
+      case 'shareLoadout': _myLoadoutsCbs.shareLoadout(id); break;
+      case 'addLoadoutToCompare': _myLoadoutsCbs.addLoadoutToCompare(id); break;
+      case 'confirmRemoveLoadout': confirmRemoveLoadout(id); break;
+      case 'removeLoadout': _myLoadoutsCbs.removeLoadout(id); break;
+      case 'renderMyLoadouts': renderMyLoadouts(); break;
+    }
+  });
+}
+
 const sourceLabels: Record<string, string> = {
   quiz: 'Quiz',
   compendium: 'Bible',
@@ -39,6 +84,8 @@ export function renderMyLoadouts(): void {
     return;
   }
 
+  _bindMyLoadoutsListeners();
+
   listEl.innerHTML = savedLoadouts.map(lo => {
     const isActive = isLoadoutActive(lo, activeLoadout);
     const racquet = RACQUETS.find(r => r.id === lo.frameId);
@@ -53,13 +100,10 @@ export function renderMyLoadouts(): void {
 
     return (
       '<div class="group relative flex items-stretch border-b border-[var(--dc-border)] last:border-b-0 transition-colors ' + activeBorderClass + '" data-lo-id="' + lo.id + '">' +
-        // Clickable main area
-        '<div class="flex items-center gap-2.5 flex-1 min-w-0 px-3 py-2.5 cursor-pointer" onclick="switchToLoadout(\'' + lo.id + '\')">' +
-          // OBS box
+        '<div class="flex items-center gap-2.5 flex-1 min-w-0 px-3 py-2.5 cursor-pointer" data-lo-action="switchToLoadout" data-id="' + lo.id + '">' +
           '<div class="w-9 h-9 shrink-0 border border-[var(--dc-border)] flex items-center justify-center">' +
             '<span class="font-mono text-[11px] font-bold" style="color:' + obsColor + '">' + (obsValue > 0 ? obsValue.toFixed(1) : '\u2014') + '</span>' +
           '</div>' +
-          // Info
           '<div class="flex-1 min-w-0">' +
             '<div class="font-sans text-[11px] font-semibold text-[var(--dc-platinum)] leading-tight truncate flex items-center gap-1">' +
               frameName +
@@ -70,15 +114,14 @@ export function renderMyLoadouts(): void {
             '<div class="font-mono text-[8px] text-[var(--dc-storm)]/60 mt-0.5">M' + lo.mainsTension + '/X' + lo.crossesTension + ' lbs</div>' +
           '</div>' +
         '</div>' +
-        // Ghost action buttons (hover reveal)
         '<div class="flex items-stretch opacity-0 group-hover:opacity-100 transition-opacity border-l border-[var(--dc-border)]">' +
-          '<button class="w-8 flex items-center justify-center text-[var(--dc-storm)] hover:text-[var(--dc-platinum)] hover:bg-[var(--dc-void)] transition-colors" onclick="shareLoadout(\'' + lo.id + '\')" title="Share">' +
+          '<button class="w-8 flex items-center justify-center text-[var(--dc-storm)] hover:text-[var(--dc-platinum)] hover:bg-[var(--dc-void)] transition-colors" data-lo-action="shareLoadout" data-id="' + lo.id + '" title="Share">' +
             '<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7.5L8 4.5M8 4.5V7M8 4.5H5.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="1" y="1" width="10" height="10" rx="2"/></svg>' +
           '</button>' +
-          '<button class="w-8 flex items-center justify-center text-[var(--dc-storm)] hover:text-[var(--dc-platinum)] hover:bg-[var(--dc-void)] transition-colors border-l border-[var(--dc-border)]" onclick="addLoadoutToCompare(\'' + lo.id + '\')" title="Compare">' +
+          '<button class="w-8 flex items-center justify-center text-[var(--dc-storm)] hover:text-[var(--dc-platinum)] hover:bg-[var(--dc-void)] transition-colors border-l border-[var(--dc-border)]" data-lo-action="addLoadoutToCompare" data-id="' + lo.id + '" title="Compare">' +
             '<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="4" height="10" rx="0.5"/><rect x="7" y="1" width="4" height="10" rx="0.5"/></svg>' +
           '</button>' +
-          '<button class="w-8 flex items-center justify-center text-[var(--dc-storm)] hover:text-[var(--dc-red)] hover:bg-[var(--dc-void)] transition-colors border-l border-[var(--dc-border)]" onclick="confirmRemoveLoadout(\'' + lo.id + '\')" title="Remove">' +
+          '<button class="w-8 flex items-center justify-center text-[var(--dc-storm)] hover:text-[var(--dc-red)] hover:bg-[var(--dc-void)] transition-colors border-l border-[var(--dc-border)]" data-lo-action="confirmRemoveLoadout" data-id="' + lo.id + '" title="Remove">' +
             '<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="3" y1="3" x2="9" y2="9"/><line x1="9" y1="3" x2="3" y2="9"/></svg>' +
           '</button>' +
         '</div>' +
@@ -131,6 +174,6 @@ export function confirmRemoveLoadout(loadoutId: string): void {
   actionBar.style.pointerEvents = 'auto';
   actionBar.innerHTML =
     '<span class="font-mono text-[8px] text-[var(--dc-storm)] px-2 flex items-center whitespace-nowrap">Delete?</span>' +
-    '<button class="px-2 font-mono text-[9px] font-bold text-[var(--dc-red)] hover:bg-[var(--dc-void)] border-l border-[var(--dc-border)] h-full transition-colors" onclick="removeLoadout(\'' + loadoutId + '\')">Yes</button>' +
-    '<button class="px-2 font-mono text-[9px] text-[var(--dc-storm)] hover:text-[var(--dc-platinum)] border-l border-[var(--dc-border)] h-full transition-colors" onclick="renderMyLoadouts()">No</button>';
+    '<button class="px-2 font-mono text-[9px] font-bold text-[var(--dc-red)] hover:bg-[var(--dc-void)] border-l border-[var(--dc-border)] h-full transition-colors" data-lo-action="removeLoadout" data-id="' + loadoutId + '">Yes</button>' +
+    '<button class="px-2 font-mono text-[9px] text-[var(--dc-storm)] hover:text-[var(--dc-platinum)] border-l border-[var(--dc-border)] h-full transition-colors" data-lo-action="renderMyLoadouts">No</button>';
 }

@@ -6,6 +6,7 @@ import { getCurrentSetup } from '../state/setup-sync.js';
 import { getCurrentMode, getSlotColors, setSlotColors } from '../state/app-state.js';
 import { sweepChart, renderSweepChart } from './pages/tune.js';
 import { updateComparisonRadar, renderComparisonSlots } from './pages/compare/index.js';
+import { renderRadarChart as renderOverviewRadarChart } from './pages/overview.js';
 
 type Theme = 'dark' | 'light';
 
@@ -61,13 +62,12 @@ export function toggleAppTheme(): void {
       refreshSlotColors: () => {
         const nextColors = [...getSlotColors<unknown[]>()];
         setSlotColors(nextColors);
-        (window as Window & { SLOT_COLORS?: unknown[] }).SLOT_COLORS = nextColors;
       },
       refreshRadarChart: () => {
         const setup = getCurrentSetup();
         if (!setup) return;
         const stats = predictSetup(setup.racquet, setup.stringConfig);
-        (window as Window & { renderRadarChart?: (stats: ReturnType<typeof predictSetup>) => void }).renderRadarChart?.(stats);
+        renderOverviewRadarChart(stats);
       },
       refreshComparison: () => {
         updateComparisonRadar();

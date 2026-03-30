@@ -175,7 +175,7 @@ export function renderDiffBattery(props: DiffBatteryProps): string {
   }).join('');
   
   const showMoreButton = !showAll && sortedDiffs.length > maxRows 
-    ? `<button class="diff-show-more" onclick="window.compareToggleShowAll()">
+    ? `<button class="diff-show-more" data-compare-action="toggleShowAll">
         Show all ${sortedDiffs.length} stats <span class="diff-show-more-icon">↓</span>
        </button>`
     : '';

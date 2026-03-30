@@ -447,8 +447,8 @@ export function renderWhatToTryNext(
             <span class="wttn-net-phrase">${netDir}</span>
           </div>
           <div class="wttn-action-row">
-            <button class="wttn-apply-btn" onclick="_applyWttnBuild(this)" data-string-id="${stringId}" data-tension="${pick.tension}" data-type="${pick.type}" data-mains-id="${mainsId}" data-crosses-id="${crossesId}">Apply</button>
-            <button class="wttn-save-btn" onclick="_saveWttnBuild(this)" data-string-id="${stringId}" data-tension="${pick.tension}" data-type="${pick.type}" data-mains-id="${mainsId}" data-crosses-id="${crossesId}" data-frame-id="${racquet.id}">Save</button>
+            <button class="wttn-apply-btn" data-tune-action="wttnApply" data-string-id="${stringId}" data-tension="${pick.tension}" data-type="${pick.type}" data-mains-id="${mainsId}" data-crosses-id="${crossesId}">Apply</button>
+            <button class="wttn-save-btn" data-tune-action="wttnSave" data-string-id="${stringId}" data-tension="${pick.tension}" data-type="${pick.type}" data-mains-id="${mainsId}" data-crosses-id="${crossesId}" data-frame-id="${racquet.id}">Save</button>
           </div>
         </div>
       `;

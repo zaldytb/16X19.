@@ -4,6 +4,7 @@
 import { useEffect, useRef } from 'react';
 import { useActiveLoadout } from '../hooks/useStore.js';
 import { wireTuneSlider } from '../ui/pages/shell.js';
+import { refreshTuneIfActive, tuneSandboxCommit } from '../ui/pages/tune.js';
 
 export function Tune() {
   const activeLoadout = useActiveLoadout();
@@ -12,16 +13,14 @@ export function Tune() {
   useEffect(() => {
     if (!initialized.current) {
       initialized.current = true;
-      // Prime the imperative Tune runtime after the route markup mounts.
-      window.renderTune?.();
+      refreshTuneIfActive();
       wireTuneSlider();
     }
   }, []);
 
   useEffect(() => {
     if (initialized.current) {
-      // Re-render when active loadout changes
-      window.renderTune?.();
+      refreshTuneIfActive();
       wireTuneSlider();
     }
   }, [activeLoadout]);
@@ -50,7 +49,7 @@ export function Tune() {
                 <h3 className="tune-card-title font-mono text-[11px] font-bold tracking-[0.15em] text-dc-platinum uppercase">Build score</h3>
               </div>
               <div className="obs-content px-0.5" id="obs-content"></div>
-              <button className="tune-apply-btn hidden" id="tune-apply-btn" onClick={() => window.tuneSandboxCommit?.()}>Apply changes</button>
+              <button className="tune-apply-btn hidden" id="tune-apply-btn" onClick={() => tuneSandboxCommit()}>Apply changes</button>
               <div className="optimal-content" id="optimal-content"></div>
             </div>
             <div className="tune-card bg-white dark:bg-dc-void-lift border border-dc-border rounded-lg hover:border-dc-storm transition-colors duration-200" id="tune-card-slider">

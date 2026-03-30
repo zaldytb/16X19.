@@ -3,19 +3,11 @@
 
 import { RACQUETS } from '../../data/loader.js';
 import type { Racquet, StringData, Loadout } from '../../engine/types.js';
+import { createLoadout, saveLoadout } from '../../state/loadout.js';
 import { generateTopBuilds } from '../../state/presets.js';
 import type { Build } from '../../state/presets.js';
-
-// Window extensions for external functions
-interface WindowExt extends Window {
-  createLoadout?: (frameId: string, stringId: string, tension: number, opts?: Record<string, unknown>) => Loadout | null;
-  activateLoadout?: (loadout: Loadout) => void;
-  saveLoadout?: (loadout: Loadout) => void;
-  switchMode?: (mode: string) => void;
-  initOptimize?: () => void;
-  runOptimizer?: () => void;
-  renderDockContextPanel?: () => void;
-}
+import { renderDockContextPanel } from '../components/dock-renderers.js';
+import { activateLoadout, switchMode } from './shell.js';
 
 // FMB Wizard state
 let _fmbStep: number | 'result' = 1;
@@ -52,6 +44,7 @@ declare const _optimizeInitialized: boolean;
  * Open the Find My Build wizard
  */
 export function openFindMyBuild(): void {
+  _bindFmbDelegates();
   _fmbStep = 1;
   _fmbAnswers.swing = null;
   _fmbAnswers.ball = null;
@@ -329,7 +322,7 @@ export function _fmbShowResults(profile: ReturnType<typeof _fmbGenerateProfile>)
       </div>
       <div class="fmb-also-try">
         <p class="fmb-also-try-text">Want more options?</p>
-        <button class="fmb-dir-btn" onclick="_fmbSearchDirection('closest')">Search All Strings in Optimizer</button>
+        <button class="fmb-dir-btn" data-fmb-action="searchDirection" data-fmb-direction="closest">Search All Strings in Optimizer</button>
       </div>
     </div>
   `;
@@ -342,10 +335,8 @@ export function _fmbSearchDirection(direction: 'closest' | 'safer' | 'ceiling'):
   const profile = _fmbGenerateProfile(_fmbAnswers);
   _fmbLastProfile = profile;
 
-  const win = window as WindowExt;
-
   if (!(window as unknown as { _optimizeInitialized?: boolean })._optimizeInitialized) {
-    win.initOptimize?.();
+    import('./optimize.js').then(({ initOptimize }) => initOptimize());
     (window as unknown as { _optimizeInitialized: boolean })._optimizeInitialized = true;
   }
 
@@ -402,7 +393,7 @@ export function _fmbSearchDirection(direction: 'closest' | 'safer' | 'ceiling'):
   }
 
   closeFindMyBuild();
-  win.switchMode?.('optimize');
+  switchMode('optimize');
 
   requestAnimationFrame(() => {
     document.getElementById('opt-run-btn')?.click();
@@ -467,8 +458,8 @@ export function _fmbRenderFrameCard(fr: typeof _fmbCurrentFrames[0], idx: number
           </div>
           <div class="fmb-build-obs">${obs}</div>
           <div class="fmb-build-actions">
-            <button class="fmb-build-btn" onclick="_fmbAction('activate', ${idx}, ${bIdx}, this)">Activate</button>
-            <button class="fmb-build-btn fmb-build-btn-secondary" onclick="_fmbAction('save', ${idx}, ${bIdx}, this)">Save</button>
+            <button class="fmb-build-btn" data-fmb-action="activate" data-frame-idx="${idx}" data-build-idx="${bIdx}">Activate</button>
+            <button class="fmb-build-btn fmb-build-btn-secondary" data-fmb-action="save" data-frame-idx="${idx}" data-build-idx="${bIdx}">Save</button>
           </div>
         </div>`;
       }).join('') +
@@ -513,11 +504,10 @@ export function _fmbAction(action: 'activate' | 'save', frameIdx: number, buildI
  * Activate a build from FMB results
  */
 function _fmbActivateBuild(racquetId: string, build: typeof _fmbCurrentFrames[0]['topBuilds'][0]): void {
-  const win = window as WindowExt;
   const isHybrid = build.type === 'hybrid';
 
   const lo = isHybrid && build.mains && build.crosses
-    ? win.createLoadout?.(racquetId, build.mains.id, build.tension, {
+    ? createLoadout(racquetId, build.mains.id, build.tension, {
         isHybrid: true,
         mainsId: build.mains.id,
         crossesId: build.crosses.id,
@@ -525,14 +515,14 @@ function _fmbActivateBuild(racquetId: string, build: typeof _fmbCurrentFrames[0]
         source: 'quiz'
       })
     : build.string
-      ? win.createLoadout?.(racquetId, build.string.id, build.tension, { source: 'quiz' })
+      ? createLoadout(racquetId, build.string.id, build.tension, { source: 'quiz' })
       : null;
 
   if (lo) {
     closeFindMyBuild();
-    win.activateLoadout?.(lo);
-    win.switchMode?.('overview');
-    win.renderDockContextPanel?.();
+    activateLoadout(lo);
+    switchMode('overview');
+    renderDockContextPanel();
   }
 }
 
@@ -540,11 +530,10 @@ function _fmbActivateBuild(racquetId: string, build: typeof _fmbCurrentFrames[0]
  * Save a build from FMB results
  */
 function _fmbSaveBuild(racquetId: string, build: typeof _fmbCurrentFrames[0]['topBuilds'][0]): void {
-  const win = window as WindowExt;
   const isHybrid = build.type === 'hybrid';
 
   const lo = isHybrid && build.mains && build.crosses
-    ? win.createLoadout?.(racquetId, build.mains.id, build.tension, {
+    ? createLoadout(racquetId, build.mains.id, build.tension, {
         isHybrid: true,
         mainsId: build.mains.id,
         crossesId: build.crosses.id,
@@ -552,13 +541,35 @@ function _fmbSaveBuild(racquetId: string, build: typeof _fmbCurrentFrames[0]['to
         source: 'quiz'
       })
     : build.string
-      ? win.createLoadout?.(racquetId, build.string.id, build.tension, { source: 'quiz' })
+      ? createLoadout(racquetId, build.string.id, build.tension, { source: 'quiz' })
       : null;
 
   if (lo) {
-    win.saveLoadout?.(lo);
+    saveLoadout(lo);
   }
 }
 
-// Legacy alias for inline handlers
-(window as unknown as Record<string, unknown>)._fmbAction = _fmbAction;
+// ---------------------------------------------------------------------------
+// Delegated event listeners — replaces inline onclick handlers
+// ---------------------------------------------------------------------------
+let _fmbDelegateBound = false;
+
+export function _bindFmbDelegates(): void {
+  if (_fmbDelegateBound) return;
+  _fmbDelegateBound = true;
+
+  document.addEventListener('click', (e: Event) => {
+    const el = (e.target as Element).closest('[data-fmb-action]') as HTMLElement | null;
+    if (!el) return;
+    const action = el.dataset.fmbAction!;
+
+    if (action === 'activate' || action === 'save') {
+      const frameIdx = parseInt(el.dataset.frameIdx ?? '0', 10);
+      const buildIdx = parseInt(el.dataset.buildIdx ?? '0', 10);
+      _fmbAction(action, frameIdx, buildIdx, el);
+    } else if (action === 'searchDirection') {
+      const dir = el.dataset.fmbDirection as 'closest' | 'safer' | 'ceiling' | undefined;
+      if (dir) _fmbSearchDirection(dir);
+    }
+  });
+}

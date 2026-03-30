@@ -63,7 +63,7 @@ function renderSavedLoadoutOptions(): string {
   return `
     <div class="editor-section">
       <label class="editor-label">Load from My Loadouts</label>
-      <select class="editor-select" id="editor-loadout-select" onchange="window.compareEditorLoadFromSaved(this.value)">
+      <select class="editor-select" id="editor-loadout-select" data-compare-action="loadFromSaved">
         <option value="">— Select a saved loadout —</option>
         ${options}
       </select>
@@ -96,11 +96,11 @@ function renderStringModeToggle(isHybrid: boolean): string {
         <button type="button" 
                 class="editor-toggle-btn ${!isHybrid ? 'active' : ''}" 
                 data-mode="full"
-                onclick="window.compareEditorSetHybrid(false)">Full Bed</button>
+                data-compare-action="editorSetHybrid" data-compare-arg="false">Full Bed</button>
         <button type="button" 
                 class="editor-toggle-btn ${isHybrid ? 'active' : ''}" 
                 data-mode="hybrid"
-                onclick="window.compareEditorSetHybrid(true)">Hybrid</button>
+                data-compare-action="editorSetHybrid" data-compare-arg="true">Hybrid</button>
       </div>
     </div>
   `;
@@ -158,7 +158,7 @@ function renderTensionInputs(state: EditorState): string {
                  min="20" 
                  max="70" 
                  value="${state.mainsTension}"
-                 oninput="window.compareEditorUpdateTension('mains', this.value)">
+                 data-compare-action="updateTension" data-compare-arg="mains">
           <span class="editor-tension-value" id="editor-mains-tension-display">${state.mainsTension} lbs</span>
         </div>
       </div>
@@ -171,7 +171,7 @@ function renderTensionInputs(state: EditorState): string {
                  min="20" 
                  max="70" 
                  value="${state.crossesTension}"
-                 oninput="window.compareEditorUpdateTension('crosses', this.value)">
+                 data-compare-action="updateTension" data-compare-arg="crosses">
           <span class="editor-tension-value" id="editor-crosses-tension-display">${state.crossesTension} lbs</span>
         </div>
       </div>
@@ -186,11 +186,11 @@ export function renderSlotEditor(props: SlotEditorProps): string {
   
   return `
     <div class="compare-editor-modal" id="compare-editor-modal" data-slot-id="${slotId}">
-      <div class="compare-editor-backdrop" onclick="window.compareEditorCancel()"></div>
+      <div class="compare-editor-backdrop" data-compare-action="editorCancel"></div>
       <div class="compare-editor-content">
         <div class="compare-editor-header">
           <span class="compare-editor-title">// EDIT SLOT ${color.label}</span>
-          <button class="compare-editor-close" onclick="window.compareEditorCancel()"></button>
+          <button class="compare-editor-close" data-compare-action="editorCancel"></button>
         </div>
         
         <div class="compare-editor-body">
@@ -205,8 +205,8 @@ export function renderSlotEditor(props: SlotEditorProps): string {
         </div>
         
         <div class="compare-editor-footer">
-          <button class="editor-btn editor-btn-secondary" onclick="window.compareEditorCancel()">Cancel</button>
-          <button class="editor-btn editor-btn-primary" onclick="window.compareEditorSave()">Apply Changes</button>
+          <button class="editor-btn editor-btn-secondary" data-compare-action="editorCancel">Cancel</button>
+          <button class="editor-btn editor-btn-primary" data-compare-action="editorSave">Apply Changes</button>
         </div>
       </div>
     </div>

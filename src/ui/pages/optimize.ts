@@ -12,28 +12,11 @@ import {
   measurePerformance,
   scheduleRender,
 } from '../../utils/performance.js';
-
-// Window extensions for external dependencies
-interface WindowExt extends Window {
-  getCurrentSetup?: () => { racquet: Racquet; stringConfig: StringConfig } | null;
-  switchMode?: (mode: string) => void;
-  loadPresetFromData?: (preset: Record<string, unknown>) => void;
-  activateLoadout?: (loadout: OptimizerLoadoutLike) => void;
-  createLoadout?: (frameId: string, stringId: string, tension: number, opts?: Record<string, unknown>) => OptimizerLoadoutLike | null;
-  saveLoadout?: (loadout: { id: string }) => void;
-  activeLoadout?: {
-    id?: string;
-    frameId: string;
-    stringId?: string | null;
-    isHybrid?: boolean;
-    mainsId?: string | null;
-    crossesId?: string | null;
-    mainsTension?: number;
-    crossesTension?: number;
-  } | null;
-  compareGetState?: () => { slots?: Array<{ id: string; loadout: unknown | null }> };
-  compareSetSlotLoadout?: (slotId: string, loadout: { id: string }, stats: SetupAttributes) => void;
-}
+import { createLoadout, saveLoadout } from '../../state/loadout.js';
+import { getActiveLoadout } from '../../state/store.js';
+import { getCurrentSetup } from '../../state/setup-sync.js';
+import { activateLoadout, switchMode } from './shell.js';
+import { getState as compareGetState, setSlotLoadout as compareSetSlotLoadout } from './compare/index.js';
 
 type OptimizerLoadoutLike = {
   id: string;
@@ -73,9 +56,8 @@ let _optLastSortBy = 'obs';
 let _optLastDisplayedCandidates: OptimizeCandidate[] = [];
 
 function _syncOptimizeFrameInput(frameSearch: HTMLInputElement, frameValue: HTMLInputElement): void {
-  const win = window as WindowExt;
-  const activeLoadout = win.activeLoadout;
-  const currentSetup = win.getCurrentSetup?.();
+  const activeLoadout = getActiveLoadout();
+  const currentSetup = getCurrentSetup();
 
   if (activeLoadout?.frameId) {
     const activeFrame = RACQUETS.find((r) => r.id === activeLoadout.frameId);
@@ -284,6 +266,43 @@ export function initOptimize(): void {
   }
 
   _restoreOptimizerResultsIfAvailable();
+  _bindOptDelegates();
+}
+
+let _optDelegateBound = false;
+
+function _bindOptDelegates(): void {
+  if (_optDelegateBound) return;
+  _optDelegateBound = true;
+
+  document.addEventListener('click', (e: Event) => {
+    const el = (e.target as Element).closest('[data-opt-action]') as HTMLElement | null;
+    if (!el) return;
+    const action = el.dataset.optAction!;
+    const idx = parseInt(el.dataset.optIdx ?? '-1', 10);
+
+    switch (action) {
+      case 'view': optActionView(idx); break;
+      case 'tune': optActionTune(idx); break;
+      case 'compare': optActionCompare(idx); break;
+      case 'save': optActionSave(idx); break;
+      case 'clearTensionFilter': _optApplyTensionFilter(''); break;
+    }
+  });
+
+  document.addEventListener('change', (e: Event) => {
+    const el = e.target as HTMLElement;
+    if (el.dataset.optAction === 'tensionFilterChange') {
+      _optApplyTensionFilter((el as HTMLInputElement).value);
+    }
+  });
+
+  document.addEventListener('keyup', (e: KeyboardEvent) => {
+    const el = e.target as HTMLElement;
+    if (el.dataset.optAction === 'tensionFilterChange' && e.key === 'Enter') {
+      _optApplyTensionFilter((el as HTMLInputElement).value);
+    }
+  });
 }
 
 /**
@@ -453,15 +472,14 @@ async function _runOptimizerCore(resultsEl: HTMLElement | null, countEl: HTMLEle
   const upgradeCtlLoss = parseFloat((document.getElementById('opt-upgrade-ctl-loss') as HTMLInputElement | null)?.value || '5') || 5;
   const upgradeDurLoss = parseFloat((document.getElementById('opt-upgrade-dur-loss') as HTMLInputElement | null)?.value || '10') || 10;
 
-  const win = window as WindowExt;
-  const activeLoadout = win.activeLoadout;
+  const activeLoadout = getActiveLoadout();
   let racquet: Racquet;
 
   if (frameSelVal === 'current' || !frameSelVal) {
     if (activeLoadout && activeLoadout.frameId) {
       racquet = (RACQUETS as unknown as Racquet[]).find(r => r.id === activeLoadout.frameId) || (RACQUETS[0] as unknown as Racquet);
     } else {
-      const setup = win.getCurrentSetup?.();
+      const setup = getCurrentSetup();
       racquet = setup ? setup.racquet : (RACQUETS[0] as unknown as Racquet);
     }
   } else {
@@ -470,7 +488,7 @@ async function _runOptimizerCore(resultsEl: HTMLElement | null, countEl: HTMLEle
 
   let currentOBS = 0;
   let currentStats: SetupAttributes | null = null;
-  const currentSetup = win.getCurrentSetup?.();
+  const currentSetup = getCurrentSetup();
   if (currentSetup) {
     const scored = getScoredSetup(currentSetup);
     currentStats = scored.stats;
@@ -666,10 +684,10 @@ export function renderOptimizerResults(
     '<input type="number" class="opt-tension-input" id="opt-tension-filter" ' +
       'value="' + (targetTension !== '' ? targetTension : '') + '" ' +
       'placeholder="All" min="30" max="70" ' +
-      'onchange="_optApplyTensionFilter(this.value)" ' +
-      'onkeyup="if(event.key===\'Enter\')_optApplyTensionFilter(this.value)">' +
+      'data-opt-action="tensionFilterChange" ' +
+      '>' +
     '<span class="opt-tension-hint">±1 lb</span>' +
-    '<button class="opt-tension-clear" onclick="_optApplyTensionFilter(\'\')" ' +
+    '<button class="opt-tension-clear" data-opt-action="clearTensionFilter" ' +
       (targetTension === '' ? 'style="display:none"' : '') + '>Clear</button>' +
   '</div>';
 
@@ -715,10 +733,10 @@ export function renderOptimizerResults(
       <td class="opt-td opt-td-num">${c.stats.durability?.toFixed(0) || '—'}</td>
       <td class="opt-td opt-td-num">${c.stats.playability?.toFixed(0) || '—'}</td>
       <td class="opt-td opt-td-actions">
-        <button class="opt-act-btn" onclick="optActionView(${i})">View</button>
-        <button class="opt-act-btn" onclick="optActionTune(${i})">Tune</button>
-        <button class="opt-act-btn" onclick="optActionCompare(${i})">Compare</button>
-        <button class="opt-act-btn opt-act-save" onclick="optActionSave(${i})">Save</button>
+        <button class="opt-act-btn" data-opt-action="view" data-opt-idx="${i}">View</button>
+        <button class="opt-act-btn" data-opt-action="tune" data-opt-idx="${i}">Tune</button>
+        <button class="opt-act-btn" data-opt-action="compare" data-opt-idx="${i}">Compare</button>
+        <button class="opt-act-btn opt-act-save" data-opt-action="save" data-opt-idx="${i}">Save</button>
       </td>
     </tr>`;
   });
@@ -788,9 +806,8 @@ export function _optBuildPresetData(candidate: NonNullable<typeof _optLastCandid
 }
 
 function _createOptimizerLoadout(candidate: NonNullable<typeof _optLastCandidates>[0]) {
-  const win = window as WindowExt;
   const preset = _optBuildPresetData(candidate);
-  return win.createLoadout?.(
+  return createLoadout(
     preset.racquetId,
     preset.isHybrid ? preset.mainsId! : preset.stringId!,
     preset.mainsTension,
@@ -813,9 +830,8 @@ function _savePreviousActiveLoadout(nextLoadout: {
   mainsTension?: number;
   crossesTension?: number;
 }): void {
-  const win = window as WindowExt;
-  const activeLoadout = win.activeLoadout;
-  if (!activeLoadout || !activeLoadout.id || typeof win.saveLoadout !== 'function') return;
+  const activeLoadout = getActiveLoadout();
+  if (!activeLoadout || !activeLoadout.id) return;
 
   const isSameBuild =
     activeLoadout.frameId === nextLoadout.frameId &&
@@ -827,7 +843,7 @@ function _savePreviousActiveLoadout(nextLoadout: {
     (activeLoadout.crossesTension || 0) === (nextLoadout.crossesTension || 0);
 
   if (!isSameBuild) {
-    win.saveLoadout(activeLoadout as { id: string });
+    saveLoadout(activeLoadout);
   }
 }
 
@@ -837,12 +853,11 @@ function _savePreviousActiveLoadout(nextLoadout: {
 export function optActionView(idx: number): void {
   const c = _getOptimizerCandidateAt(idx);
   if (!c) return;
-  const win = window as WindowExt;
   const loadout = _createOptimizerLoadout(c);
   if (!loadout) return;
   _savePreviousActiveLoadout(loadout);
-  win.activateLoadout?.(loadout);
-  win.switchMode?.('overview');
+  activateLoadout(loadout);
+  switchMode('overview');
 }
 
 /**
@@ -851,12 +866,11 @@ export function optActionView(idx: number): void {
 export function optActionTune(idx: number): void {
   const c = _getOptimizerCandidateAt(idx);
   if (!c) return;
-  const win = window as WindowExt;
   const loadout = _createOptimizerLoadout(c);
   if (!loadout) return;
   _savePreviousActiveLoadout(loadout);
-  win.activateLoadout?.(loadout);
-  win.switchMode?.('tune');
+  activateLoadout(loadout);
+  switchMode('tune');
 }
 
 /**
@@ -865,15 +879,14 @@ export function optActionTune(idx: number): void {
 export function optActionCompare(idx: number): void {
   const c = _getOptimizerCandidateAt(idx);
   if (!c) return;
-  const win = window as WindowExt;
   const lo = _createOptimizerLoadout(c);
-  const compareState = win.compareGetState?.();
-  if (lo?.stats && compareState?.slots && typeof win.compareSetSlotLoadout === 'function') {
-    const emptySlot = compareState.slots.find((slot: any) => slot.loadout === null);
+  const compareState = compareGetState();
+  if (lo?.stats && compareState?.slots) {
+    const emptySlot = compareState.slots.find((slot) => slot.loadout === null);
     if (emptySlot?.id) {
-      win.compareSetSlotLoadout(emptySlot.id, lo, lo.stats);
+      compareSetSlotLoadout(emptySlot.id, lo, lo.stats);
     }
-    win.switchMode?.('compare');
+    switchMode('compare');
   }
 }
 
@@ -883,10 +896,9 @@ export function optActionCompare(idx: number): void {
 export function optActionSave(idx: number): void {
   const c = _getOptimizerCandidateAt(idx);
   if (!c) return;
-  const win = window as WindowExt;
   const lo = _createOptimizerLoadout(c);
   if (lo) {
-    win.saveLoadout?.(lo);
+    saveLoadout(lo);
   }
 
   const btn = document.querySelector(`tr[data-opt-idx="${idx}"] .opt-act-save`);

@@ -18,6 +18,9 @@ import { getActiveLoadout, getSavedLoadouts, setActiveLoadout } from '../../stat
 import { syncViews } from '../../runtime/coordinator.js';
 import { getCurrentSetup, getSetupFromLoadout } from '../../state/setup-sync.js';
 import { getCurrentMode } from '../../state/app-state.js';
+import { activateLoadout, commitEditorToLoadout } from './shell.js';
+import { renderDockPanel } from '../components/dock-renderers.js';
+import { renderDashboard as _renderDashboard } from './overview.js';
 import { _prevObsValues, animateOBS } from '../components/obs-animation.js';
 import {
   generateRecommendedBuilds,
@@ -27,17 +30,6 @@ import {
 import { getScoredSetup } from '../../utils/performance.js';
 
 // Window extensions for external dependencies
-interface WindowExt extends Window {
-  switchMode?: (mode: string) => void;
-  getCurrentSetup?: () => { racquet: Racquet; stringConfig: StringConfig } | null;
-  renderDashboard?: () => void;
-  activateLoadout?: (loadout: Loadout | null) => void;
-  saveLoadout?: (loadout: Loadout) => void;
-  currentMode?: string;
-  $?: (sel: string) => HTMLElement | null;
-  renderDockPanel?: () => void;
-}
-
 // Module-level state
 export let sweepChart: Chart | null = null;
 let _tuneRefreshing = false;
@@ -103,11 +95,10 @@ function _applyTuneInteractionFrame(): void {
  * Refresh tune panels if tune mode is active
  */
 export function refreshTuneIfActive(): void {
-  const win = window as WindowExt;
-  if (win.currentMode !== 'tune' || _tuneRefreshing) return;
+  if (getCurrentMode() !== 'tune' || _tuneRefreshing) return;
   _tuneRefreshing = true;
   try {
-    const setup = win.getCurrentSetup?.();
+    const setup = getCurrentSetup();
     if (setup) {
       initTuneMode(setup);
     } else {
@@ -134,8 +125,7 @@ export function getHybridBaselineTension(stringConfig: StringConfig, dimension: 
 export function updateSliderLabel(): void {
   const val = tuneState.exploredTension;
   const dim = tuneState.hybridDimension;
-  const win = window as WindowExt;
-  const setup = win.getCurrentSetup?.();
+  const setup = getCurrentSetup();
   const labelEl = document.querySelector('.slider-current-label');
   const valueEl = document.getElementById('slider-current-value');
 
@@ -208,7 +198,6 @@ function _tuneLoadoutSignature(lo: Loadout): string {
  */
 export function initTuneMode(setup: { racquet: Racquet; stringConfig: StringConfig }): void {
   const { racquet, stringConfig } = setup;
-  const win = window as WindowExt;
   const activeLoadout = getActiveLoadout();
 
   // Snapshot baseline from activeLoadout
@@ -309,6 +298,49 @@ export function initTuneMode(setup: { racquet: Racquet; stringConfig: StringConf
     applyBtn.classList.add('hidden');
     applyBtn.textContent = 'Apply changes';
   }
+
+  _bindTuneDelegates();
+}
+
+let _tuneDelegateBound = false;
+
+function _bindTuneDelegates(): void {
+  if (_tuneDelegateBound) return;
+  _tuneDelegateBound = true;
+
+  document.addEventListener('click', (e: Event) => {
+    const el = (e.target as Element).closest('[data-tune-action]') as HTMLElement | null;
+    if (!el) return;
+    const action = el.dataset.tuneAction!;
+
+    if (action === 'wttnApply') {
+      _applyWttnBuild(el);
+    } else if (action === 'wttnSave') {
+      _saveWttnBuild(el);
+    } else if (action === 'applyGauge') {
+      const gauge = parseFloat(el.dataset.gauge ?? '0');
+      const section = parseInt(el.dataset.section ?? '0', 10);
+      _applyGaugeSelection(gauge, section);
+    } else if (action === 'applyRec') {
+      _applyRecBuild(
+        el.dataset.racquetId ?? '',
+        el.dataset.stringId ?? '',
+        parseInt(el.dataset.tension ?? '0', 10),
+        el.dataset.type ?? 'full',
+        el.dataset.mainsId || undefined,
+        el.dataset.crossesId || undefined
+      );
+    } else if (action === 'saveRec') {
+      _saveRecBuild(
+        el.dataset.racquetId ?? '',
+        el.dataset.stringId ?? '',
+        parseInt(el.dataset.tension ?? '0', 10),
+        el.dataset.type ?? 'full',
+        el.dataset.mainsId || undefined,
+        el.dataset.crossesId || undefined
+      );
+    }
+  });
 }
 
 /**
@@ -713,7 +745,7 @@ export function renderGaugeExplorer(setup: { racquet: Racquet; stringConfig: Str
       const shortLabel = r.gauge >= 1.30 ? '16' : r.gauge >= 1.25 ? '16L' : r.gauge >= 1.20 ? '17' : '18';
       const mmLabel = `${r.gauge.toFixed(2)}`;
       const currentCls = r.isCurrent ? ' gauge-current' : '';
-      html += `<button class="gauge-explore-col-header${currentCls}" onclick="_applyGaugeSelection(${r.gauge},${secIdx})" title="${r.isCurrent ? 'Current gauge' : 'Click to apply this gauge'}">
+      html += `<button class="gauge-explore-col-header${currentCls}" data-tune-action="applyGauge" data-gauge="${r.gauge}" data-section="${secIdx}" title="${r.isCurrent ? 'Current gauge' : 'Click to apply this gauge'}">
         <span class="gauge-col-short">${shortLabel}</span>
         <span class="gauge-col-mm">${mmLabel}</span>
         ${r.isCurrent ? '<span class="gauge-col-tag">current</span>' : '<span class="gauge-col-tag gauge-col-apply">apply</span>'}
@@ -1032,8 +1064,7 @@ export function renderTuneHybridToggle(stringConfig: StringConfig): void {
     btn.addEventListener('click', () => {
       const dim = (btn as HTMLElement).dataset.dim as 'mains' | 'crosses' | 'linked';
       tuneState.hybridDimension = dim;
-      const win = window as WindowExt;
-      const setup = win.getCurrentSetup?.();
+      const setup = getCurrentSetup();
       if (setup) {
         tuneState.baselineTension = getHybridBaselineTension(setup.stringConfig, dim);
         tuneState.exploredTension = tuneState.baselineTension;
@@ -1317,8 +1348,8 @@ function _renderRecommendationItem(
         <span class="recs-composite-delta ${deltaCls}">${isCurrent ? 'YOU' : deltaStr}</span>
       </div>
       <div class="recs-action-row">
-        <button class="recs-apply-btn" onclick="_applyRecBuild('${setup.racquet.id}','${stringId}',${candidate.tension},'${candidate.type}','${mainsId}','${crossesId}')">Apply</button>
-        <button class="recs-save-btn" onclick="_saveRecBuild('${setup.racquet.id}','${stringId}',${candidate.tension},'${candidate.type}','${mainsId}','${crossesId}')">Save</button>
+        <button class="recs-apply-btn" data-tune-action="applyRec" data-racquet-id="${setup.racquet.id}" data-string-id="${stringId}" data-tension="${candidate.tension}" data-type="${candidate.type}" data-mains-id="${mainsId}" data-crosses-id="${crossesId}">Apply</button>
+        <button class="recs-save-btn" data-tune-action="saveRec" data-racquet-id="${setup.racquet.id}" data-string-id="${stringId}" data-tension="${candidate.tension}" data-type="${candidate.type}" data-mains-id="${mainsId}" data-crosses-id="${crossesId}">Save</button>
       </div>
     </div>
   `;
@@ -1442,7 +1473,7 @@ export function _applyWttnBuild(btn: HTMLElement): void {
 
   const loadout = _buildTuneRecommendationLoadout(setup.racquet.id, stringId, tension, type, mainsId, crossesId);
   if (loadout) {
-    (window as WindowExt).activateLoadout?.(loadout);
+    activateLoadout(loadout);
     const newSetup = getCurrentSetup();
     if (newSetup) initTuneMode(newSetup);
   }
@@ -1460,7 +1491,7 @@ export function _applyRecBuild(
 ): void {
   const loadout = _buildTuneRecommendationLoadout(racquetId, stringId, tension, type, mainsId, crossesId);
   if (loadout) {
-    (window as WindowExt).activateLoadout?.(loadout);
+    activateLoadout(loadout);
     const newSetup = getCurrentSetup();
     if (newSetup) initTuneMode(newSetup);
   }
@@ -1476,7 +1507,7 @@ export function _saveWttnBuild(btn: HTMLElement): void {
 
   const loadout = _buildTuneRecommendationLoadout(frameId, stringId, tension, type, mainsId, crossesId);
   if (loadout) {
-    (window as WindowExt).saveLoadout?.(loadout);
+    saveLoadout(loadout);
     _flashActionButton(btn, 'Save', 'Saved \u2713');
   }
 }
@@ -1491,7 +1522,7 @@ export function _saveRecBuild(
 ): void {
   const loadout = _buildTuneRecommendationLoadout(racquetId, stringId, tension, type, mainsId, crossesId);
   if (loadout) {
-    (window as WindowExt).saveLoadout?.(loadout);
+    saveLoadout(loadout);
   }
 }
 
@@ -1499,7 +1530,6 @@ export function _saveRecBuild(
  * Commit tune sandbox changes
  */
 export function tuneSandboxCommit(): void {
-  const win = window as WindowExt;
   const activeLoadout = getActiveLoadout();
   if (!tuneState.explored || !activeLoadout) return;
   if (!tuneState.baseline) return;
@@ -1558,8 +1588,8 @@ export function tuneSandboxCommit(): void {
     btn.textContent = 'Apply changes';
   }
 
-  win.renderDockPanel?.();
-  win.renderDashboard?.();
+  renderDockPanel();
+  _renderDashboard();
 }
 
 /**
@@ -1568,7 +1598,6 @@ export function tuneSandboxCommit(): void {
 export function applyExploredTension(): void {
   if (!tuneState.explored) return;
 
-  const win = window as WindowExt;
   const setup = getCurrentSetup();
   if (!setup) return;
 
@@ -1598,10 +1627,9 @@ export function applyExploredTension(): void {
 
   // Trigger editor change
   if (getActiveLoadout()) {
-    // commitEditorToLoadout would be called via window
-    (window as unknown as { commitEditorToLoadout?: () => void }).commitEditorToLoadout?.();
+    commitEditorToLoadout();
   } else {
-    win.renderDashboard?.();
+    _renderDashboard();
   }
 
   // Reset tune state

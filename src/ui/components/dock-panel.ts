@@ -7,17 +7,22 @@ import { getActiveLoadout } from '../../state/store.js';
 /** Action link for dock context panel */
 export interface DockAction {
   label: string;
-  onclick: string;
+  /** Action identifier, e.g. 'switchMode' or 'openFindMyBuild'. */
+  action: string;
+  /** Optional argument, e.g. the mode name for 'switchMode'. */
+  arg?: string;
 }
 
 /**
- * Generate context action links HTML
+ * Generate context action links HTML — uses data-dock-action / data-dock-arg
+ * attributes handled by the delegated listener in dock-renderers.ts.
  */
 export function _dockContextActions(actions: DockAction[]): string {
   if (!actions || actions.length === 0) return '';
   return '<div class="dock-ctx-actions">' +
     actions.map(function(a) {
-      return '<a class="dock-ctx-action" onclick="' + a.onclick + '">' + a.label + '</a>';
+      const argAttr = a.arg ? ` data-dock-arg="${a.arg}"` : '';
+      return `<a class="dock-ctx-action" data-dock-action="${a.action}"${argAttr}>${a.label}</a>`;
     }).join('') +
   '</div>';
 }

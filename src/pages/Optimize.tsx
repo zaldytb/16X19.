@@ -2,7 +2,7 @@
 // Optimize page - React component wrapper around existing imperative rendering
 
 import { useEffect, useRef } from 'react';
-import { initOptimize } from '../ui/pages/optimize.js';
+import { initOptimize, _toggleOptMS } from '../ui/pages/optimize.js';
 
 export function Optimize() {
   const initialized = useRef(false);
@@ -79,7 +79,7 @@ export function Optimize() {
             <div className="opt-multiselect" id="opt-material-ms">
               <button
                 className="opt-ms-trigger"
-                onClick={() => window._toggleOptMS?.('opt-material-ms')}
+                onClick={() => _toggleOptMS('opt-material-ms')}
               >
                 <span className="opt-ms-label" id="opt-material-ms-label">All materials</span>
                 <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
@@ -96,7 +96,7 @@ export function Optimize() {
             <div className="opt-multiselect" id="opt-brand-ms">
               <button
                 className="opt-ms-trigger"
-                onClick={() => window._toggleOptMS?.('opt-brand-ms')}
+                onClick={() => _toggleOptMS('opt-brand-ms')}
               >
                 <span className="opt-ms-label" id="opt-brand-ms-label">All brands</span>
                 <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">

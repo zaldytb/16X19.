@@ -13,8 +13,6 @@ import {
   getComparisonSlots,
   getCurrentMode,
   getDockEditorContext,
-  hasWindowAppStateBridgeInstalled,
-  installWindowAppStateBridge,
   setDockEditorContext,
   setCurrentMode,
   setSlotColors,
@@ -23,6 +21,7 @@ import * as Overview from './overview.js';
 import * as Tune from './tune.js';
 import * as ComparePage from './compare/index.js';
 import { SLOT_COLORS } from './compare/types.js';
+import { toggleMobileDock } from '../components/mobile-dock.js';
 import {
   populateGaugeDropdown,
   populateRacquetDropdown,
@@ -30,8 +29,8 @@ import {
   showFrameSpecs,
   setHybridMode,
 } from '../shared/helpers.js';
-import { renderDockContextPanel, renderDockPanel, hydrateDock } from '../components/dock-renderers.js';
-import { renderComparisonPresets } from '../shared/presets.js';
+import { renderDockContextPanel, renderDockPanel, hydrateDock, registerDockCallbacks } from '../components/dock-renderers.js';
+import { renderComparisonPresets, registerPresetCallbacks } from '../shared/presets.js';
 import { ssInstances } from '../components/searchable-select.js';
 import { showShareToast, copyToClipboard, exportLoadoutsToFile, importLoadoutsFromJSON, parseSharedBuildFromURL, generateShareURL } from '../../utils/share.js';
 import { toggleAppTheme } from '../theme.js';
@@ -41,6 +40,7 @@ import { validateRuntimeContracts } from '../../runtime/contracts.js';
 import { reportRuntimeIssue } from '../../runtime/diagnostics.js';
 import { getRouterNavigate } from '../../routing/routerNavigate.js';
 import { modeToPath } from '../../routing/modePaths.js';
+import { registerMyLoadoutsCallbacks } from './my-loadouts.js';
 
 type CompareSlot = {
   id: number;
@@ -57,12 +57,6 @@ type CompareSlot = {
   snapshotObs?: number;
 };
 
-type WindowExt = Window & {
-  initCompendium?: () => void;
-  _compSyncWithActiveLoadout?: () => void;
-};
-
-const win = window as WindowExt;
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T | null =>
   document.querySelector(sel) as T | null;
 const _store = (() => {
@@ -98,15 +92,7 @@ async function ensureCompendiumModule() {
 }
 
 export function _syncLegacyModeState(mode: string): void {
-  const win = window as Window & {
-    currentMode?: string;
-    isTuneMode?: boolean;
-    isComparisonMode?: boolean;
-  };
-
-  win.currentMode = mode;
-  win.isTuneMode = mode === 'tune';
-  win.isComparisonMode = mode === 'compare';
+  void mode;
 }
 
 function getCompareSlots(): CompareSlot[] {
@@ -132,29 +118,14 @@ function syncRuntimeViews(reason: string, changed: Parameters<typeof syncViews>[
 }
 
 function initTuneModeCompat(setup: { racquet: Racquet; stringConfig: StringConfig }): void {
-  const runtimeInitTuneMode = (window as WindowExt & { initTuneMode?: typeof Tune.initTuneMode }).initTuneMode;
-  if (typeof runtimeInitTuneMode === 'function' && runtimeInitTuneMode !== Tune.initTuneMode) {
-    runtimeInitTuneMode(setup);
-    return;
-  }
   Tune.initTuneMode(setup);
 }
 
 function refreshTuneIfActiveCompat(): void {
-  const runtimeRefreshTune = (window as WindowExt & { refreshTuneIfActive?: typeof Tune.refreshTuneIfActive }).refreshTuneIfActive;
-  if (typeof runtimeRefreshTune === 'function' && runtimeRefreshTune !== Tune.refreshTuneIfActive) {
-    runtimeRefreshTune();
-    return;
-  }
   Tune.refreshTuneIfActive();
 }
 
 function onTuneSliderInputCompat(event: Event): void {
-  const runtimeOnTuneSliderInput = (window as WindowExt & { onTuneSliderInput?: typeof Tune.onTuneSliderInput }).onTuneSliderInput;
-  if (typeof runtimeOnTuneSliderInput === 'function' && runtimeOnTuneSliderInput !== Tune.onTuneSliderInput) {
-    runtimeOnTuneSliderInput(event);
-    return;
-  }
   Tune.onTuneSliderInput(event);
 }
 
@@ -188,11 +159,10 @@ function buildCompareSlotFromLoadout(loadout: Loadout): CompareSlot | null {
 }
 
 function autoFillCompareFromSaved(): void {
-  const runtimeWin = window as any;
-  const compareState = runtimeWin.compareGetState?.();
-  if (compareState?.slots && typeof runtimeWin.compareClearSlot === 'function' && typeof runtimeWin.compareSetSlotLoadout === 'function') {
+  const compareState = ComparePage.getState();
+  if (compareState?.slots) {
     compareState.slots.forEach((slot: any) => {
-      runtimeWin.compareClearSlot(slot.id);
+      ComparePage.clearSlot(slot.id);
     });
 
     const activeLoadout = getActiveLoadout();
@@ -217,9 +187,9 @@ function autoFillCompareFromSaved(): void {
       const setup = getSetupFromLoadout(candidate);
       if (!setup) return;
       const stats = getScoredSetup(setup).stats;
-      const latestState = runtimeWin.compareGetState?.();
+      const latestState = ComparePage.getState();
       const emptySlot = latestState?.slots?.find((slot: any) => slot.loadout === null);
-      if (emptySlot) runtimeWin.compareSetSlotLoadout(emptySlot.id, candidate, stats);
+      if (emptySlot) ComparePage.setSlotLoadout(emptySlot.id as any, candidate, stats);
     });
     return;
   }
@@ -328,7 +298,7 @@ function clearDockEditorFields(): void {
 }
 
 function getCompareStateSlot(slotId: string): any | null {
-  const compareState = (window as any).compareGetState?.();
+  const compareState = ComparePage.getState();
   if (!compareState?.slots) return null;
   return compareState.slots.find((slot: any) => String(slot.id) === String(slotId)) || null;
 }
@@ -566,7 +536,7 @@ export function commitEditorToLoadout(): void {
     baseLoadout.name = buildLoadoutName(setup.racquet, setup.stringConfig);
 
     if (context.kind === 'compare-slot') {
-      (window as any).compareSetSlotLoadout?.(context.slotId, baseLoadout, scored.stats);
+      ComparePage.setSlotLoadout(context.slotId as any, baseLoadout, scored.stats);
       _compareEditorDirty = false;
     } else {
       baseLoadout._dirty = getSavedLoadouts().some((loadout) => loadout.id === baseLoadout.id);
@@ -601,15 +571,14 @@ export function addLoadoutToCompare(loadoutId: string): void {
   const loadout = getSavedLoadouts().find((item) => item.id === loadoutId);
   if (!loadout) return;
 
-  const win = window as any;
-  const compareState = win.compareGetState?.();
-  if (compareState?.slots && typeof win.compareSetSlotLoadout === 'function') {
+  const compareState = ComparePage.getState();
+  if (compareState?.slots) {
     const emptySlot = compareState.slots.find((slot: any) => slot.loadout === null);
     const targetSlotId = emptySlot?.id || compareState.slots[compareState.slots.length - 1]?.id;
     const setup = getSetupFromLoadout(loadout);
     if (targetSlotId && setup) {
       const stats = getScoredSetup(setup).stats;
-      win.compareSetSlotLoadout(targetSlotId, { ...loadout }, stats);
+      ComparePage.setSlotLoadout(targetSlotId as any, { ...loadout }, stats);
       setDockEditorContext({ kind: 'compare-overview' });
       _compareEditorDirty = false;
     }
@@ -633,17 +602,16 @@ export function addActiveLoadoutToCompare(): void {
   const activeLoadout = getActiveLoadout();
   if (!activeLoadout) return;
 
-  const win = window as any;
-  const compareState = win.compareGetState?.();
+  const compareState = ComparePage.getState();
   const setup = getSetupFromLoadout(activeLoadout);
-  if (!compareState?.slots || typeof win.compareSetSlotLoadout !== 'function' || !setup) return;
+  if (!compareState?.slots || !setup) return;
 
   const emptySlot = compareState.slots.find((slot: any) => slot.loadout === null);
   const targetSlotId = emptySlot?.id || compareState.slots[compareState.slots.length - 1]?.id;
   if (!targetSlotId) return;
 
   const stats = getScoredSetup(setup).stats;
-  win.compareSetSlotLoadout(targetSlotId, { ...activeLoadout }, stats);
+  ComparePage.setSlotLoadout(targetSlotId as any, { ...activeLoadout }, stats);
   setDockEditorContext({ kind: 'compare-overview' });
   _compareEditorDirty = false;
 
@@ -679,8 +647,8 @@ export function switchMode(mode: string): void {
 
     if (isMobileScroll) {
       const dock = document.getElementById('build-dock');
-      if (dock?.classList.contains('dock-expanded') && typeof (window as any).toggleMobileDock === 'function') {
-        (window as any).toggleMobileDock();
+      if (dock?.classList.contains('dock-expanded')) {
+        toggleMobileDock();
       }
     }
   } else {
@@ -734,14 +702,8 @@ export function switchMode(mode: string): void {
     } else if (mode === 'compendium') {
       void ensureCompendiumModule().then((Compendium) => {
         if (!_compendiumInitialized) {
-          if (win.initCompendium && win.initCompendium !== Compendium.initCompendium) {
-            win.initCompendium();
-          } else {
-            Compendium.initCompendium();
-          }
+          Compendium.initCompendium();
           _compendiumInitialized = true;
-        } else if (win._compSyncWithActiveLoadout && win._compSyncWithActiveLoadout !== Compendium._compSyncWithActiveLoadout) {
-          win._compSyncWithActiveLoadout();
         } else {
           Compendium._compSyncWithActiveLoadout();
         }
@@ -762,10 +724,9 @@ export function switchMode(mode: string): void {
 
 /** Compare tab activation (DOM must exist). Used by route mount and direct mode activation. */
 export function runCompareModeActivation(): void {
-  const win = window as any;
-  if (win.initComparePage) {
-    win.initComparePage();
-    const compareState = win.compareGetState?.();
+  if (ComparePage.initComparePage) {
+    ComparePage.initComparePage();
+    const compareState = ComparePage.getState();
     const configuredSlots = compareState?.slots?.filter((slot: any) => slot.loadout !== null) || [];
     if (configuredSlots.length === 0) {
       if (getSavedLoadouts().length >= 2) {
@@ -814,14 +775,8 @@ export function runCompendiumRouteActivation(options?: { tab?: CompendiumWorkspa
   void ensureCompendiumModule().then((Compendium) => {
     const compendiumDomMounted = !!document.getElementById('comp-main');
     if (!_compendiumInitialized || !compendiumDomMounted) {
-      if (win.initCompendium && win.initCompendium !== Compendium.initCompendium) {
-        win.initCompendium();
-      } else {
-        Compendium.initCompendium();
-      }
+      Compendium.initCompendium();
       _compendiumInitialized = true;
-    } else if (win._compSyncWithActiveLoadout && win._compSyncWithActiveLoadout !== Compendium._compSyncWithActiveLoadout) {
-      win._compSyncWithActiveLoadout();
     } else {
       Compendium._compSyncWithActiveLoadout();
     }
@@ -838,8 +793,7 @@ export function wireTuneSlider(): void {
 }
 
 export function openTuneForSlot(slotIndex: number): void {
-  const win = window as any;
-  const compareStateSlot = win.compareGetState?.()?.slots?.[slotIndex] || null;
+  const compareStateSlot = ComparePage.getState()?.slots?.[slotIndex] || null;
 
   if (compareStateSlot?.loadout && compareStateSlot?.stats) {
     const compareLoadout = compareStateSlot.loadout as Loadout;
@@ -1155,7 +1109,6 @@ export function init(): void {
   if (_initCalled) return;
   _initCalled = true;
 
-  installWindowAppStateBridge();
   setSlotColors(SLOT_COLORS);
   _syncLegacyModeState(getCurrentMode());
   validateRuntimeContracts({
@@ -1166,21 +1119,9 @@ export function init(): void {
       'dock-my-loadouts',
       'workspace',
     ],
-    requiredWindowBindings: [
-      'activateLoadout',
-      'switchMode',
-      'renderDockPanel',
-      'renderDashboard',
-      'compareGetState',
-    ],
+    requiredWindowBindings: [],
     throwInDev: true,
   });
-
-  if (!hasWindowAppStateBridgeInstalled()) {
-    reportRuntimeIssue('APP_STATE_BRIDGE', 'App-state bridge was not installed before init.', {
-      throwInDev: true,
-    });
-  }
 
   const selectRacquet = $('#select-racquet');
   const selectStringFull = $('#select-string-full');
@@ -1223,6 +1164,51 @@ export function init(): void {
 
   $('#btn-full')?.addEventListener('click', () => _handleHybridToggle(false));
   $('#btn-hybrid')?.addEventListener('click', () => _handleHybridToggle(true));
+
+  // Register dock callbacks to replace bridge-driven window.* calls
+  registerDockCallbacks({
+    switchMode,
+    switchToLoadout,
+    openFindMyBuild: () => { import('./find-my-build.js').then(m => m.openFindMyBuild()); },
+    addActiveLoadoutToCompare: addActiveLoadoutToCompare,
+    compareAddSlot: (slotId) => ComparePage.addSlot(slotId as Parameters<typeof ComparePage.addSlot>[0]),
+    compareEditSlot: (slotId) => ComparePage.editSlot(slotId as Parameters<typeof ComparePage.editSlot>[0]),
+    compareRemoveSlot: (slotId) => ComparePage.removeSlot(slotId as Parameters<typeof ComparePage.removeSlot>[0]),
+    compareClearSlot: (slotId) => ComparePage.clearSlot(slotId as Parameters<typeof ComparePage.clearSlot>[0]),
+    compareGetState: () => ComparePage.getState(),
+    compareQuickAddSaved: (loadoutId) => ComparePage.quickAddSaved(loadoutId),
+    renderCompareAll: () => ComparePage.renderCompareSummaries(),
+  });
+  ComparePage.registerCompareShellCallbacks({
+    activateLoadout,
+    switchMode,
+    renderDockContextPanel,
+  });
+  registerMyLoadoutsCallbacks({
+    switchToLoadout,
+    shareLoadout,
+    addLoadoutToCompare,
+    removeLoadout,
+  });
+  registerPresetCallbacks({
+    switchMode,
+  });
+  void import('./compendium.js').then(({ registerCompendiumTabCallbacks }) => {
+    registerCompendiumTabCallbacks({
+      onStringsTabActivate: () => {
+        void import('./strings.js').then(({ _stringEnsureInitialized }) => {
+          _stringEnsureInitialized();
+        });
+      },
+    });
+  });
+  void import('./strings.js').then(({ registerStringCallbacks }) => {
+    registerStringCallbacks({
+      goToCompendiumFrame: (frameId) => {
+        selectLandingFrame(frameId);
+      },
+    });
+  });
 
   renderComparisonPresets();
   document.getElementById('btn-add-slot')?.addEventListener('click', () => ComparePage.addComparisonSlot());

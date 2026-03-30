@@ -21,6 +21,7 @@ import {
 } from '../../engine/composite.js';
 import { createLoadout } from '../../state/loadout.js';
 import { activateLoadout, switchMode } from '../pages/shell.js';
+import { addLoadoutToNextAvailableSlot } from './compare/index.js';
 import { initCompendium, _compSelectFrame, _compSwitchTab } from '../pages/compendium.js';
 import { _stringSelectString } from '../pages/strings.js';
 import {
@@ -131,6 +132,80 @@ function initLeaderboard(): void {
   }
   _syncLbv2Shell();
   _runLbv2();
+  _bindLeaderboardDelegates();
+}
+
+let _lbDelegateBound = false;
+
+function _bindLeaderboardDelegates(): void {
+  if (_lbDelegateBound) return;
+  _lbDelegateBound = true;
+
+  // Click delegation — stat pills, view-mode tabs, clear buttons, action btns
+  document.addEventListener('click', (e: Event) => {
+    const el = (e.target as Element).closest('[data-lb-action]') as HTMLElement | null;
+    if (!el) return;
+    const action = el.dataset.lbAction!;
+    const arg = el.dataset.lbArg;
+
+    switch (action) {
+      case 'setStat':
+        if (arg) _lbv2SetStat(arg);
+        break;
+      case 'setFilter':
+        if (arg === 'both' || arg === 'full' || arg === 'hybrid') _lbv2SetFilter(arg);
+        break;
+      case 'setView':
+        if (arg === 'builds' || arg === 'frames' || arg === 'strings') _lbv2SetView(arg);
+        break;
+      case 'clearFrameFilters':
+        _lbv2ClearFrameFilters();
+        break;
+      case 'clearStringFilters':
+        _lbv2ClearStringFilters();
+        break;
+      case 'view':
+        _lbv2View(
+          el.dataset.racquetId ?? '',
+          el.dataset.stringId ?? '',
+          parseInt(el.dataset.tension ?? '0', 10),
+          el.dataset.type ?? 'full',
+          el.dataset.mainsId ?? '',
+          el.dataset.crossesId ?? '',
+          parseInt(el.dataset.crossesTension ?? '0', 10)
+        );
+        break;
+      case 'compare':
+        _lbv2Compare(
+          el.dataset.racquetId ?? '',
+          el.dataset.stringId ?? '',
+          parseInt(el.dataset.tension ?? '0', 10),
+          el.dataset.type ?? 'full',
+          el.dataset.mainsId ?? '',
+          el.dataset.crossesId ?? '',
+          parseInt(el.dataset.crossesTension ?? '0', 10)
+        );
+        break;
+      case 'viewFrame':
+        if (el.dataset.racquetId) _lbv2ViewFrame(el.dataset.racquetId);
+        break;
+      case 'viewString':
+        if (el.dataset.stringId) _lbv2ViewString(el.dataset.stringId);
+        break;
+    }
+  });
+
+  // Change delegation — frame/string filter selects
+  document.addEventListener('change', (e: Event) => {
+    const el = e.target as HTMLElement;
+    const action = el.dataset.lbAction;
+    const arg = el.dataset.lbArg;
+    if (action === 'setFrameFilter' && arg) {
+      _lbv2SetFrameFilter(arg);
+    } else if (action === 'setStringFilter' && arg) {
+      _lbv2SetStringFilter(arg);
+    }
+  });
 }
 
 // ── Shell HTML (pure Tailwind) ────────────────────────────────────────────────
@@ -145,7 +220,7 @@ function _buildShellHTML(): string {
           : 'border-dc-storm/40 text-dc-storm hover:border-dc-storm hover:text-dc-platinum'
       }"
       data-stat="${s.key}"
-      onclick="_lbv2SetStat('${s.key}')"
+      data-lb-action="setStat" data-lb-arg="${s.key}"
       title="${s.desc}"
     >
       <span>${s.icon}</span>
@@ -166,7 +241,7 @@ function _buildShellHTML(): string {
           : 'border-dc-storm/40 text-dc-storm hover:border-dc-storm hover:text-dc-platinum'
       }"
       data-type-filter="${v}"
-      onclick="_lbv2SetFilter('${v}')"
+      data-lb-action="setFilter" data-lb-arg="${v}"
     >${l}</button>`;
   }).join('');
 
@@ -184,7 +259,7 @@ function _buildShellHTML(): string {
           : 'border-transparent text-dc-storm hover:text-dc-platinum hover:border-dc-storm/40'
       }"
       data-view-mode="${v}"
-      onclick="_lbv2SetView('${v}')"
+      data-lb-action="setView" data-lb-arg="${v}"
     >
       <span class="text-[10px] font-bold uppercase tracking-[0.12em]">${l}</span>
       <span class="hidden md:inline text-[8px] tracking-[0.08em] opacity-60">${sub}</span>
@@ -205,7 +280,7 @@ function _buildShellHTML(): string {
     `<select
       id="${id}"
       class="lbv2-filter-select bg-transparent border border-dc-storm/40 text-dc-storm font-mono text-[9px] px-2 py-1.5 cursor-pointer hover:border-dc-storm focus:border-dc-accent focus:text-dc-platinum transition-colors outline-none shrink-0"
-      onchange="_lbv2SetFrameFilter('${id.replace('lb2-ff-','')}')"
+      data-lb-action="setFrameFilter" data-lb-arg="${id.replace('lb2-ff-','')}"
     >
       <option value="">${placeholder}</option>
       ${opts.map(o => `<option value="${o.v}" ${val === o.v ? 'selected' : ''}>${o.l}</option>`).join('')}
@@ -253,7 +328,7 @@ function _buildShellHTML(): string {
       ${Object.values(ff).some(v => v !== '') ? `
         <button
           class="font-mono text-[9px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-storm/30 text-dc-storm/60 hover:border-dc-red hover:text-dc-red transition-colors shrink-0"
-          onclick="_lbv2ClearFrameFilters()"
+          data-lb-action="clearFrameFilters"
         >Clear</button>` : ''}
         </div>
       </div>
@@ -269,7 +344,7 @@ function _buildShellHTML(): string {
     `<select
       id="${id}"
       class="lbv2-filter-select bg-transparent border border-dc-storm/40 text-dc-storm font-mono text-[9px] px-2 py-1.5 cursor-pointer hover:border-dc-storm focus:border-dc-accent focus:text-dc-platinum transition-colors outline-none shrink-0"
-      onchange="_lbv2SetStringFilter('${id.replace('lb2-sf-','')}')"
+      data-lb-action="setStringFilter" data-lb-arg="${id.replace('lb2-sf-','')}"
     >
       <option value="">${placeholder}</option>
       ${opts.map(o => `<option value="${o.v}" ${val === o.v ? 'selected' : ''}>${o.l}</option>`).join('')}
@@ -309,7 +384,7 @@ function _buildShellHTML(): string {
       ${Object.values(sf).some(v => v !== '') ? `
         <button
           class="font-mono text-[9px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-storm/30 text-dc-storm/60 hover:border-dc-red hover:text-dc-red transition-colors shrink-0"
-          onclick="_lbv2ClearStringFilters()"
+          data-lb-action="clearStringFilters"
         >Clear</button>` : ''}
         </div>
       </div>
@@ -850,11 +925,11 @@ function _renderLbv2Results(results: BuildResult[]): void {
           <div class="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               class="font-mono text-[8px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-ink transition-colors"
-              onclick="_lbv2View('${entry.racquet.id}','${stringId}',${entry.tension},'${entry.type}','${mainsId}','${crossesId}',${entry.crossesTension})"
+              data-lb-action="view" data-racquet-id="${entry.racquet.id}" data-string-id="${stringId}" data-tension="${entry.tension}" data-type="${entry.type}" data-mains-id="${mainsId}" data-crosses-id="${crossesId}" data-crosses-tension="${entry.crossesTension}"
             >View</button>
             <button
               class="font-mono text-[8px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-storm/40 text-dc-storm hover:border-dc-storm hover:text-dc-platinum transition-colors"
-              onclick="_lbv2Compare('${entry.racquet.id}','${stringId}',${entry.tension},'${entry.type}','${mainsId}','${crossesId}',${entry.crossesTension})"
+              data-lb-action="compare" data-racquet-id="${entry.racquet.id}" data-string-id="${stringId}" data-tension="${entry.tension}" data-type="${entry.type}" data-mains-id="${mainsId}" data-crosses-id="${crossesId}" data-crosses-tension="${entry.crossesTension}"
             >Cmp</button>
           </div>
         </td>
@@ -1013,7 +1088,7 @@ function _renderLbv2Frames(results: FrameResult[]): void {
           <div class="opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               class="font-mono text-[8px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-ink transition-colors"
-              onclick="_lbv2ViewFrame('${r.id}')"
+              data-lb-action="viewFrame" data-racquet-id="${r.id}"
             >View</button>
           </div>
         </td>
@@ -1168,7 +1243,7 @@ function _renderLbv2Strings(results: StringResult[]): void {
           <div class="opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               class="font-mono text-[8px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-ink transition-colors"
-              onclick="_lbv2ViewString('${s.id}')"
+              data-lb-action="viewString" data-string-id="${s.id}"
             >View</button>
           </div>
         </td>
@@ -1270,19 +1345,6 @@ function _lbv2ShowCompareWarning(message: string): void {
 }
 
 function _lbv2Compare(racquetId: string, stringId: string, tension: number, type: string, mainsId: string, crossesId: string, crossesTension: number): void {
-  const compareState = typeof (window as Window & typeof globalThis & Record<string, unknown>).compareGetState === 'function'
-    ? ((window as Window & typeof globalThis & Record<string, unknown>).compareGetState as () => Record<string, unknown> | null)()
-    : null;
-  const slots = (compareState?.slots as Array<{loadout: unknown}> | undefined);
-  const emptySlot = slots?.find(function(slot) {
-    return !slot.loadout;
-  });
-
-  if (!emptySlot) {
-    _lbv2ShowCompareWarning('All 3 compare slots are already filled. Remove one of the existing builds before adding a leaderboard result.');
-    return;
-  }
-
   const opts: Record<string, unknown> = { source: 'leaderboard' };
   if (type === 'hybrid') {
     opts.isHybrid = true;
@@ -1294,14 +1356,9 @@ function _lbv2Compare(racquetId: string, stringId: string, tension: number, type
   const loadout = createLoadout(racquetId, type === 'hybrid' ? mainsId : stringId, tension, opts);
   if (!loadout) return;
 
-  if (typeof (window as Window & typeof globalThis & Record<string, unknown>).compareAddLoadoutToNextAvailableSlot === 'function') {
-    const slotId = ((window as Window & typeof globalThis & Record<string, unknown>).compareAddLoadoutToNextAvailableSlot as (lo: unknown) => string | null)(loadout);
-    if (!slotId) {
-      _lbv2ShowCompareWarning('All 3 compare slots are already filled. Remove one of the existing builds before adding a leaderboard result.');
-      return;
-    }
-  } else {
-    _lbv2ShowCompareWarning('Compare is not ready yet. Open the Compare tab once, then try again.');
+  const slotId = addLoadoutToNextAvailableSlot(loadout);
+  if (!slotId) {
+    _lbv2ShowCompareWarning('All 3 compare slots are already filled. Remove one of the existing builds before adding a leaderboard result.');
     return;
   }
 

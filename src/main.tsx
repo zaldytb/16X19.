@@ -1,6 +1,5 @@
 import { createRoot } from 'react-dom/client';
 import '../style.css';
-import './ui/pages/compare/compare.css';
 import App from './App.js';
 import { init16x19Favicon } from './ui/favicon.js';
 

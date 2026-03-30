@@ -2,12 +2,10 @@
 // Tune page - React component wrapper around existing imperative rendering
 
 import { useEffect, useRef } from 'react';
-import { useActiveLoadout } from '../hooks/useStore.js';
 import { wireTuneSlider } from '../ui/pages/shell.js';
 import { refreshTuneIfActive, tuneSandboxCommit } from '../ui/pages/tune.js';
 
 export function Tune() {
-  const activeLoadout = useActiveLoadout();
   const initialized = useRef(false);
 
   useEffect(() => {
@@ -17,13 +15,6 @@ export function Tune() {
       wireTuneSlider();
     }
   }, []);
-
-  useEffect(() => {
-    if (initialized.current) {
-      refreshTuneIfActive();
-      wireTuneSlider();
-    }
-  }, [activeLoadout]);
 
   return (
     <section className="workspace-mode" id="mode-tune" data-mode="tune">

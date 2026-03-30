@@ -5,12 +5,16 @@ import {
   getDockEditorContext,
   setDockEditorContext,
 } from '../state/app-state.js';
-import * as Overview from '../ui/pages/overview.js';
-import * as Tune from '../ui/pages/tune.js';
-import * as ComparePage from '../ui/pages/compare/index.js';
+import { renderCompareRefreshViaBridge } from '../ui/pages/compare-runtime-bridge.js';
+import { renderOverviewDashboardViaBridge } from '../ui/pages/overview-runtime-bridge.js';
+import { refreshTuneIfActiveViaBridge } from '../ui/pages/tune-runtime-bridge.js';
 import { hydrateDock, renderDockContextPanel, renderDockPanel } from '../ui/components/dock-renderers.js';
 import { reconcileDockEditorContext } from './contracts.js';
 import { reportRuntimeIssue } from './diagnostics.js';
+import { registerCompareStateRefreshHandler } from './compare-refresh-bridge.js';
+
+/** Only the latest `syncViews()` invocation may apply deferred async work (dynamic imports + dock context). */
+let _syncViewsGeneration = 0;
 
 export interface ViewChangeSet {
   activeLoadout?: boolean;
@@ -47,6 +51,7 @@ export function getRefreshPlan(mode: string, changed: ViewChangeSet): RefreshPla
 }
 
 export function syncViews(reason: string, changed: ViewChangeSet): void {
+  const generation = ++_syncViewsGeneration;
   const mode = getCurrentMode();
   const plan = getRefreshPlan(mode, changed);
 
@@ -60,10 +65,12 @@ export function syncViews(reason: string, changed: ViewChangeSet): void {
       currentContext,
       getComparisonSlots<{ id: string | number }>(),
     );
-    if (nextContext.kind !== currentContext.kind ||
-        (nextContext.kind === 'compare-slot' &&
-          currentContext.kind === 'compare-slot' &&
-          nextContext.slotId !== currentContext.slotId)) {
+    if (
+      nextContext.kind !== currentContext.kind ||
+      (nextContext.kind === 'compare-slot' &&
+        currentContext.kind === 'compare-slot' &&
+        nextContext.slotId !== currentContext.slotId)
+    ) {
       setDockEditorContext(nextContext);
       changed = { ...changed, dockEditorContext: true };
     }
@@ -73,19 +80,19 @@ export function syncViews(reason: string, changed: ViewChangeSet): void {
     renderDockPanel();
   }
 
+  const pageWork: Promise<unknown>[] = [];
+
   if (plan.overview) {
-    Overview.renderDashboard();
+    renderOverviewDashboardViaBridge();
   }
 
   if (plan.tune) {
-    Tune.refreshTuneIfActive();
+    refreshTuneIfActiveViaBridge();
   }
 
   if (plan.compare) {
     try {
-      ComparePage.renderComparisonSlots();
-      ComparePage.updateComparisonRadar();
-      ComparePage.renderComparisonDeltas();
+      renderCompareRefreshViaBridge();
     } catch (error) {
       reportRuntimeIssue('COMPARE_RENDER', `Compare refresh failed during "${reason}"`, {
         details: error,
@@ -93,22 +100,37 @@ export function syncViews(reason: string, changed: ViewChangeSet): void {
     }
   }
 
-  if (plan.compendium) {
-    try {
-      void import('../ui/pages/compendium.js').then((mod) => {
-        mod._compSyncWithActiveLoadout();
-      });
-      void import('../ui/pages/strings.js').then((mod) => {
-        mod._stringSyncWithActiveLoadout();
-      });
-    } catch (error) {
-      reportRuntimeIssue('COMPENDIUM_RENDER', `Compendium refresh failed during "${reason}"`, {
-        details: error,
-      });
+  const runAfterPageWork = (): void => {
+    if (generation !== _syncViewsGeneration) return;
+    if (plan.compendium) {
+      try {
+        void import('../ui/pages/compendium.js').then((mod) => {
+          if (generation !== _syncViewsGeneration) return;
+          mod._compSyncWithActiveLoadout();
+        });
+        void import('../ui/pages/strings.js').then((mod) => {
+          if (generation !== _syncViewsGeneration) return;
+          mod._stringSyncWithActiveLoadout();
+        });
+      } catch (error) {
+        reportRuntimeIssue('COMPENDIUM_RENDER', `Compendium refresh failed during "${reason}"`, {
+          details: error,
+        });
+      }
     }
-  }
 
-  if (plan.dockContext || changed.dockEditorContext) {
-    renderDockContextPanel();
+    if (plan.dockContext || changed.dockEditorContext) {
+      renderDockContextPanel();
+    }
+  };
+
+  if (pageWork.length > 0) {
+    void Promise.all(pageWork).then(runAfterPageWork);
+  } else {
+    runAfterPageWork();
   }
 }
+
+registerCompareStateRefreshHandler(() => {
+  syncViews('compare-state-change', { compareState: true });
+});

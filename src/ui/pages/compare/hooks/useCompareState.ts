@@ -12,6 +12,7 @@ import {
 } from '../../../../state/app-state.js';
 import { normalizeCompareSlots } from '../../../../runtime/contracts.js';
 import { reportRuntimeIssue } from '../../../../runtime/diagnostics.js';
+import { notifyCompareStateChanged } from '../../../../runtime/compare-refresh-bridge.js';
 
 // Private state
 let _state: CompareState = {
@@ -83,6 +84,7 @@ function notify(): void {
   }
   syncLegacyMirror();
   _subscribers.forEach(fn => fn(_state));
+  notifyCompareStateChanged();
 }
 
 export function getState(): CompareState {

@@ -15,7 +15,7 @@ import { generateBuildReason, generateTopBuilds, pickDiverseBuilds, type Build }
 import { getCurrentSetup } from '../../state/setup-sync.js';
 import { createSearchableSelect, ssInstances } from '../components/searchable-select.js';
 import { activateLoadout, switchMode } from './shell.js';
-import { getState as compareGetState, setSlotLoadout as compareSetSlotLoadout } from './compare/index.js';
+import { getState as compareGetState, setSlotLoadout as compareSetSlotLoadout } from './compare/hooks/useCompareState.js';
 import { getCompBaseObs, setCompBaseObs } from './comp-base-obs.js';
 
 // ---------------------------------------------------------------------------

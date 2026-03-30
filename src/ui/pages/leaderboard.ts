@@ -21,16 +21,15 @@ import {
 } from '../../engine/composite.js';
 import { createLoadout } from '../../state/loadout.js';
 import { activateLoadout, switchMode } from '../pages/shell.js';
-import { addLoadoutToNextAvailableSlot } from './compare/index.js';
+import { addLoadoutToNextAvailableSlot } from './compare/compare-slot-api.js';
 import { initCompendium, _compSelectFrame, _compSwitchTab } from '../pages/compendium.js';
 import { _stringSelectString } from '../pages/strings.js';
+import { RACQUET_BRANDS, STRING_BRANDS } from '../../utils/performance-derived.js';
 import {
-  RACQUET_BRANDS,
-  STRING_BRANDS,
   getCachedValue,
   measurePerformance,
   scheduleRender,
-} from '../../utils/performance.js';
+} from '../../utils/performance-runtime.js';
 
 import type {
   Racquet,

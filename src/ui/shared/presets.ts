@@ -9,7 +9,8 @@ import { getCurrentSetup } from '../../state/setup-sync.js';
 import { getComparisonSlots } from '../../state/app-state.js';
 import { predictSetup, computeCompositeScore, buildTensionContext } from '../../engine/index.js';
 import { createLoadout } from '../../state/loadout.js';
-import { addLoadoutToPreferredSlot, addLoadoutToNextAvailableSlot, getState as compareGetState } from '../pages/compare/index.js';
+import { addLoadoutToPreferredSlot, addLoadoutToNextAvailableSlot } from '../pages/compare/compare-slot-api.js';
+import { getState as compareGetState } from '../pages/compare/hooks/useCompareState.js';
 
 // Type assertion helper for generated data imports
 type RacquetData = Racquet & Record<string, unknown>;

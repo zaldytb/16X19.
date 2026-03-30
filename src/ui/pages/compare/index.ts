@@ -4,7 +4,6 @@
  */
 
 import type { Loadout, Racquet, StringData } from '../../../engine/types.js';
-import { buildTensionContext, computeCompositeScore, generateIdentity, predictSetup } from '../../../engine/index.js';
 import { RACQUETS, STRINGS } from '../../../data/loader.js';
 import { getActiveLoadout, getSavedLoadouts } from '../../../state/store.js';
 import { getCurrentSetup } from '../../../state/setup-sync.js';
@@ -25,8 +24,14 @@ import { renderSlotCard } from './components/SlotCard.js';
 import { renderRadarChart, updateRadarChart } from './components/RadarChart.js';
 import { renderDiffBattery } from './components/DiffBattery.js';
 import { renderSlotEditor, getEditorFormData, mountSlotEditor } from './components/SlotEditor.js';
-import { getCachedValue, measurePerformance } from '../../../utils/performance.js';
-import { syncViews } from '../../../runtime/coordinator.js';
+import { getCachedValue, measurePerformance } from '../../../utils/performance-runtime.js';
+import { registerCompareRuntimeCallbacks } from '../compare-runtime-bridge.js';
+import {
+  addLoadoutToSlot,
+  toTrackedCompareLoadout,
+  addLoadoutToNextAvailableSlot,
+  addLoadoutToPreferredSlot,
+} from './compare-slot-api.js';
 
 // ---------------------------------------------------------------------------
 // Shell callbacks — registered by shell.ts to avoid circular static imports.
@@ -98,7 +103,6 @@ export function cleanupComparePage(): void {
  */
 function handleStateChange(state: typeof _currentState): void {
   _currentState = state;
-  syncViews('compare-state-change', { compareState: true });
 }
 
 /**
@@ -429,17 +433,6 @@ function getSlotByIndex(slotIndex: number): Slot | null {
   return _currentState.slots[slotIndex] || null;
 }
 
-function toTrackedCompareLoadout(loadout: Loadout): CompareLoadout {
-  const compareLoadout = { ...loadout } as CompareLoadout;
-  if (compareLoadout.sourceLoadoutId == null) {
-    compareLoadout.sourceLoadoutId = loadout.id || null;
-  }
-  if (compareLoadout.snapshotObs == null) {
-    compareLoadout.snapshotObs = loadout.obs ?? 0;
-  }
-  return compareLoadout;
-}
-
 export function tuneSlot(slotId: SlotId): void {
   const slot = getSlotById(slotId);
   if (!slot || slot.loadout === null) return;
@@ -473,72 +466,7 @@ export function saveSlot(slotId: SlotId, button?: HTMLButtonElement | null): voi
   }
 }
 
-/**
- * Add a loadout to a specific slot
- */
-function addLoadoutToSlot(slotId: SlotId, loadout: Loadout): void {
-  const racquet = compareRacquets.find(r => r.id === loadout.frameId);
-  if (!racquet) return;
-  
-  let stringConfig;
-  if (loadout.isHybrid && loadout.mainsId && loadout.crossesId) {
-    const mains = compareStrings.find(s => s.id === loadout.mainsId);
-    const crosses = compareStrings.find(s => s.id === loadout.crossesId);
-    if (!mains || !crosses) return;
-    stringConfig = {
-      isHybrid: true as const,
-      mains,
-      crosses,
-      mainsTension: loadout.mainsTension,
-      crossesTension: loadout.crossesTension
-    };
-  } else {
-    const string = compareStrings.find(s => s.id === loadout.stringId);
-    if (!string) return;
-    stringConfig = {
-      isHybrid: false as const,
-      string,
-      mainsTension: loadout.mainsTension,
-      crossesTension: loadout.crossesTension
-    };
-  }
-  
-  const stats = predictSetup(racquet, stringConfig);
-  const tensionContext = buildTensionContext({
-    mainsTension: loadout.mainsTension,
-    crossesTension: loadout.crossesTension,
-  }, racquet);
-  const nextLoadout: CompareLoadout = {
-    ...toTrackedCompareLoadout(loadout),
-    stats,
-    obs: +computeCompositeScore(stats, tensionContext).toFixed(1),
-    identity: generateIdentity(stats, racquet, stringConfig)?.name || loadout.identity,
-  };
-
-  setSlotLoadout(slotId, nextLoadout, stats);
-  _shellCbs.renderDockContextPanel?.();
-}
-
-export function addLoadoutToNextAvailableSlot(loadout: Loadout): SlotId | null {
-  const emptySlotId = getFirstEmptySlot();
-  if (!emptySlotId) return null;
-  addLoadoutToSlot(emptySlotId, loadout);
-  return emptySlotId;
-}
-
-export function addLoadoutToPreferredSlot(loadout: Loadout): SlotId | null {
-  const emptySlotId = getFirstEmptySlot();
-  if (emptySlotId) {
-    addLoadoutToSlot(emptySlotId, loadout);
-    return emptySlotId;
-  }
-
-  const fallbackSlotId = _currentState.slots[_currentState.slots.length - 1]?.id ?? null;
-  if (!fallbackSlotId) return null;
-
-  addLoadoutToSlot(fallbackSlotId, loadout);
-  return fallbackSlotId;
-}
+export { addLoadoutToNextAvailableSlot, addLoadoutToPreferredSlot };
 
 export function recalcSlot(slotIndex: number): void {
   const slot = getSlotByIndex(slotIndex);
@@ -825,6 +753,24 @@ function _bindCompareDelegates(): void {
     }
   });
 }
+
+registerCompareRuntimeCallbacks({
+  initComparePage,
+  renderComparisonSlots,
+  renderCompareSummaries,
+  renderCompareVerdict,
+  renderCompareMatrix,
+  updateComparisonRadar,
+  renderComparisonDeltas,
+  addComparisonSlotFromHome,
+  showQuickAddPrompt,
+  addSlot,
+  editSlot,
+  removeSlot,
+  quickAddSaved,
+  addComparisonSlot,
+  registerCompareShellCallbacks,
+});
 
 // Export public API
 export {

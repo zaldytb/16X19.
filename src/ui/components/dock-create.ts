@@ -6,7 +6,7 @@ import { getActiveLoadout, getSavedLoadouts } from '../../state/store.js';
 import { getCurrentMode } from '../../state/app-state.js';
 import { createLoadout, saveLoadout } from '../../state/loadout.js';
 import { activateLoadout, switchMode } from '../pages/shell.js';
-import { renderDashboard } from '../pages/overview.js';
+import { renderOverviewDashboardViaBridge } from '../pages/overview-runtime-bridge.js';
 import { _initQaSearchable } from './searchable-select.js';
 import type { Loadout } from '../../engine/types.js';
 
@@ -222,7 +222,7 @@ export function _cfActivate(): void {
     saveLoadout(lo);
     switchMode('tune');
   } else if (getCurrentMode() === 'overview') {
-    renderDashboard();
+    renderOverviewDashboardViaBridge();
   }
 }
 

@@ -2,8 +2,16 @@ import { lazy } from 'react';
 import { HowItWorks } from './HowItWorks.js';
 import { Overview } from './Overview.js';
 import { Compendium } from './Compendium.js';
-import { Tune } from './Tune.js';
-import { Compare } from './Compare.js';
+
+const TunePage = lazy(async () => {
+  const module = await import('./Tune.js');
+  return { default: module.Tune };
+});
+
+const ComparePage = lazy(async () => {
+  const module = await import('./Compare.js');
+  return { default: module.Compare };
+});
 
 const OptimizePage = lazy(async () => {
   const module = await import('./Optimize.js');
@@ -15,11 +23,15 @@ export function OverviewWorkspace() {
 }
 
 export function TuneWorkspace() {
-  return <Tune />;
+  return (
+    <TunePage />
+  );
 }
 
 export function CompareWorkspace() {
-  return <Compare />;
+  return (
+    <ComparePage />
+  );
 }
 
 export function OptimizeWorkspace() {

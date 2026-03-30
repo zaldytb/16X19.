@@ -17,6 +17,7 @@ import {
 import type { Racquet, StringConfig, SetupAttributes, IdentityResult } from '../../engine/types.js';
 import { getGaugeOptions } from '../../engine/string-profile.js';
 import { STRINGS } from '../../data/loader.js';
+import { animateOBSInContainer } from '../components/obs-animation.js';
 
 // ============================================
 // OBS SCORE DISPLAY
@@ -42,12 +43,14 @@ interface OBSRenderOptions {
   size?: 'sm' | 'md' | 'lg';
 }
 
+const _obsBadgePrevScores = new WeakMap<HTMLElement, number>();
+
 export function renderOBSBadge(
   container: HTMLElement,
   score: number,
   options: OBSRenderOptions = {}
 ): void {
-  const { showDelta = false, baselineScore, size = 'md' } = options;
+  const { animate = false, showDelta = false, baselineScore, size = 'md' } = options;
   const tier = getObsTier(score);
   const pct = Math.min(Math.max(score / 100, 0), 1) * 100;
 
@@ -97,6 +100,12 @@ export function renderOBSBadge(
     </div>
     ${batteryHTML}
   `;
+
+  const previousScore = _obsBadgePrevScores.get(container);
+  if (animate) {
+    animateOBSInContainer(container, '.obs-score-value', score, 400, previousScore ?? null);
+  }
+  _obsBadgePrevScores.set(container, score);
 }
 
 // Legacy OBS renderer - used by various pages

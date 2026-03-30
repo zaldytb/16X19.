@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { useActiveLoadout } from '../hooks/useStore.js';
 import { _initLandingSearch } from '../ui/pages/shell.js';
 import { renderDashboard } from '../ui/pages/overview.js';
 
@@ -11,15 +10,16 @@ async function runFindMyBuildAction(
 }
 
 export function Overview() {
-  const activeLoadout = useActiveLoadout();
-
   useEffect(() => {
     _initLandingSearch();
   }, []);
 
   useEffect(() => {
+    // Live overview updates are coordinated through `syncViews()`.
+    // Rendering once on mount avoids flattening the hero OBS animation
+    // with a second immediate render from the route wrapper.
     renderDashboard();
-  }, [activeLoadout]);
+  }, []);
 
   return (
     <section className="workspace-mode" id="mode-overview" data-mode="overview">

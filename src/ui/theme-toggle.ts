@@ -1,6 +1,9 @@
 import { predictSetup } from '../engine/index.js';
 import { getCurrentMode, getSlotColors, setSlotColors } from '../state/app-state.js';
 import { getCurrentSetup } from '../state/setup-sync.js';
+import { renderCompareRefreshViaBridge } from './pages/compare-runtime-bridge.js';
+import { renderOverviewRadarChartViaBridge } from './pages/overview-runtime-bridge.js';
+import { refreshTuneSweepChartViaBridge } from './pages/tune-runtime-bridge.js';
 import { toggleTheme } from './theme.js';
 
 export function toggleAppTheme(): void {
@@ -16,24 +19,15 @@ export function toggleAppTheme(): void {
         const setup = getCurrentSetup();
         if (!setup) return;
         const stats = predictSetup(setup.racquet, setup.stringConfig);
-        void import('./pages/overview.js').then(({ renderRadarChart }) => {
-          renderRadarChart(stats);
-        });
+        renderOverviewRadarChartViaBridge(stats);
       },
       refreshComparison: () => {
-        void import('./pages/compare/index.js').then(({ updateComparisonRadar, renderComparisonSlots }) => {
-          updateComparisonRadar();
-          renderComparisonSlots();
-        });
+        renderCompareRefreshViaBridge();
       },
       refreshSweepChart: () => {
         const setup = getCurrentSetup();
         if (!setup) return;
-        void import('./pages/tune.js').then(({ sweepChart, renderSweepChart }) => {
-          if (!sweepChart) return;
-          sweepChart.destroy();
-          renderSweepChart(setup);
-        });
+        refreshTuneSweepChartViaBridge(setup);
       },
     },
     {

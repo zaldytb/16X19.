@@ -1,6 +1,7 @@
 // src/pages/Compare.tsx
 // Compare page - React component wrapper around existing imperative rendering
 
+import '../ui/pages/compare/compare.css';
 import { useEffect } from 'react';
 import {
   cleanupComparePage,

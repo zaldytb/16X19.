@@ -17,15 +17,21 @@ import {
 } from '../../engine/constants.js';
 import type { StringData, Racquet, SetupAttributes, StringConfig as EngineStringConfig } from '../../engine/types.js';
 import { getActiveLoadout } from '../../state/store.js';
-import { _prevObsValues, animateOBS } from '../components/obs-animation.js';
+import { _prevObsValues, animateOBSInContainer } from '../components/obs-animation.js';
 import { renderMobileLoadoutPills } from '../components/dock-renderers.js';
 import { getScoredSetup, measurePerformance } from '../../utils/performance.js';
 
 import { getCurrentSetup } from '../../state/setup-sync.js';
 import { switchMode } from './shell.js';
-import { refreshTuneIfActive } from './tune.js';
+import { registerOverviewRuntimeCallbacks } from './overview-runtime-bridge.js';
+import { refreshTuneIfActiveViaBridge } from './tune-runtime-bridge.js';
 
 type StringConfig = EngineStringConfig;
+
+registerOverviewRuntimeCallbacks({
+  renderDashboard,
+  renderRadarChart,
+});
 
 /**
  * Render the main dashboard
@@ -71,7 +77,7 @@ export function renderDashboard(): void {
   renderWarnings(warnings);
 
   // Refresh Tune mode if active
-  refreshTuneIfActive();
+  refreshTuneIfActiveViaBridge();
 }
 
 let _overviewDelegateBound = false;
@@ -159,11 +165,7 @@ export function renderOverviewHero(
     </div>
   `;
 
-  // OBS counting animation
-  const heroObsEl = el.querySelector('.hero-obs-value') as HTMLElement | null;
-  if (heroObsEl && _prevObsValues.hero != null) {
-    animateOBS(heroObsEl, _prevObsValues.hero, score, 500);
-  }
+  animateOBSInContainer(el, '.hero-obs-value', score, 500, _prevObsValues.hero);
   _prevObsValues.hero = score;
 }
 

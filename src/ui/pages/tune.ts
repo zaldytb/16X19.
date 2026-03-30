@@ -20,8 +20,9 @@ import { getCurrentSetup, getSetupFromLoadout } from '../../state/setup-sync.js'
 import { getCurrentMode } from '../../state/app-state.js';
 import { activateLoadout, commitEditorToLoadout } from './shell.js';
 import { renderDockPanel } from '../components/dock-renderers.js';
-import { renderDashboard as _renderDashboard } from './overview.js';
-import { _prevObsValues, animateOBS } from '../components/obs-animation.js';
+import { renderOverviewDashboardViaBridge } from './overview-runtime-bridge.js';
+import { registerTuneRuntimeCallbacks } from './tune-runtime-bridge.js';
+import { _prevObsValues, animateOBSInContainer } from '../components/obs-animation.js';
 import {
   generateRecommendedBuilds,
   renderWhatToTryNext as renderSharedWhatToTryNext,
@@ -75,6 +76,23 @@ type Chart = {
 };
 
 declare const Chart: new (ctx: CanvasRenderingContext2D, config: Record<string, unknown>) => Chart;
+
+registerTuneRuntimeCallbacks({
+  initTuneMode,
+  refreshTuneIfActive,
+  onTuneSliderInput,
+  resetPreviewState: () => {
+    tuneState.baseline = null;
+    tuneState.explored = null;
+  },
+  refreshSweepChart: (setup) => {
+    if (sweepChart) {
+      sweepChart.destroy();
+      sweepChart = null;
+    }
+    renderSweepChart(setup);
+  },
+});
 
 function _applyTuneInteractionFrame(): void {
   _pendingTuneRenderFrame = null;
@@ -1281,11 +1299,8 @@ export function renderOverallBuildScore(
     ${batteryHTML}
   `;
 
-  if (animate && _prevObsValues.tune != null) {
-    const obsEl = container.querySelector('.obs-score-value');
-    if (obsEl instanceof HTMLElement) {
-      animateOBS(obsEl, _prevObsValues.tune, score, 400);
-    }
+  if (animate) {
+    animateOBSInContainer(container, '.obs-score-value', score, 400, _prevObsValues.tune);
   }
   _prevObsValues.tune = score;
 }
@@ -1589,7 +1604,7 @@ export function tuneSandboxCommit(): void {
   }
 
   renderDockPanel();
-  _renderDashboard();
+  renderOverviewDashboardViaBridge();
 }
 
 /**
@@ -1629,7 +1644,7 @@ export function applyExploredTension(): void {
   if (getActiveLoadout()) {
     commitEditorToLoadout();
   } else {
-    _renderDashboard();
+    renderOverviewDashboardViaBridge();
   }
 
   // Reset tune state

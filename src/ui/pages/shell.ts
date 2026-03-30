@@ -17,10 +17,30 @@ import {
   setCurrentMode,
   setSlotColors,
 } from '../../state/app-state.js';
-import * as Overview from './overview.js';
-import * as Tune from './tune.js';
-import * as ComparePage from './compare/index.js';
+import {
+  addComparisonSlotFromHomeViaBridge,
+  addComparisonSlotViaBridge,
+  addCompareSlotViaBridge,
+  editCompareSlotViaBridge,
+  initComparePageViaBridge,
+  quickAddCompareSavedViaBridge,
+  registerCompareShellCallbacksViaBridge,
+  removeCompareSlotViaBridge,
+  renderCompareSummariesViaBridge,
+  renderCompareSurfacesViaBridge,
+  showCompareQuickAddPromptViaBridge,
+} from './compare-runtime-bridge.js';
+import { addLoadoutToSlot } from './compare/compare-slot-api.js';
+import { clearSlot as clearCompareSlot, getState as getCompareState, setSlotLoadout as setCompareSlotLoadout } from './compare/hooks/useCompareState.js';
+import type { SlotId as CompareSlotId } from './compare/types.js';
 import { SLOT_COLORS } from './compare/types.js';
+import { renderOverviewDashboardViaBridge } from './overview-runtime-bridge.js';
+import {
+  initTuneModeViaBridge,
+  onTuneSliderInputViaBridge,
+  refreshTuneIfActiveViaBridge,
+  resetTunePreviewStateViaBridge,
+} from './tune-runtime-bridge.js';
 import { toggleMobileDock } from '../components/mobile-dock.js';
 import {
   populateGaugeDropdown,
@@ -95,15 +115,7 @@ function getCompareSlots(): CompareSlot[] {
 }
 
 function renderCompareSurfaces(): void {
-  ComparePage.renderComparisonSlots();
-  ComparePage.renderCompareSummaries();
-  ComparePage.renderCompareVerdict();
-  ComparePage.renderCompareMatrix();
-  try {
-    ComparePage.updateComparisonRadar();
-  } catch (_err) {
-    // Be tolerant when compare state is only partially initialized.
-  }
+  renderCompareSurfacesViaBridge();
 }
 
 function syncRuntimeViews(reason: string, changed: Parameters<typeof syncViews>[1]): void {
@@ -113,15 +125,15 @@ function syncRuntimeViews(reason: string, changed: Parameters<typeof syncViews>[
 }
 
 function initTuneModeCompat(setup: { racquet: Racquet; stringConfig: StringConfig }): void {
-  Tune.initTuneMode(setup);
+  initTuneModeViaBridge(setup);
 }
 
 function refreshTuneIfActiveCompat(): void {
-  Tune.refreshTuneIfActive();
+  refreshTuneIfActiveViaBridge();
 }
 
 function onTuneSliderInputCompat(event: Event): void {
-  Tune.onTuneSliderInput(event);
+  onTuneSliderInputViaBridge(event);
 }
 
 function buildLoadoutName(racquet: Racquet, stringConfig: StringConfig): string {
@@ -154,10 +166,10 @@ function buildCompareSlotFromLoadout(loadout: Loadout): CompareSlot | null {
 }
 
 function autoFillCompareFromSaved(): void {
-  const compareState = ComparePage.getState();
+  const compareState = getCompareState();
   if (compareState?.slots) {
     compareState.slots.forEach((slot: any) => {
-      ComparePage.clearSlot(slot.id);
+      clearCompareSlot(slot.id as CompareSlotId);
     });
 
     const activeLoadout = getActiveLoadout();
@@ -182,9 +194,9 @@ function autoFillCompareFromSaved(): void {
       const setup = getSetupFromLoadout(candidate);
       if (!setup) return;
       const stats = getScoredSetup(setup).stats;
-      const latestState = ComparePage.getState();
+      const latestState = getCompareState();
       const emptySlot = latestState?.slots?.find((slot: any) => slot.loadout === null);
-      if (emptySlot) ComparePage.setSlotLoadout(emptySlot.id as any, candidate, stats);
+      if (emptySlot) setCompareSlotLoadout(emptySlot.id as CompareSlotId, candidate, stats);
     });
     return;
   }
@@ -293,7 +305,7 @@ function clearDockEditorFields(): void {
 }
 
 function getCompareStateSlot(slotId: string): any | null {
-  const compareState = ComparePage.getState();
+  const compareState = getCompareState();
   if (!compareState?.slots) return null;
   return compareState.slots.find((slot: any) => String(slot.id) === String(slotId)) || null;
 }
@@ -433,8 +445,7 @@ export function resetActiveLoadout(): void {
   updateDockEditorActionState();
   setActiveLoadout(null);
 
-  (Tune.tuneState as any).baseline = null;
-  (Tune.tuneState as any).explored = null;
+  resetTunePreviewStateViaBridge();
 
   ssInstances['select-racquet']?.setValue('');
   ssInstances['select-string-full']?.setValue('');
@@ -531,7 +542,7 @@ export function commitEditorToLoadout(): void {
     baseLoadout.name = buildLoadoutName(setup.racquet, setup.stringConfig);
 
     if (context.kind === 'compare-slot') {
-      ComparePage.setSlotLoadout(context.slotId as any, baseLoadout, scored.stats);
+      setCompareSlotLoadout(context.slotId as CompareSlotId, baseLoadout, scored.stats);
       _compareEditorDirty = false;
     } else {
       baseLoadout._dirty = getSavedLoadouts().some((loadout) => loadout.id === baseLoadout.id);
@@ -566,14 +577,14 @@ export function addLoadoutToCompare(loadoutId: string): void {
   const loadout = getSavedLoadouts().find((item) => item.id === loadoutId);
   if (!loadout) return;
 
-  const compareState = ComparePage.getState();
+  const compareState = getCompareState();
   if (compareState?.slots) {
     const emptySlot = compareState.slots.find((slot: any) => slot.loadout === null);
     const targetSlotId = emptySlot?.id || compareState.slots[compareState.slots.length - 1]?.id;
     const setup = getSetupFromLoadout(loadout);
     if (targetSlotId && setup) {
       const stats = getScoredSetup(setup).stats;
-      ComparePage.setSlotLoadout(targetSlotId as any, { ...loadout }, stats);
+      setCompareSlotLoadout(targetSlotId as CompareSlotId, { ...loadout }, stats);
       setDockEditorContext({ kind: 'compare-overview' });
       _compareEditorDirty = false;
     }
@@ -597,7 +608,7 @@ export function addActiveLoadoutToCompare(): void {
   const activeLoadout = getActiveLoadout();
   if (!activeLoadout) return;
 
-  const compareState = ComparePage.getState();
+  const compareState = getCompareState();
   const setup = getSetupFromLoadout(activeLoadout);
   if (!compareState?.slots || !setup) return;
 
@@ -606,7 +617,7 @@ export function addActiveLoadoutToCompare(): void {
   if (!targetSlotId) return;
 
   const stats = getScoredSetup(setup).stats;
-  ComparePage.setSlotLoadout(targetSlotId as any, { ...activeLoadout }, stats);
+  setCompareSlotLoadout(targetSlotId as CompareSlotId, { ...activeLoadout }, stats);
   setDockEditorContext({ kind: 'compare-overview' });
   _compareEditorDirty = false;
 
@@ -717,34 +728,21 @@ export function switchMode(mode: string): void {
 
 /** Compare tab activation (DOM must exist). Used by route mount and direct mode activation. */
 export function runCompareModeActivation(): void {
-  if (ComparePage.initComparePage) {
-    ComparePage.initComparePage();
-    const compareState = ComparePage.getState();
-    const configuredSlots = compareState?.slots?.filter((slot: any) => slot.loadout !== null) || [];
-    if (configuredSlots.length === 0) {
-      if (getSavedLoadouts().length >= 2) {
-        autoFillCompareFromSaved();
-      } else if (getSavedLoadouts().length === 1 || getActiveLoadout()) {
-        ComparePage.addComparisonSlotFromHome();
-        ComparePage.showQuickAddPrompt();
-      } else {
-        ComparePage.addComparisonSlotFromHome();
-      }
+  initComparePageViaBridge();
+  const compareState = getCompareState();
+  const configuredSlots = compareState?.slots?.filter((slot: any) => slot.loadout !== null) || [];
+  if (configuredSlots.length === 0) {
+    if (getSavedLoadouts().length >= 2) {
+      autoFillCompareFromSaved();
+    } else if (getSavedLoadouts().length === 1 || getActiveLoadout()) {
+      addComparisonSlotFromHomeViaBridge();
+      showCompareQuickAddPromptViaBridge();
+    } else {
+      addComparisonSlotFromHomeViaBridge();
     }
   } else {
     renderComparisonPresets();
-    if (getCompareSlots().length === 0) {
-      if (getSavedLoadouts().length >= 2) {
-        autoFillCompareFromSaved();
-      } else if (getSavedLoadouts().length === 1 || getActiveLoadout()) {
-        ComparePage.addComparisonSlotFromHome();
-        ComparePage.showQuickAddPrompt();
-      } else {
-        ComparePage.addComparisonSlotFromHome();
-      }
-    } else {
-      renderCompareSurfaces();
-    }
+    renderCompareSurfaces();
   }
 }
 
@@ -785,7 +783,7 @@ export function wireTuneSlider(): void {
 }
 
 export function openTuneForSlot(slotIndex: number): void {
-  const compareStateSlot = ComparePage.getState()?.slots?.[slotIndex] || null;
+  const compareStateSlot = getCompareState()?.slots?.[slotIndex] || null;
 
   if (compareStateSlot?.loadout && compareStateSlot?.stats) {
     const compareLoadout = compareStateSlot.loadout as Loadout;
@@ -884,7 +882,7 @@ export function _onEditorChange(): void {
     if (getActiveLoadout()) {
       commitEditorToLoadout();
     } else {
-      Overview.renderDashboard();
+      renderOverviewDashboardViaBridge();
     }
   });
 }
@@ -1162,15 +1160,15 @@ export function init(): void {
     switchToLoadout,
     openFindMyBuild: () => { import('./find-my-build.js').then(m => m.openFindMyBuild()); },
     addActiveLoadoutToCompare: addActiveLoadoutToCompare,
-    compareAddSlot: (slotId) => ComparePage.addSlot(slotId as Parameters<typeof ComparePage.addSlot>[0]),
-    compareEditSlot: (slotId) => ComparePage.editSlot(slotId as Parameters<typeof ComparePage.editSlot>[0]),
-    compareRemoveSlot: (slotId) => ComparePage.removeSlot(slotId as Parameters<typeof ComparePage.removeSlot>[0]),
-    compareClearSlot: (slotId) => ComparePage.clearSlot(slotId as Parameters<typeof ComparePage.clearSlot>[0]),
-    compareGetState: () => ComparePage.getState(),
-    compareQuickAddSaved: (loadoutId) => ComparePage.quickAddSaved(loadoutId),
-    renderCompareAll: () => ComparePage.renderCompareSummaries(),
+    compareAddSlot: (slotId) => addCompareSlotViaBridge(slotId as CompareSlotId),
+    compareEditSlot: (slotId) => editCompareSlotViaBridge(slotId as CompareSlotId),
+    compareRemoveSlot: (slotId) => removeCompareSlotViaBridge(slotId as CompareSlotId),
+    compareClearSlot: (slotId) => clearCompareSlot(slotId as CompareSlotId),
+    compareGetState: () => getCompareState(),
+    compareQuickAddSaved: (loadoutId) => quickAddCompareSavedViaBridge(loadoutId),
+    renderCompareAll: () => renderCompareSummariesViaBridge(),
   });
-  ComparePage.registerCompareShellCallbacks({
+  registerCompareShellCallbacksViaBridge({
     activateLoadout,
     switchMode,
     renderDockContextPanel,
@@ -1202,7 +1200,7 @@ export function init(): void {
   });
 
   renderComparisonPresets();
-  document.getElementById('btn-add-slot')?.addEventListener('click', () => ComparePage.addComparisonSlot());
+  document.getElementById('btn-add-slot')?.addEventListener('click', () => addComparisonSlotViaBridge());
 
   document.querySelectorAll('.mode-btn').forEach((button) => {
     button.addEventListener('click', () => {

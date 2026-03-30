@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { toggleDockCollapse } from '../../ui/components/dock-collapse.js';
 import { toggleMobileDock } from '../../ui/components/mobile-dock.js';
-import { toggleAppTheme } from '../../ui/theme.js';
+import { toggleAppTheme } from '../../ui/theme-toggle.js';
 import {
   saveActiveLoadout,
   shareActiveLoadout,

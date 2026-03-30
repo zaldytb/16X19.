@@ -45,7 +45,6 @@ type OptimizeCandidate = {
 };
 
 // Module-level state
-let _optimizeInitialized = false;
 let _optExcludedStringIds = new Set<string>();
 let _optAllowedMaterials = new Set<string>();
 let _optAllowedBrands = new Set<string>();
@@ -54,6 +53,18 @@ let _optLastCurrentOBS = 0;
 let _optRunToken = 0;
 let _optLastSortBy = 'obs';
 let _optLastDisplayedCandidates: OptimizeCandidate[] = [];
+let _optTargetTension = '';
+
+function _setOptTargetTension(value: string, rerender = true): void {
+  _optTargetTension = value;
+
+  if (!rerender || !_optLastCandidates || _optLastCandidates.length === 0) {
+    return;
+  }
+
+  const sortBy = document.querySelector('.opt-th-active')?.textContent?.toLowerCase() || 'obs';
+  renderOptimizerResults(_optLastCandidates, sortBy, _optLastCurrentOBS || 0);
+}
 
 function _syncOptimizeFrameInput(frameSearch: HTMLInputElement, frameValue: HTMLInputElement): void {
   const activeLoadout = getActiveLoadout();
@@ -117,7 +128,6 @@ export function initOptimize(): void {
     return;
   }
   frameSearch.dataset.optInitialized = 'true';
-  _optimizeInitialized = true;
 
   _initOptSearchable(
     frameSearch,
@@ -413,7 +423,7 @@ export function runOptimizer(): void {
   const countEl = document.getElementById('opt-results-count');
   const runToken = ++_optRunToken;
 
-  _optClearTensionFilter();
+  _optClearTensionFilter(false);
 
   if (resultsEl) {
     resultsEl.innerHTML = '<div class="opt-loading">Computing builds…</div>';
@@ -668,7 +678,7 @@ export function renderOptimizerResults(
   }
 
   const sortColClass = sortBy === 'obs' ? 'obs' : sortBy;
-  const targetTension = (window as unknown as { _optTargetTension?: string })._optTargetTension || '';
+  const targetTension = _optTargetTension;
 
   let displayCandidates = candidates;
   if (targetTension !== '' && !isNaN(parseInt(targetTension))) {
@@ -749,18 +759,14 @@ export function renderOptimizerResults(
  * Apply target tension filter
  */
 export function _optApplyTensionFilter(value: string): void {
-  (window as unknown as { _optTargetTension: string })._optTargetTension = value;
-  if (_optLastCandidates && _optLastCandidates.length > 0) {
-    const sortBy = document.querySelector('.opt-th-active')?.textContent?.toLowerCase() || 'obs';
-    renderOptimizerResults(_optLastCandidates, sortBy, _optLastCurrentOBS || 0);
-  }
+  _setOptTargetTension(value);
 }
 
 /**
  * Clear tension filter
  */
-export function _optClearTensionFilter(): void {
-  (window as unknown as { _optTargetTension: string })._optTargetTension = '';
+export function _optClearTensionFilter(rerender = true): void {
+  _setOptTargetTension('', rerender);
 }
 
 /**

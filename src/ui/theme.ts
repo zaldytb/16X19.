@@ -1,12 +1,5 @@
 // src/ui/theme.ts
-// Theme toggle and dark mode management
-
-import { predictSetup } from '../engine/index.js';
-import { getCurrentSetup } from '../state/setup-sync.js';
-import { getCurrentMode, getSlotColors, setSlotColors } from '../state/app-state.js';
-import { sweepChart, renderSweepChart } from './pages/tune.js';
-import { updateComparisonRadar, renderComparisonSlots } from './pages/compare/index.js';
-import { renderRadarChart as renderOverviewRadarChart } from './pages/overview.js';
+// Theme DOM helpers and responsive header management
 
 type Theme = 'dark' | 'light';
 
@@ -54,37 +47,6 @@ export function toggleTheme(callbacks: ThemeCallbacks = {}, state: ThemeState = 
   if (state.currentMode === 'tune' && state.hasSweepChart && callbacks.refreshSweepChart) {
     callbacks.refreshSweepChart();
   }
-}
-
-export function toggleAppTheme(): void {
-  toggleTheme(
-    {
-      refreshSlotColors: () => {
-        const nextColors = [...getSlotColors<unknown[]>()];
-        setSlotColors(nextColors);
-      },
-      refreshRadarChart: () => {
-        const setup = getCurrentSetup();
-        if (!setup) return;
-        const stats = predictSetup(setup.racquet, setup.stringConfig);
-        renderOverviewRadarChart(stats);
-      },
-      refreshComparison: () => {
-        updateComparisonRadar();
-        renderComparisonSlots();
-      },
-      refreshSweepChart: () => {
-        const setup = getCurrentSetup();
-        if (!setup || !sweepChart) return;
-        sweepChart.destroy();
-        renderSweepChart(setup);
-      },
-    },
-    {
-      currentMode: getCurrentMode(),
-      hasSweepChart: !!sweepChart,
-    }
-  );
 }
 
 export function handleResponsiveHeader(): void {

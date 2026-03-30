@@ -20,7 +20,7 @@ import { renderMyLoadouts } from '../pages/my-loadouts.js';
 
 // ---------------------------------------------------------------------------
 // Callback registry — populated by shell.ts during init() to avoid circular
-// imports. All bridge-previously-mediated calls go through these.
+// imports. Cross-module dock actions are routed through these callbacks.
 // ---------------------------------------------------------------------------
 
 type DockCallbacks = {

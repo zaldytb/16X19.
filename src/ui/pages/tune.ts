@@ -809,7 +809,7 @@ function _loadoutNameFromSetup(racquet: Racquet, stringConfig: StringConfig): st
   return `${stringConfig.string.name} on ${racquet.name}`;
 }
 
-/** Apply a gauge column from the explorer — updates active loadout + dock; exposed to onclick. */
+/** Apply a gauge column from the explorer — updates the active loadout and dock. */
 export function _applyGaugeSelection(gaugeMm: number, sectionIndex: number): void {
   const active = getActiveLoadout();
   if (!active) return;

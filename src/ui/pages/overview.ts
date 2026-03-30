@@ -25,9 +25,6 @@ import { getCurrentSetup } from '../../state/setup-sync.js';
 import { switchMode } from './shell.js';
 import { refreshTuneIfActive } from './tune.js';
 
-// Bridge globals (via window)
-declare function $(sel: string): HTMLElement | null;
-
 type StringConfig = EngineStringConfig;
 
 /**

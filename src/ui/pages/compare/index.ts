@@ -826,10 +826,6 @@ function _bindCompareDelegates(): void {
   });
 }
 
-export function hasCompareBridgeInstalled(): boolean {
-  return _delegateBound;
-}
-
 // Export public API
 export {
   getState,

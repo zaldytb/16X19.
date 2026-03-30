@@ -1,6 +1,6 @@
 # Getting Started with Loadout Lab
 
-Loadout Lab is a physics-based tennis equipment analysis tool. Pick a racquet, string, and tension — the engine predicts how your setup will play across nine attributes: power, spin, control, comfort, feel, stability, forgiveness, launch, and maneuverability.
+Loadout Lab is a physics-based tennis equipment analysis tool. Pick a racquet, string, and tension — the engine predicts how your setup will play across 11 attributes: power, spin, control, comfort, feel, stability, forgiveness, launch, maneuverability, durability, and playability.
 
 ---
 
@@ -50,7 +50,7 @@ Once open, use the tabs at the top to navigate between modes:
 | **Overview** | Dashboard summary of your selected racquet + string + tension |
 | **Tune** | Adjust tension live and see how scores shift |
 | **Compare** | Side-by-side analysis of up to 3 different loadouts |
-| **Optimize** | Answer a short quiz to get a personalized frame recommendation |
+| **Optimize** | Search the setup space for high-performing builds on a selected frame |
 | **Bible** | Full compendium of all racquets with raw specs |
 | **How It Works** | Explanation of the prediction model |
 

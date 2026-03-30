@@ -22,31 +22,34 @@
 | ---------- | ------------ |
 | Build | Vite 8.x |
 | App language | TypeScript 6.x (strict) under `src/` |
-| Styling | Tailwind CSS 4.x via `@tailwindcss/vite` + `style.css` design tokens |
+| Styling | Tailwind CSS 4.x via `@tailwindcss/vite`, with inline `index.html` config still present, plus `style.css` design tokens |
 | Package manager | npm |
 | Runtime | Node.js 20+ (pipeline via `tsx`) |
 | Charts | Chart.js npm package |
 | Deploy | GitHub Pages + Vercel |
 
-**Important:** Tailwind is wired through `@tailwindcss/vite`, but runtime-generated utility strings in TypeScript should still stay verbatim to avoid styling drift.
+**Important:** Tailwind is wired through `@tailwindcss/vite`, and `index.html` still carries inline runtime config. Runtime-generated utility strings in TypeScript should stay verbatim to avoid styling drift.
 
 ## Runtime architecture
 
-### 1. Vite entry and minimal `window` bridge
+### 1. Vite entry and bootstrap flow
 
 [`src/main.tsx`](src/main.tsx) is the only application entry. It:
 
 - mounts the React app and router
-- installs the reduced bridge from [`src/bridge/installWindowBridge.ts`](src/bridge/installWindowBridge.ts)
-- lazy-loads heavier route/runtime modules (for example Compendium, Strings, Leaderboard, Find My Build, Optimize helpers) via dynamic `import()`
+- initializes shared startup helpers such as the favicon heartbeat
 
-[`src/global.d.ts`](src/global.d.ts) augments `Window` with the remaining bridge surface so strict TypeScript stays compatible with inline HTML handlers.
+[`src/App.tsx`](src/App.tsx) mounts the shell and calls [`src/bridge/installWindowBridge.ts`](src/bridge/installWindowBridge.ts) for the Digicraft boot sequence plus vanilla shell/bootstrap wiring.
 
-When debugging, **trace `window.*` from `installWindowBridge()` (see `src/bridge/installWindowBridge.ts`)** — the bridge is smaller now, but still load-bearing for injected markup and some lazy route helpers.
+Lazy route/runtime modules (for example Compendium, Strings, Leaderboard, Find My Build, Optimize helpers) are still loaded via dynamic `import()` where needed.
+
+[`src/global.d.ts`](src/global.d.ts) is effectively empty now; strict TypeScript no longer relies on a large `Window` augmentation layer.
+
+When debugging startup issues, trace `runVanillaAppInit()` and the boot helpers in [`src/bridge/installWindowBridge.ts`](src/bridge/installWindowBridge.ts). Cross-module UI actions now flow through direct imports, delegated listeners, and callback registries instead of a `window.*` bridge.
 
 ### 2. No root `app.js`
 
-The historical `app.js` monolith is **removed**. All live page logic lives under `src/**/*.ts`.
+The historical `app.js` monolith is **removed**. Live page logic now spans `src/**/*.ts` and `src/**/*.tsx`.
 
 ### 3. Active loadout is source of truth
 

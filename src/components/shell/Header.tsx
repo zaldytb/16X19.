@@ -5,7 +5,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext.js';
 import { getCurrentMode, setCurrentMode } from '../../state/app-state.js';
-import { _syncLegacyModeState } from '../../ui/pages/shell.js';
 import { pathToMode } from '../../routing/modePaths.js';
 import { syncViews } from '../../runtime/coordinator.js';
 import { get16x19FaviconHref } from '../../ui/favicon.js';
@@ -80,7 +79,6 @@ export function Header() {
     (mode: string, path: string) => {
       if (mode !== getCurrentMode()) {
         setCurrentMode(mode as any);
-        _syncLegacyModeState(mode);
       }
       navigate(path);
       syncViews('mode-click', { mode: true, dockEditorContext: true });

@@ -2,12 +2,13 @@ import { useEffect } from 'react';
 import { useActiveLoadout } from '../hooks/useStore.js';
 import { _initLandingSearch } from '../ui/pages/shell.js';
 import { renderDashboard } from '../ui/pages/overview.js';
-import {
-  openFindMyBuild,
-  closeFindMyBuild,
-  fmbBack,
-  fmbNext,
-} from '../ui/pages/find-my-build.js';
+
+async function runFindMyBuildAction(
+  action: 'openFindMyBuild' | 'closeFindMyBuild' | 'fmbBack' | 'fmbNext',
+): Promise<void> {
+  const mod = await import('../ui/pages/find-my-build.js');
+  mod[action]();
+}
 
 export function Overview() {
   const activeLoadout = useActiveLoadout();
@@ -66,7 +67,7 @@ export function Overview() {
             <div className="h-[1px] bg-dc-border flex-1"></div>
           </div>
 
-          <button className="group w-full flex flex-col md:flex-row items-start md:items-center justify-between gap-6 p-8 bg-transparent border border-dc-border hover:border-dc-platinum transition-all cursor-pointer text-left" id="fmb-cta" onClick={() => openFindMyBuild()}>
+          <button className="group w-full flex flex-col md:flex-row items-start md:items-center justify-between gap-6 p-8 bg-transparent border border-dc-border hover:border-dc-platinum transition-all cursor-pointer text-left" id="fmb-cta" onClick={() => { void runFindMyBuildAction('openFindMyBuild'); }}>
             <div className="flex items-start gap-6">
               <div className="mt-1 w-10 h-10 border border-dc-storm group-hover:border-dc-platinum flex items-center justify-center text-dc-storm group-hover:text-dc-void group-hover:bg-dc-platinum transition-colors">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
@@ -87,7 +88,7 @@ export function Overview() {
         <div className="fmb-progress"><div className="fmb-progress-fill" id="fmb-progress-fill" style={{ width: '20%' }}></div></div>
 
         <div className="fmb-header">
-          <button className="fmb-close" id="fmb-close" onClick={() => closeFindMyBuild()} title="Close">&times;</button>
+          <button className="fmb-close" id="fmb-close" onClick={() => { void runFindMyBuildAction('closeFindMyBuild'); }} title="Close">&times;</button>
         </div>
 
         <div className="fmb-step" data-step="1" id="fmb-step-1">
@@ -149,8 +150,8 @@ export function Overview() {
         </div>
 
         <div className="fmb-nav">
-          <button className="fmb-back" id="fmb-back" onClick={() => fmbBack()}>Back</button>
-          <button className="fmb-next" id="fmb-next" onClick={() => fmbNext()}>Next</button>
+          <button className="fmb-back" id="fmb-back" onClick={() => { void runFindMyBuildAction('fmbBack'); }}>Back</button>
+          <button className="fmb-next" id="fmb-next" onClick={() => { void runFindMyBuildAction('fmbNext'); }}>Next</button>
         </div>
       </div>
 

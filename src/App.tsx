@@ -12,7 +12,6 @@ import { ThemeProvider } from './context/ThemeContext.js';
 import { registerRouterNavigate } from './routing/routerNavigate.js';
 import { pathToMode } from './routing/modePaths.js';
 import { getCurrentMode, setCurrentMode } from './state/app-state.js';
-import { _syncLegacyModeState } from './ui/pages/shell.js';
 import { syncViews } from './runtime/coordinator.js';
 import { runVanillaAppInit } from './bridge/installWindowBridge.js';
 import {
@@ -51,7 +50,6 @@ function RouteModeSync() {
     const mode = pathToMode(location.pathname);
     if (mode !== getCurrentMode()) {
       setCurrentMode(mode);
-      _syncLegacyModeState(mode);
     }
     // Update active states on buttons
     document.querySelectorAll('.mode-btn').forEach((button) => {

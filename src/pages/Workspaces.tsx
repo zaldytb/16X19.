@@ -1,10 +1,14 @@
-import { useEffect } from 'react';
+import { lazy } from 'react';
 import { HowItWorks } from './HowItWorks.js';
 import { Overview } from './Overview.js';
-import { Optimize } from './Optimize.js';
 import { Compendium } from './Compendium.js';
 import { Tune } from './Tune.js';
 import { Compare } from './Compare.js';
+
+const OptimizePage = lazy(async () => {
+  const module = await import('./Optimize.js');
+  return { default: module.Optimize };
+});
 
 export function OverviewWorkspace() {
   return <Overview />;
@@ -19,7 +23,7 @@ export function CompareWorkspace() {
 }
 
 export function OptimizeWorkspace() {
-  return <Optimize />;
+  return <OptimizePage />;
 }
 
 export function CompendiumWorkspace() {
@@ -33,10 +37,6 @@ export function StringsWorkspace() {
 
 /** Leaderboard tab inside compendium shell */
 export function LeaderboardWorkspace() {
-  useEffect(() => {
-    // Ensure leaderboard module is loaded
-    void import('../ui/pages/leaderboard.js');
-  }, []);
   return <Compendium initialTab="leaderboard" />;
 }
 

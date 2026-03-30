@@ -33,7 +33,7 @@ import { renderDockContextPanel, renderDockPanel, hydrateDock, registerDockCallb
 import { renderComparisonPresets, registerPresetCallbacks } from '../shared/presets.js';
 import { ssInstances } from '../components/searchable-select.js';
 import { showShareToast, copyToClipboard, exportLoadoutsToFile, importLoadoutsFromJSON, parseSharedBuildFromURL, generateShareURL } from '../../utils/share.js';
-import { toggleAppTheme } from '../theme.js';
+import { toggleAppTheme } from '../theme-toggle.js';
 import { getScoredSetup } from '../../utils/performance.js';
 import { syncViews } from '../../runtime/coordinator.js';
 import { validateRuntimeContracts } from '../../runtime/contracts.js';
@@ -77,7 +77,6 @@ const scrollPositions: Record<string, number> = {
 };
 
 let _initCalled = false;
-let _optimizeInitialized = false;
 let _compendiumInitialized = false;
 let _compareEditorDirty = false;
 let _pendingActiveRefreshFrame: number | null = null;
@@ -89,10 +88,6 @@ async function ensureOptimizeModule() {
 
 async function ensureCompendiumModule() {
   return import('./compendium.js');
-}
-
-export function _syncLegacyModeState(mode: string): void {
-  void mode;
 }
 
 function getCompareSlots(): CompareSlot[] {
@@ -661,7 +656,6 @@ export function switchMode(mode: string): void {
   }
 
   setCurrentMode(mode);
-  _syncLegacyModeState(mode);
   if (mode === 'compare') {
     if (getDockEditorContext().kind !== 'compare-slot') {
       setDockEditorContext({ kind: 'compare-overview' });
@@ -697,7 +691,6 @@ export function switchMode(mode: string): void {
     } else if (mode === 'optimize') {
       void ensureOptimizeModule().then((Optimize) => {
         Optimize.initOptimize();
-        _optimizeInitialized = true;
       });
     } else if (mode === 'compendium') {
       void ensureCompendiumModule().then((Compendium) => {
@@ -759,7 +752,6 @@ export function runCompareModeActivation(): void {
 export function runOptimizeRouteActivation(): void {
   void ensureOptimizeModule().then((Optimize) => {
     Optimize.initOptimize();
-    _optimizeInitialized = true;
   });
 }
 
@@ -767,8 +759,8 @@ export type CompendiumWorkspaceTab = 'rackets' | 'strings' | 'leaderboard';
 
 /**
  * Initialize compendium (first visit) or sync active frame; then switch the visible tab.
- * Tab switching uses the loaded module directly so it is not lost to the async window bridge
- * or missed on repeat visits (previously only the first init path showed Rackets reliably).
+ * Tab switching uses the loaded module directly so it is not lost to the async
+ * activation path or missed on repeat visits.
  */
 export function runCompendiumRouteActivation(options?: { tab?: CompendiumWorkspaceTab }): void {
   const tab = options?.tab ?? 'rackets';
@@ -1110,7 +1102,6 @@ export function init(): void {
   _initCalled = true;
 
   setSlotColors(SLOT_COLORS);
-  _syncLegacyModeState(getCurrentMode());
   validateRuntimeContracts({
     requiredDomIds: [
       'build-dock',
@@ -1165,7 +1156,7 @@ export function init(): void {
   $('#btn-full')?.addEventListener('click', () => _handleHybridToggle(false));
   $('#btn-hybrid')?.addEventListener('click', () => _handleHybridToggle(true));
 
-  // Register dock callbacks to replace bridge-driven window.* calls
+  // Register cross-module callbacks once so dock and compare flows stay decoupled.
   registerDockCallbacks({
     switchMode,
     switchToLoadout,

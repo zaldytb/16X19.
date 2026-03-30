@@ -1364,21 +1364,4 @@ function _lbv2Compare(racquetId: string, stringId: string, tension: number, type
 
   switchMode('compare');
 }
-
-
-// ES Module exports
-export {
-  initLeaderboard,
-  _lbv2State,
-  _lbv2SetStat,
-  _lbv2SetFilter,
-  _lbv2SetView,
-  _lbv2SetFrameFilter,
-  _lbv2ClearFrameFilters,
-  _lbv2SetStringFilter,
-  _lbv2ClearStringFilters,
-  _lbv2View,
-  _lbv2ViewFrame,
-  _lbv2ViewString,
-  _lbv2Compare,
-};
+export { initLeaderboard };

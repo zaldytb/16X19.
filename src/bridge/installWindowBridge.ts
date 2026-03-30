@@ -1,5 +1,5 @@
-// Tennis Loadout Lab - Vite Entry Point
-// =====================================
+// Tennis Loadout Lab - boot sequence and vanilla shell init helpers
+// ================================================================
 
 import * as Shell from '../ui/pages/shell.js';
 import * as Theme from '../ui/theme.js';

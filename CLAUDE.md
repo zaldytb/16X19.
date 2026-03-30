@@ -39,11 +39,11 @@ npm run calibrate       # Re-fit string estimation coefficients
 
 ## Architecture
 
-### Module bridge pattern
+### Startup and module wiring
 
-TypeScript owns all live UI and engine code under `src/`. [`src/main.tsx`](src/main.tsx) is the Vite entry — it mounts the React app and [`src/bridge/installWindowBridge.ts`](src/bridge/installWindowBridge.ts) assigns modules to `window.*` so inline `onclick="funcName()"` handlers in injected HTML work. There is no root `app.js` monolith.
+TypeScript owns all live UI and engine code under `src/`. [`src/main.tsx`](src/main.tsx) is the Vite entry — it mounts the React app and initializes startup helpers such as the favicon heartbeat. [`src/App.tsx`](src/App.tsx) mounts the shell and calls [`src/bridge/installWindowBridge.ts`](src/bridge/installWindowBridge.ts) for the Digicraft boot sequence plus vanilla shell/bootstrap wiring. There is no root `app.js` monolith.
 
-When exposing new functions to HTML handlers: export from the TypeScript module → import in `src/bridge/installWindowBridge.ts` → assign to `window` (and extend `src/global.d.ts` if needed for strict typing).
+Cross-module behavior now prefers direct imports, delegated listeners, or explicit callback registries. Do not add new `window.*` globals as part of normal feature work.
 
 ### 4-Layer Prediction Engine (`src/engine/`)
 
@@ -91,7 +91,7 @@ Route modules include `shell.ts`, `overview.ts`, `tune.ts`, `compare/`, `optimiz
 - **Swingweight spelling** — field name in JSON data is `swingweight` (lowercase 'w'), not `swingWeight`.
 - **TypeScript strict mode** — `src/` (engine, state, UI) must pass `npm run typecheck` with zero errors.
 - **Canary tests have zero drift tolerance** — any OBS score change (even 0.1) will fail. If you intentionally change engine math, run `npm run canary:baseline` to re-record.
-- **Tailwind is loaded via CDN** — config is inline in `index.html`, not a `tailwind.config.*` file.
+- **Tailwind setup is mixed on purpose** — the app uses `@tailwindcss/vite`, and `index.html` still carries inline Tailwind config/runtime tokens. Treat both as load-bearing unless you are doing a dedicated styling audit.
 
 ---
 

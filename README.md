@@ -24,11 +24,11 @@ Mirror: `https://loadout-lab.vercel.app`
 
 - **Vite 8** — dev server and production bundle
 - **TypeScript 6** — strict mode for `src/` (engine, state, UI)
-- **Tailwind CSS 4** — build-time via `@tailwindcss/vite`; design tokens and component styles live in `style.css`
+- **Tailwind CSS 4** — `@tailwindcss/vite` for the app build, with inline runtime config/tokens still declared in `index.html`; design tokens and component styles live in `style.css`
 - **Chart.js** — npm dependency used by overview, compare, and tune charts
 - **Node.js 20+** — data pipeline and tooling (`tsx` for TypeScript scripts)
 
-There is **no** root `app.js` monolith. The Vite entry is [`src/main.tsx`](src/main.tsx) (React + React Router). [`src/bridge/installWindowBridge.ts`](src/bridge/installWindowBridge.ts) now provides a **minimal** `window.*` bridge only for remaining inline handlers in injected markup.
+There is **no** root `app.js` monolith. The Vite entry is [`src/main.tsx`](src/main.tsx) (React + React Router). [`src/App.tsx`](src/App.tsx) mounts the shell and calls [`src/bridge/installWindowBridge.ts`](src/bridge/installWindowBridge.ts) for boot animation and vanilla shell/bootstrap wiring. Cross-module UI behavior now uses direct imports, delegated listeners, and callback registries rather than a `window.*` bridge.
 
 ## Quick start
 
@@ -47,7 +47,7 @@ npm run build
 | Engine | `src/engine/` | Deterministic prediction (L0–L3 + composite) |
 | State | `src/state/` | Loadouts, setup sync, app/compare UI state |
 | UI | `src/ui/` | Pages, dock, shared renderers |
-| Bridge | `src/bridge/installWindowBridge.ts` | Minimal `window.*` surface for remaining inline handlers |
+| Bootstrap | `src/bridge/installWindowBridge.ts` | Boot animation helpers and vanilla shell/bootstrap wiring |
 | Data | `pipeline/data/*.json` → `npm run export` → `src/data/generated.ts` + `data.ts` | Source of truth plus generated TypeScript data modules |
 
 See [AGENTS.md](AGENTS.md) for agent-oriented detail and debugging notes.
@@ -62,8 +62,9 @@ See [AGENTS.md](AGENTS.md) for agent-oriented detail and debugging notes.
 ├── data.ts                 # generated compatibility module — do not edit
 ├── src/
 │   ├── main.tsx            # Vite entry (React root)
-│   ├── bridge/             # minimal `window.*` bridge for remaining inline handlers
-│   ├── global.d.ts         # Window typings for the bridge
+│   ├── App.tsx             # React shell, routing, and startup wiring
+│   ├── bridge/             # boot sequence + vanilla shell/bootstrap helpers
+│   ├── global.d.ts         # reserved for shared global typing (currently minimal)
 │   ├── vite-env.d.ts
 │   ├── engine/
 │   ├── state/

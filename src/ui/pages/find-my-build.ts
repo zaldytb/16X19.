@@ -37,9 +37,6 @@ let _fmbLastProfile: {
   notes: string[];
 } | null = null;
 
-// External globals
-declare const _optimizeInitialized: boolean;
-
 /**
  * Open the Find My Build wizard
  */
@@ -335,10 +332,7 @@ export function _fmbSearchDirection(direction: 'closest' | 'safer' | 'ceiling'):
   const profile = _fmbGenerateProfile(_fmbAnswers);
   _fmbLastProfile = profile;
 
-  if (!(window as unknown as { _optimizeInitialized?: boolean })._optimizeInitialized) {
-    import('./optimize.js').then(({ initOptimize }) => initOptimize());
-    (window as unknown as { _optimizeInitialized: boolean })._optimizeInitialized = true;
-  }
+  void import('./optimize.js').then(({ initOptimize }) => initOptimize());
 
   const mins: Record<string, number> = { spin: 0, control: 0, power: 0, comfort: 0, feel: 0, durability: 0, playability: 0, stability: 0, maneuverability: 0 };
   let sortBy = profile.sortBy;

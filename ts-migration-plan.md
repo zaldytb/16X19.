@@ -2,7 +2,7 @@
 
 ## Summary
 
-The browser app is **TypeScript-first** with **Vite** as the bundler. The legacy root **`app.js` monolith has been removed**. Runtime behavior is implemented in `src/**/*.ts` and exposed to `index.html` through **[`src/main.ts`](src/main.ts)** (`window.*` bridge). Declarations for that bridge live in **[`src/global.d.ts`](src/global.d.ts)**.
+The browser app is **TypeScript-first** with **Vite** as the bundler. The legacy root **`app.js` monolith has been removed**. Runtime behavior is implemented in `src/**/*.ts` and exposed to `index.html` through **[`src/main.tsx`](src/main.tsx)** (`window.*` bridge). Declarations for that bridge live in **[`src/global.d.ts`](src/global.d.ts)**.
 
 Pipeline tooling under **`pipeline/scripts/`** is **`.ts`** and is executed with **`tsx`** (see root `package.json` scripts).
 
@@ -13,7 +13,7 @@ Pipeline tooling under **`pipeline/scripts/`** is **`.ts`** and is executed with
 | Engine | `src/engine/` |
 | State | `src/state/` |
 | UI | `src/ui/` |
-| Vite + bridge entry | `src/main.ts` |
+| Vite + bridge entry | `src/main.tsx` |
 | Types for `window` | `src/global.d.ts` |
 | Vite config | `vite.config.ts` |
 | Data source | `pipeline/data/*.json` |
@@ -22,7 +22,7 @@ Pipeline tooling under **`pipeline/scripts/`** is **`.ts`** and is executed with
 
 ## Ownership rules (for agents)
 
-1. **`src/main.ts`** is the single source of which global names map to which implementations.
+1. **`src/main.tsx`** is the single source of which global names map to which implementations.
 2. Prefer fixing behavior in the **TypeScript module**, not by adding parallel globals.
 3. **Do not** switch the SPA from Tailwind **CDN** to a Vite Tailwind plugin without a dedicated parity audit — dynamic class strings in TS must stay unchanged.
 4. **`src/data/generated.ts`** and **`data.js`** are generated only — edit JSON and run `npm run pipeline` / `npm run export`.
@@ -44,5 +44,5 @@ npm run typecheck && npm run canary && npm run build
 
 - Page runtimes live under `src/**/*.ts`.
 - Leaderboard is TypeScript (`leaderboard.ts`).
-- Bridge entry is `src/main.ts` (not `main.js`).
+- Bridge entry is `src/main.tsx` (not `main.js`).
 - Automated gate passes: typecheck, canary, build.

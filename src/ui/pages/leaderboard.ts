@@ -131,7 +131,8 @@ function initLeaderboard(): void {
   _lbv2State.initialized = true;
   const panel = document.getElementById('comp-tab-leaderboard');
   if (!panel) return;
-  if (!_lbv2ShellMounted) {
+  const shellMounted = !!panel.querySelector('#lb2-results');
+  if (!_lbv2ShellMounted || !shellMounted) {
     panel.innerHTML = _buildShellHTML();
     _lbv2ShellMounted = true;
   }

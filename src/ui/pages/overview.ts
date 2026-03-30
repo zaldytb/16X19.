@@ -21,8 +21,7 @@ import { _prevObsValues, animateOBS } from '../components/obs-animation.js';
 import { renderMobileLoadoutPills } from '../components/dock-renderers.js';
 import { getScoredSetup, measurePerformance } from '../../utils/performance.js';
 
-// Globals from app.js
-declare const currentRadarChart: Chart | null;
+// Bridge globals (via window)
 declare function $(sel: string): HTMLElement | null;
 
 // External dependencies (via window)
@@ -401,9 +400,11 @@ export function radarTooltipHandler(context: {
 
 // Chart.js type declaration
 type Chart = {
+  canvas?: HTMLCanvasElement;
   data: { datasets: Array<{ data: number[]; borderColor: string; backgroundColor: string; pointBackgroundColor: string; pointBorderColor: string }>; labels: string[] };
   options: { scales: { r: { grid: { color: string }; angleLines: { color: string }; pointLabels: { color: string } } } };
   update: (mode: string) => void;
+  destroy?: () => void;
 };
 
 declare const Chart: new (
@@ -425,8 +426,16 @@ export function renderRadarChart(stats: SetupAttributes): void {
   const chartApi = Chart as unknown as {
     getChart?: (key: HTMLCanvasElement) => Chart | undefined;
   };
+  const staleChart = _currentRadarChart?.canvas && _currentRadarChart.canvas !== canvas
+    ? _currentRadarChart
+    : null;
+  if (staleChart) {
+    staleChart.destroy?.();
+    _currentRadarChart = null;
+  }
+
   const existingChart = _currentRadarChart || chartApi.getChart?.(canvas) || null;
-  if (!_currentRadarChart && existingChart) {
+  if (existingChart && !_currentRadarChart) {
     _currentRadarChart = existingChart;
   }
 

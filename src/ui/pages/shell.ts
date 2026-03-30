@@ -812,7 +812,8 @@ export type CompendiumWorkspaceTab = 'rackets' | 'strings' | 'leaderboard';
 export function runCompendiumRouteActivation(options?: { tab?: CompendiumWorkspaceTab }): void {
   const tab = options?.tab ?? 'rackets';
   void ensureCompendiumModule().then((Compendium) => {
-    if (!_compendiumInitialized) {
+    const compendiumDomMounted = !!document.getElementById('comp-main');
+    if (!_compendiumInitialized || !compendiumDomMounted) {
       if (win.initCompendium && win.initCompendium !== Compendium.initCompendium) {
         win.initCompendium();
       } else {
@@ -831,9 +832,9 @@ export function runCompendiumRouteActivation(options?: { tab?: CompendiumWorkspa
 /** Attach tune tension slider handler (call when #tune-slider enters DOM, e.g. React route mount). */
 export function wireTuneSlider(): void {
   const tuneSlider = $('#tune-slider') as HTMLInputElement | null;
-  if (tuneSlider) {
-    tuneSlider.oninput = onTuneSliderInputCompat;
-  }
+  if (!tuneSlider || tuneSlider.dataset.bound === 'true') return;
+  tuneSlider.addEventListener('input', onTuneSliderInputCompat);
+  tuneSlider.dataset.bound = 'true';
 }
 
 export function openTuneForSlot(slotIndex: number): void {
@@ -1005,7 +1006,8 @@ export function _handleHybridToggle(toHybrid: boolean): void {
 
 function selectLandingFrame(racquetId: string): void {
   void ensureCompendiumModule().then((Compendium) => {
-    if (!_compendiumInitialized) {
+    const compendiumDomMounted = !!document.getElementById('comp-main');
+    if (!_compendiumInitialized || !compendiumDomMounted) {
       Compendium.initCompendium();
       _compendiumInitialized = true;
     }

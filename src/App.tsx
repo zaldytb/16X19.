@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useLayoutEffect } from 'react';
+import { Suspense, useLayoutEffect } from 'react';
 import {
   BrowserRouter,
   Navigate,
@@ -9,23 +9,19 @@ import {
   useNavigate,
 } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext.js';
-import { RawHtml } from './components/RawHtml.js';
 import { registerRouterNavigate } from './routing/routerNavigate.js';
 import { pathToMode } from './routing/modePaths.js';
 import { getCurrentMode, setCurrentMode } from './state/app-state.js';
 import { _syncLegacyModeState } from './ui/pages/shell.js';
 import { syncViews } from './runtime/coordinator.js';
+import { runVanillaAppInit } from './bridge/installWindowBridge.js';
 import {
-  clearDigicraftBootSequence,
-  runDigicraftBootSequence,
-  runVanillaAppInit,
-} from './bridge/installWindowBridge.js';
-
-import shellChromeBeforeWorkspaceHtml from './assets/shell-chrome-before-workspace.html?raw';
-import shellChromeAfterWorkspaceHtml from './assets/shell-chrome-after-workspace.html?raw';
-import mobileTabBarHtml from './assets/mobile-tab-bar.html?raw';
-import footerHtml from './assets/footer.html?raw';
-import bootLoaderHtml from './assets/boot-loader.html?raw';
+  BootLoader,
+  Header,
+  BuildDock,
+  MobileTabBar,
+  Footer,
+} from './components/shell/index.js';
 
 import {
   OverviewWorkspace,
@@ -41,7 +37,7 @@ import {
 
 function RouterRegistration() {
   const navigate = useNavigate();
-  useEffect(() => {
+  useLayoutEffect(() => {
     registerRouterNavigate(navigate);
     return () => registerRouterNavigate(null);
   }, [navigate]);
@@ -51,12 +47,13 @@ function RouterRegistration() {
 /** Keep legacy app-state mode in sync when using browser navigation. */
 function RouteModeSync() {
   const location = useLocation();
-  useEffect(() => {
+  useLayoutEffect(() => {
     const mode = pathToMode(location.pathname);
     if (mode !== getCurrentMode()) {
       setCurrentMode(mode);
       _syncLegacyModeState(mode);
     }
+    // Update active states on buttons
     document.querySelectorAll('.mode-btn').forEach((button) => {
       button.classList.toggle('active', (button as HTMLElement).dataset.mode === mode);
     });
@@ -69,39 +66,23 @@ function RouteModeSync() {
 }
 
 function ShellLayout() {
-  // Boot markup comes from RawHtml; run after commit so nodes exist. In React 18
-  // Strict Mode the tree remounts once in dev — init only in main.tsx would
-  // animate detached DOM and leave the visible loader stuck at 0%.
-  useLayoutEffect(() => {
-    runDigicraftBootSequence();
-    return () => clearDigicraftBootSequence();
-  }, []);
-
   useLayoutEffect(() => {
     runVanillaAppInit();
   }, []);
 
-  useEffect(() => {
-    const maxMs = 8000;
-    const t = window.setTimeout(() => {
-      document.getElementById('dc-boot-loader')?.remove();
-    }, maxMs);
-    return () => window.clearTimeout(t);
-  }, []);
-
   return (
     <>
-      <RawHtml html={bootLoaderHtml} />
+      <BootLoader />
       <main className="app-shell">
-        <RawHtml html={shellChromeBeforeWorkspaceHtml} />
+        <Header />
+        <BuildDock />
         <div className="workspace" id="workspace">
           <Suspense fallback={<div className="p-8 text-dc-storm font-mono text-xs">Loading…</div>}>
             <Outlet />
           </Suspense>
         </div>
-        <RawHtml html={shellChromeAfterWorkspaceHtml} />
+        <MobileTabBar />
       </main>
-      <RawHtml html={mobileTabBarHtml} />
     </>
   );
 }
@@ -132,7 +113,7 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
-        <RawHtml html={footerHtml} />
+        <Footer />
       </BrowserRouter>
     </ThemeProvider>
   );

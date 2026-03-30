@@ -18,3 +18,4 @@ tools/frame-gui/build/
 *.backup
 
 .vercel
+.firecrawl/

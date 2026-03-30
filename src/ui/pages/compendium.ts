@@ -44,7 +44,6 @@ type BuildWithArchetype = Build & { archetype?: string };
 let _compSelectedRacquetId: string | null = null;
 let _compSortKey: SortKey = 'score';
 let _compCurrentBuilds: BuildWithArchetype[] = [];
-let _compendiumInitWired = false;
 const _compendiumBuildCache: Record<string, BuildWithArchetype[]> = {};
 let _compPreviewFrame: number | null = null;
 let _compRosterTimer: number | null = null;
@@ -103,8 +102,17 @@ export function _compSwitchTab(tab: string): void {
     getWindowFn('_stringSyncWithActiveLoadout')?.();
   }
 
-  if (tab === 'leaderboard' && typeof (window as any)._lbv2State !== 'undefined' && !(window as any)._lbv2State.initialized) {
-    window.setTimeout(() => getWindowFn('initLeaderboard')?.(), 50);
+  if (tab === 'leaderboard') {
+    const leaderboardPanel = document.getElementById('comp-tab-leaderboard');
+    const leaderboardShellMounted = !!leaderboardPanel?.querySelector('#lb2-results');
+    const leaderboardState = (window as any)._lbv2State;
+    const shouldInitLeaderboard =
+      typeof leaderboardState !== 'undefined' &&
+      (!leaderboardState.initialized || !leaderboardShellMounted);
+
+    if (shouldInitLeaderboard) {
+      window.setTimeout(() => getWindowFn('initLeaderboard')?.(), 50);
+    }
   }
 }
 
@@ -147,6 +155,17 @@ function _compGenerateBuildReason(build: BuildWithArchetype, frameStats: SetupSt
   return generateBuildReason(build, frameStats);
 }
 
+function _bindCompendiumControl(
+  elementId: string,
+  eventName: 'input' | 'change',
+  handler: EventListener
+): void {
+  const element = document.getElementById(elementId) as HTMLElement | null;
+  if (!element || element.dataset.compBound === 'true') return;
+  element.addEventListener(eventName, handler);
+  element.dataset.compBound = 'true';
+}
+
 export function initCompendium(): void {
   const brandSel = document.getElementById('comp-filter-brand') as HTMLSelectElement | null;
   if (!brandSel) return;
@@ -162,15 +181,12 @@ export function initCompendium(): void {
     brandSel.dataset.populated = 'true';
   }
 
-  if (!_compendiumInitWired) {
-    document.getElementById('comp-search')?.addEventListener('input', _compScheduleRosterRender);
-    document.getElementById('comp-filter-brand')?.addEventListener('change', _compRenderRoster);
-    document.getElementById('comp-filter-pattern')?.addEventListener('change', _compRenderRoster);
-    document.getElementById('comp-filter-stiffness')?.addEventListener('change', _compRenderRoster);
-    document.getElementById('comp-filter-headsize')?.addEventListener('change', _compRenderRoster);
-    document.getElementById('comp-filter-weight')?.addEventListener('change', _compRenderRoster);
-    _compendiumInitWired = true;
-  }
+  _bindCompendiumControl('comp-search', 'input', _compScheduleRosterRender);
+  _bindCompendiumControl('comp-filter-brand', 'change', _compRenderRoster);
+  _bindCompendiumControl('comp-filter-pattern', 'change', _compRenderRoster);
+  _bindCompendiumControl('comp-filter-stiffness', 'change', _compRenderRoster);
+  _bindCompendiumControl('comp-filter-headsize', 'change', _compRenderRoster);
+  _bindCompendiumControl('comp-filter-weight', 'change', _compRenderRoster);
 
   _compRenderRoster();
 

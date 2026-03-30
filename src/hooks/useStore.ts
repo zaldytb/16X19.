@@ -1,30 +1,32 @@
-import { useSyncExternalStore } from 'react';
-import { getActiveLoadout, getSavedLoadouts, subscribe } from '../state/store.js';
+import { useAppStore } from '../state/useAppStore.js';
 import { getCurrentSetup } from '../state/setup-sync.js';
 
 export type CurrentSetup = NonNullable<ReturnType<typeof getCurrentSetup>>;
 
 export function useActiveLoadout() {
-  return useSyncExternalStore(
-    (cb) => subscribe('activeLoadout', cb),
-    getActiveLoadout,
-    getActiveLoadout,
-  );
+  return useAppStore((state) => state.activeLoadout);
 }
 
 export function useSavedLoadouts() {
-  return useSyncExternalStore(
-    (cb) => subscribe('savedLoadouts', cb),
-    getSavedLoadouts,
-    getSavedLoadouts,
-  );
+  return useAppStore((state) => state.savedLoadouts);
 }
 
 /** Canonical racquet/string setup from active loadout (null if none). */
 export function useCurrentSetup(): CurrentSetup | null {
-  return useSyncExternalStore(
-    (cb) => subscribe('activeLoadout', cb),
-    () => getCurrentSetup(),
-    () => getCurrentSetup(),
-  );
+  const activeLoadout = useAppStore((state) => state.activeLoadout);
+  if (!activeLoadout) return null;
+  return getCurrentSetup();
+}
+
+// Additional selectors for app state
+export function useCurrentMode() {
+  return useAppStore((state) => state.currentMode);
+}
+
+export function useComparisonSlots() {
+  return useAppStore((state) => state.comparisonSlots);
+}
+
+export function useDockEditorContext() {
+  return useAppStore((state) => state.dockEditorContext);
 }

@@ -1,7 +1,10 @@
 // src/state/index.ts
 // State management public API
 
-// Store functions (primary API)
+// Zustand store (primary for React)
+export { useAppStore, type AppMode, type DockEditorContext } from './useAppStore.js';
+
+// Store functions (backward compatibility)
 export {
   getActiveLoadout,
   getSavedLoadouts,
@@ -33,7 +36,7 @@ export {
   syncStringCompendiumWithActiveLoadout
 } from './setup-sync.js';
 
-// Shared app runtime state
+// Shared app runtime state (backward compatibility)
 export {
   getCurrentMode,
   setCurrentMode,

@@ -1117,6 +1117,7 @@ export function onTuneSliderInput(e: Event): void {
   const val = parseInt((e.target as HTMLInputElement).value);
   tuneState.exploredTension = val;
   updateSliderLabel();
+  _updateTuneApplyButton();
 
   const valueEl = document.getElementById('slider-current-value');
   if (valueEl) {
@@ -1212,15 +1213,18 @@ export function _updateTuneApplyButton(): void {
     btn.classList.add('hidden');
     return;
   }
+  const tensionChanged = tuneState.exploredTension !== tuneState.baselineTension;
   const delta = tuneState.explored.obs - tuneState.baseline.obs;
-  if (Math.abs(delta) <= 0.05) {
+  if (!tensionChanged) {
     btn.classList.add('hidden');
     btn.textContent = 'Apply changes';
     return;
   }
   const sign = delta > 0 ? '+' : '';
   btn.classList.remove('hidden');
-  btn.textContent = `Apply changes (${sign}${delta.toFixed(1)} OBS)`;
+  btn.textContent = Math.abs(delta) <= 0.05
+    ? 'Apply explored tension'
+    : `Apply changes (${sign}${delta.toFixed(1)} OBS)`;
 }
 
 export function renderOverallBuildScore(

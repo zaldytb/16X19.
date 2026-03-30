@@ -1,0 +1,358 @@
+// src/pages/HowItWorks.tsx
+// How It Works page - converted from static HTML to React component
+
+export function HowItWorks() {
+  return (
+    <section id="mode-howitworks" className="workspace-mode">
+      <div className="hiw-page">
+        <div className="hiw-header">
+          <h2 className="hiw-compact-title">How it works</h2>
+        </div>
+
+        {/* SECTION 1: POSITIONING */}
+        <div className="hiw-section">
+          <div className="hiw-section-num">01</div>
+          <h2 className="hiw-section-title">What This Actually Is</h2>
+          <div className="hiw-section-body">
+            <p>
+              The Loadout Lab is a <strong>parametric prediction engine</strong> for tennis equipment behavior. It doesn't hit balls. It doesn't measure your swing. It takes the published physical properties of frames and strings — stiffness indices, beam widths, density coefficients, string gauge, composition — and runs them through a multi-layer scoring pipeline to estimate how a given setup would <em>feel and perform</em> under tension.
+            </p>
+            <p>
+              Think of it as an extremely opinionated spreadsheet that went to design school. The math is real. The coefficients are tuned against known equipment behavior. But every model is a simplification, and this one is transparent about where it simplifies.
+            </p>
+            <div className="hiw-callout">
+              <div className="hiw-callout-icon">◆</div>
+              <p>This is not a racquet recommendation engine. It's a build-exploration tool — designed for players who already know what they like and want to understand <em>why</em> certain combinations produce certain feels.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 2: THE MODELING CHAIN */}
+        <div className="hiw-section">
+          <div className="hiw-section-num">02</div>
+          <h2 className="hiw-section-title">The Four-Layer Pipeline</h2>
+          <div className="hiw-section-body">
+            <p>
+              Every build score flows through four distinct layers. Each layer transforms raw properties into progressively higher-level predictions. Nothing is skipped; nothing is averaged away.
+            </p>
+
+            <div className="hiw-pipeline">
+              <div className="hiw-pipeline-layer">
+                <div className="hiw-pipeline-badge">L0</div>
+                <div className="hiw-pipeline-content">
+                  <h3>Frame Physics</h3>
+                  <p>Raw frame specs — head size, beam width, weight, balance, stiffness (RA), swingweight — normalized and transformed into 9 base capability scores. This is pure physics: how much energy the frame stores, how stable it is at contact, how much it flexes on impact. Technology bonuses (aero, comfortTech, spinTech) are applied here. No string interaction yet.</p>
+                </div>
+              </div>
+              <div className="hiw-pipeline-connector">
+                <svg width="2" height="32" viewBox="0 0 2 32"><line x1="1" y1="0" x2="1" y2="32" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.3"/></svg>
+              </div>
+              <div className="hiw-pipeline-layer">
+                <div className="hiw-pipeline-badge">L1</div>
+                <div className="hiw-pipeline-content">
+                  <h3>String Profile</h3>
+                  <p>Material composition and physical properties — stiffness, tension loss, spin potential, gauge. Each string type (poly, gut, multi, synthetic) has a base character profile plus a modifier layer that captures the specific product's deviation from its category baseline. A Luxilon ALU Power doesn't score like a generic co-poly. Frame coupling modifiers apply here.</p>
+                </div>
+              </div>
+              <div className="hiw-pipeline-connector">
+                <svg width="2" height="32" viewBox="0 0 2 32"><line x1="1" y1="0" x2="1" y2="32" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.3"/></svg>
+              </div>
+              <div className="hiw-pipeline-layer">
+                <div className="hiw-pipeline-badge">L2</div>
+                <div className="hiw-pipeline-content">
+                  <h3>Tension Modifier</h3>
+                  <p>Pattern-aware tension effects enter here. This layer models how each stat responds to tension changes — not linearly, but through response curves tuned per-string-category. Lower tension doesn't just "add power" uniformly; it changes the energy transfer profile, dwell time, and snapback window. Open patterns (≤18 crosses) reward mains-tighter differentials; dense patterns (≥20 crosses) prefer near-equal tension.</p>
+                </div>
+              </div>
+              <div className="hiw-pipeline-connector">
+                <svg width="2" height="32" viewBox="0 0 2 32"><line x1="1" y1="0" x2="1" y2="32" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.3"/></svg>
+              </div>
+              <div className="hiw-pipeline-layer">
+                <div className="hiw-pipeline-badge">L3</div>
+                <div className="hiw-pipeline-content">
+                  <h3>Hybrid Interaction</h3>
+                  <p>For hybrid setups: mains and crosses are scored independently with their own string profiles, then blended with pairing-specific bonuses/penalties (gut×poly, multi×poly, etc.). The blending isn't 50/50 — it's physics-informed, favoring mains for spin/power and crosses for control/feel. Full-bed setups skip this layer.</p>
+                </div>
+              </div>
+              <div className="hiw-pipeline-connector">
+                <svg width="2" height="32" viewBox="0 0 2 32"><line x1="1" y1="0" x2="1" y2="32" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.3"/></svg>
+              </div>
+              <div className="hiw-pipeline-layer">
+                <div className="hiw-pipeline-badge">OBS</div>
+                <div className="hiw-pipeline-content">
+                  <h3>Composite Scoring</h3>
+                  <p>All 11 stats collapse into the <strong>Overall Build Score</strong> — a weighted composite representing the build's total predicted performance envelope. The weights aren't equal: power and spin carry more than durability, because that's how equipment performance maps to on-court impact. The OBS feeds the 10-tier rank ladder from "Delete This" to "Max Aura."</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="hiw-callout">
+              <div className="hiw-callout-icon">⚡</div>
+              <p>Hybrid stringing activates <strong>Layer 3</strong> — mains and crosses are scored independently with their own string profiles, then blended with pairing-specific bonuses (gut×poly, multi×poly, etc.). The blending isn't 50/50 — mains dominate spin/power, crosses dominate control/feel. It's physics-informed.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 3: THE ELEVEN STATS */}
+        <div className="hiw-section">
+          <div className="hiw-section-num">03</div>
+          <h2 className="hiw-section-title">What the Numbers Mean</h2>
+          <div className="hiw-section-body">
+            <p>
+              Eleven stats. Each scored 0–100. Each derived from actual physical properties, not vibes. Here's what each one tracks and where its inputs come from.
+            </p>
+
+            <div className="hiw-stats-grid">
+              <div className="hiw-stat-card">
+                <div className="hiw-stat-name">Power</div>
+                <div className="hiw-stat-desc">Energy return at contact. Driven by frame stiffness, beam width, head size, and string power coefficient. Higher tension compresses this; lower tension unlocks it. The stat everyone chases.</div>
+              </div>
+              <div className="hiw-stat-card">
+                <div className="hiw-stat-name">Spin</div>
+                <div className="hiw-stat-desc">Snapback potential and string-ball bite. String texture, gauge, and pattern density are the primary drivers. Frame head size contributes via the angular velocity window. Poly dominates here for a reason.</div>
+              </div>
+              <div className="hiw-stat-card">
+                <div className="hiw-stat-name">Control</div>
+                <div className="hiw-stat-desc">Precision and predictability on directional shots. Inversely related to power at the frame level — stiffer, smaller-headed frames score higher. String tension stability and frame torsional rigidity feed this. The surgeon's stat.</div>
+              </div>
+              <div className="hiw-stat-card">
+                <div className="hiw-stat-name">Comfort</div>
+                <div className="hiw-stat-desc">Shock absorption and arm-friendliness. String softness, frame flex, and weight distribution. Distinct from feel — you can have high comfort with low feel (soft multi in a flexy frame) or high feel with low comfort (stiff poly in a stiff stick).</div>
+              </div>
+              <div className="hiw-stat-card">
+                <div className="hiw-stat-name">Feel</div>
+                <div className="hiw-stat-desc">Tactile feedback quality and information transfer to the hand. Frame flex index, string elasticity, and dampening characteristics. Natural gut maxes this out. Dead poly minimizes it. Not the same as comfort.</div>
+              </div>
+              <div className="hiw-stat-card">
+                <div className="hiw-stat-name">Stability</div>
+                <div className="hiw-stat-desc">Twisting resistance on off-center hits. Swingweight, frame mass, and beam profile. Heavier, wider-beamed frames dominate. This is about physics — mass resists rotation.</div>
+              </div>
+              <div className="hiw-stat-card">
+                <div className="hiw-stat-name">Forgiveness</div>
+                <div className="hiw-stat-desc">How well the setup compensates for off-center hits. Combines stability (resistance to twist) with head size (larger sweetspot). The "help me" stat — higher values mean less punishment on imperfect contact.</div>
+              </div>
+              <div className="hiw-stat-card">
+                <div className="hiw-stat-name">Launch</div>
+                <div className="hiw-stat-desc">Trajectory height and ball flight. Driven by string stiffness, tension, and pattern density. Softer strings and lower tensions produce higher launch angles. Critical for modern topspin games.</div>
+              </div>
+              <div className="hiw-stat-card">
+                <div className="hiw-stat-name">Maneuverability</div>
+                <div className="hiw-stat-desc">How quickly you can whip the frame through the air. Inverse of swingweight — lighter, head-light frames dominate. The reactive stat: net play, returns, and defense all depend on it.</div>
+              </div>
+              <div className="hiw-stat-card">
+                <div className="hiw-stat-name">Durability</div>
+                <div className="hiw-stat-desc">String longevity and notching resistance. Co-poly scores well on raw survival, gut scores poorly. How long before you need to restring — distinct from playability (how long it plays well).</div>
+              </div>
+              <div className="hiw-stat-card">
+                <div className="hiw-stat-name">Playability Duration</div>
+                <div className="hiw-stat-desc">How long the string maintains its performance character over hitting sessions. Not the same as durability — a string can survive forever but play dead after 5 hours. The delta between fresh-strung magic and post-session mediocrity.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 4: COMPOSITE SCORE & OBS */}
+        <div className="hiw-section">
+          <div className="hiw-section-num">04</div>
+          <h2 className="hiw-section-title">The Overall Build Score</h2>
+          <div className="hiw-section-body">
+            <p>
+              The OBS is a <strong>weighted composite</strong> of all 11 stats, collapsed into a single number on a 0–100 scale. It's not a simple average — the weights reflect how much each stat contributes to real on-court performance impact.
+            </p>
+            <p>
+              Power and spin carry more weight than durability. Control carries more than stability. Feel carries more than playability duration. These weights aren't arbitrary — they're calibrated against known equipment behavior and community consensus.
+            </p>
+            <div className="hiw-rank-preview">
+              <h3>The Rank Ladder</h3>
+              <p>The OBS maps to a ten-tier rank ladder. Yes, the names are intentionally brainrot. No, we're not changing them.</p>
+              <div className="hiw-rank-tiers">
+                <div className="hiw-rank-tier"><span className="hiw-rank-score">0–10</span><span className="hiw-rank-label">Delete This</span></div>
+                <div className="hiw-rank-tier"><span className="hiw-rank-score">10–20</span><span className="hiw-rank-label">Hospital Build</span></div>
+                <div className="hiw-rank-tier"><span className="hiw-rank-score">20–30</span><span className="hiw-rank-label">Bruh</span></div>
+                <div className="hiw-rank-tier"><span className="hiw-rank-score">30–40</span><span className="hiw-rank-label">Cooked</span></div>
+                <div className="hiw-rank-tier"><span className="hiw-rank-score">40–50</span><span className="hiw-rank-label">This Ain't It</span></div>
+                <div className="hiw-rank-tier"><span className="hiw-rank-score">50–60</span><span className="hiw-rank-label">Mid</span></div>
+                <div className="hiw-rank-tier"><span className="hiw-rank-score">60–70</span><span className="hiw-rank-label">Built Diff</span></div>
+                <div className="hiw-rank-tier"><span className="hiw-rank-score">70–80</span><span className="hiw-rank-label">S Rank</span></div>
+                <div className="hiw-rank-tier"><span className="hiw-rank-score">80–90</span><span className="hiw-rank-label">WTF</span></div>
+                <div className="hiw-rank-tier"><span className="hiw-rank-score">90–100</span><span className="hiw-rank-label">Max Aura</span></div>
+              </div>
+            </div>
+            <p>
+              A build doesn't need to be "Max Aura" to be good for you. The rank ladder measures <em>total predicted performance ceiling</em>, not personal fit. A 55-scoring build with exactly the stats you want might outperform a 78-scoring build that's optimized for a playstyle that isn't yours.
+            </p>
+          </div>
+        </div>
+
+        {/* SECTION 5: DATA PIPELINE */}
+        <div className="hiw-section">
+          <div className="hiw-section-num">05</div>
+          <h2 className="hiw-section-title">The Data Pipeline</h2>
+          <div className="hiw-section-body">
+            <p>
+              Equipment data lives in <code>pipeline/data/</code> as JSON files. The app loads generated data from <code>src/data/generated.ts</code>, and also emits compatibility <code>data.js</code> from the same source — never edit either generated file directly.
+            </p>
+            <p>
+              <strong>Source of truth:</strong> <code>frames.json</code> (281 racquets) and <code>strings.json</code> (52 strings). These are validated against schemas, then exported to <code>src/data/generated.ts</code> for the app and <code>data.js</code> for compatibility.
+            </p>
+            <p>
+              <strong>Adding equipment:</strong> Use <code>npm run ingest:frame</code> or <code>npm run ingest:string</code> for interactive entry. Or batch import from CSV. After any addition, run <code>npm run pipeline</code> to validate, export, and run canary regression tests.
+            </p>
+            <p>
+              <strong>TWU scraping:</strong> Bulk scrape the Tennis Warehouse University database with <code>npm run scrape:twu</code> (frames) or <code>npm run scrape:twu-strings</code> (strings). Enrich the CSVs with inferred specs, then ingest.
+            </p>
+            <div className="hiw-callout">
+              <div className="hiw-callout-icon">◆</div>
+              <p>The prediction engine is deterministic — same inputs always produce same outputs. Canary tests guard against regression on every verified export. The canonical implementation is TypeScript in <code>src/engine/</code> (bundled by Vite for the browser); <code>npm run canary</code> imports the same modules under Node via <code>tsx</code>.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 6: DESIGN SYSTEM */}
+        <div className="hiw-section">
+          <div className="hiw-section-num">06</div>
+          <h2 className="hiw-section-title">The Design System</h2>
+          <div className="hiw-section-body">
+            <p>
+              <strong>Digicraft Brutalism</strong> — a monochrome base with an artful red accent for data visualization. The palette is intentionally restrained: #1A1A1A (void), #DCDFE2 (platinum), #5E666C (storm), with #AF0000 (artful red) reserved exclusively for chart data and OBS visualization.
+            </p>
+            <p>
+              Typography pairs Inter (UI) with JetBrains Mono (data). Halftone grain textures add analog warmth to digital precision. No drop shadows, no gradients, no decorative chrome. The interface gets out of the way so the numbers can speak.
+            </p>
+            <div className="hiw-callout">
+              <div className="hiw-callout-icon">◆</div>
+              <p>The visual system is designed for extended use — hours of exploration without eye fatigue. High contrast for readability, but never harsh. The monochrome base lets the red data accents pop when they matter.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 7: TUNE MODE */}
+        <div className="hiw-section">
+          <div className="hiw-section-num">07</div>
+          <h2 className="hiw-section-title">What Tune Mode Does</h2>
+          <div className="hiw-section-body">
+            <p>
+              Tune mode exposes <strong>Layer 2</strong> of the pipeline — the tension modifier — as an interactive sandbox. When you drag tension from 40 to 70 lbs, you're not adjusting a linear multiplier. You're watching all 11 stats respond through their individual response curves simultaneously.
+            </p>
+            <p>
+              This is the core insight: tension doesn't just change "power" or "control" in isolation. It reshapes the <em>entire stat profile</em>. A two-pound tension drop might increase power by 3 points, spin by 1.5, decrease control by 2, and barely touch feel. Tune mode lets you see all of that at once, in real time.
+            </p>
+            <div className="hiw-callout">
+              <div className="hiw-callout-icon">🎯</div>
+              <p>Tune mode is a <strong>constraint visualization + free control</strong> system. The slider explores freely against the model's optimal tension window. You see cost/gain via the OBS delta chip (green for gains, red for losses) without committing anything until you click "Apply changes."</p>
+            </div>
+            <p>
+              The "Best Value Move" recommendation updates live as you drag — it reflects your current slider position against the optimal window, not just the baseline. The sweep chart, slider overlay, and Build Score blue bar all share the same computed optimal tension band.
+            </p>
+          </div>
+        </div>
+
+        {/* SECTION 8: WHAT THIS IS NOT */}
+        <div className="hiw-section">
+          <div className="hiw-section-num">08</div>
+          <h2 className="hiw-section-title">What This Tool Is Not</h2>
+          <div className="hiw-section-body">
+            <div className="hiw-not-grid">
+              <div className="hiw-not-card">
+                <h3>Not a swing analyzer</h3>
+                <p>This tool knows nothing about your swing speed, technique, or physical attributes. It models equipment behavior in isolation. A 4.0 player and a touring pro would get the same scores for the same setup — because the equipment <em>is</em> the same. How you use it is your business.</p>
+              </div>
+              <div className="hiw-not-card">
+                <h3>Not a purchase recommendation</h3>
+                <p>The Loadout Lab doesn't tell you what to buy. It tells you what a given combination would theoretically produce. Whether that's worth your money, compatible with your game, or available at your local shop — that's outside the model's scope.</p>
+              </div>
+              <div className="hiw-not-card">
+                <h3>Not empirically validated</h3>
+                <p>The coefficients are tuned against known equipment behavior and community consensus, not lab-measured ball trajectories. This is a modeling tool, not a physics simulator. The predictions are directionally accurate — they track reality — but they're not measurements. Treat the numbers as a structured framework for thinking about equipment trade-offs, not as ground truth.</p>
+              </div>
+              <div className="hiw-not-card">
+                <h3>Not a replacement for hitting</h3>
+                <p>No model replaces the feel of actually hitting with a setup. This tool helps you narrow the search space, understand why certain combos work, and explore trade-offs before you commit money and stringing time. But the court is the final test.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 9: WHY IT'S USEFUL */}
+        <div className="hiw-section">
+          <div className="hiw-section-num">09</div>
+          <h2 className="hiw-section-title">Why It's Still Useful</h2>
+          <div className="hiw-section-body">
+            <p>
+              Because equipment decisions are expensive, time-consuming, and weirdly emotional. You can spend $250 on a frame, $30 on strings, $25 on labor, and walk away disappointed because the setup didn't feel like you expected — and you won't know <em>why</em>.
+            </p>
+            <p>
+              The Loadout Lab gives you a structured language for understanding equipment trade-offs. It doesn't replace experience, but it accelerates it. Instead of blindly testing 15 string/tension combos, you can model the differences, understand the mechanisms, and narrow your experiments to 3-4 setups worth actually hitting with.
+            </p>
+            <p>
+              It's also just fun to nerd out on. If you've ever spent 45 minutes on a Tennis Warehouse forum thread debating whether Solinco Confidential at 52 plays meaningfully different from RPM Blast at 54, this tool was built for you. Now you can see the predicted differences side by side, on a radar chart, with actual numbers.
+            </p>
+            <div className="hiw-callout hiw-callout-final">
+              <div className="hiw-callout-icon">◆</div>
+              <p>Built by a left-handed one-hander who spends too much time thinking about string tension. The brainrot rank names are intentional. The math is serious. The vibes are immaculate. Welcome to the lab. — Zaldy R</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Release Notes */}
+        <div className="hiw-divider" id="release-notes"></div>
+
+        <div className="hiw-header">
+          <h2 className="hiw-compact-title">Release notes</h2>
+          <p className="release-notes-sub">Technical changelog — what changed, why, and how it affects your workflow.</p>
+        </div>
+
+        <div className="hiw-section">
+          <div className="hiw-section-num">v4.0</div>
+          <h2 className="hiw-section-title">React Migration & Modernization</h2>
+          <div className="hiw-section-body">
+            <p>
+              <strong>Complete React componentization.</strong> All pages converted from imperative DOM manipulation to React component architecture. State management migrated to Zustand for predictable, reactive updates. CDN dependencies (Tailwind, Chart.js) moved to npm for version pinning and tree-shaking.
+            </p>
+            <p>
+              <strong>Window bridge elimination.</strong> The ~297-function global window bridge replaced with proper React props and hooks. HTML partials converted to JSX components. All onclick handlers replaced with React event handlers.
+            </p>
+            <div className="hiw-callout">
+              <div className="hiw-callout-icon">◆</div>
+              <p>The app now uses a proper component tree with React Router for navigation. All state changes flow through Zustand and trigger React re-renders. No more imperative DOM manipulation or template string injection.</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="hiw-section">
+          <div className="hiw-section-num">v3.0</div>
+          <h2 className="hiw-section-title">String Compendium + Tailwind Migration</h2>
+          <div className="hiw-section-body">
+            <p>
+              <strong>String Compendium is live.</strong> Browse the complete string database with the same HUD overlay pattern as the Racket Bible. Each string page shows TWU scores, intrinsic characteristics (stiffness, spin potential, tension loss), and a <strong>Frame Injection modulator</strong> for real-time setup preview.
+            </p>
+            <p>
+              The Frame Injection panel supports both <strong>Full Bed</strong> and <strong>Hybrid</strong> configurations. Select any frame from the dropdown, choose gauge and tension, and see live battery-bar previews showing how the string affects frame stats. Crosses string selection appears in hybrid mode with independent gauge control. "Add to Loadout" saves without activating; "Set Active" saves and immediately switches to Overview with your new setup.
+            </p>
+            <p>
+              <strong>Complete Tailwind CSS migration.</strong> All components in the Racket Bible and String Compendium now use Tailwind utility classes with the Digicraft design system (dc-void, dc-platinum, dc-storm, dc-accent). Dark mode uses <code>[data-theme="dark"]</code> selector strategy. Legacy CSS purged (~800 lines removed). Elephant & Mouse typography hierarchy (hero/obs/mouse) applied consistently.
+            </p>
+            <div className="hiw-callout">
+              <div className="hiw-callout-icon">◆</div>
+              <p>The String Compendium mirrors the Racket Bible architecture: click the string name to open the HUD, select from the grid, and see detailed telemetry. The Frame Injection modulator is the inverse of the Racket Bible's String Modulator — start with string, pick frame, preview result.</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="hiw-section">
+          <div className="hiw-section-num">v2.5</div>
+          <h2 className="hiw-section-title">Repository Cleanup & Documentation</h2>
+          <div className="hiw-section-body">
+            <p>
+              Complete repository audit and documentation pass. Deleted orphaned files (<code>split-app.js</code>, temp test artifacts). Added <code>calibrate</code> npm script for string estimation coefficient fitting. Updated <code>.gitignore</code> to exclude TWU scrape CSVs and enriched intermediates.
+            </p>
+            <p>
+              README rewritten with full architecture documentation: 4-layer prediction pipeline, Digicraft Brutalism design system, data pipeline workflows, TWU scraping tools, and complete file structure. How It Works page updated to match — 11 stats, corrected pipeline layers (L0-L3), Data Pipeline and Design System sections added.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  );
+}

@@ -1,68 +1,51 @@
 // src/state/store.ts
 // Centralized state store for active and saved loadouts
+// (Now backed by Zustand store for React integration)
 
 import type { Loadout } from '../engine/types.js';
-
-// ─── State ───────────────────────────────────────
-let _activeLoadout: Loadout | null = null;
-let _savedLoadouts: Loadout[] = [];
+import { useAppStore } from './useAppStore.js';
 
 // ─── Getters ─────────────────────────────────────
 export function getActiveLoadout(): Loadout | null {
-  return _activeLoadout;
+  return useAppStore.getState().activeLoadout;
 }
 
 export function getSavedLoadouts(): Loadout[] {
-  return _savedLoadouts;
+  return useAppStore.getState().savedLoadouts;
 }
 
 // ─── Setters ─────────────────────────────────────
 export function setActiveLoadout(lo: Loadout | null): void {
-  _activeLoadout = lo;
-  _notify('activeLoadout');
+  useAppStore.getState().setActiveLoadout(lo);
 }
 
 export function setSavedLoadouts(arr: Loadout[]): void {
-  _savedLoadouts = arr;
-  _notify('savedLoadouts');
+  useAppStore.getState().setSavedLoadouts(arr);
 }
 
 // ─── Convenience mutators ────────────────────────
 export function addSavedLoadout(lo: Loadout): void {
-  _savedLoadouts = [..._savedLoadouts, lo];
-  _notify('savedLoadouts');
+  useAppStore.getState().addSavedLoadout(lo);
 }
 
 export function removeSavedLoadout(id: string): void {
-  _savedLoadouts = _savedLoadouts.filter(lo => lo.id !== id);
-  _notify('savedLoadouts');
+  useAppStore.getState().removeSavedLoadout(id);
 }
 
 export function updateSavedLoadout(id: string, updates: Partial<Loadout>): void {
-  _savedLoadouts = _savedLoadouts.map(lo =>
-    lo.id === id ? { ...lo, ...updates } : lo
-  );
-  _notify('savedLoadouts');
+  useAppStore.getState().updateSavedLoadout(id, updates);
 }
 
-// ─── Pub/Sub ─────────────────────────────────────
-type Listener = () => void;
-const _listeners: Map<string, Listener[]> = new Map();
-
-export function subscribe(key: 'activeLoadout' | 'savedLoadouts', fn: Listener): () => void {
-  if (!_listeners.has(key)) _listeners.set(key, []);
-  _listeners.get(key)!.push(fn);
-  // Return unsubscribe function
-  return () => {
-    const arr = _listeners.get(key);
-    if (arr) {
-      const idx = arr.indexOf(fn);
-      if (idx !== -1) arr.splice(idx, 1);
-    }
-  };
-}
-
-function _notify(key: string): void {
-  const arr = _listeners.get(key);
-  if (arr) arr.forEach(fn => fn());
+// ─── Pub/Sub (Zustand subscription) ───────────────
+export function subscribe(
+  key: 'activeLoadout' | 'savedLoadouts',
+  fn: () => void
+): () => void {
+  // Use a listener that calls fn whenever state changes
+  return useAppStore.subscribe((state, prevState) => {
+    const changed = key === 'activeLoadout'
+      ? state.activeLoadout !== prevState.activeLoadout
+      : state.savedLoadouts !== prevState.savedLoadouts;
+    if (changed) fn();
+  });
 }

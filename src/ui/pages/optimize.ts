@@ -870,11 +870,10 @@ export function optActionCompare(idx: number): void {
   const compareState = win.compareGetState?.();
   if (lo?.stats && compareState?.slots && typeof win.compareSetSlotLoadout === 'function') {
     const emptySlot = compareState.slots.find((slot: any) => slot.loadout === null);
-    const targetSlotId = (emptySlot || compareState.slots[compareState.slots.length - 1])?.id;
-    if (targetSlotId) {
-      win.compareSetSlotLoadout(targetSlotId, lo, lo.stats);
-      win.switchMode?.('compare');
+    if (emptySlot?.id) {
+      win.compareSetSlotLoadout(emptySlot.id, lo, lo.stats);
     }
+    win.switchMode?.('compare');
   }
 }
 

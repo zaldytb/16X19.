@@ -1,73 +1,55 @@
-import { useLayoutEffect } from 'react';
-import { RawHtml } from '../components/RawHtml.js';
-import { useActiveLoadout } from '../hooks/useStore.js';
+import { useEffect } from 'react';
 import * as Shell from '../ui/pages/shell.js';
-
-import overviewHtml from '../assets/workspace/overview.html?raw';
-import tuneHtml from '../assets/workspace/tune.html?raw';
-import compareHtml from '../assets/workspace/compare.html?raw';
-import optimizeHtml from '../assets/workspace/optimize.html?raw';
-import compendiumHtml from '../assets/workspace/compendium.html?raw';
-import howitworksHtml from '../assets/workspace/howitworks.html?raw';
+import { HowItWorks } from './HowItWorks.js';
+import { Overview } from './Overview.js';
+import { Optimize } from './Optimize.js';
+import { Compendium } from './Compendium.js';
+import { Tune } from './Tune.js';
+import { Compare } from './Compare.js';
 
 export function OverviewWorkspace() {
-  const active = useActiveLoadout();
-  useLayoutEffect(() => {
-    window.renderDashboard?.();
-  }, [active]);
-  return <RawHtml html={overviewHtml} />;
+  return <Overview />;
 }
 
 export function TuneWorkspace() {
-  const active = useActiveLoadout();
-  useLayoutEffect(() => {
-    Shell.wireTuneSlider();
-    window.refreshTuneIfActive?.();
-  }, [active]);
-  return <RawHtml html={tuneHtml} />;
+  return <Tune />;
 }
 
 export function CompareWorkspace() {
-  useLayoutEffect(() => {
-    Shell.runCompareModeActivation();
-  }, []);
-  return <RawHtml html={compareHtml} />;
+  return <Compare />;
 }
 
 export function OptimizeWorkspace() {
-  useLayoutEffect(() => {
-    Shell.runOptimizeRouteActivation();
+  useEffect(() => {
+    // Legacy initialization after React render
+    const timer = setTimeout(() => {
+      window.initOptimize?.();
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
-  return <RawHtml html={optimizeHtml} />;
+  return <Optimize />;
 }
 
 export function CompendiumWorkspace() {
-  useLayoutEffect(() => {
-    Shell.runCompendiumRouteActivation({ tab: 'rackets' });
-  }, []);
-  return <RawHtml html={compendiumHtml} />;
+  return <Compendium initialTab="rackets" />;
 }
 
-/** Strings tab — same DOM as compendium; tab switched after init. */
+/** Strings tab — same component, different initial tab */
 export function StringsWorkspace() {
-  useLayoutEffect(() => {
-    Shell.runCompendiumRouteActivation({ tab: 'strings' });
-  }, []);
-  return <RawHtml html={compendiumHtml} />;
+  return <Compendium initialTab="strings" />;
 }
 
 /** Leaderboard tab inside compendium shell */
 export function LeaderboardWorkspace() {
-  useLayoutEffect(() => {
-    void import('../ui/pages/leaderboard.js').then(() => {
-      Shell.runCompendiumRouteActivation({ tab: 'leaderboard' });
-    });
+  useEffect(() => {
+    // Ensure leaderboard module is loaded
+    void import('../ui/pages/leaderboard.js');
   }, []);
-  return <RawHtml html={compendiumHtml} />;
+  return <Compendium initialTab="leaderboard" />;
 }
 
 export function HowItWorksWorkspace() {
-  return <RawHtml html={howitworksHtml} />;
+  return <HowItWorks />;
 }
 
 export function MyLoadoutsWorkspace() {

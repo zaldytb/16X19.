@@ -5,7 +5,7 @@ import { RACQUETS, STRINGS } from '../../data/loader.js';
 import { getActiveLoadout, getSavedLoadouts } from '../../state/store.js';
 import { getCurrentMode } from '../../state/app-state.js';
 
-// Globals from app.js
+// Bridge globals (via window)
 declare const activeLoadout: Loadout | null;
 declare const savedLoadouts: Loadout[];
 
@@ -14,7 +14,7 @@ import type { Loadout } from '../../engine/types.js';
 // Module-level state
 let _cfCreatingNew = false;
 
-// External functions from app.js (called via window)
+// Bridge functions (called via window)
 interface WindowExt extends Window {
   createLoadout?: (frameId: string, stringId: string, tension: number, opts?: Record<string, unknown>) => Loadout | null;
   activateLoadout?: (loadout: Loadout) => void;

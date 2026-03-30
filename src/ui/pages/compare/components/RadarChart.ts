@@ -3,14 +3,36 @@
  * Ballistic-style multi-layer radar for compare page
  */
 
+import {
+  Chart,
+  Filler,
+  Legend,
+  LineElement,
+  PointElement,
+  RadarController,
+  RadialLinearScale,
+  Tooltip,
+} from 'chart.js';
 import { STAT_KEYS, STAT_LABELS_FULL } from '../../../../engine/constants.js';
 import type { SetupStats } from '../../../../engine/types.js';
 import type { CompareSlot } from '../types.js';
 
-// Chart.js type declaration
-declare const Chart: any;
-
 let _chart: any = null;
+let _chartJsRegistered = false;
+
+function ensureRadarChartRegistration(): void {
+  if (_chartJsRegistered) return;
+  Chart.register(
+    RadarController,
+    RadialLinearScale,
+    PointElement,
+    LineElement,
+    Filler,
+    Tooltip,
+    Legend,
+  );
+  _chartJsRegistered = true;
+}
 
 export interface RadarChartProps {
   slots: CompareSlot[];
@@ -56,6 +78,7 @@ function createDatasets(slots: CompareSlot[]): any[] {
 }
 
 export function renderRadarChart(containerId: string, props: RadarChartProps): void {
+  ensureRadarChartRegistration();
   const canvas = document.getElementById(containerId) as HTMLCanvasElement | null;
   if (!canvas) return;
   
@@ -127,12 +150,12 @@ export function renderRadarChart(containerId: string, props: RadarChartProps): v
           titleFont: {
             family: 'JetBrains Mono, monospace',
             size: 10,
-            weight: '600',
+            weight: 600,
           },
           bodyFont: {
             family: 'JetBrains Mono, monospace',
             size: 11,
-            weight: '500',
+            weight: 500,
           },
           caretSize: 0,
           boxPadding: 0,
@@ -168,7 +191,7 @@ export function renderRadarChart(containerId: string, props: RadarChartProps): v
             font: {
               family: 'JetBrains Mono, monospace',
               size: 9,
-              weight: '600',
+              weight: 600,
             },
           }
         }

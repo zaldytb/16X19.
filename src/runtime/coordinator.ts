@@ -26,6 +26,7 @@ export interface RefreshPlan {
   overview: boolean;
   tune: boolean;
   compare: boolean;
+  compendium: boolean;
 }
 
 export function getRefreshPlan(mode: string, changed: ViewChangeSet): RefreshPlan {
@@ -41,6 +42,7 @@ export function getRefreshPlan(mode: string, changed: ViewChangeSet): RefreshPla
     overview: mode === 'overview' && !!(changed.activeLoadout || changed.mode),
     tune: mode === 'tune' && !!(changed.activeLoadout || changed.mode),
     compare: mode === 'compare' && !!(changed.compareState || changed.mode),
+    compendium: mode === 'compendium' && !!(changed.activeLoadout || changed.mode),
   };
 }
 
@@ -86,6 +88,22 @@ export function syncViews(reason: string, changed: ViewChangeSet): void {
       ComparePage.renderComparisonDeltas();
     } catch (error) {
       reportRuntimeIssue('COMPARE_RENDER', `Compare refresh failed during "${reason}"`, {
+        details: error,
+      });
+    }
+  }
+
+  if (plan.compendium) {
+    try {
+      (window as Window & {
+        _compSyncWithActiveLoadout?: () => unknown;
+        _stringSyncWithActiveLoadout?: () => unknown;
+      })._compSyncWithActiveLoadout?.();
+      (window as Window & {
+        _stringSyncWithActiveLoadout?: () => unknown;
+      })._stringSyncWithActiveLoadout?.();
+    } catch (error) {
+      reportRuntimeIssue('COMPENDIUM_RENDER', `Compendium refresh failed during "${reason}"`, {
         details: error,
       });
     }

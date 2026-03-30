@@ -21,9 +21,9 @@ npm run typecheck    # TypeScript check — must be zero errors
 npm run canary       # 5 regression tests — must pass with zero OBS drift
 
 # Data pipeline (when modifying pipeline/data/*.json)
-npm run pipeline     # validate + export:verify (validate, regenerate generated app data + data.js, run canaries)
+npm run pipeline     # validate + export:verify (validate, regenerate generated app data + data.ts, run canaries)
 npm run validate     # Validate frames.json / strings.json against schemas
-npm run export       # Regenerate src/data/generated.ts and data.js from JSON source files
+npm run export       # Regenerate src/data/generated.ts and data.ts from JSON source files
 npm run canary:baseline  # Re-record expected canary values (after intentional engine changes)
 
 # Data ingestion
@@ -75,7 +75,7 @@ All pages derive their initial state from `getCurrentSetup()`. The active loadou
 - `pipeline/data/frames.json` — racquet database (source of truth, never edit generated outputs directly)
 - `pipeline/data/strings.json` — string database (source of truth)
 - `src/data/generated.ts` — **generated app data module** from `npm run export`; commit after regenerating
-- `data.js` — **generated compatibility file** from `npm run export`; commit after regenerating
+- `data.ts` — **generated compatibility module** from `npm run export`; commit after regenerating
 - `pipeline/schemas/` — JSON schemas used by `npm run validate`
 - `src/data/loader.ts` — imports `RACQUETS`, `STRINGS`, `FRAME_META` from `src/data/generated.ts`
 
@@ -87,7 +87,7 @@ Route modules include `shell.ts`, `overview.ts`, `tune.ts`, `compare/`, `optimiz
 
 ## Critical rules
 
-- **Never edit `src/data/generated.ts` or `data.js` directly** — both are generated. Modify `pipeline/data/frames.json` or `pipeline/data/strings.json`, then run `npm run pipeline`.
+- **Never edit `src/data/generated.ts` or `data.ts` directly** — both are generated. Modify `pipeline/data/frames.json` or `pipeline/data/strings.json`, then run `npm run pipeline`.
 - **Swingweight spelling** — field name in JSON data is `swingweight` (lowercase 'w'), not `swingWeight`.
 - **TypeScript strict mode** — `src/` (engine, state, UI) must pass `npm run typecheck` with zero errors.
 - **Canary tests have zero drift tolerance** — any OBS score change (even 0.1) will fail. If you intentionally change engine math, run `npm run canary:baseline` to re-record.
@@ -130,6 +130,6 @@ These defaults are optimized for AI coding agents (and humans) working on apps t
 - Add OpenTelemetry via `@vercel/otel` on Node; don't expect OTEL support on the Edge runtime
 - Enable Web Analytics + Speed Insights early
 - Use AI Gateway for model routing, set AI_GATEWAY_API_KEY, using a model string (e.g. 'anthropic/claude-sonnet-4.6'), Gateway is already default in AI SDK
-  needed. Always curl https://ai-gateway.vercel.sh/v1/models first; never trust model IDs from memory
+ needed. Always curl <https://ai-gateway.vercel.sh/v1/models> first; never trust model IDs from memory
 - For durable agent loops or untrusted code: use Workflow (pause/resume/state) + Sandbox; use Vercel MCP for secure infra access
 <!-- VERCEL BEST PRACTICES END -->

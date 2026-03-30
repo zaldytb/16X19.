@@ -60,13 +60,6 @@ export function renderDockCreateSection(): void {
 }
 
 /**
- * Render create form HTML (legacy - kept for compatibility, uses Tailwind version)
- */
-export function _renderCreateForm(title: string, showCancel: boolean): string {
-  return _renderCreateFormTailwind(title, showCancel);
-}
-
-/**
  * Render create form HTML with Tailwind styling
  */
 export function _renderCreateFormTailwind(title: string, showCancel: boolean): string {
@@ -352,17 +345,3 @@ export function _hideNewLoadoutForm(): void {
   renderDockCreateSection();
 }
 
-/**
- * Legacy alias for backward compat
- */
-export function toggleQuickAdd(): void { _showNewLoadoutForm(); }
-
-/**
- * Legacy alias for backward compat
- */
-export function quickAddActivate(): void { _cfActivate(); }
-
-/**
- * Legacy alias for backward compat
- */
-export function quickAddSave(): void { _cfSave(); }

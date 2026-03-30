@@ -2,6 +2,7 @@
 // Optimize page - React component wrapper around existing imperative rendering
 
 import { useEffect, useRef } from 'react';
+import { initOptimize } from '../ui/pages/optimize.js';
 
 export function Optimize() {
   const initialized = useRef(false);
@@ -9,8 +10,7 @@ export function Optimize() {
   useEffect(() => {
     if (!initialized.current) {
       initialized.current = true;
-      // Call the legacy init function
-      window.initOptimize?.();
+      initOptimize();
     }
   }, []);
 

@@ -190,10 +190,3 @@ export function reset(): void {
   notify();
 }
 
-// Backward compatibility with old comparisonSlots array
-export function getComparisonSlots(): { loadout: Loadout | null; stats: SetupStats | null }[] {
-  return _state.slots.map(s => ({
-    loadout: s.loadout,
-    stats: s.stats
-  }));
-}

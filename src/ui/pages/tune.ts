@@ -100,34 +100,6 @@ function _applyTuneInteractionFrame(): void {
 }
 
 /**
- * Toggle tune mode (legacy compat)
- */
-export function toggleTuneMode(): void {
-  const win = window as WindowExt;
-  if (win.currentMode === 'tune') {
-    win.switchMode?.('overview');
-  } else {
-    const setup = win.getCurrentSetup?.();
-    if (!setup) return;
-    win.switchMode?.('tune');
-  }
-}
-
-/**
- * Close tune mode (legacy compat)
- */
-export function closeTuneMode(): void {
-  (window as WindowExt).switchMode?.('overview');
-}
-
-/**
- * dockBuilderPanel - no-op for backward compat
- */
-export function dockBuilderPanel(_inTune: boolean): void {
-  // Builder panel is now permanently in the left build-dock
-}
-
-/**
  * Refresh tune panels if tune mode is active
  */
 export function refreshTuneIfActive(): void {

@@ -44,7 +44,7 @@ function RouterRegistration() {
   return null;
 }
 
-/** Keep legacy app-state mode in sync when using browser navigation. */
+/** Keep app-state mode in sync with browser navigation. */
 function RouteModeSync() {
   const location = useLocation();
   useLayoutEffect(() => {

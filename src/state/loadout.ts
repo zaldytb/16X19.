@@ -1,6 +1,6 @@
 // src/state/loadout.ts
-// Loadout state management — delegates to centralized store
-// This module is kept for backward compat; new code should import from './store.js'
+// Loadout state utilities layered on top of the centralized store.
+// Prefer importing from the specific state module you need in new code.
 
 import { RACQUETS, STRINGS } from '../data/loader.js';
 import type { Racquet, StringData, Loadout, StringConfig } from '../engine/types.js';
@@ -17,7 +17,7 @@ import {
   updateSavedLoadout as _updateSavedLoadout
 } from './store.js';
 
-// Re-export store functions (backward compat)
+// Re-export the core store accessors from this loadout-focused surface.
 export { getActiveLoadout, getSavedLoadouts, setActiveLoadout, setSavedLoadouts } from './store.js';
 
 // Persistence helper

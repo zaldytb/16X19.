@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Frame",
-  "description": "A racquet frame entry in the pipeline data layer. Engine-required fields are in 'required'. Pipeline-only fields (_meta, _provenance, brand) are stripped before export to data.js.",
+  "description": "A racquet frame entry in the pipeline data layer. Engine-required fields are in 'required'. Pipeline-only fields (_meta, _provenance, brand) are stripped before export to data.ts.",
   "type": "object",
   "required": [
     "id", "name", "year", "headSize", "strungWeight", "swingweight",
@@ -35,7 +35,7 @@
     },
     "_meta": {
       "type": "object",
-      "description": "Pipeline-only: technology bonuses merged from FRAME_META. Stripped on export and reconstructed as FRAME_META in data.js.",
+      "description": "Pipeline-only: technology bonuses merged from FRAME_META. Stripped on export and reconstructed as FRAME_META in data.ts.",
       "required": ["aeroBonus", "comfortTech", "spinTech", "genBonus"],
       "properties": {
         "aeroBonus":   { "type": "number", "description": "Aerodynamic frame benefit → power + spin. Scale: 0=none to 2+=exceptional" },

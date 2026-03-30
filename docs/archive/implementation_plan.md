@@ -1,6 +1,8 @@
-> **Archived — phased extraction plan predating removal of root `app.js`.** For current architecture see [`ts-migration-plan.md`](ts-migration-plan.md).
-
 # TypeScript Migration Continuation Plan — Phases 8–12
+
+> **Archived — phased extraction plan from the pre-final migration period.**
+> Historical references to `app.js`, `src/ui/pages/compare.ts`, `leaderboard.js`, `initLeaderboardApp`, or a broad `window` bridge are no longer current.
+> For the live architecture, see [`README.md`](../README.md), [`AGENTS.md`](../AGENTS.md), and [`ts-migration-plan.md`](../ts-migration-plan.md).
 
 ## Current State Analysis
 

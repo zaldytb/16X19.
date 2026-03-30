@@ -18,14 +18,14 @@ Pipeline tooling under **`pipeline/scripts/`** is **`.ts`** and is executed with
 | Vite config | `vite.config.ts` |
 | Data source | `pipeline/data/*.json` |
 | Generated app data import | `src/data/generated.ts` (from `npm run export`) |
-| Compatibility artifact | `data.js` (from `npm run export`) |
+| Compatibility artifact | `data.ts` (from `npm run export`) |
 
 ## Ownership rules (for agents)
 
 1. **`src/main.tsx`** is the single source of which global names map to which implementations.
 2. Prefer fixing behavior in the **TypeScript module**, not by adding parallel globals.
 3. **Do not** switch the SPA from Tailwind **CDN** to a Vite Tailwind plugin without a dedicated parity audit — dynamic class strings in TS must stay unchanged.
-4. **`src/data/generated.ts`** and **`data.js`** are generated only — edit JSON and run `npm run pipeline` / `npm run export`.
+4. **`src/data/generated.ts`** and **`data.ts`** are generated only — edit JSON and run `npm run pipeline` / `npm run export`.
 
 ## Verification
 

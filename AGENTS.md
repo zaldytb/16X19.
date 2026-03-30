@@ -19,30 +19,30 @@
 ## Technology stack
 
 | Category | Technology |
-|----------|------------|
+| ---------- | ------------ |
 | Build | Vite 8.x |
 | App language | TypeScript 6.x (strict) under `src/` |
-| Styling | Tailwind CSS 4.x **CDN** (`index.html`) + `style.css` design tokens |
+| Styling | Tailwind CSS 4.x via `@tailwindcss/vite` + `style.css` design tokens |
 | Package manager | npm |
 | Runtime | Node.js 20+ (pipeline via `tsx`) |
-| Charts | Chart.js **CDN** (`index.html`) |
+| Charts | Chart.js npm package |
 | Deploy | GitHub Pages + Vercel |
 
-**Important:** Tailwind is intentionally **not** wired through `@tailwindcss/vite` for the SPA. Runtime-generated utility strings in TypeScript must stay verbatim so CDN JIT output matches production.
+**Important:** Tailwind is wired through `@tailwindcss/vite`, but runtime-generated utility strings in TypeScript should still stay verbatim to avoid styling drift.
 
 ## Runtime architecture
 
-### 1. Vite entry and `window` bridge
+### 1. Vite entry and minimal `window` bridge
 
 [`src/main.tsx`](src/main.tsx) is the only application entry. It:
 
-- imports page and shared modules from `src/`
-- assigns functions and state to `window.*` for `onclick="..."` and legacy global names
-- lazy-loads heavy pages (e.g. compendium, leaderboard) via dynamic `import()`
+- mounts the React app and router
+- installs the reduced bridge from [`src/bridge/installWindowBridge.ts`](src/bridge/installWindowBridge.ts)
+- lazy-loads heavier route/runtime modules (for example Compendium, Strings, Leaderboard, Find My Build, Optimize helpers) via dynamic `import()`
 
-[`src/global.d.ts`](src/global.d.ts) augments `Window` with the bridge surface (optional properties, permissive call signatures) so strict TypeScript stays compatible with inline HTML handlers.
+[`src/global.d.ts`](src/global.d.ts) augments `Window` with the remaining bridge surface so strict TypeScript stays compatible with inline HTML handlers.
 
-When debugging, **trace `window.*` from `installWindowBridge()` (see `src/bridge/installWindowBridge.ts`)** — do not assume a second runtime layer.
+When debugging, **trace `window.*` from `installWindowBridge()` (see `src/bridge/installWindowBridge.ts`)** — the bridge is smaller now, but still load-bearing for injected markup and some lazy route helpers.
 
 ### 2. No root `app.js`
 
@@ -64,7 +64,7 @@ loadout-lab/
 ├── index.html
 ├── vite.config.ts
 ├── style.css
-├── data.js
+├── data.ts
 ├── README.md
 ├── AGENTS.md
 ├── CLAUDE.md
@@ -145,7 +145,7 @@ Pipeline scripts live in `pipeline/scripts/*.ts` and run with **`tsx`**.
 ## Data pipeline
 
 **Source of truth:** `pipeline/data/frames.json`, `strings.json`, `canaries.json`  
-**Generated:** `src/data/generated.ts` and compatibility `data.js` — never hand-edit; regenerate with `npm run export` or `npm run pipeline`.
+**Generated:** `src/data/generated.ts` and root compatibility `data.ts` — never hand-edit; regenerate with `npm run export` or `npm run pipeline`.
 
 ## Debugging notes
 
@@ -173,8 +173,8 @@ npm run typecheck && npm run canary && npm run build
 
 ## Common pitfalls
 
-1. `src/data/generated.ts` and `data.js` are generated — edit JSON under `pipeline/data/` and re-run the pipeline.  
-2. Tailwind via CDN — avoid risky dynamic class composition; keep existing utility strings when touching TS templates.  
+1. `src/data/generated.ts` and `data.ts` are generated — edit JSON under `pipeline/data/` and re-run the pipeline.  
+2. Tailwind utilities in TS templates should stay stable — avoid risky dynamic class composition when touching runtime-generated markup.  
 3. Dark mode: `data-theme="dark"` on `<html>`.  
 4. JSON field name: **`swingweight`** (lowercase `w`).  
 5. Import paths in TS often end in `.js` (bundler resolution to `.ts` sources).  

@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "String",
-  "description": "A string entry in the pipeline data layer. Engine-required fields are in 'required'. Pipeline-only fields (_provenance) are stripped before export to data.js.",
+  "description": "A string entry in the pipeline data layer. Engine-required fields are in 'required'. Pipeline-only fields (_provenance) are stripped before export to data.ts.",
   "type": "object",
   "required": [
     "id", "name", "gauge", "gaugeNum", "material",

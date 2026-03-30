@@ -472,7 +472,7 @@ importBtn.addEventListener('click', async () => {
       const pipelineResult = await window.electronAPI.runPipeline({ repoRoot });
       appendProcessLogs(pipelineResult);
       if (pipelineResult.code === 0) {
-        log('Pipeline completed. data.js regenerated.', 'ok');
+        log('Pipeline completed. data.ts regenerated.', 'ok');
       } else {
         appendProcessErrors(pipelineResult);
         log(`Pipeline exited with code ${String(pipelineResult.code)}.`, 'error');

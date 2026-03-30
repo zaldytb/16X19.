@@ -18,7 +18,7 @@ export interface TwScore {
   durability: number;
 }
 
-/** String entry as stored in data.js / STRINGS array */
+/** String entry as stored in generated data modules / STRINGS array */
 export interface StringData {
   id: string;
   name: string;
@@ -34,10 +34,10 @@ export interface StringData {
   _gaugeModified?: boolean;
   /** Original reference gauge, set by applyGaugeModifier */
   _refGauge?: number;
-  [key: string]: unknown; // allow extra fields from data.js
+  [key: string]: unknown; // allow extra fields from generated data
 }
 
-/** Racquet entry as stored in data.js / RACQUETS array.
+/** Racquet entry as stored in generated data modules / RACQUETS array.
  *  Field names match the actual data — note `swingweight` (lowercase w). */
 export interface Racquet {
   id: string;
@@ -45,7 +45,7 @@ export interface Racquet {
   headSize: number;
   /** Strung weight in grams */
   strungWeight: number;
-  /** Swing weight in kg·cm² (lowercase 'w' — matches data.js) */
+  /** Swing weight in kg·cm² (lowercase 'w' — matches generated data) */
   swingweight: number;
   stiffness: number;
   balance: number;
@@ -55,7 +55,7 @@ export interface Racquet {
   [key: string]: unknown;
 }
 
-/** Per-frame technology metadata from FRAME_META in data.js */
+/** Per-frame technology metadata from FRAME_META in generated data */
 export interface FrameMeta {
   aeroBonus: number;
   comfortTech: number;

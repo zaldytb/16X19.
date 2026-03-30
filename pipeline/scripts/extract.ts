@@ -5,7 +5,7 @@
 // into pipeline/data/*.json during the initial pipeline setup.
 // The data blocks have since been removed from app.js.
 // Running this again will produce empty/broken output.
-// To regenerate data.js from JSON, use: npm run export
+// To regenerate data.ts from JSON, use: npm run export
 
 'use strict';
 const path = require('path');

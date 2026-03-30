@@ -121,7 +121,7 @@ function renderCompareSurfaces(): void {
   try {
     ComparePage.updateComparisonRadar();
   } catch (_err) {
-    // Preserve legacy tolerance for partial compare state.
+    // Be tolerant when compare state is only partially initialized.
   }
 }
 
@@ -760,7 +760,7 @@ export function switchMode(mode: string): void {
   }
 }
 
-/** Compare tab activation (DOM must exist). Used by React route mount and legacy switchMode. */
+/** Compare tab activation (DOM must exist). Used by route mount and direct mode activation. */
 export function runCompareModeActivation(): void {
   const win = window as any;
   if (win.initComparePage) {

@@ -10,7 +10,7 @@ import { getComparisonSlots } from '../../state/app-state.js';
 import { predictSetup, computeCompositeScore, buildTensionContext } from '../../engine/index.js';
 import { createLoadout } from '../../state/loadout.js';
 
-// Type assertion helper for data.js imports
+// Type assertion helper for generated data imports
 type RacquetData = Racquet & Record<string, unknown>;
 type StringDataRaw = StringData & Record<string, unknown>;
 

@@ -12,7 +12,7 @@ export function Tune() {
   useEffect(() => {
     if (!initialized.current) {
       initialized.current = true;
-      // Call the legacy render function
+      // Prime the imperative Tune runtime after the route markup mounts.
       window.renderTune?.();
       wireTuneSlider();
     }

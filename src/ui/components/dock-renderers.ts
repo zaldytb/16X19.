@@ -499,16 +499,14 @@ function _renderDockPanelCompare(container: HTMLElement): void {
 
   let html = '';
 
-  // Use new compare system state if available, fallback to legacy
+  // Prefer compare module state; keep a fallback for older state shapes.
   const win = window as any;
   const newCompareState = win.compareGetState?.();
   
   if (newCompareState) {
-    // New compare system
     html += _renderNewComparePanel(newCompareState);
   } else {
-    // Legacy compare system
-    html += _renderLegacyComparePanel();
+    html += _renderComparePanelFallback();
   }
 
   const al = getActiveLoadout();
@@ -550,7 +548,7 @@ function _renderDockPanelCompare(container: HTMLElement): void {
 }
 
 /**
- * Render new compare panel with A/B/C slots
+ * Render compare panel with A/B/C slots from compare module state.
  */
 function _renderNewComparePanel(state: any): string {
   const editorContext = getDockEditorContext();
@@ -653,9 +651,9 @@ function _renderNewComparePanel(state: any): string {
 }
 
 /**
- * Render legacy compare panel (fallback)
+ * Render compare panel fallback for older slot state shapes.
  */
-function _renderLegacyComparePanel(): string {
+function _renderComparePanelFallback(): string {
   let html = `
     <div class="dock-compare-intro">
       <div class="dock-ctx-label">Setup Controls</div>

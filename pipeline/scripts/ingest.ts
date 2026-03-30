@@ -647,7 +647,7 @@ function runCSV(type, csvPath) {
 
   if (batch.length) {
     fs.writeFileSync(dataFile, JSON.stringify([...existing, ...batch], null, 2));
-    console.log(`\nRun 'npm run pipeline' to validate and regenerate data.js`);
+    console.log(`\nRun 'npm run pipeline' to validate and regenerate data.ts`);
   }
 
   console.log(`\nImport complete: ${added} added, ${skipped} skipped, ${warnCount} warnings`);

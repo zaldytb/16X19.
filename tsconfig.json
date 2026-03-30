@@ -21,6 +21,6 @@
     "isolatedModules": true,
     "jsx": "react-jsx"
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts", "data.ts"],
   "exclude": ["node_modules", "dist", "pipeline", "tools", "Dock Refactor"]
 }

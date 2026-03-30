@@ -6,7 +6,7 @@ How racquet **frames** move from authoring into the live app bundle.
 
 - **Edit:** [`pipeline/data/frames.json`](../pipeline/data/frames.json) (via CLI, CSV, or tools below).
 - **Schema / ranges:** [`pipeline/schemas/frame.schema.json`](../pipeline/schemas/frame.schema.json).
-- **Runtime bundle:** [`data.js`](../data.js) — **generated** by export; do not hand-edit.
+- **Runtime bundle:** [`data.ts`](../data.ts) — **generated** by export; do not hand-edit.
 
 ## End-to-end flow
 

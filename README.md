@@ -24,11 +24,11 @@ Mirror: `https://loadout-lab.vercel.app`
 
 - **Vite 8** — dev server and production bundle
 - **TypeScript 6** — strict mode for `src/` (engine, state, UI)
-- **Tailwind CSS 4** — loaded from the **CDN** in `index.html` (inline `tailwind.config`); custom tokens in `style.css`
-- **Chart.js** — loaded from CDN for radar and sweep charts
+- **Tailwind CSS 4** — build-time via `@tailwindcss/vite`; design tokens and component styles live in `style.css`
+- **Chart.js** — npm dependency used by overview, compare, and tune charts
 - **Node.js 20+** — data pipeline and tooling (`tsx` for TypeScript scripts)
 
-There is **no** root `app.js` monolith. The Vite entry is [`src/main.tsx`](src/main.tsx) (React + React Router). [`src/bridge/installWindowBridge.ts`](src/bridge/installWindowBridge.ts) assigns implementations from TypeScript modules to `window.*` for inline HTML handlers in injected markup.
+There is **no** root `app.js` monolith. The Vite entry is [`src/main.tsx`](src/main.tsx) (React + React Router). [`src/bridge/installWindowBridge.ts`](src/bridge/installWindowBridge.ts) now provides a **minimal** `window.*` bridge only for remaining inline handlers in injected markup.
 
 ## Quick start
 
@@ -43,12 +43,12 @@ npm run build
 ## Architecture (summary)
 
 | Layer | Location | Role |
-|--------|-----------|------|
+| -------- | ----------- | ------ |
 | Engine | `src/engine/` | Deterministic prediction (L0–L3 + composite) |
 | State | `src/state/` | Loadouts, setup sync, app/compare UI state |
 | UI | `src/ui/` | Pages, dock, shared renderers |
-| Bridge | `src/main.ts` | `window.*` exports for `onclick` / legacy names |
-| Data | `pipeline/data/*.json` → `npm run export` → `src/data/generated.ts` + `data.js` | Source of truth vs generated app/compat outputs |
+| Bridge | `src/bridge/installWindowBridge.ts` | Minimal `window.*` surface for remaining inline handlers |
+| Data | `pipeline/data/*.json` → `npm run export` → `src/data/generated.ts` + `data.ts` | Source of truth plus generated TypeScript data modules |
 
 See [AGENTS.md](AGENTS.md) for agent-oriented detail and debugging notes.
 
@@ -59,10 +59,10 @@ See [AGENTS.md](AGENTS.md) for agent-oriented detail and debugging notes.
 ├── index.html
 ├── vite.config.ts
 ├── style.css
-├── data.js                 # generated compatibility artifact — do not edit
+├── data.ts                 # generated compatibility module — do not edit
 ├── src/
 │   ├── main.tsx            # Vite entry (React root)
-│   ├── bridge/             # `window.*` bridge for legacy HTML handlers
+│   ├── bridge/             # minimal `window.*` bridge for remaining inline handlers
 │   ├── global.d.ts         # Window typings for the bridge
 │   ├── vite-env.d.ts
 │   ├── engine/
@@ -77,7 +77,7 @@ See [AGENTS.md](AGENTS.md) for agent-oriented detail and debugging notes.
 │   ├── data/
 │   ├── schemas/
 │   ├── scripts/*.ts        # validate, export, canary, ingest, … (run with tsx)
-│   └── engine/             # legacy / reference (e.g. leaderboard-v2.ts)
+│   └── engine/             # pipeline-only/reference engine utilities
 ├── docs/                   # in-repo wiki-style guides
 ├── tools/                  # frame-gui, helpers
 └── .github/workflows/
@@ -115,11 +115,11 @@ The **active loadout** is the source of truth for the live app.
 **Generated (never hand-edit):**
 
 - `src/data/generated.ts` — produced by `npm run export` / `npm run pipeline`, used by the app
-- `data.js` — compatibility artifact produced by `npm run export` / `npm run pipeline`
+- `data.ts` — root compatibility re-export produced by `npm run export` / `npm run pipeline`
 
 ```bash
 npm run validate          # schema validation
-npm run export            # JSON → src/data/generated.ts + data.js
+npm run export            # JSON → src/data/generated.ts + data.ts
 npm run export:verify     # export + canary
 npm run pipeline          # validate + export:verify
 npm run ingest:frame
@@ -138,7 +138,7 @@ Before pushing:
 npm run typecheck && npm run canary && npm run build
 ```
 
-Manual smoke (after UI or engine changes): overview, tune apply flow, compare slots, compendium/strings, dock save/activate, leaderboard tab.
+Manual smoke (after UI or engine changes): overview hero/radar, tune apply flow, compare slots/editor, compendium/strings, dock save/activate, leaderboard tab roundtrip.
 
 ## Deployment
 

@@ -79,7 +79,7 @@ function formatTensionRange(tensionRange: unknown): string {
 }
 
 export function getFrameSpecs(racquet: Racquet): FrameSpecItem[] {
-  // balancePts may exist on racquet from data.js
+  // balancePts may exist on racquet from generated data modules
   const balancePts = (racquet as unknown as Record<string, string>).balancePts || `${racquet.balance}mm`;
 
   return [
@@ -284,7 +284,7 @@ export function getSetupFromEditorDOM(
     const mainsGauge = mainsGaugeEl?.value ? parseFloat(mainsGaugeEl.value) : null;
     const crossesGauge = crossesGaugeEl?.value ? parseFloat(crossesGaugeEl.value) : null;
 
-    // Apply gauge modifiers (cast from data.js)
+    // Apply gauge modifiers (cast from generated data)
     let mainsData = (STRINGS as unknown as StringData[]).find((s) => s.id === mainsId);
     let crossesData = (STRINGS as unknown as StringData[]).find((s) => s.id === crossesId);
     if (mainsData && mainsGauge) mainsData = applyGaugeModifier(mainsData, mainsGauge);

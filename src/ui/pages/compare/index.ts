@@ -221,13 +221,13 @@ export function renderCompareSummaries(): void {
 }
 
 export function renderCompareVerdict(): void {
-  // The new compare page currently uses slot cards, radar, and diff battery.
-  // Verdict content from the legacy compare surface is intentionally omitted.
+  // Compare currently renders slot cards, radar, and diff battery only.
+  // A separate verdict surface is intentionally omitted.
 }
 
 export function renderCompareMatrix(): void {
-  // The new compare page currently uses slot cards, radar, and diff battery.
-  // Matrix content from the legacy compare surface is intentionally omitted.
+  // Compare currently renders slot cards, radar, and diff battery only.
+  // A separate matrix surface is intentionally omitted.
 }
 
 export function getSlotColors() {

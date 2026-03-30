@@ -190,10 +190,10 @@ export function HowItWorks() {
           <h2 className="hiw-section-title">The Data Pipeline</h2>
           <div className="hiw-section-body">
             <p>
-              Equipment data lives in <code>pipeline/data/</code> as JSON files. The app loads generated data from <code>src/data/generated.ts</code>, and also emits compatibility <code>data.js</code> from the same source — never edit either generated file directly.
+              Equipment data lives in <code>pipeline/data/</code> as JSON files. The app loads generated data from <code>src/data/generated.ts</code>, and also emits compatibility <code>data.ts</code> from the same source — never edit either generated file directly.
             </p>
             <p>
-              <strong>Source of truth:</strong> <code>frames.json</code> (281 racquets) and <code>strings.json</code> (52 strings). These are validated against schemas, then exported to <code>src/data/generated.ts</code> for the app and <code>data.js</code> for compatibility.
+              <strong>Source of truth:</strong> <code>frames.json</code> (281 racquets) and <code>strings.json</code> (52 strings). These are validated against schemas, then exported to <code>src/data/generated.ts</code> for the app and <code>data.ts</code> for compatibility.
             </p>
             <p>
               <strong>Adding equipment:</strong> Use <code>npm run ingest:frame</code> or <code>npm run ingest:string</code> for interactive entry. Or batch import from CSV. After any addition, run <code>npm run pipeline</code> to validate, export, and run canary regression tests.

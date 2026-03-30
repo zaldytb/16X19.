@@ -134,7 +134,7 @@ The app remembers your repo root between sessions. See [`tools/frame-gui/README.
 
 > **Windows installer:** A standalone `FrameGuiSetup.exe` can be built with `npm run build:win` from `tools/frame-gui/` — no repo clone required for end users. Node.js must still be installed on their machine for the import features to work.
 
-**End-to-end pipeline (frames → app):** see [Frame-ingestion.md](Frame-ingestion.md) for how `frames.json` is validated, exported to `data.js`, and how `FRAME_META` is derived.
+**End-to-end pipeline (frames → app):** see [Frame-ingestion.md](Frame-ingestion.md) for how `frames.json` is validated, exported to `data.ts`, and how `FRAME_META` is derived.
 
 ---
 
@@ -196,25 +196,25 @@ npx tsx pipeline/scripts/ingest.ts --type string --csv path/to/your/strings.csv
 
 ## Finalizing Changes
 
-After adding any frame or string, regenerate `data.js` so the app picks up the new equipment:
+After adding any frame or string, regenerate `data.ts` so the app picks up the new equipment:
 
 ```bash
 npm run pipeline
 ```
 
-This runs **validate** (schemas), then **export:verify** (regenerate `data.js` and run **canary** regression tests). If everything passes, run `npm run dev` or refresh your deployed build — new equipment appears in the selectors.
+This runs **validate** (schemas), then **export:verify** (regenerate `data.ts` and run **canary** regression tests). If everything passes, run `npm run dev` or refresh your deployed build — new equipment appears in the selectors.
 
 ### Individual pipeline commands
 
 | Command | What it does |
 |---------|-------------|
 | `npm run validate` | Check all JSON data against schemas |
-| `npm run export` | Regenerate `data.js` from JSON |
+| `npm run export` | Regenerate `data.ts` from JSON |
 | `npm run export:verify` | Regenerate + run canary regression tests |
 | `npm run canary` | Run regression tests only |
 | `npm run pipeline` | Full validate → export → verify |
 
-> **Important:** `data.js` is a generated file — never edit it directly. Always edit the JSON source files in `pipeline/data/` and re-run the pipeline.
+> **Important:** `data.ts` is a generated file — never edit it directly. Always edit the JSON source files in `pipeline/data/` and re-run the pipeline.
 
 ---
 
@@ -239,6 +239,6 @@ npx tsx pipeline/scripts/ingest.ts --type string --csv my-strings.csv
 # Desktop GUI for frames (no CLI)
 cd tools/frame-gui && npm install && npm start
 
-# Rebuild data.js after any changes
+# Rebuild data.ts after any changes
 npm run pipeline
 ```

@@ -1,5 +1,9 @@
 # TypeScript Migration Checklist
 
+> **Archived — migration checkpoint snapshot, not the current repo contract.**
+> Items below refer to intermediate states such as `app.js`, transitional bridge shims, and earlier compare runtime paths.
+> For the current post-migration state, use [`README.md`](../README.md), [`AGENTS.md`](../AGENTS.md), and [`ts-migration-plan.md`](../ts-migration-plan.md).
+
 This checklist reflects the current migration state of `loadout-lab` after the shell, Tune, Compare, Compendium, and Strings cutovers.
 
 ## Completed

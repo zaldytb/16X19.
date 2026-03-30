@@ -42,13 +42,6 @@ import type {
   IdentityResult,
 } from '../../engine/types.js';
 
-/**
- * Initialize leaderboard with app-level dependencies — no-op kept for bridge compatibility
- */
-export function initLeaderboardApp(_appExports: Record<string, unknown>): void {
-  // replaced by direct imports — kept as no-op for bridge compatibility
-}
-
 interface Lbv2State {
   statKey: string;
   filterType: 'both' | 'full' | 'hybrid';

@@ -95,12 +95,12 @@ The installer bundles Electron but **not** Node.js. Users must have [Node.js](ht
 
 ## Contract
 
-**The GUI never edits `frames.json`, `src/data/generated.ts`, or `data.js` directly.**
+**The GUI never edits `frames.json`, `src/data/generated.ts`, or `data.ts` directly.**
 
 All data writes go through the existing ingest pipeline:
 
 1. The GUI writes a CSV to `pipeline/import/` inside the repo root.
 2. It spawns `tsx` on `pipeline/scripts/ingest.ts` with `--type frame --csv <path>`, which validates every row against `pipeline/schemas/frame.schema.json` before appending to `pipeline/data/frames.json`.
-3. Optionally it then runs `npm run pipeline` (validate + export) to regenerate `src/data/generated.ts` and compatibility `data.js`.
+3. Optionally it then runs `npm run pipeline` (validate + export) to regenerate `src/data/generated.ts` and compatibility `data.ts`.
 
 This means all existing validation, duplicate detection, and provenance tracking still apply.

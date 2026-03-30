@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import * as Shell from '../ui/pages/shell.js';
 import { HowItWorks } from './HowItWorks.js';
 import { Overview } from './Overview.js';
 import { Optimize } from './Optimize.js';
@@ -20,13 +19,6 @@ export function CompareWorkspace() {
 }
 
 export function OptimizeWorkspace() {
-  useEffect(() => {
-    // Legacy initialization after React render
-    const timer = setTimeout(() => {
-      window.initOptimize?.();
-    }, 0);
-    return () => clearTimeout(timer);
-  }, []);
   return <Optimize />;
 }
 

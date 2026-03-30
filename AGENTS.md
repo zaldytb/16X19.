@@ -34,7 +34,7 @@
 
 ### 1. Vite entry and `window` bridge
 
-[`src/main.ts`](src/main.ts) is the only application entry. It:
+[`src/main.tsx`](src/main.tsx) is the only application entry. It:
 
 - imports page and shared modules from `src/`
 - assigns functions and state to `window.*` for `onclick="..."` and legacy global names
@@ -42,7 +42,7 @@
 
 [`src/global.d.ts`](src/global.d.ts) augments `Window` with the bridge surface (optional properties, permissive call signatures) so strict TypeScript stays compatible with inline HTML handlers.
 
-When debugging, **trace `window.*` from `main.ts`** — do not assume a second runtime layer.
+When debugging, **trace `window.*` from `installWindowBridge()` (see `src/bridge/installWindowBridge.ts`)** — do not assume a second runtime layer.
 
 ### 2. No root `app.js`
 
@@ -70,7 +70,7 @@ loadout-lab/
 ├── CLAUDE.md
 ├── ts-migration-plan.md
 ├── src/
-│   ├── main.ts
+│   ├── main.tsx
 │   ├── global.d.ts
 │   ├── vite-env.d.ts
 │   ├── engine/

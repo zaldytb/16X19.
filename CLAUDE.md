@@ -41,9 +41,9 @@ npm run calibrate       # Re-fit string estimation coefficients
 
 ### Module bridge pattern
 
-TypeScript owns all live UI and engine code under `src/`. [`src/main.ts`](src/main.ts) is the Vite entry — it imports modules and assigns them to `window.*` so inline `onclick="funcName()"` handlers in `index.html` work. There is no root `app.js` monolith.
+TypeScript owns all live UI and engine code under `src/`. [`src/main.tsx`](src/main.tsx) is the Vite entry — it mounts the React app and [`src/bridge/installWindowBridge.ts`](src/bridge/installWindowBridge.ts) assigns modules to `window.*` so inline `onclick="funcName()"` handlers in injected HTML work. There is no root `app.js` monolith.
 
-When exposing new functions to HTML handlers: export from the TypeScript module → import in `src/main.ts` → assign to `window` (and extend `src/global.d.ts` if needed for strict typing).
+When exposing new functions to HTML handlers: export from the TypeScript module → import in `src/bridge/installWindowBridge.ts` → assign to `window` (and extend `src/global.d.ts` if needed for strict typing).
 
 ### 4-Layer Prediction Engine (`src/engine/`)
 

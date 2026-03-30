@@ -2,47 +2,44 @@
 // =====================================
 
 // Import CSS for Vite to process
-import '../style.css';
-import './ui/pages/compare/compare.css';
-
 // Import state store for window bridge
-import { getActiveLoadout, getSavedLoadouts, setActiveLoadout, setSavedLoadouts } from './state/store.js';
-import { createLoadout as _createLoadoutTS, saveLoadout as saveLoadoutState } from './state/loadout.js';
-import { getCurrentSetup, getSetupFromLoadout } from './state/setup-sync.js';
+import { getActiveLoadout, getSavedLoadouts, setActiveLoadout, setSavedLoadouts } from '../state/store.js';
+import { createLoadout as _createLoadoutTS, saveLoadout as saveLoadoutState } from '../state/loadout.js';
+import { getCurrentSetup, getSetupFromLoadout } from '../state/setup-sync.js';
 
 // Import page modules
-import * as MyLoadouts from './ui/pages/my-loadouts.js';
-import * as Overview from './ui/pages/overview.js';
-import * as Tune from './ui/pages/tune.js';
-import * as ComparePage from './ui/pages/compare/index.js';
-import * as Shell from './ui/pages/shell.js';
-import * as Theme from './ui/theme.js';
+import * as MyLoadouts from '../ui/pages/my-loadouts.js';
+import * as Overview from '../ui/pages/overview.js';
+import * as Tune from '../ui/pages/tune.js';
+import * as ComparePage from '../ui/pages/compare/index.js';
+import * as Shell from '../ui/pages/shell.js';
+import * as Theme from '../ui/theme.js';
 
 // Import dock components
-import * as DockCollapse from './ui/components/dock-collapse.js';
-import * as MobileDock from './ui/components/mobile-dock.js';
-import * as ObsAnimation from './ui/components/obs-animation.js';
-import * as DockPanel from './ui/components/dock-panel.js';
-import * as DockRenderers from './ui/components/dock-renderers.js';
-import * as DockCreate from './ui/components/dock-create.js';
-import * as SearchableSelect from './ui/components/searchable-select.js';
+import * as DockCollapse from '../ui/components/dock-collapse.js';
+import * as MobileDock from '../ui/components/mobile-dock.js';
+import * as ObsAnimation from '../ui/components/obs-animation.js';
+import * as DockPanel from '../ui/components/dock-panel.js';
+import * as DockRenderers from '../ui/components/dock-renderers.js';
+import * as DockCreate from '../ui/components/dock-create.js';
+import * as SearchableSelect from '../ui/components/searchable-select.js';
 
 // Import shared utilities
-import * as SharedRenderers from './ui/shared/renderers.js';
-import * as SharedRecommendations from './ui/shared/recommendations.js';
-import * as SharedPresets from './ui/shared/presets.js';
-import * as SharedHelpers from './ui/shared/helpers.js';
+import * as SharedRenderers from '../ui/shared/renderers.js';
+import * as SharedRecommendations from '../ui/shared/recommendations.js';
+import * as SharedPresets from '../ui/shared/presets.js';
+import * as SharedHelpers from '../ui/shared/helpers.js';
 
 
 const pageLoaders = {
-  leaderboard: () => import('./ui/pages/leaderboard.js'),
-  findMyBuild: () => import('./ui/pages/find-my-build.js'),
-  optimize: () => import('./ui/pages/optimize.js'),
-  compendium: () => import('./ui/pages/compendium.js'),
-  strings: () => import('./ui/pages/strings.js'),
+  leaderboard: () => import('../ui/pages/leaderboard.js'),
+  findMyBuild: () => import('../ui/pages/find-my-build.js'),
+  optimize: () => import('../ui/pages/optimize.js'),
+  compendium: () => import('../ui/pages/compendium.js'),
+  strings: () => import('../ui/pages/strings.js'),
 };
 
-type LeaderboardModule = typeof import('./ui/pages/leaderboard.js');
+type LeaderboardModule = typeof import('../ui/pages/leaderboard.js');
 let leaderboardModulePromise: Promise<LeaderboardModule> | null = null;
 
 async function ensureLeaderboardModule() {
@@ -71,13 +68,38 @@ function bindLazyFunction(
   };
 }
 
-function runDigicraftBootSequence(): void {
+let bootSequenceIntervalId: ReturnType<typeof setInterval> | null = null;
+let bootPendingTimeouts: number[] = [];
+
+function clearBootPendingTimeouts(): void {
+  for (const id of bootPendingTimeouts) {
+    window.clearTimeout(id);
+  }
+  bootPendingTimeouts = [];
+}
+
+/** Stop boot animation timers (e.g. React Strict Mode remount before finish). */
+export function clearDigicraftBootSequence(): void {
+  if (bootSequenceIntervalId !== null) {
+    window.clearInterval(bootSequenceIntervalId);
+    bootSequenceIntervalId = null;
+  }
+  clearBootPendingTimeouts();
+}
+
+export function runDigicraftBootSequence(): void {
+  clearDigicraftBootSequence();
+
   const loader = document.getElementById('dc-boot-loader');
   const batteryTrack = document.getElementById('dc-boot-battery');
   const pctText = document.getElementById('dc-boot-pct');
   const logsContainer = document.getElementById('dc-boot-logs');
 
-  if (!loader || !batteryTrack || !logsContainer) return;
+  if (!loader || !batteryTrack || !logsContainer) {
+    // Avoid leaving a full-screen overlay up if markup/timing failed.
+    if (loader) loader.remove();
+    return;
+  }
   const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
   const hasBootedThisSession = (() => {
     try {
@@ -148,16 +170,21 @@ function runDigicraftBootSequence(): void {
 
     if (progress === 100) {
       window.clearInterval(bootInterval);
-      window.setTimeout(() => {
+      bootSequenceIntervalId = null;
+      const t1 = window.setTimeout(() => {
         loader.classList.add('opacity-0');
-        window.setTimeout(() => loader.remove(), 700);
+        const t2 = window.setTimeout(() => loader.remove(), 700);
+        bootPendingTimeouts.push(t2);
       }, 120);
+      bootPendingTimeouts.push(t1);
     }
   }, 32);
+  bootSequenceIntervalId = bootInterval;
 }
 
 // Bridge: expose all exports to window for inline HTML handlers
 // This maintains backward compatibility with onclick="funcName()" patterns
+export function installWindowBridge(): void {
 window.getActiveLoadout = getActiveLoadout;
 window.getSavedLoadouts = getSavedLoadouts;
 window.setActiveLoadout = setActiveLoadout;
@@ -269,6 +296,7 @@ window.renderWhatToTryNext = Tune.renderWhatToTryNext;
 window.renderExplorePrompt = Tune.renderExplorePrompt;
 window._applyWttnBuild = Tune._applyWttnBuild;
 window._applyRecBuild = Tune._applyRecBuild;
+window._applyGaugeSelection = Tune._applyGaugeSelection;
 window._saveWttnBuild = Tune._saveWttnBuild;
 window._saveRecBuild = Tune._saveRecBuild;
 window.onTuneSliderInput = Tune.onTuneSliderInput;
@@ -527,39 +555,37 @@ window._lbv2State = window._lbv2State || { initialized: false };
 if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
   console.log('[Main] Explicit window bridge ready');
 }
+}
 
-// Initialize the app immediately (module scripts may run after DOM is already parsed)
-try {
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      runDigicraftBootSequence();
-      Shell.init();
-      Theme.handleResponsiveHeader();
-      DockCollapse._initDockCollapse();
-    });
-  } else {
-    runDigicraftBootSequence();
+/**
+ * Non-React shell init: Shell.init(), dock listeners.
+ * Boot animation runs from App ShellLayout useLayoutEffect (after React commits markup).
+ */
+export function runVanillaAppInit(): void {
+  try {
     Shell.init();
     Theme.handleResponsiveHeader();
     DockCollapse._initDockCollapse();
-  }
 
-  const dock = document.getElementById('build-dock');
-  if (dock) {
-    dock.addEventListener('scroll', function handleDockScroll() {
-      dock.classList.toggle('dock-scrolled', dock.scrollTop > 0);
-    }, { passive: true });
-  }
+    const dock = document.getElementById('build-dock');
+    if (dock && dock.dataset.scrollBound !== 'true') {
+      dock.dataset.scrollBound = 'true';
+      dock.addEventListener('scroll', function handleDockScroll() {
+        dock.classList.toggle('dock-scrolled', dock.scrollTop > 0);
+      }, { passive: true });
+    }
 
-  const dockBackdrop = document.getElementById('dock-backdrop');
-  if (dockBackdrop) {
-    dockBackdrop.addEventListener('click', function handleDockBackdropClick() {
-      const d = document.getElementById('build-dock');
-      if (d && d.classList.contains('dock-expanded')) {
-        MobileDock.toggleMobileDock();
-      }
-    });
+    const dockBackdrop = document.getElementById('dock-backdrop');
+    if (dockBackdrop && dockBackdrop.dataset.clickBound !== 'true') {
+      dockBackdrop.dataset.clickBound = 'true';
+      dockBackdrop.addEventListener('click', function handleDockBackdropClick() {
+        const d = document.getElementById('build-dock');
+        if (d && d.classList.contains('dock-expanded')) {
+          MobileDock.toggleMobileDock();
+        }
+      });
+    }
+  } catch (e) {
+    console.error('[Main] Error during initialization:', e);
   }
-} catch (e) {
-  console.error('[Main] Error during initialization:', e);
 }

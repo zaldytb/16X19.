@@ -115,7 +115,8 @@ function renderSlots(): void {
   
   const slots = _currentState.slots;
   const nextKey = getStructuralSlotsKey();
-  if (_lastSlotsRenderKey === nextKey) return;
+  const hasRenderedSlots = container.children.length > 0;
+  if (_lastSlotsRenderKey === nextKey && hasRenderedSlots) return;
   _lastSlotsRenderKey = nextKey;
   
   container.innerHTML = `
@@ -173,7 +174,8 @@ function renderRadar(): void {
     `;
   }
   
-  if (_lastRadarRenderKey !== radarKey) {
+  const hasCanvas = !!container.querySelector('#compare-radar-chart');
+  if (_lastRadarRenderKey !== radarKey || !hasCanvas) {
     measurePerformance('compare radar update', () => renderRadarChart('compare-radar-chart', { slots: configured }));
     _lastRadarRenderKey = radarKey;
   }
@@ -199,7 +201,8 @@ function renderDiff(): void {
     return;
   }
   
-  if (_lastDiffRenderKey === diffKey) return;
+  const hasRenderedDiff = container.children.length > 0;
+  if (_lastDiffRenderKey === diffKey && hasRenderedDiff) return;
 
   container.innerHTML = measurePerformance('compare diff update', () => renderDiffBattery({
     slots: configured,

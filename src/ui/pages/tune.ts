@@ -13,8 +13,9 @@ import type { Racquet, StringData, SetupAttributes, StringConfig, Loadout } from
 import { GAUGE_LABELS } from '../../engine/constants.js';
 import { getGaugeOptions } from '../../engine/string-profile.js';
 import { STRINGS } from '../../data/loader.js';
-import { createLoadout } from '../../state/loadout.js';
-import { getActiveLoadout, getSavedLoadouts } from '../../state/store.js';
+import { createLoadout, saveLoadout } from '../../state/loadout.js';
+import { getActiveLoadout, getSavedLoadouts, setActiveLoadout } from '../../state/store.js';
+import { syncViews } from '../../runtime/coordinator.js';
 import { getCurrentSetup, getSetupFromLoadout } from '../../state/setup-sync.js';
 import { getCurrentMode } from '../../state/app-state.js';
 import { _prevObsValues, animateOBS } from '../components/obs-animation.js';
@@ -786,6 +787,82 @@ export function renderGaugeExplorer(setup: { racquet: Racquet; stringConfig: Str
   container.innerHTML = html;
 }
 
+function _setGaugeSelectByMm(select: HTMLSelectElement | null, mm: number): void {
+  if (!select) return;
+  for (let i = 0; i < select.options.length; i += 1) {
+    const v = parseFloat(select.options[i].value);
+    if (Number.isFinite(v) && Math.abs(v - mm) < 0.001) {
+      select.selectedIndex = i;
+      return;
+    }
+  }
+}
+
+function _loadoutNameFromSetup(racquet: Racquet, stringConfig: StringConfig): string {
+  if (stringConfig.isHybrid) {
+    return `${stringConfig.mains.name} / ${stringConfig.crosses.name} on ${racquet.name}`;
+  }
+  return `${stringConfig.string.name} on ${racquet.name}`;
+}
+
+/** Apply a gauge column from the explorer — updates active loadout + dock; exposed to onclick. */
+export function _applyGaugeSelection(gaugeMm: number, sectionIndex: number): void {
+  const active = getActiveLoadout();
+  if (!active) return;
+
+  const setup = getCurrentSetup();
+  if (!setup) return;
+
+  const { stringConfig, racquet } = setup;
+  const next: Loadout = { ...active };
+
+  if (stringConfig.isHybrid) {
+    if (sectionIndex === 0) {
+      next.mainsGauge = String(gaugeMm);
+    } else if (sectionIndex === 1) {
+      next.crossesGauge = String(gaugeMm);
+    } else {
+      return;
+    }
+  } else if (sectionIndex === 0) {
+    next.gauge = String(gaugeMm);
+  } else {
+    return;
+  }
+
+  const resolved = getSetupFromLoadout(next);
+  if (!resolved) return;
+
+  const scored = getScoredSetup(resolved);
+  next.stats = scored.stats;
+  next.obs = +scored.obs.toFixed(1);
+  next.identity = scored.identity?.name || scored.identity?.archetype || '';
+  next.name = _loadoutNameFromSetup(resolved.racquet, resolved.stringConfig);
+
+  const inSaved = getSavedLoadouts().some((l) => l.id === next.id);
+  next._dirty = inSaved;
+
+  setActiveLoadout(next);
+  if (inSaved) {
+    saveLoadout(next);
+  }
+
+  if (!stringConfig.isHybrid) {
+    _setGaugeSelectByMm(document.getElementById('gauge-select-full') as HTMLSelectElement | null, gaugeMm);
+  } else if (sectionIndex === 0) {
+    _setGaugeSelectByMm(document.getElementById('gauge-select-mains') as HTMLSelectElement | null, gaugeMm);
+  } else {
+    _setGaugeSelectByMm(document.getElementById('gauge-select-crosses') as HTMLSelectElement | null, gaugeMm);
+  }
+
+  syncViews('tune-gauge-apply', { activeLoadout: true, dockEditorContext: true });
+
+  const fresh = getCurrentSetup();
+  if (fresh) {
+    initTuneMode(fresh);
+  }
+}
+
 /**
  * Render baseline marker
  */
@@ -907,11 +984,11 @@ export function renderSweepChart(setup: { racquet: Racquet }): void {
     animation: { duration: 400, easing: 'easeOutQuart' }
   };
 
-  if (sweepChart?.data && sweepChart.update) {
-    sweepChart.data = nextData;
-    sweepChart.options = nextOptions;
-    sweepChart.update('none');
-    return;
+  // Always destroy + recreate: in-place Chart.js updates often fail when tension range /
+  // label count changes after applying WTTN or recommended builds (new string / frame).
+  if (sweepChart) {
+    sweepChart.destroy();
+    sweepChart = null;
   }
 
   sweepChart = new Chart(ctx, {
@@ -1391,7 +1468,7 @@ export function _applyWttnBuild(btn: HTMLElement): void {
   if (loadout) {
     (window as WindowExt).activateLoadout?.(loadout);
     const newSetup = getCurrentSetup();
-    if (newSetup && getCurrentMode() === 'tune') initTuneMode(newSetup);
+    if (newSetup) initTuneMode(newSetup);
   }
 
   _flashActionButton(btn, 'Apply', 'Applied \u2713');
@@ -1409,7 +1486,7 @@ export function _applyRecBuild(
   if (loadout) {
     (window as WindowExt).activateLoadout?.(loadout);
     const newSetup = getCurrentSetup();
-    if (newSetup && getCurrentMode() === 'tune') initTuneMode(newSetup);
+    if (newSetup) initTuneMode(newSetup);
   }
 }
 

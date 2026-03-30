@@ -18,19 +18,36 @@ interface WindowExt extends Window {
   getCurrentSetup?: () => { racquet: Racquet; stringConfig: StringConfig } | null;
   switchMode?: (mode: string) => void;
   loadPresetFromData?: (preset: Record<string, unknown>) => void;
-  createLoadout?: (frameId: string, stringId: string, tension: number, opts?: Record<string, unknown>) => { id: string; stats?: SetupAttributes | null } | null;
+  activateLoadout?: (loadout: OptimizerLoadoutLike) => void;
+  createLoadout?: (frameId: string, stringId: string, tension: number, opts?: Record<string, unknown>) => OptimizerLoadoutLike | null;
   saveLoadout?: (loadout: { id: string }) => void;
-  activeLoadout?: { frameId: string } | null;
+  activeLoadout?: {
+    id?: string;
+    frameId: string;
+    stringId?: string | null;
+    isHybrid?: boolean;
+    mainsId?: string | null;
+    crossesId?: string | null;
+    mainsTension?: number;
+    crossesTension?: number;
+  } | null;
   compareGetState?: () => { slots?: Array<{ id: string; loadout: unknown | null }> };
   compareSetSlotLoadout?: (slotId: string, loadout: { id: string }, stats: SetupAttributes) => void;
 }
 
-// Module-level state
-let _optimizeInitialized = false;
-let _optExcludedStringIds = new Set<string>();
-let _optAllowedMaterials = new Set<string>();
-let _optAllowedBrands = new Set<string>();
-let _optLastCandidates: Array<{
+type OptimizerLoadoutLike = {
+  id: string;
+  frameId: string;
+  stringId?: string | null;
+  isHybrid?: boolean;
+  mainsId?: string | null;
+  crossesId?: string | null;
+  mainsTension?: number;
+  crossesTension?: number;
+  stats?: SetupAttributes | null;
+};
+
+type OptimizeCandidate = {
   type: 'full' | 'hybrid';
   label: string;
   gauge?: string;
@@ -42,38 +59,83 @@ let _optLastCandidates: Array<{
   mainsData?: StringData;
   crossesData?: StringData;
   racquet: Racquet;
-}> | null = null;
+};
+
+// Module-level state
+let _optimizeInitialized = false;
+let _optExcludedStringIds = new Set<string>();
+let _optAllowedMaterials = new Set<string>();
+let _optAllowedBrands = new Set<string>();
+let _optLastCandidates: OptimizeCandidate[] | null = null;
 let _optLastCurrentOBS = 0;
 let _optRunToken = 0;
+let _optLastSortBy = 'obs';
+let _optLastDisplayedCandidates: OptimizeCandidate[] = [];
+
+function _syncOptimizeFrameInput(frameSearch: HTMLInputElement, frameValue: HTMLInputElement): void {
+  const win = window as WindowExt;
+  const activeLoadout = win.activeLoadout;
+  const currentSetup = win.getCurrentSetup?.();
+
+  if (activeLoadout?.frameId) {
+    const activeFrame = RACQUETS.find((r) => r.id === activeLoadout.frameId);
+    if (activeFrame) {
+      frameSearch.value = activeFrame.name;
+      frameValue.value = activeFrame.id;
+      return;
+    }
+  }
+
+  if (currentSetup?.racquet) {
+    frameSearch.value = currentSetup.racquet.name;
+    frameValue.value = currentSetup.racquet.id;
+    return;
+  }
+
+  if (!frameValue.value) {
+    frameValue.value = 'current';
+  }
+}
+
+function _restoreOptimizerResultsIfAvailable(): void {
+  if (!_optLastCandidates) return;
+
+  const sortEl = document.getElementById('opt-sort') as HTMLSelectElement | null;
+  const countEl = document.getElementById('opt-results-count');
+  const sortBy = sortEl?.value || _optLastSortBy || 'obs';
+  _optLastSortBy = sortBy;
+
+  if (sortEl) {
+    sortEl.value = sortBy;
+  }
+  if (countEl) {
+    countEl.textContent = `${_optLastCandidates.length} result${_optLastCandidates.length !== 1 ? 's' : ''}`;
+  }
+
+  renderOptimizerResults(_optLastCandidates, sortBy, _optLastCurrentOBS);
+}
+
+function _getOptimizerCandidateAt(idx: number) {
+  return _optLastDisplayedCandidates[idx] || _optLastCandidates?.[idx] || null;
+}
 
 /**
  * Initialize the optimizer page
  */
 export function initOptimize(): void {
-  if (_optimizeInitialized) return;
-  _optimizeInitialized = true;
-
   const frameSearch = document.getElementById('opt-frame-search') as HTMLInputElement | null;
   const frameDropdown = document.getElementById('opt-frame-dropdown') as HTMLElement | null;
   const frameValue = document.getElementById('opt-frame-value') as HTMLInputElement | null;
 
   if (!frameSearch || !frameDropdown || !frameValue) return;
 
-  // Set default to active loadout frame, or current setup frame
-  const win = window as WindowExt;
-  const activeLoadout = win.activeLoadout;
-  const currentSetup = win.getCurrentSetup?.();
+  _syncOptimizeFrameInput(frameSearch, frameValue);
 
-  if (activeLoadout && activeLoadout.frameId) {
-    const loFrame = RACQUETS.find(r => r.id === activeLoadout.frameId);
-    if (loFrame) {
-      frameSearch.value = loFrame.name;
-      frameValue.value = loFrame.id;
-    }
-  } else if (currentSetup) {
-    frameSearch.value = currentSetup.racquet.name;
-    frameValue.value = currentSetup.racquet.id;
+  if (frameSearch.dataset.optInitialized === 'true') {
+    return;
   }
+  frameSearch.dataset.optInitialized = 'true';
+  _optimizeInitialized = true;
 
   _initOptSearchable(
     frameSearch,
@@ -87,6 +149,7 @@ export function initOptimize(): void {
   _optAllowedMaterials = new Set(materials);
   const matContainer = document.getElementById('opt-material-checks');
   if (matContainer) {
+    matContainer.innerHTML = '';
     materials.forEach(mat => {
       const item = document.createElement('label');
       item.className = 'opt-ms-item active';
@@ -109,6 +172,7 @@ export function initOptimize(): void {
   _optAllowedBrands = new Set(brands);
   const brandContainer = document.getElementById('opt-brand-checks');
   if (brandContainer) {
+    brandContainer.innerHTML = '';
     brands.forEach(brand => {
       const item = document.createElement('label');
       item.className = 'opt-ms-item active';
@@ -189,6 +253,7 @@ export function initOptimize(): void {
   document.getElementById('opt-sort')?.addEventListener('change', () => {
     if (_optLastCandidates && _optLastCandidates.length > 0) {
       const sortBy = (document.getElementById('opt-sort') as HTMLSelectElement | null)?.value || 'obs';
+      _optLastSortBy = sortBy;
       _optLastCandidates.sort((a, b) => {
         if (sortBy === 'obs') return b.score - a.score;
         return ((b.stats as unknown as Record<string, number>)[sortBy] || 0) - ((a.stats as unknown as Record<string, number>)[sortBy] || 0);
@@ -217,6 +282,8 @@ export function initOptimize(): void {
       }
     }
   }
+
+  _restoreOptimizerResultsIfAvailable();
 }
 
 /**
@@ -365,6 +432,7 @@ async function _runOptimizerCore(resultsEl: HTMLElement | null, countEl: HTMLEle
     STRINGS.filter(isStringAllowed)
   );
   const sortBy = (document.getElementById('opt-sort') as HTMLSelectElement | null)?.value || 'obs';
+  _optLastSortBy = sortBy;
   const tensionMin = parseInt((document.getElementById('opt-tension-min') as HTMLInputElement | null)?.value || '40') || 40;
   const tensionMax = parseInt((document.getElementById('opt-tension-max') as HTMLInputElement | null)?.value || '65') || 65;
   const upgradeMode = (document.getElementById('opt-upgrade-mode') as HTMLInputElement | null)?.checked ?? false;
@@ -591,6 +659,7 @@ export function renderOptimizerResults(
   }
 
   const top = displayCandidates.slice(0, 200);
+  _optLastDisplayedCandidates = top;
 
   const filterHTML = '<div class="opt-tension-filter">' +
     '<label class="opt-tension-label">Target Tension</label>' +
@@ -630,7 +699,7 @@ export function renderOptimizerResults(
     const tensionLabel = c.type === 'hybrid' ? `${c.tension}/${c.crossesTension}` : `${c.tension}`;
     const typeTag = c.type === 'hybrid' ? '<span class="opt-tag-hybrid">H</span>' : '<span class="opt-tag-full">F</span>';
 
-    html += `<tr class="opt-row${i === 0 ? ' opt-row-top' : ''}">
+    html += `<tr class="opt-row${i === 0 ? ' opt-row-top' : ''}" data-opt-idx="${i}">
       <td class="opt-td opt-td-rank">${i + 1}</td>
       <td class="opt-td opt-td-type">${typeTag}</td>
       <td class="opt-td opt-td-string">${c.label}</td>
@@ -718,40 +787,10 @@ export function _optBuildPresetData(candidate: NonNullable<typeof _optLastCandid
   }
 }
 
-/**
- * View optimizer result
- */
-export function optActionView(idx: number): void {
-  if (!_optLastCandidates) return;
-  const c = _optLastCandidates[idx];
-  if (!c) return;
-  const preset = _optBuildPresetData(c);
-  (window as WindowExt).loadPresetFromData?.(preset);
-  (window as WindowExt).switchMode?.('overview');
-}
-
-/**
- * Tune optimizer result
- */
-export function optActionTune(idx: number): void {
-  if (!_optLastCandidates) return;
-  const c = _optLastCandidates[idx];
-  if (!c) return;
-  const preset = _optBuildPresetData(c);
-  (window as WindowExt).loadPresetFromData?.(preset);
-  (window as WindowExt).switchMode?.('tune');
-}
-
-/**
- * Compare optimizer result
- */
-export function optActionCompare(idx: number): void {
-  if (!_optLastCandidates) return;
-  const c = _optLastCandidates[idx];
-  if (!c) return;
-  const preset = _optBuildPresetData(c);
+function _createOptimizerLoadout(candidate: NonNullable<typeof _optLastCandidates>[0]) {
   const win = window as WindowExt;
-  const lo = win.createLoadout?.(
+  const preset = _optBuildPresetData(candidate);
+  return win.createLoadout?.(
     preset.racquetId,
     preset.isHybrid ? preset.mainsId! : preset.stringId!,
     preset.mainsTension,
@@ -762,7 +801,72 @@ export function optActionCompare(idx: number): void {
       crossesId: preset.crossesId,
       crossesTension: preset.crossesTension,
     }
-  );
+  ) || null;
+}
+
+function _savePreviousActiveLoadout(nextLoadout: {
+  frameId: string;
+  stringId?: string | null;
+  isHybrid?: boolean;
+  mainsId?: string | null;
+  crossesId?: string | null;
+  mainsTension?: number;
+  crossesTension?: number;
+}): void {
+  const win = window as WindowExt;
+  const activeLoadout = win.activeLoadout;
+  if (!activeLoadout || !activeLoadout.id || typeof win.saveLoadout !== 'function') return;
+
+  const isSameBuild =
+    activeLoadout.frameId === nextLoadout.frameId &&
+    (activeLoadout.stringId || '') === (nextLoadout.stringId || '') &&
+    !!activeLoadout.isHybrid === !!nextLoadout.isHybrid &&
+    (activeLoadout.mainsId || '') === (nextLoadout.mainsId || '') &&
+    (activeLoadout.crossesId || '') === (nextLoadout.crossesId || '') &&
+    (activeLoadout.mainsTension || 0) === (nextLoadout.mainsTension || 0) &&
+    (activeLoadout.crossesTension || 0) === (nextLoadout.crossesTension || 0);
+
+  if (!isSameBuild) {
+    win.saveLoadout(activeLoadout as { id: string });
+  }
+}
+
+/**
+ * View optimizer result
+ */
+export function optActionView(idx: number): void {
+  const c = _getOptimizerCandidateAt(idx);
+  if (!c) return;
+  const win = window as WindowExt;
+  const loadout = _createOptimizerLoadout(c);
+  if (!loadout) return;
+  _savePreviousActiveLoadout(loadout);
+  win.activateLoadout?.(loadout);
+  win.switchMode?.('overview');
+}
+
+/**
+ * Tune optimizer result
+ */
+export function optActionTune(idx: number): void {
+  const c = _getOptimizerCandidateAt(idx);
+  if (!c) return;
+  const win = window as WindowExt;
+  const loadout = _createOptimizerLoadout(c);
+  if (!loadout) return;
+  _savePreviousActiveLoadout(loadout);
+  win.activateLoadout?.(loadout);
+  win.switchMode?.('tune');
+}
+
+/**
+ * Compare optimizer result
+ */
+export function optActionCompare(idx: number): void {
+  const c = _getOptimizerCandidateAt(idx);
+  if (!c) return;
+  const win = window as WindowExt;
+  const lo = _createOptimizerLoadout(c);
   const compareState = win.compareGetState?.();
   if (lo?.stats && compareState?.slots && typeof win.compareSetSlotLoadout === 'function') {
     const emptySlot = compareState.slots.find((slot: any) => slot.loadout === null);
@@ -778,26 +882,15 @@ export function optActionCompare(idx: number): void {
  * Save optimizer result
  */
 export function optActionSave(idx: number): void {
-  if (!_optLastCandidates) return;
-  const c = _optLastCandidates[idx];
+  const c = _getOptimizerCandidateAt(idx);
   if (!c) return;
-  const preset = _optBuildPresetData(c);
   const win = window as WindowExt;
-
-  const opts: Record<string, unknown> = { source: 'optimize' };
-  if (preset.isHybrid) {
-    opts.isHybrid = true;
-    opts.mainsId = preset.mainsId;
-    opts.crossesId = preset.crossesId;
-    opts.crossesTension = preset.crossesTension;
-  }
-
-  const lo = win.createLoadout?.(preset.racquetId, preset.isHybrid ? preset.mainsId! : preset.stringId!, preset.mainsTension, opts);
+  const lo = _createOptimizerLoadout(c);
   if (lo) {
     win.saveLoadout?.(lo);
   }
 
-  const btn = document.querySelector(`tr[data-opt-idx="${idx}"] .opt-act-btn:last-child`);
+  const btn = document.querySelector(`tr[data-opt-idx="${idx}"] .opt-act-save`);
   if (btn) {
     btn.textContent = '✓';
     btn.classList.add('opt-act-saved');

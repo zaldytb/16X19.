@@ -39,6 +39,8 @@ import { getScoredSetup } from '../../utils/performance.js';
 import { syncViews } from '../../runtime/coordinator.js';
 import { validateRuntimeContracts } from '../../runtime/contracts.js';
 import { reportRuntimeIssue } from '../../runtime/diagnostics.js';
+import { getRouterNavigate } from '../../routing/routerNavigate.js';
+import { modeToPath } from '../../routing/modePaths.js';
 
 type CompareSlot = {
   id: number;
@@ -380,7 +382,7 @@ export function activateLoadout(loadout: Loadout | null): void {
   if (racquet && optFrameSearch) optFrameSearch.value = racquet.name;
   if (racquet && optFrameValue) optFrameValue.value = racquet.id;
 
-  syncRuntimeViews('activate-loadout', { dockEditorContext: true });
+  syncRuntimeViews('activate-loadout', { activeLoadout: true, dockEditorContext: true });
 }
 
 export function switchToLoadout(loadoutId: string): void {
@@ -654,30 +656,40 @@ export function switchMode(mode: string): void {
   const currentMode = getCurrentMode();
   if (mode === currentMode) return;
 
+  const useReactRouter = !!getRouterNavigate();
   const workspace = document.getElementById('workspace');
   const isMobileScroll = window.innerWidth <= 1024;
 
-  if (isMobileScroll) {
-    scrollPositions[currentMode] = window.scrollY;
-  } else if (workspace) {
-    scrollPositions[currentMode] = workspace.scrollTop;
-  }
-
-  const currentSection = document.getElementById(`mode-${currentMode}`);
-  if (currentSection) currentSection.classList.add('hidden');
-
-  document.querySelectorAll('.mode-btn').forEach((button) => {
-    button.classList.toggle('active', (button as HTMLElement).dataset.mode === mode);
-  });
-  document.querySelectorAll('.mobile-tab-btn').forEach((button) => {
-    button.classList.toggle('active', (button as HTMLElement).dataset.mode === mode);
-  });
-
-  if (isMobileScroll) {
-    const dock = document.getElementById('build-dock');
-    if (dock?.classList.contains('dock-expanded') && typeof (window as any).toggleMobileDock === 'function') {
-      (window as any).toggleMobileDock();
+  if (!useReactRouter) {
+    if (isMobileScroll) {
+      scrollPositions[currentMode] = window.scrollY;
+    } else if (workspace) {
+      scrollPositions[currentMode] = workspace.scrollTop;
     }
+
+    const currentSection = document.getElementById(`mode-${currentMode}`);
+    if (currentSection) currentSection.classList.add('hidden');
+
+    document.querySelectorAll('.mode-btn').forEach((button) => {
+      button.classList.toggle('active', (button as HTMLElement).dataset.mode === mode);
+    });
+    document.querySelectorAll('.mobile-tab-btn').forEach((button) => {
+      button.classList.toggle('active', (button as HTMLElement).dataset.mode === mode);
+    });
+
+    if (isMobileScroll) {
+      const dock = document.getElementById('build-dock');
+      if (dock?.classList.contains('dock-expanded') && typeof (window as any).toggleMobileDock === 'function') {
+        (window as any).toggleMobileDock();
+      }
+    }
+  } else {
+    document.querySelectorAll('.mode-btn').forEach((button) => {
+      button.classList.toggle('active', (button as HTMLElement).dataset.mode === mode);
+    });
+    document.querySelectorAll('.mobile-tab-btn').forEach((button) => {
+      button.classList.toggle('active', (button as HTMLElement).dataset.mode === mode);
+    });
   }
 
   setCurrentMode(mode);
@@ -693,79 +705,135 @@ export function switchMode(mode: string): void {
   updateDockEditorTitle();
   updateDockEditorActionState();
 
-  const nextSection = document.getElementById(`mode-${mode}`);
-  if (nextSection) {
-    nextSection.classList.remove('hidden');
-    nextSection.style.animation = 'none';
-    void nextSection.offsetHeight;
-    nextSection.style.animation = '';
+  if (!useReactRouter) {
+    const nextSection = document.getElementById(`mode-${mode}`);
+    if (nextSection) {
+      nextSection.classList.remove('hidden');
+      nextSection.style.animation = 'none';
+      void nextSection.offsetHeight;
+      nextSection.style.animation = '';
+    }
+
+    requestAnimationFrame(() => {
+      if (isMobileScroll) {
+        window.scrollTo(0, scrollPositions[mode] || 0);
+      } else if (workspace) {
+        workspace.scrollTop = scrollPositions[mode] || 0;
+      }
+    });
   }
 
-  requestAnimationFrame(() => {
-    if (isMobileScroll) {
-      window.scrollTo(0, scrollPositions[mode] || 0);
-    } else if (workspace) {
-      workspace.scrollTop = scrollPositions[mode] || 0;
-    }
-  });
-
-  if (mode === 'compare') {
-    // Initialize new TypeScript compare page
-    const win = window as any;
-    if (win.initComparePage) {
-      win.initComparePage();
-      const compareState = win.compareGetState?.();
-      const configuredSlots = compareState?.slots?.filter((slot: any) => slot.loadout !== null) || [];
-      if (configuredSlots.length === 0) {
-        if (getSavedLoadouts().length >= 2) {
-          autoFillCompareFromSaved();
-        } else if (getSavedLoadouts().length === 1 || getActiveLoadout()) {
-          ComparePage.addComparisonSlotFromHome();
-          ComparePage.showQuickAddPrompt();
-        } else {
-          ComparePage.addComparisonSlotFromHome();
-        }
-      }
-    } else {
-      // Fallback to legacy compare
-      renderComparisonPresets();
-      if (getCompareSlots().length === 0) {
-        if (getSavedLoadouts().length >= 2) {
-          autoFillCompareFromSaved();
-        } else if (getSavedLoadouts().length === 1 || getActiveLoadout()) {
-          ComparePage.addComparisonSlotFromHome();
-          ComparePage.showQuickAddPrompt();
-        } else {
-          ComparePage.addComparisonSlotFromHome();
-        }
-      } else {
-        renderCompareSurfaces();
-      }
-    }
-  } else if (mode === 'optimize') {
-    void ensureOptimizeModule().then((Optimize) => {
-      if (!_optimizeInitialized) {
+  if (!useReactRouter) {
+    if (mode === 'compare') {
+      runCompareModeActivation();
+    } else if (mode === 'optimize') {
+      void ensureOptimizeModule().then((Optimize) => {
         Optimize.initOptimize();
         _optimizeInitialized = true;
-      }
-    });
-  } else if (mode === 'compendium') {
-    void ensureCompendiumModule().then((Compendium) => {
-      if (!_compendiumInitialized) {
-        if (win.initCompendium && win.initCompendium !== Compendium.initCompendium) {
-          win.initCompendium();
+      });
+    } else if (mode === 'compendium') {
+      void ensureCompendiumModule().then((Compendium) => {
+        if (!_compendiumInitialized) {
+          if (win.initCompendium && win.initCompendium !== Compendium.initCompendium) {
+            win.initCompendium();
+          } else {
+            Compendium.initCompendium();
+          }
+          _compendiumInitialized = true;
+        } else if (win._compSyncWithActiveLoadout && win._compSyncWithActiveLoadout !== Compendium._compSyncWithActiveLoadout) {
+          win._compSyncWithActiveLoadout();
         } else {
-          Compendium.initCompendium();
+          Compendium._compSyncWithActiveLoadout();
         }
-        _compendiumInitialized = true;
-      } else if (win._compSyncWithActiveLoadout && win._compSyncWithActiveLoadout !== Compendium._compSyncWithActiveLoadout) {
-        win._compSyncWithActiveLoadout();
-      } else {
-        Compendium._compSyncWithActiveLoadout();
-      }
-    });
+      });
+    }
   }
-  syncRuntimeViews('switch-mode', { mode: true, dockEditorContext: true });
+
+  const nav = getRouterNavigate();
+  if (nav) {
+    nav(modeToPath(mode));
+    requestAnimationFrame(() => {
+      syncRuntimeViews('switch-mode', { mode: true, dockEditorContext: true });
+    });
+  } else {
+    syncRuntimeViews('switch-mode', { mode: true, dockEditorContext: true });
+  }
+}
+
+/** Compare tab activation (DOM must exist). Used by React route mount and legacy switchMode. */
+export function runCompareModeActivation(): void {
+  const win = window as any;
+  if (win.initComparePage) {
+    win.initComparePage();
+    const compareState = win.compareGetState?.();
+    const configuredSlots = compareState?.slots?.filter((slot: any) => slot.loadout !== null) || [];
+    if (configuredSlots.length === 0) {
+      if (getSavedLoadouts().length >= 2) {
+        autoFillCompareFromSaved();
+      } else if (getSavedLoadouts().length === 1 || getActiveLoadout()) {
+        ComparePage.addComparisonSlotFromHome();
+        ComparePage.showQuickAddPrompt();
+      } else {
+        ComparePage.addComparisonSlotFromHome();
+      }
+    }
+  } else {
+    renderComparisonPresets();
+    if (getCompareSlots().length === 0) {
+      if (getSavedLoadouts().length >= 2) {
+        autoFillCompareFromSaved();
+      } else if (getSavedLoadouts().length === 1 || getActiveLoadout()) {
+        ComparePage.addComparisonSlotFromHome();
+        ComparePage.showQuickAddPrompt();
+      } else {
+        ComparePage.addComparisonSlotFromHome();
+      }
+    } else {
+      renderCompareSurfaces();
+    }
+  }
+}
+
+/** Optimize / Compendium first-time init when React route mounts (DOM ready). */
+export function runOptimizeRouteActivation(): void {
+  void ensureOptimizeModule().then((Optimize) => {
+    Optimize.initOptimize();
+    _optimizeInitialized = true;
+  });
+}
+
+export type CompendiumWorkspaceTab = 'rackets' | 'strings' | 'leaderboard';
+
+/**
+ * Initialize compendium (first visit) or sync active frame; then switch the visible tab.
+ * Tab switching uses the loaded module directly so it is not lost to the async window bridge
+ * or missed on repeat visits (previously only the first init path showed Rackets reliably).
+ */
+export function runCompendiumRouteActivation(options?: { tab?: CompendiumWorkspaceTab }): void {
+  const tab = options?.tab ?? 'rackets';
+  void ensureCompendiumModule().then((Compendium) => {
+    if (!_compendiumInitialized) {
+      if (win.initCompendium && win.initCompendium !== Compendium.initCompendium) {
+        win.initCompendium();
+      } else {
+        Compendium.initCompendium();
+      }
+      _compendiumInitialized = true;
+    } else if (win._compSyncWithActiveLoadout && win._compSyncWithActiveLoadout !== Compendium._compSyncWithActiveLoadout) {
+      win._compSyncWithActiveLoadout();
+    } else {
+      Compendium._compSyncWithActiveLoadout();
+    }
+    Compendium._compSwitchTab(tab);
+  });
+}
+
+/** Attach tune tension slider handler (call when #tune-slider enters DOM, e.g. React route mount). */
+export function wireTuneSlider(): void {
+  const tuneSlider = $('#tune-slider') as HTMLInputElement | null;
+  if (tuneSlider) {
+    tuneSlider.oninput = onTuneSliderInputCompat;
+  }
 }
 
 export function openTuneForSlot(slotIndex: number): void {
@@ -1094,9 +1162,6 @@ export function init(): void {
       'builder-panel',
       'dock-context-panel',
       'dock-my-loadouts',
-      'mode-overview',
-      'mode-tune',
-      'mode-compare',
       'workspace',
     ],
     requiredWindowBindings: [
@@ -1174,18 +1239,19 @@ export function init(): void {
   });
   document.getElementById('btn-mode-howitworks-mobile')?.addEventListener('click', () => switchMode('howitworks'));
 
-  const tuneSlider = $('#tune-slider') as HTMLInputElement | null;
-  if (tuneSlider) {
-    // Keep Tune on a single runtime-owned slider handler to avoid split-state updates.
-    tuneSlider.oninput = onTuneSliderInputCompat;
-  }
+  wireTuneSlider();
   $('#btn-theme')?.addEventListener('click', toggleAppTheme);
 
-  document.getElementById('mode-tune')?.classList.add('hidden');
-  document.getElementById('mode-compare')?.classList.add('hidden');
-  document.getElementById('mode-optimize')?.classList.add('hidden');
-  document.getElementById('mode-compendium')?.classList.add('hidden');
-  document.getElementById('mode-howitworks')?.classList.add('hidden');
+  // Legacy single-page DOM had every mode in #workspace; hide non-overview until switch.
+  // React Router mounts one route at a time — only one [id^="mode-"] exists; skip or we hide the active view.
+  const modeSections = document.querySelectorAll('#workspace [id^="mode-"]');
+  if (modeSections.length > 1) {
+    document.getElementById('mode-tune')?.classList.add('hidden');
+    document.getElementById('mode-compare')?.classList.add('hidden');
+    document.getElementById('mode-optimize')?.classList.add('hidden');
+    document.getElementById('mode-compendium')?.classList.add('hidden');
+    document.getElementById('mode-howitworks')?.classList.add('hidden');
+  }
 
   const storedLoadouts = loadSavedLoadouts();
   setSavedLoadouts(storedLoadouts);

@@ -255,7 +255,7 @@ export function _compRenderRoster(): void {
   if (!list) return;
   const racquets = _compGetFilteredRacquets();
   const rosterKey = racquets.map((r) => `${r.id}:${r.id === _compSelectedRacquetId ? 1 : 0}`).join('|');
-  if (rosterKey === _compLastRosterKey) return;
+  if (rosterKey === _compLastRosterKey && list.children.length > 0) return;
   _compLastRosterKey = rosterKey;
 
   list.innerHTML = racquets
@@ -312,7 +312,9 @@ export function _compSyncWithActiveLoadout(): void {
   const setup = getCurrentSetup();
   if (!setup?.racquet) return;
   const activeRacquetId = setup.racquet.id;
+  _compRenderRoster();
   if (_compSelectedRacquetId === activeRacquetId) {
+    _compRenderMain(setup.racquet);
     _compInitStringInjector(setup.racquet);
   } else {
     _compSelectFrame(activeRacquetId);
@@ -855,10 +857,38 @@ export function _compClearInjection(): void {
     const crossesTensionEl = document.getElementById('comp-crosses-tension') as HTMLInputElement | null;
     if (mainsTensionEl) mainsTensionEl.value = String(midTension);
     if (crossesTensionEl) crossesTensionEl.value = String(midTension - 2);
+
+    ssInstances['comp-mains-select'] = createSearchableSelect(mainsContainer as HTMLElement, {
+      type: 'string',
+      placeholder: 'Select String...',
+      value: '',
+      onChange: (val: string) => {
+        _compInjectState.mainsId = val;
+        _compPopulateGaugeDropdown('comp-mains-gauge', val);
+        if (_compInjectState.mode === 'fullbed' && val) {
+          _compInjectState.crossesId = val;
+          _compPopulateGaugeDropdown('comp-crosses-gauge', val);
+        }
+        _compSchedulePreviewStats();
+      },
+    });
+
+    if (crossesContainer) {
+      ssInstances['comp-crosses-select'] = createSearchableSelect(crossesContainer, {
+        type: 'string',
+        placeholder: 'Select Cross String...',
+        value: '',
+        id: 'comp-crosses-select-trigger',
+        onChange: (val: string) => {
+          _compInjectState.crossesId = val;
+          _compPopulateGaugeDropdown('comp-crosses-gauge', val);
+          _compSchedulePreviewStats();
+        },
+      });
+    }
   }
 
   _compClearPreview();
-  if (racquet) _compInitStringInjector(racquet);
 }
 
 export function _compGenerateTopBuilds(racquet: Racquet, count: number): BuildWithArchetype[] {

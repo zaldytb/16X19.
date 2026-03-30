@@ -78,6 +78,12 @@ export function renderRadarChart(containerId: string, props: RadarChartProps): v
   const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
   const angleColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
   const pointLabelColor = isDark ? 'rgba(220, 223, 226, 0.82)' : 'rgba(26, 26, 26, 0.72)';
+
+  const chartCanvas = _chart?.canvas as HTMLCanvasElement | undefined;
+  if (_chart && chartCanvas && chartCanvas !== canvas) {
+    _chart.destroy();
+    _chart = null;
+  }
   
   // Update existing chart if slot count matches
   if (_chart && _chart.data.datasets.length === datasets.length) {

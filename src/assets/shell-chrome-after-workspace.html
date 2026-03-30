@@ -1,0 +1,16 @@
+    <!-- Mobile action bar: OUTSIDE dock so it's always visible -->
+    <div class="dock-mobile-bar" id="dock-mobile-bar" onclick="toggleMobileDock()">
+      <div class="dock-mob-lead">
+        <span class="dock-mob-kicker">Builder</span>
+        <div class="dock-mob-summary" id="dock-mob-summary">
+          <span class="dock-mob-obs" id="dock-mob-obs"></span>
+          <span class="dock-mob-label" id="dock-mob-label">No active loadout</span>
+        </div>
+      </div>
+      <svg class="dock-mob-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="4 6 8 10 12 6"/></svg>
+      <button class="dock-mob-theme" id="dock-mob-theme" onclick="event.stopPropagation(); toggleTheme();" title="Toggle theme">
+        <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="1.5"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.93 4.93l1.41 1.41M13.66 13.66l1.41 1.41M4.93 15.07l1.41-1.41M13.66 6.34l1.41-1.41" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+
+    <div class="dock-backdrop" id="dock-backdrop"></div>

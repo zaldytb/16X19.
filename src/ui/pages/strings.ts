@@ -223,35 +223,61 @@ function updateStringPreviewTrack(
 }
 
 export function _stringEnsureInitialized(): void {
-  if (!_stringFiltersBound) {
-    document.getElementById('string-search')?.addEventListener('input', scheduleStringRosterRender);
-    document.getElementById('string-filter-material')?.addEventListener('change', _stringRenderRoster);
-    document.getElementById('string-filter-shape')?.addEventListener('change', _stringRenderRoster);
-    document.getElementById('string-filter-stiffness')?.addEventListener('change', _stringRenderRoster);
+  const searchEl = document.getElementById('string-search');
+  const materialEl = document.getElementById('string-filter-material');
+  const shapeEl = document.getElementById('string-filter-shape');
+  const stiffnessEl = document.getElementById('string-filter-stiffness');
+
+  if (searchEl && searchEl.dataset.stringBound !== 'true') {
+    searchEl.addEventListener('input', scheduleStringRosterRender);
+    searchEl.dataset.stringBound = 'true';
+    _stringFiltersBound = true;
+  }
+  if (materialEl && materialEl.dataset.stringBound !== 'true') {
+    materialEl.addEventListener('change', _stringRenderRoster);
+    materialEl.dataset.stringBound = 'true';
+    _stringFiltersBound = true;
+  }
+  if (shapeEl && shapeEl.dataset.stringBound !== 'true') {
+    shapeEl.addEventListener('change', _stringRenderRoster);
+    shapeEl.dataset.stringBound = 'true';
+    _stringFiltersBound = true;
+  }
+  if (stiffnessEl && stiffnessEl.dataset.stringBound !== 'true') {
+    stiffnessEl.addEventListener('change', _stringRenderRoster);
+    stiffnessEl.dataset.stringBound = 'true';
     _stringFiltersBound = true;
   }
 
   _stringRenderRoster();
 
-  if (!_stringsInitialized) {
+  const synced = syncStringCompendiumWithActiveLoadout();
+  const initialId = synced?.isHybrid ? synced.mainsId : synced?.stringId;
+  if (initialId && findStringById(initialId)) {
     _stringsInitialized = true;
-    const synced = syncStringCompendiumWithActiveLoadout();
-    const initialId = synced?.isHybrid ? synced.mainsId : synced?.stringId;
-    if (initialId && findStringById(initialId)) {
-      _stringSyncWithActiveLoadout();
+    _stringSyncWithActiveLoadout();
+    return;
+  }
+
+  if (_stringSelectedId && findStringById(_stringSelectedId)) {
+    _stringsInitialized = true;
+    const selected = findStringById(_stringSelectedId);
+    if (selected) {
+      _stringRenderMain(selected);
       return;
     }
+  }
 
-    if (STRING_DATA.length > 0) {
-      _stringSelectString(STRING_DATA[0].id);
-      return;
-    }
+  if (STRING_DATA.length > 0) {
+    _stringsInitialized = true;
+    _stringSelectString(STRING_DATA[0].id);
+    return;
+  }
 
-    const main = document.getElementById('string-main');
-    if (main) {
-      main.innerHTML =
-        '<div class="flex flex-col items-center justify-center h-64 text-dc-red"><p class="font-mono text-sm">Error: String database not loaded</p></div>';
-    }
+  const main = document.getElementById('string-main');
+  if (main) {
+    main.innerHTML =
+      '<div class="flex flex-col items-center justify-center h-64 text-dc-red"><p class="font-mono text-sm">Error: String database not loaded</p></div>';
   }
 }
 
@@ -312,7 +338,7 @@ export function _stringRenderRoster(): void {
 
   const strings = _stringGetFilteredStrings();
   const rosterKey = strings.map((item) => `${item.id}:${item.id === _stringSelectedId ? 1 : 0}`).join('|');
-  if (rosterKey === _stringLastRosterKey) return;
+  if (rosterKey === _stringLastRosterKey && list.children.length > 0) return;
   _stringLastRosterKey = rosterKey;
   list.innerHTML = strings
     .map((stringItem) => {

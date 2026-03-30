@@ -1,5 +1,5 @@
 /**
- * `window.*` bridge for inline HTML handlers — assigned from src/main.ts.
+ * `window.*` bridge for inline HTML handlers — assigned from src/bridge/installWindowBridge.ts.
  * Uses permissive function types to avoid churn; implementations are typed in their modules.
  */
 export {};
@@ -10,7 +10,7 @@ type BridgeFn = (...args: any[]) => any;
 
 declare global {
   interface Window {
-    /** Optional: assigned at runtime from src/main.ts; keeps local `WindowExt` merges valid */
+    /** Optional: assigned at runtime from installWindowBridge; keeps local `WindowExt` merges valid */
     getActiveLoadout?: BridgeFn;
     getSavedLoadouts?: BridgeFn;
     setActiveLoadout?: BridgeFn;
@@ -121,6 +121,7 @@ declare global {
     renderExplorePrompt?: BridgeFn;
     _applyWttnBuild?: BridgeFn;
     _applyRecBuild?: BridgeFn;
+    _applyGaugeSelection?: (gaugeMm: number, sectionIndex: number) => void;
     _saveWttnBuild?: BridgeFn;
     _saveRecBuild?: BridgeFn;
     onTuneSliderInput?: BridgeFn;

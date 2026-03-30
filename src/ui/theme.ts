@@ -92,6 +92,8 @@ export function handleResponsiveHeader(): void {
   const dockRegion = document.querySelector('.header-dock-region');
   const workspaceRegion = document.querySelector('.header-workspace-region');
   if (!switcher || !dockRegion || !workspaceRegion) return;
+  if (switcher.dataset.responsiveHeaderBound === 'true') return;
+  switcher.dataset.responsiveHeaderBound = 'true';
 
   const mediaQuery = window.matchMedia('(max-width: 1024px)');
   const onBreakpoint = (event: MediaQueryList | MediaQueryListEvent): void => {

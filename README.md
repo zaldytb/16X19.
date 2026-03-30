@@ -28,7 +28,7 @@ Mirror: `https://loadout-lab.vercel.app`
 - **Chart.js** — loaded from CDN for radar and sweep charts
 - **Node.js 20+** — data pipeline and tooling (`tsx` for TypeScript scripts)
 
-There is **no** root `app.js` monolith. The Vite entry is [`src/main.ts`](src/main.ts), which assigns implementations from TypeScript modules to `window.*` for inline HTML handlers in `index.html`.
+There is **no** root `app.js` monolith. The Vite entry is [`src/main.tsx`](src/main.tsx) (React + React Router). [`src/bridge/installWindowBridge.ts`](src/bridge/installWindowBridge.ts) assigns implementations from TypeScript modules to `window.*` for inline HTML handlers in injected markup.
 
 ## Quick start
 
@@ -61,7 +61,8 @@ See [AGENTS.md](AGENTS.md) for agent-oriented detail and debugging notes.
 ├── style.css
 ├── data.js                 # generated compatibility artifact — do not edit
 ├── src/
-│   ├── main.ts             # Vite entry + window bridge
+│   ├── main.tsx            # Vite entry (React root)
+│   ├── bridge/             # `window.*` bridge for legacy HTML handlers
 │   ├── global.d.ts         # Window typings for the bridge
 │   ├── vite-env.d.ts
 │   ├── engine/

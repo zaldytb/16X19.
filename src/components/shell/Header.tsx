@@ -8,6 +8,7 @@ import { getCurrentMode, setCurrentMode } from '../../state/app-state.js';
 import { _syncLegacyModeState } from '../../ui/pages/shell.js';
 import { pathToMode } from '../../routing/modePaths.js';
 import { syncViews } from '../../runtime/coordinator.js';
+import { get16x19FaviconHref } from '../../ui/favicon.js';
 
 const modeIcons: Record<string, React.ReactNode> = {
   compendium: (
@@ -62,6 +63,7 @@ export function Header() {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const currentMode = pathToMode(location.pathname);
+  const activeLogoHref = get16x19FaviconHref(true);
 
   const handleModeClick = useCallback(
     (mode: string, path: string) => {
@@ -87,22 +89,12 @@ export function Header() {
           onClick={handleReload}
         >
           <div className="grid grid-cols-4 gap-1 w-10 h-10 border border-dc-border p-1 group-hover:border-dc-accent transition-colors">
-            <div className="bg-dc-storm/20 w-full h-full"></div>
-            <div className="bg-dc-storm/20 w-full h-full"></div>
-            <div className="bg-dc-storm/20 w-full h-full"></div>
-            <div className="bg-dc-storm/20 w-full h-full"></div>
-            <div className="bg-dc-storm/20 w-full h-full"></div>
-            <div className="bg-dc-storm/20 w-full h-full"></div>
-            <div className="bg-dc-storm/20 w-full h-full"></div>
-            <div className="bg-dc-storm/20 w-full h-full"></div>
-            <div className="bg-dc-storm/20 w-full h-full"></div>
-            <div className="bg-dc-storm/20 w-full h-full"></div>
-            <div className="bg-dc-storm/20 w-full h-full"></div>
-            <div className="bg-dc-accent animate-pulse w-full h-full"></div>
-            <div className="bg-dc-storm/20 w-full h-full"></div>
-            <div className="bg-dc-storm/20 w-full h-full"></div>
-            <div className="bg-dc-storm/20 w-full h-full"></div>
-            <div className="bg-dc-storm/20 w-full h-full"></div>
+            <img
+              src={activeLogoHref}
+              alt=""
+              aria-hidden="true"
+              className="col-span-4 row-span-4 w-full h-full"
+            />
           </div>
 
           <div className="flex flex-col">

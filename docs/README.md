@@ -5,9 +5,9 @@ This folder holds **in-repo** guides you can treat like a lightweight wiki (GitH
 ## Pages
 
 | Doc | Purpose |
-|-----|---------|
+| --- | ------- |
 | [Getting-Started.md](Getting-Started.md) | Install Node, run the dev server, ingest frames/strings, run the pipeline |
-| [Frame-ingestion.md](Frame-ingestion.md) | Frames only: `frames.json` → validate → `data.ts` + `FRAME_META` |
+| [Frame-ingestion.md](Frame-ingestion.md) | Frames only: `frames.json` → validate → `src/data/generated.ts` + `data.ts` + `FRAME_META` |
 | [../README.md](../README.md) | Repository overview, stack, layout, deploy |
 | [../AGENTS.md](../AGENTS.md) | Conventions for contributors and coding agents |
 | [../CLAUDE.md](../CLAUDE.md) | Claude Code commands and critical rules |
@@ -19,7 +19,7 @@ This folder holds **in-repo** guides you can treat like a lightweight wiki (GitH
 ```bash
 npm install
 npm run dev              # Vite dev server
-npm run pipeline         # validate JSON → export data.ts → canary
+npm run pipeline         # validate JSON → export generated app data → canary
 npm run ingest:frame     # interactive frame entry
 npm run ingest:string    # interactive string entry
 ```

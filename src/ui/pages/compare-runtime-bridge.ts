@@ -1,3 +1,6 @@
+// Lightweight callback registry for Compare runtime entrypoints.
+// Shared callers use this instead of importing the full compare page module.
+
 import type { Loadout } from '../../engine/types.js';
 import type { SlotId } from './compare/types.js';
 

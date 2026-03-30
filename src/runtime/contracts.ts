@@ -18,6 +18,9 @@ export function validateWindowBindings(
   requiredBindings: string[],
   target: Record<string, unknown>,
 ): RuntimeContractResult {
+  if (requiredBindings.length === 0) {
+    return { ok: true, missing: [] };
+  }
   const missing = requiredBindings.filter((binding) => typeof target[binding] !== 'function');
   return { ok: missing.length === 0, missing };
 }
@@ -53,6 +56,8 @@ export function reconcileDockEditorContext(
 
 interface ValidateRuntimeContractsOptions {
   requiredDomIds: string[];
+  // Most callers now pass an empty list because the runtime no longer depends
+  // on a global `window.*` bridge. Keep this for narrow compatibility checks.
   requiredWindowBindings: string[];
   documentRef?: Document;
   windowRef?: Window & Record<string, unknown>;

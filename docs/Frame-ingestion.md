@@ -6,19 +6,20 @@ How racquet **frames** move from authoring into the live app bundle.
 
 - **Edit:** [`pipeline/data/frames.json`](../pipeline/data/frames.json) (via CLI, CSV, or tools below).
 - **Schema / ranges:** [`pipeline/schemas/frame.schema.json`](../pipeline/schemas/frame.schema.json).
-- **Runtime bundle:** [`data.ts`](../data.ts) — **generated** by export; do not hand-edit.
+- **Generated app data:** [`src/data/generated.ts`](../src/data/generated.ts) — **generated** by export; imported by the live app through `src/data/loader.ts`.
+- **Compatibility artifact:** [`data.ts`](../data.ts) — **generated** by export; do not hand-edit.
 
 ## End-to-end flow
 
 1. **Author** — Append or batch-import validated frame objects into `frames.json`.
 2. **Validate** — `npm run validate` (AJV-style checks + range warnings in [`pipeline/scripts/validate.ts`](../pipeline/scripts/validate.ts)).
-3. **Export** — `npm run export` runs [`pipeline/scripts/export-to-app.ts`](../pipeline/scripts/export-to-app.ts), which strips pipeline-only fields (`brand`, `_meta`, `_provenance`, `_staging`) from each frame, writes `RACQUETS`, and rebuilds `FRAME_META` keyed by `id`.
+3. **Export** — `npm run export` runs [`pipeline/scripts/export-to-app.ts`](../pipeline/scripts/export-to-app.ts), which strips pipeline-only fields (`brand`, `_meta`, `_provenance`, `_staging`) from each frame, writes `RACQUETS` + `FRAME_META` into `src/data/generated.ts`, and rebuilds the root `data.ts` compatibility artifact.
 4. **Gate** — `npm run pipeline` runs validate, export with canary verification (`export:verify`).
 
 ## Entry points
 
 | Method | Command / tool |
-|--------|----------------|
+| ------ | -------------- |
 | Interactive CLI | `npm run ingest:frame` → [`pipeline/scripts/ingest.ts`](../pipeline/scripts/ingest.ts) (`--type frame`) |
 | Batch CSV | `npx tsx pipeline/scripts/ingest.ts --type frame --csv path/to.csv` — column order in [Getting-Started.md](Getting-Started.md) |
 | Browser table → CSV | Open [`tools/frame-editor.html`](../tools/frame-editor.html), download CSV, then run ingest as above |

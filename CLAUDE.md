@@ -45,6 +45,14 @@ TypeScript owns all live UI and engine code under `src/`. [`src/main.tsx`](src/m
 
 Cross-module behavior now prefers direct imports, delegated listeners, or explicit callback registries. Do not add new `window.*` globals as part of normal feature work.
 
+React Router routes live in `src/App.tsx`, with route wrappers in `src/pages/` and shell UI in `src/components/shell/`. Most imperative workspace behavior still lives in `src/ui/pages/`.
+
+### Runtime coordination (`src/runtime/`)
+
+`src/runtime/coordinator.ts` is the refresh coordinator for route changes and shared state changes. It computes refresh plans and calls callback registries such as `src/ui/pages/overview-runtime-bridge.ts`, `src/ui/pages/tune-runtime-bridge.ts`, and `src/ui/pages/compare-runtime-bridge.ts`.
+
+Treat those `*-runtime-bridge.ts` files as internal callback registries for lazy page modules, not as a revival of the old `window.*` bridge.
+
 ### 4-Layer Prediction Engine (`src/engine/`)
 
 Pure TypeScript functions — deterministic, no side effects. Same inputs always produce identical outputs.
@@ -63,12 +71,14 @@ All domain types are in `src/engine/types.ts`. Constants (gauge options, OBS tie
 
 Centralized single-source-of-truth store:
 
-- `store.ts` — `_activeLoadout`, `_savedLoadouts`, getters/setters, pub/sub listeners
+- `useAppStore.ts` — backing Zustand store for loadout + app state
+- `store.ts` — active/saved loadout facade used by runtime and non-React code
 - `loadout.ts` — CRUD operations, localStorage persistence
 - `setup-sync.ts` — `getCurrentSetup()`, cross-page state synchronization
+- `app-state.ts` — mode, compare slots, radar/slot colors, dock editor context facade
 - `presets.ts` — top builds generation
 
-All pages derive their initial state from `getCurrentSetup()`. The active loadout is the canonical source.
+All pages derive their initial state from `getCurrentSetup()`. The active loadout is the canonical source. Prefer the `store.ts` / `app-state.ts` facades for runtime code; use Zustand hooks/selectors only where React ownership is helpful.
 
 ### Data layer
 
@@ -81,7 +91,9 @@ All pages derive their initial state from `getCurrentSetup()`. The active loadou
 
 ### UI pages (`src/ui/pages/`)
 
-Route modules include `shell.ts`, `overview.ts`, `tune.ts`, `compare/`, `optimize.ts`, `compendium.ts`, `strings.ts`, `find-my-build.ts`, `my-loadouts.ts`, `leaderboard.ts`. They coordinate with `getCurrentSetup()` / store as appropriate.
+Imperative page modules include `shell.ts`, `overview.ts`, `tune.ts`, `compare/`, `optimize.ts`, `compendium.ts`, `strings.ts`, `find-my-build.ts`, `my-loadouts.ts`, and `leaderboard.ts`. React route wrappers live separately under `src/pages/`.
+
+The live Find My Build flow is the imperative `find-my-build.ts` module opened from Overview and dock actions, not a standalone routed workspace.
 
 ---
 

@@ -3,7 +3,7 @@
 
 import { RACQUETS, STRINGS } from '../../data/loader.js';
 import type { Racquet, StringData, StringConfig } from '../../engine/types.js';
-import { applyGaugeModifier, getGaugeOptions } from '../../engine/string-profile.js';
+import { applyGaugeModifier, getGaugeOptions } from '../../engine/index.js';
 import { createSearchableSelect, ssInstances } from '../components/searchable-select.js';
 
 // ============================================

@@ -18,7 +18,7 @@ import {
   getObsScoreColor,
   calcFrameBase,
   calcBaseStringProfile,
-} from '../../engine/composite.js';
+} from '../../engine/index.js';
 import { createLoadout } from '../../state/loadout.js';
 import { activateLoadout, switchMode } from '../pages/shell.js';
 import { addLoadoutToNextAvailableSlot } from './compare/compare-slot-api.js';

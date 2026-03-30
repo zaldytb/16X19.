@@ -45,8 +45,10 @@ npm run build
 | Layer | Location | Role |
 | -------- | ----------- | ------ |
 | Engine | `src/engine/` | Deterministic prediction (L0–L3 + composite) |
-| State | `src/state/` | Loadouts, setup sync, app/compare UI state |
-| UI | `src/ui/` | Pages, dock, shared renderers |
+| State | `src/state/` | Zustand-backed loadout and app state, plus stable facades for runtime code |
+| React shell | `src/App.tsx`, `src/pages/`, `src/components/` | Routes, shell layout, workspace wrappers, header/dock/footer |
+| Runtime | `src/runtime/`, `src/ui/pages/*-runtime-bridge.ts` | Coordinator-driven refresh plans and cross-page callback registries |
+| UI | `src/ui/` | Imperative workspace modules, dock renderers, shared UI helpers |
 | Bootstrap | `src/bridge/installWindowBridge.ts` | Boot animation helpers and vanilla shell/bootstrap wiring |
 | Data | `pipeline/data/*.json` → `npm run export` → `src/data/generated.ts` + `data.ts` | Source of truth plus generated TypeScript data modules |
 
@@ -64,12 +66,18 @@ See [AGENTS.md](AGENTS.md) for agent-oriented detail and debugging notes.
 │   ├── main.tsx            # Vite entry (React root)
 │   ├── App.tsx             # React shell, routing, and startup wiring
 │   ├── bridge/             # boot sequence + vanilla shell/bootstrap helpers
+│   ├── components/         # React shell components (header, dock, footer, mobile tabs)
+│   ├── context/            # React providers (theme, etc.)
 │   ├── global.d.ts         # reserved for shared global typing (currently minimal)
+│   ├── hooks/              # React-facing selectors/hooks over shared app state
+│   ├── pages/              # route wrappers/workspaces used by React Router
+│   ├── routing/            # path ↔ mode helpers and router integration
+│   ├── runtime/            # view coordinator, contracts, diagnostics, refresh bridges
 │   ├── vite-env.d.ts
 │   ├── engine/
 │   ├── state/
 │   ├── ui/
-│   │   ├── pages/          # shell, overview, tune, compare, …
+│   │   ├── pages/          # imperative page logic (overview, tune, compare, compendium, …)
 │   │   ├── components/
 │   │   └── shared/
 │   ├── data/
@@ -101,9 +109,12 @@ Outputs include 11 attribute scores, build identity / archetype, OBS composite s
 
 The **active loadout** is the source of truth for the live app.
 
-- `src/state/store.ts` — active and saved loadouts  
-- `src/state/setup-sync.ts` — racquet/string setup from the active loadout  
-- `src/state/app-state.ts` — mode, compare slots, shared UI coordination  
+- `src/state/useAppStore.ts` — backing Zustand store for loadout + app state
+- `src/state/store.ts` — stable active/saved loadout facade for runtime and non-React code
+- `src/state/setup-sync.ts` — racquet/string setup from the active loadout
+- `src/state/app-state.ts` — stable facade for mode, compare slots, charts, and dock editor context
+
+Most non-React modules should still depend on `store.ts` / `app-state.ts`; React components can use the hooks/selectors layered over `useAppStore.ts`.
 
 ## Data pipeline
 

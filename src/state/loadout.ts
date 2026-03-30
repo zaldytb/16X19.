@@ -4,9 +4,13 @@
 
 import { RACQUETS, STRINGS } from '../data/loader.js';
 import type { Racquet, StringData, Loadout, StringConfig } from '../engine/types.js';
-import { applyGaugeModifier } from '../engine/string-profile.js';
-import { predictSetup, computeCompositeScore, generateIdentity } from '../engine/composite.js';
-import { buildTensionContext } from '../engine/tension.js';
+import {
+  applyGaugeModifier,
+  predictSetup,
+  computeCompositeScore,
+  generateIdentity,
+  buildTensionContext,
+} from '../engine/index.js';
 import {
   getActiveLoadout as _getActiveLoadout,
   getSavedLoadouts as _getSavedLoadouts,

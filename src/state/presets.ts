@@ -4,8 +4,7 @@
 
 import { STRINGS } from '../data/loader.js';
 import type { Racquet, StringData, SetupStats, StringConfig } from '../engine/types.js';
-import { predictSetup, computeCompositeScore } from '../engine/composite.js';
-import { buildTensionContext } from '../engine/tension.js';
+import { predictSetup, computeCompositeScore, buildTensionContext } from '../engine/index.js';
 
 /** Build object with full configuration and computed stats */
 export interface Build {

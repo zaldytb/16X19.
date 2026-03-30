@@ -4,7 +4,7 @@
 import { getActiveLoadout } from './store.js';
 import type { Loadout, Racquet, StringData, StringConfig } from '../engine/types.js';
 import { getRacquetById, getStringById } from '../data/loader.js';
-import { applyGaugeModifier } from '../engine/string-profile.js';
+import { applyGaugeModifier } from '../engine/index.js';
 import { reportRuntimeIssue } from '../runtime/diagnostics.js';
 
 interface SetupResult {

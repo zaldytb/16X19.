@@ -5,7 +5,7 @@
 import { RACQUETS, STRINGS } from '../../data/loader.js';
 import type { Racquet, StringData } from '../../engine/types.js';
 import { GAUGE_LABELS } from '../../engine/constants.js';
-import { getGaugeOptions } from '../../engine/string-profile.js';
+import { getGaugeOptions } from '../../engine/index.js';
 
 type SelectType = 'racquet' | 'string' | 'custom';
 

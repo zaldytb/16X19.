@@ -2,7 +2,7 @@
 // Dock panel renderers and context-aware panel system
 
 import { RACQUETS, STRINGS } from '../../data/loader.js';
-import { getObsScoreColor, computeCompositeScore, buildTensionContext } from '../../engine/composite.js';
+import { getObsScoreColor, computeCompositeScore, buildTensionContext } from '../../engine/index.js';
 import type { Loadout } from '../../engine/types.js';
 import { getActiveLoadout, getSavedLoadouts } from '../../state/store.js';
 import {

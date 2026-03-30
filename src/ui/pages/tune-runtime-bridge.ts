@@ -1,3 +1,6 @@
+// Lightweight callback registry for Tune runtime entrypoints.
+// Shared callers use this instead of importing the full page module.
+
 import type { Racquet, StringConfig } from '../../engine/types.js';
 
 type TuneSetup = {

@@ -11,7 +11,7 @@ import {
 } from '../../engine/index.js';
 import type { Racquet, StringData, SetupAttributes, StringConfig, Loadout } from '../../engine/types.js';
 import { GAUGE_LABELS } from '../../engine/constants.js';
-import { getGaugeOptions } from '../../engine/string-profile.js';
+import { getGaugeOptions } from '../../engine/index.js';
 import { STRINGS } from '../../data/loader.js';
 import { createLoadout, saveLoadout } from '../../state/loadout.js';
 import { getActiveLoadout, getSavedLoadouts, setActiveLoadout } from '../../state/store.js';

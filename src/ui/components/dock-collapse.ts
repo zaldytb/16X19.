@@ -1,7 +1,7 @@
 // src/ui/components/dock-collapse.ts
 // Dock collapse rail functionality
 
-import { getObsScoreColor } from '../../engine/composite.js';
+import { getObsScoreColor } from '../../engine/index.js';
 import { getActiveLoadout, getSavedLoadouts } from '../../state/store.js';
 
 function getNumericObs(value: unknown): number {

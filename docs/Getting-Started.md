@@ -46,12 +46,15 @@ Vite starts a local server (typically `http://localhost:5173`) and opens the bro
 Once open, use the tabs at the top to navigate between modes:
 
 | Mode | What it does |
-|------|-------------|
+| ---- | ------------ |
 | **Overview** | Dashboard summary of your selected racquet + string + tension |
 | **Tune** | Adjust tension live and see how scores shift |
 | **Compare** | Side-by-side analysis of up to 3 different loadouts |
 | **Optimize** | Search the setup space for high-performing builds on a selected frame |
 | **Bible** | Full compendium of all racquets with raw specs |
+| **Strings** | String compendium inside the same shared shell as Bible |
+| **Leaderboard** | Rankings and filters inside the same shared shell as Bible |
+| **My Loadouts** | Route-level reminder that saved loadouts live in the dock |
 | **How It Works** | Explanation of the prediction model |
 
 Your loadout is automatically saved in browser `localStorage`. Use the **Share** button to generate a URL you can copy and send to others — no account required.
@@ -73,7 +76,7 @@ The script will walk you through each field with prompts and validation. Require
 **Required fields you will be asked for:**
 
 | Field | Example | Notes |
-|-------|---------|-------|
+| ----- | ------- | ----- |
 | Name | `Wilson Pro Staff 97 v14` | First word becomes the brand |
 | Year | `2023` | |
 | Head size | `97` | sq inches |
@@ -91,7 +94,7 @@ Optional fields (identity descriptors, notes, tech bonuses) are also prompted bu
 
 Prepare a `.csv` file with these columns in order:
 
-```
+```text
 id,name,year,headSize,strungWeight,balance,balancePts,swingweight,stiffness,
 beamWidth,pattern,tensionRange,powerLevel,strokeStyle,swingSpeed,frameProfile,
 identity,notes,aeroBonus,comfortTech,spinTech,genBonus
@@ -100,7 +103,8 @@ identity,notes,aeroBonus,comfortTech,spinTech,genBonus
 > **Tip:** Leave `id` blank — it will be auto-generated from the name.
 >
 > **Important:** `beamWidth` and `tensionRange` must be quoted in the CSV because they contain commas:
-> ```
+>
+> ```text
 > "21.5,21.5,21.5"   ← beamWidth
 > "50,60"            ← tensionRange
 > ```
@@ -134,7 +138,7 @@ The app remembers your repo root between sessions. See [`tools/frame-gui/README.
 
 > **Windows installer:** A standalone `FrameGuiSetup.exe` can be built with `npm run build:win` from `tools/frame-gui/` — no repo clone required for end users. Node.js must still be installed on their machine for the import features to work.
 
-**End-to-end pipeline (frames → app):** see [Frame-ingestion.md](Frame-ingestion.md) for how `frames.json` is validated, exported to `data.ts`, and how `FRAME_META` is derived.
+**End-to-end pipeline (frames → app):** see [Frame-ingestion.md](Frame-ingestion.md) for how `frames.json` is validated, exported to `src/data/generated.ts` and `data.ts`, and how `FRAME_META` is derived.
 
 ---
 
@@ -153,7 +157,7 @@ The script will prompt for each field. For `twScore` sub-fields, it can **estima
 **Required fields:**
 
 | Field | Example | Notes |
-|-------|---------|-------|
+| ----- | ------- | ----- |
 | Name | `Luxilon ALU Power 125` | |
 | Gauge | `16L` | e.g. 15, 16, 16L, 17, 18 |
 | Gauge number | `1.25` | mm diameter |
@@ -175,7 +179,7 @@ The script will prompt for each field. For `twScore` sub-fields, it can **estima
 
 Prepare a `.csv` file with these columns:
 
-```
+```text
 id,name,gauge,gaugeNum,material,stiffness,tensionLoss,spinPotential,
 twScore.power,twScore.spin,twScore.comfort,twScore.control,
 twScore.feel,twScore.playabilityDuration,twScore.durability,
@@ -196,25 +200,25 @@ npx tsx pipeline/scripts/ingest.ts --type string --csv path/to/your/strings.csv
 
 ## Finalizing Changes
 
-After adding any frame or string, regenerate `data.ts` so the app picks up the new equipment:
+After adding any frame or string, regenerate the generated data modules so the app picks up the new equipment:
 
 ```bash
 npm run pipeline
 ```
 
-This runs **validate** (schemas), then **export:verify** (regenerate `data.ts` and run **canary** regression tests). If everything passes, run `npm run dev` or refresh your deployed build — new equipment appears in the selectors.
+This runs **validate** (schemas), then **export:verify** (regenerate `src/data/generated.ts` and `data.ts`, then run **canary** regression tests). If everything passes, run `npm run dev` or refresh your deployed build — new equipment appears in the selectors.
 
 ### Individual pipeline commands
 
 | Command | What it does |
-|---------|-------------|
+| ------- | ------------ |
 | `npm run validate` | Check all JSON data against schemas |
-| `npm run export` | Regenerate `data.ts` from JSON |
+| `npm run export` | Regenerate `src/data/generated.ts` and `data.ts` from JSON |
 | `npm run export:verify` | Regenerate + run canary regression tests |
 | `npm run canary` | Run regression tests only |
 | `npm run pipeline` | Full validate → export → verify |
 
-> **Important:** `data.ts` is a generated file — never edit it directly. Always edit the JSON source files in `pipeline/data/` and re-run the pipeline.
+> **Important:** `src/data/generated.ts` and `data.ts` are generated files — never edit them directly. Always edit the JSON source files in `pipeline/data/` and re-run the pipeline.
 
 ---
 
@@ -239,6 +243,6 @@ npx tsx pipeline/scripts/ingest.ts --type string --csv my-strings.csv
 # Desktop GUI for frames (no CLI)
 cd tools/frame-gui && npm install && npm start
 
-# Rebuild data.ts after any changes
+# Rebuild generated app data after any changes
 npm run pipeline
 ```

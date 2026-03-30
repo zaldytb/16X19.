@@ -15,7 +15,7 @@ import {
   classifySetup,
 } from '../../engine/index.js';
 import type { Racquet, StringConfig, SetupAttributes, IdentityResult } from '../../engine/types.js';
-import { getGaugeOptions } from '../../engine/string-profile.js';
+import { getGaugeOptions } from '../../engine/index.js';
 import { STRINGS } from '../../data/loader.js';
 import { animateOBSInContainer } from '../components/obs-animation.js';
 

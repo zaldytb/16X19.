@@ -1,3 +1,6 @@
+// Lightweight callback registry for Overview runtime entrypoints.
+// Shared callers use this instead of importing the full page module.
+
 import type { SetupAttributes } from '../../engine/types.js';
 
 type OverviewRuntimeCallbacks = {

@@ -3,7 +3,7 @@
 
 import { RACQUETS, STRINGS } from '../../data/loader.js';
 import type { Loadout } from '../../engine/types.js';
-import { getObsScoreColor } from '../../engine/composite.js';
+import { getObsScoreColor } from '../../engine/index.js';
 import { getActiveLoadout, getSavedLoadouts } from '../../state/store.js';
 
 // ---------------------------------------------------------------------------

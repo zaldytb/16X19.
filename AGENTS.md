@@ -41,7 +41,7 @@
 
 [`src/App.tsx`](src/App.tsx) mounts the shell and calls [`src/bridge/installWindowBridge.ts`](src/bridge/installWindowBridge.ts) for the Digicraft boot sequence plus vanilla shell/bootstrap wiring.
 
-Lazy route/runtime modules (for example Compendium, Strings, Leaderboard, Find My Build, Optimize helpers) are still loaded via dynamic `import()` where needed.
+React Router routes live in [`src/App.tsx`](src/App.tsx), with workspace wrappers in [`src/pages/`](src/pages/) and shell UI in [`src/components/shell/`](src/components/shell/). Lazy routes such as Tune, Compare, and Optimize are owned by [`src/pages/Workspaces.tsx`](src/pages/Workspaces.tsx).
 
 [`src/global.d.ts`](src/global.d.ts) is effectively empty now; strict TypeScript no longer relies on a large `Window` augmentation layer.
 
@@ -51,14 +51,24 @@ When debugging startup issues, trace `runVanillaAppInit()` and the boot helpers 
 
 The historical `app.js` monolith is **removed**. Live page logic now spans `src/**/*.ts` and `src/**/*.tsx`.
 
-### 3. Active loadout is source of truth
+### 3. Runtime view coordination
+
+[`src/runtime/coordinator.ts`](src/runtime/coordinator.ts) is the cross-page refresh coordinator. It computes refresh plans from route + store changes and fans out through callback registries such as:
+
+- [`src/ui/pages/overview-runtime-bridge.ts`](src/ui/pages/overview-runtime-bridge.ts)
+- [`src/ui/pages/tune-runtime-bridge.ts`](src/ui/pages/tune-runtime-bridge.ts)
+- [`src/ui/pages/compare-runtime-bridge.ts`](src/ui/pages/compare-runtime-bridge.ts)
+
+Those files are internal callback registries used to keep lazy page modules decoupled from the main shell graph.
+
+### 4. Active loadout is source of truth
 
 - `src/state/store.ts` — active and saved loadouts  
 - `src/state/setup-sync.ts` — current racquet/string setup from the active loadout  
 
-### 4. Shared UI state
+### 5. Shared UI state
 
-`src/state/app-state.ts` holds mode, compare slots, radar/slot colors, and other cross-page UI coordination. Prefer this over new ad hoc globals.
+[`src/state/useAppStore.ts`](src/state/useAppStore.ts) is the backing Zustand store. [`src/state/store.ts`](src/state/store.ts) and [`src/state/app-state.ts`](src/state/app-state.ts) are the stable facades most runtime code should import from. Prefer these over new ad hoc globals.
 
 ## Project structure
 
@@ -74,27 +84,34 @@ loadout-lab/
 ├── ts-migration-plan.md
 ├── src/
 │   ├── main.tsx
+│   ├── App.tsx
+│   ├── components/
+│   │   └── shell/
+│   ├── context/
 │   ├── global.d.ts
+│   ├── hooks/
+│   ├── pages/
+│   │   ├── Workspaces.tsx
+│   │   ├── Overview.tsx
+│   │   ├── Tune.tsx
+│   │   ├── Compare.tsx
+│   │   └── …
+│   ├── routing/
+│   ├── runtime/
+│   │   ├── coordinator.ts
+│   │   ├── contracts.ts
+│   │   └── diagnostics.ts
 │   ├── vite-env.d.ts
 │   ├── engine/
 │   ├── state/
+│   │   ├── useAppStore.ts
 │   │   ├── store.ts
 │   │   ├── loadout.ts
 │   │   ├── setup-sync.ts
 │   │   ├── app-state.ts
 │   │   └── presets.ts
 │   ├── ui/
-│   │   ├── pages/
-│   │   │   ├── shell.ts
-│   │   │   ├── overview.ts
-│   │   │   ├── tune.ts
-│   │   │   ├── compare/ …
-│   │   │   ├── optimize.ts
-│   │   │   ├── compendium.ts
-│   │   │   ├── strings.ts
-│   │   │   ├── find-my-build.ts
-│   │   │   ├── my-loadouts.ts
-│   │   │   └── leaderboard.ts
+│   │   ├── pages/              # imperative page modules + runtime callback registries
 │   │   ├── components/
 │   │   └── shared/
 │   ├── data/
@@ -152,6 +169,10 @@ Pipeline scripts live in `pipeline/scripts/*.ts` and run with **`tsx`**.
 
 ## Debugging notes
 
+### Routing / mode sync
+
+Route changes flow through [`src/App.tsx`](src/App.tsx) and [`src/routing/modePaths.ts`](src/routing/modePaths.ts). `pathToMode()` intentionally aliases some secondary routes like `/strings` and `/leaderboard` back to the Compendium shell mode so shared nav state stays coherent.
+
 ### Tune
 
 Sensitive to split state paths. When changing Tune, verify together: delta card, OBS in Tune, WTTN, recommendations, loadout switching while Tune is open, slider → apply.
@@ -163,6 +184,10 @@ Compare runtime is TypeScript (`src/ui/pages/compare/`). Keep dock actions and `
 ### Overview
 
 Overview is TS-owned (`overview.ts`). If the UI looks empty or duplicated, check for a second render pass or stale listeners, not a legacy `app.js` path.
+
+### Find My Build
+
+The live wizard is the imperative module [`src/ui/pages/find-my-build.ts`](src/ui/pages/find-my-build.ts), opened from Overview and dock actions. There is no standalone routed Find My Build workspace in the current shell.
 
 ## Testing strategy
 

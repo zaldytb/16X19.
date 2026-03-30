@@ -1,7 +1,7 @@
 // src/components/shell/Header.tsx
 // Site header with navigation
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext.js';
 import { getCurrentMode, setCurrentMode } from '../../state/app-state.js';
@@ -63,7 +63,18 @@ export function Header() {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const currentMode = pathToMode(location.pathname);
-  const activeLogoHref = get16x19FaviconHref(true);
+  const [isLogoActive, setIsLogoActive] = useState(true);
+  const logoHref = get16x19FaviconHref(isLogoActive);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setIsLogoActive((current) => !current);
+    }, 1000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, []);
 
   const handleModeClick = useCallback(
     (mode: string, path: string) => {
@@ -90,7 +101,7 @@ export function Header() {
         >
           <div className="grid grid-cols-4 gap-1 w-10 h-10 border border-dc-border p-1 group-hover:border-dc-accent transition-colors">
             <img
-              src={activeLogoHref}
+              src={logoHref}
               alt=""
               aria-hidden="true"
               className="col-span-4 row-span-4 w-full h-full"

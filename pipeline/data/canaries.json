@@ -6,8 +6,10 @@
     "mainsTension": 52,
     "crossesTension": 50,
     "baseline": {
-      "obs": 78.1,
-      "archetype": "Control Platform"
+      "obs": 76.1,
+      "archetype": "Control Platform",
+      "noveltyBonus": 0,
+      "noveltyArchetypes": []
     }
   },
   {
@@ -18,7 +20,9 @@
     "crossesTension": 53,
     "baseline": {
       "obs": 58.1,
-      "archetype": "Power Hybrid"
+      "archetype": "Power Hybrid",
+      "noveltyBonus": 0,
+      "noveltyArchetypes": []
     }
   },
   {
@@ -28,8 +32,10 @@
     "mainsTension": 52,
     "crossesTension": 50,
     "baseline": {
-      "obs": 69.2,
-      "archetype": "Power Hybrid"
+      "obs": 68.3,
+      "archetype": "Power Hybrid",
+      "noveltyBonus": 0,
+      "noveltyArchetypes": []
     }
   },
   {
@@ -40,7 +46,9 @@
     "crossesTension": 50,
     "baseline": {
       "obs": 70.3,
-      "archetype": "Balanced Setup"
+      "archetype": "Balanced Setup",
+      "noveltyBonus": 0,
+      "noveltyArchetypes": []
     }
   },
   {
@@ -53,7 +61,42 @@
     "crossesTension": 53,
     "baseline": {
       "obs": 72.2,
-      "archetype": "Balanced Setup"
+      "archetype": "Balanced Setup",
+      "noveltyBonus": 0,
+      "noveltyArchetypes": []
+    }
+  },
+  {
+    "name": "Novelty Wilson Python Cluster",
+    "frameId": "wilson-python-98-2026",
+    "stringId": "solinco-hyper-g-16",
+    "mainsTension": 52,
+    "crossesTension": 50,
+    "baseline": {
+      "obs": 79.9,
+      "archetype": "Control Platform",
+      "noveltyBonus": 0.8,
+      "noveltyArchetypes": [
+        "preciseSpinner",
+        "controlBomber",
+        "stableWhipper"
+      ]
+    }
+  },
+  {
+    "name": "Novelty Muse Plush Launcher",
+    "frameId": "yonex-muse-98-2026",
+    "stringId": "solinco-hyper-g-16",
+    "mainsTension": 52,
+    "crossesTension": 50,
+    "baseline": {
+      "obs": 89,
+      "archetype": "Spin Dominator",
+      "noveltyBonus": 1.6,
+      "noveltyArchetypes": [
+        "plushLauncher",
+        "comfortableAttacker"
+      ]
     }
   }
 ]

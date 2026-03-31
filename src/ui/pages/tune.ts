@@ -14,6 +14,7 @@ import { GAUGE_LABELS } from '../../engine/constants.js';
 import { getGaugeOptions } from '../../engine/index.js';
 import { STRINGS } from '../../data/loader.js';
 import { createLoadout, saveLoadout } from '../../state/loadout.js';
+import { persistActiveLoadout } from '../../state/active-loadout-storage.js';
 import { getActiveLoadout, getSavedLoadouts, setActiveLoadout } from '../../state/store.js';
 import { syncViews } from '../../runtime/coordinator.js';
 import { getCurrentSetup, getSetupFromLoadout } from '../../state/setup-sync.js';
@@ -1591,6 +1592,7 @@ export function tuneSandboxCommit(): void {
   tuneState.baseline = null;
   tuneState.explored = null;
   tuneState.baselineTension = tuneState.exploredTension;
+  persistActiveLoadout(activeLoadout);
 
   const resetSetup = getCurrentSetup();
   if (resetSetup) {

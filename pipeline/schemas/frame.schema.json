@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Frame",
-  "description": "A racquet frame entry in the pipeline data layer. Engine-required fields are in 'required'. Pipeline-only fields (_meta, _provenance, brand) are stripped before export to data.ts.",
+  "description": "A racquet frame entry in the pipeline data layer. Engine-required fields are in 'required'. Pipeline-only fields (_meta, _novelty, _provenance, brand) are stripped before export to data.ts.",
   "type": "object",
   "required": [
     "id", "name", "year", "headSize", "strungWeight", "swingweight",
@@ -42,6 +42,19 @@
         "comfortTech": { "type": "number", "description": "Vibration-dampening tech → comfort + feel" },
         "spinTech":    { "type": "number", "description": "Textured/open-throat tech → spin" },
         "genBonus":    { "type": "number", "description": "Generation/revision improvement → small boost across all attrs" }
+      },
+      "additionalProperties": false
+    },
+    "_novelty": {
+      "type": "object",
+      "description": "Pipeline-only: reviewer-authored contradiction hints for frame-stage novelty modeling. Stripped on export and reconstructed into FRAME_NOVELTY_PROFILE in data.ts.",
+      "required": ["controlBomber", "plushLauncher", "stableWhipper", "preciseSpinner", "comfortableAttacker"],
+      "properties": {
+        "controlBomber": { "type": "number", "description": "Frame bias toward power + control + spin contradiction. Scale: 0=none to 2+=exceptional" },
+        "plushLauncher": { "type": "number", "description": "Frame bias toward power + comfort + forgiveness contradiction." },
+        "stableWhipper": { "type": "number", "description": "Frame bias toward stability + maneuverability + spin contradiction." },
+        "preciseSpinner": { "type": "number", "description": "Frame bias toward control + spin/launch without loose aim." },
+        "comfortableAttacker": { "type": "number", "description": "Frame bias toward comfort + put-away power + connected feel." }
       },
       "additionalProperties": false
     },

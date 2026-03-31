@@ -7,6 +7,7 @@ import {
 } from '../../engine/index.js';
 import type { Loadout, Racquet, StringData, StringConfig } from '../../engine/types.js';
 import { createLoadout as createStateLoadout, loadSavedLoadouts, saveLoadout as stateSaveLoadout, saveLoadout, removeLoadout as stateRemoveLoadout, switchToLoadout as getSwitchedLoadout } from '../../state/loadout.js';
+import { loadActiveLoadout, loadActiveLoadoutId } from '../../state/active-loadout-storage.js';
 import { getCurrentSetup, getSetupFromLoadout } from '../../state/setup-sync.js';
 import { getActiveLoadout, getSavedLoadouts, setActiveLoadout, setSavedLoadouts, subscribe as subscribeStore } from '../../state/store.js';
 import {
@@ -79,14 +80,6 @@ type CompareSlot = {
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T | null =>
   document.querySelector(sel) as T | null;
-const _store = (() => {
-  try {
-    return window['local' + 'Storage' as keyof Window] as Storage;
-  } catch (_err) {
-    return null;
-  }
-})();
-
 const scrollPositions: Record<string, number> = {
   overview: 0,
   tune: 0,
@@ -344,14 +337,6 @@ export function activateLoadout(loadout: Loadout | null): void {
   updateDockEditorTitle();
   updateDockEditorActionState();
   setActiveLoadout(loadout);
-
-  try {
-    _store?.setItem('tll-active-loadout-id', loadout.id);
-  } catch (error) {
-    reportRuntimeIssue('ACTIVE_LOADOUT_STORAGE', 'Failed to persist active loadout id.', {
-      details: error,
-    });
-  }
 
   const optFrameSearch = document.getElementById('opt-frame-search') as HTMLInputElement | null;
   const optFrameValue = document.getElementById('opt-frame-value') as HTMLInputElement | null;
@@ -1234,13 +1219,18 @@ export function init(): void {
   setSavedLoadouts(storedLoadouts);
 
   try {
-    const activeId = _store?.getItem('tll-active-loadout-id');
-    if (activeId && storedLoadouts.length > 0) {
+    const storedActiveLoadout = loadActiveLoadout();
+    if (storedActiveLoadout) {
+      setActiveLoadout(storedActiveLoadout);
+    } else {
+      const activeId = loadActiveLoadoutId();
+      if (activeId && storedLoadouts.length > 0) {
       const saved = storedLoadouts.find((loadout) => loadout.id === activeId);
       if (saved) {
         const active = { ...saved, _dirty: false };
         setActiveLoadout(active);
       }
+    }
     }
   } catch (error) {
     reportRuntimeIssue('LOAD_ACTIVE_FROM_STORAGE', 'Failed to restore active loadout from storage.', {

@@ -920,6 +920,62 @@
     }
   },
   {
+    "id": "wilson-python-98-2026",
+    "name": "Wilson Python 98 323g",
+    "year": 2026,
+    "headSize": 98,
+    "length": 27,
+    "strungWeight": 323,
+    "balance": 32.49,
+    "balancePts": "6 pts HL",
+    "swingweight": 322,
+    "stiffness": 66,
+    "beamWidth": [
+      21,
+      23,
+      22
+    ],
+    "pattern": "16x20",
+    "powerLevel": "Low-Medium",
+    "strokeStyle": "Full",
+    "swingSpeed": "Fast",
+    "tensionRange": [
+      46,
+      55
+    ],
+    "frameProfile": "Aero-oriented spin platform; throat shaping for RHS (prototype / retail TBD)",
+    "identity": "Precision Spin Blade",
+    "notes": "DRAFT — Wilson has not published a full spec sheet. Numbers align to the in-repo Babolat Pure Aero 98 2026 platform for same-category comparison; early impressions (Reddit, tennis press) describe PA98-like spin with more connected / box-beam-adjacent feel. Other patterns (e.g. 16x19, 18x20) may ship as separate SKUs — replace this row when official specs land.",
+    "brand": "Wilson",
+    "_meta": {
+      "aeroBonus": 1.5,
+      "comfortTech": 2.25,
+      "spinTech": 1.25,
+      "genBonus": 1.5
+    },
+    "_novelty": {
+      "controlBomber": 1.4,
+      "plushLauncher": 0.4,
+      "stableWhipper": 0.6,
+      "preciseSpinner": 1.6,
+      "comfortableAttacker": 0.5
+    },
+    "_provenance": {
+      "source": "Community impressions + Pure Aero 98 2026 platform placeholder (Tennis Gear Guide, Prostrung, Reddit r/10s); pending Wilson official release",
+      "dateAdded": "2026-03-31",
+      "confidence": "estimated",
+      "estimatedFields": [
+        "strungWeight",
+        "swingweight",
+        "stiffness",
+        "balance",
+        "beamWidth",
+        "pattern",
+        "tensionRange"
+      ]
+    }
+  },
+  {
     "id": "wilson-rf01-pro-2025",
     "name": "Wilson RF01 Pro 337g",
     "year": 2025,

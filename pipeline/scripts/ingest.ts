@@ -216,6 +216,14 @@ function buildFrame(fields) {
     genBonus:    parseFloat(fields['_meta.genBonus']    ?? fields.genBonus    ?? 0) || 0
   };
 
+  entry._novelty = {
+    controlBomber:      parseFloat(fields['_novelty.controlBomber']      ?? fields.controlBomber      ?? 0) || 0,
+    plushLauncher:      parseFloat(fields['_novelty.plushLauncher']      ?? fields.plushLauncher      ?? 0) || 0,
+    stableWhipper:      parseFloat(fields['_novelty.stableWhipper']      ?? fields.stableWhipper      ?? 0) || 0,
+    preciseSpinner:     parseFloat(fields['_novelty.preciseSpinner']     ?? fields.preciseSpinner     ?? 0) || 0,
+    comfortableAttacker: parseFloat(fields['_novelty.comfortableAttacker'] ?? fields.comfortableAttacker ?? 0) || 0
+  };
+
   entry._provenance = {
     source:          'manual',
     dateAdded:       TODAY,
@@ -229,8 +237,9 @@ function buildFrame(fields) {
 // ─── CSV → Frame mapping ──────────────────────────────────────────────────────
 // Thin wrapper around buildFrame that sets the correct provenance for CSV imports.
 // brand:   auto-derived from name (first word) — not a CSV column
-// _meta:   all CSV imports default to { aeroBonus:0, comfortTech:0, spinTech:0, genBonus:0 }
-//          (buildFrame already defaults missing _meta.* fields to 0)
+// _meta:     all CSV imports default to { aeroBonus:0, comfortTech:0, spinTech:0, genBonus:0 }
+// _novelty:  all CSV imports default to all zeros unless explicit columns are provided
+//            (buildFrame already defaults missing _meta.* and _novelty.* fields to 0)
 // _provenance: source='csv' distinguishes batch imports from interactive 'manual' entry
 function mapCsvRowToFrame(row) {
   const entry = buildFrame(row);
@@ -398,6 +407,13 @@ async function ingestFrameInteractive() {
   fields['_meta.comfortTech'] = await askMeta('Comfort tech (vibration dampening)');
   fields['_meta.spinTech']    = await askMeta('Spin tech    (textured/open-throat)');
   fields['_meta.genBonus']    = await askMeta('Gen bonus    (generation improvement)');
+
+  console.log('\n  Frame novelty hints (_novelty) — press Enter for 0:');
+  fields['_novelty.controlBomber'] = await askMeta('Control bomber      (power + control + spin contradiction)');
+  fields['_novelty.plushLauncher'] = await askMeta('Plush launcher      (power + comfort + forgiveness)');
+  fields['_novelty.stableWhipper'] = await askMeta('Stable whipper      (stability + maneuverability + spin)');
+  fields['_novelty.preciseSpinner'] = await askMeta('Precise spinner     (control + spin/launch + confidence)');
+  fields['_novelty.comfortableAttacker'] = await askMeta('Comfortable attacker (comfort + put-away power + feel)');
 
   const entry  = buildFrame(fields);
   const issues = validateEntry(entry, frameSchema);
@@ -679,12 +695,15 @@ Modes:
 CSV column format for frames:
   id,name,year,headSize,strungWeight,balance,balancePts,swingweight,
   stiffness,beamWidth,pattern,tensionRange,powerLevel,strokeStyle,
-  swingSpeed,frameProfile,identity,notes
+  swingSpeed,frameProfile,identity,notes,
+  aeroBonus,comfortTech,spinTech,genBonus,
+  controlBomber,plushLauncher,stableWhipper,preciseSpinner,comfortableAttacker
 
   beamWidth     comma-separated in quotes: "23,26,23" → [23, 26, 23]
   tensionRange  two numbers in quotes:     "50,59"    → [50, 59]
   brand         auto-derived from name (first word) — not a CSV column
   _meta         defaults to all zeros for CSV imports
+  _novelty      defaults to all zeros for CSV imports
   Optional columns may be omitted from the CSV entirely.
 `);
     process.exit(0);

@@ -2,7 +2,7 @@
 
 ## Project overview
 
-16X19 (Tennis Loadout Lab) is a physics-based tennis equipment analysis tool. It predicts how a racquet and string setup performs across 11 attributes and summarizes the build with an OBS composite score plus identity and archetype output.
+16X19 (Tennis Loadout Lab) is a physics-based tennis equipment analysis tool. It predicts how a racquet and string setup performs across 11 attributes and summarizes the build with an OBS composite score plus identity/archetype output. Frame-level contradiction modeling is applied before the string layer rather than being surfaced as a separate user-facing novelty score.
 
 **Primary URL:** `https://zaldytb.github.io/loadout-lab/`  
 **Mirror:** `https://loadout-lab.vercel.app`
@@ -64,7 +64,10 @@ Those files are internal callback registries used to keep lazy page modules deco
 ### 4. Active loadout is source of truth
 
 - `src/state/store.ts` — active and saved loadouts  
+- `src/state/active-loadout-storage.ts` — active-loadout localStorage persistence and restore helpers  
 - `src/state/setup-sync.ts` — current racquet/string setup from the active loadout  
+
+The active loadout and saved loadouts are expected to survive a hard refresh. Boot restore happens from `src/ui/pages/shell.ts` during `Shell.init()`.
 
 ### 5. Shared UI state
 
@@ -165,7 +168,13 @@ Pipeline scripts live in `pipeline/scripts/*.ts` and run with **`tsx`**.
 ## Data pipeline
 
 **Source of truth:** `pipeline/data/frames.json`, `strings.json`, `canaries.json`  
-**Generated:** `src/data/generated.ts` and root compatibility `data.ts` — never hand-edit; regenerate with `npm run export` or `npm run pipeline`.
+**Generated:** `src/data/generated.ts` and root compatibility `data.ts` — never hand-edit; regenerate with `npm run export` or `npm run pipeline`. Generated data now includes `FRAME_META` and `FRAME_NOVELTY_PROFILE` alongside `RACQUETS` / `STRINGS`.
+
+For frame ingestion/modeling:
+
+- `_meta` carries construction / technology tendencies (`aeroBonus`, `comfortTech`, `spinTech`, `genBonus`)
+- `_novelty` carries reviewer-authored contradiction hints (`controlBomber`, `plushLauncher`, `stableWhipper`, `preciseSpinner`, `comfortableAttacker`)
+- frame contradiction modeling is applied after frame base calculation and before the string layer, so users infer it through the final stat shape rather than a separate novelty UI
 
 ## Debugging notes
 
@@ -176,6 +185,8 @@ Route changes flow through [`src/App.tsx`](src/App.tsx) and [`src/routing/modePa
 ### Tune
 
 Sensitive to split state paths. When changing Tune, verify together: delta card, OBS in Tune, WTTN, recommendations, loadout switching while Tune is open, slider → apply.
+
+Because Tune may mutate the active loadout directly before re-rendering, also verify refresh persistence after applying tension or gauge changes.
 
 ### Compare
 
@@ -199,6 +210,12 @@ npm run typecheck && npm run canary && npm run build
 
 **Manual smoke** after UI or engine work: overview hero/bars/radar/fit/warnings; tune; compare; compendium/strings; dock create/save/activate; leaderboard tab.
 
+If you touched state, boot, dock, or tune/compare flows, also refresh the page and confirm:
+
+- the active loadout restores correctly
+- saved loadouts still render in the dock
+- compare can still seed from the restored active loadout
+
 ## Common pitfalls
 
 1. `src/data/generated.ts` and `data.ts` are generated — edit JSON under `pipeline/data/` and re-run the pipeline.  
@@ -207,6 +224,7 @@ npm run typecheck && npm run canary && npm run build
 4. JSON field name: **`swingweight`** (lowercase `w`).  
 5. Import paths in TS often end in `.js` (bundler resolution to `.ts` sources).  
 6. Stale client state can produce a “working” UI with wrong numbers — verify store + setup-sync when scores look off.
+7. Active-loadout persistence is separate from saved-loadout persistence — check both paths when debugging refresh regressions.
 
 ## Deployment
 

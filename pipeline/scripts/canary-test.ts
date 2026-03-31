@@ -4,7 +4,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { predictSetup, computeCompositeScore, buildTensionContext, generateIdentity } from '../../src/engine/index.ts';
+import { predictSetup, computeCompositeScore, computeNoveltyBreakdown, buildTensionContext, generateIdentity } from '../../src/engine/index.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,6 +15,7 @@ const STRINGS_FILE= path.join(ROOT, 'pipeline', 'data', 'strings.json');
 const CANARY_FILE = path.join(ROOT, 'pipeline', 'data', 'canaries.json');
 
 const OBS_TOLERANCE = 3;
+const NOVELTY_TOLERANCE = 0.2;
 
 function main() {
   const isBaseline = process.argv.includes('--baseline');
@@ -59,12 +60,18 @@ function main() {
     const stats    = predictSetup(racquet, config, frameMeta);
     const tensCtx  = buildTensionContext(config, racquet);
     const obs      = computeCompositeScore(stats, tensCtx);
+    const novelty  = computeNoveltyBreakdown(stats);
     const identity = generateIdentity(stats, racquet, config);
     const archetype = identity.archetype;
 
     if (isBaseline) {
-      canary.baseline = { obs: parseFloat(obs.toFixed(1)), archetype };
-      console.log(`  RECORDED  ${canary.name}: OBS=${obs.toFixed(1)}, archetype="${archetype}"`);
+      canary.baseline = {
+        obs: parseFloat(obs.toFixed(1)),
+        archetype,
+        noveltyBonus: parseFloat(novelty.totalBonus.toFixed(1)),
+        noveltyArchetypes: novelty.archetypes
+      };
+      console.log(`  RECORDED  ${canary.name}: OBS=${obs.toFixed(1)}, novelty=${novelty.totalBonus.toFixed(1)}, archetype="${archetype}"`);
     } else {
       if (!canary.baseline) {
         console.log(`  ERROR  ${canary.name}: no baseline recorded — run --baseline first`);
@@ -74,12 +81,20 @@ function main() {
       const obsDiff = Math.abs(obs - canary.baseline.obs);
       const obsOk   = obsDiff <= OBS_TOLERANCE;
       const archOk  = archetype === canary.baseline.archetype;
-      const pass    = obsOk && archOk;
+      const noveltyDiff = canary.baseline.noveltyBonus === undefined ? 0 : Math.abs(novelty.totalBonus - canary.baseline.noveltyBonus);
+      const noveltyOk = canary.baseline.noveltyBonus === undefined ? true : noveltyDiff <= NOVELTY_TOLERANCE;
+      const baselineArchetypes = canary.baseline.noveltyArchetypes || [];
+      const noveltyArchOk = baselineArchetypes.length === 0
+        ? true
+        : JSON.stringify(novelty.archetypes) === JSON.stringify(baselineArchetypes);
+      const pass    = obsOk && archOk && noveltyOk && noveltyArchOk;
       if (!pass) allPass = false;
 
       const status = pass ? 'PASS' : 'FAIL';
       let detail = `OBS=${obs.toFixed(1)} (baseline ${canary.baseline.obs}, diff ${obsDiff.toFixed(1)})`;
       if (!archOk) detail += ` | archetype="${archetype}" (expected "${canary.baseline.archetype}")`;
+      if (!noveltyOk) detail += ` | novelty=${novelty.totalBonus.toFixed(1)} (baseline ${canary.baseline.noveltyBonus}, diff ${noveltyDiff.toFixed(1)})`;
+      if (!noveltyArchOk) detail += ` | noveltyArchetypes=${JSON.stringify(novelty.archetypes)} (expected ${JSON.stringify(baselineArchetypes)})`;
       console.log(`  ${status.padEnd(4)}  ${canary.name}: ${detail}`);
     }
   }

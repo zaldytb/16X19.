@@ -63,6 +63,49 @@ export interface FrameMeta {
   genBonus: number;
 }
 
+export interface FrameNoveltyHints {
+  controlBomber: number;
+  plushLauncher: number;
+  stableWhipper: number;
+  preciseSpinner: number;
+  comfortableAttacker: number;
+}
+
+export interface NoveltyTag {
+  id: string;
+  label: string;
+  score: number;
+}
+
+export interface FrameNoveltyBands {
+  headSize: string;
+  weight: string;
+  swingweight: string;
+  stiffness: string;
+  beam: string;
+  density: string;
+  pattern: string;
+}
+
+export interface FrameNoveltyPercentiles {
+  headSize: number;
+  strungWeight: number;
+  swingweight: number;
+  stiffness: number;
+  avgBeam: number;
+  openness: number;
+}
+
+export interface FrameNoveltyProfile {
+  bucketKey: string;
+  bucketSize: number;
+  rarityScore: number;
+  bands: FrameNoveltyBands;
+  percentiles: FrameNoveltyPercentiles;
+  rarityTags: NoveltyTag[];
+  hintWeights: FrameNoveltyHints;
+}
+
 // ============================================
 // ENGINE LAYER — intermediate & final scores
 // ============================================
@@ -82,6 +125,20 @@ export interface FrameBaseScores {
   playability: number;
   /** Debug slot — may be undefined; set externally in some callers */
   _frameDebug?: unknown;
+}
+
+export interface FrameNoveltyAdjustment {
+  power: number;
+  spin: number;
+  control: number;
+  launch: number;
+  comfort: number;
+  stability: number;
+  forgiveness: number;
+  feel: number;
+  maneuverability: number;
+  durability: number;
+  playability: number;
 }
 
 /** Scores produced by calcBaseStringProfile (7 attributes — strings don't drive launch/stability/etc.) */
@@ -147,17 +204,50 @@ export interface SetupAttributes {
 
 /** Debug payload attached to predictSetup result */
 export interface SetupDebug {
+  rawFrameBase?: FrameBaseScores;
   frameBase: FrameBaseScores;
+  frameNovelty?: FrameNoveltyBreakdown;
   stringProfile: StringProfileScores;
   stringMod: StringFrameMod;
   tensionMod: TensionMod;
   _frameDebug: unknown;
   hybridInteraction: HybridMod | null;
+  noveltyContext?: NoveltyContext;
+  novelty?: NoveltyBreakdown;
 }
 
 /** Full return type of predictSetup — attributes + debug bag */
 export interface SetupStats extends SetupAttributes {
   _debug?: SetupDebug;
+}
+
+export type NoveltySource = 'outcome' | 'spec' | 'rarity';
+
+export interface NoveltySignal {
+  id: string;
+  label: string;
+  source: NoveltySource;
+  score: number;
+  detail: string;
+}
+
+export interface NoveltyBreakdown {
+  totalBonus: number;
+  outcomeBonus: number;
+  specBonus: number;
+  rarityBonus: number;
+  archetypes: string[];
+  signals: NoveltySignal[];
+}
+
+export interface FrameNoveltyBreakdown extends NoveltyBreakdown {
+  attributeBoosts: FrameNoveltyAdjustment;
+}
+
+export interface NoveltyContext {
+  racquet: Racquet;
+  frameMeta: FrameMeta;
+  frameNoveltyProfile: FrameNoveltyProfile | null;
 }
 
 // ============================================

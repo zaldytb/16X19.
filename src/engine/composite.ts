@@ -6,9 +6,14 @@ import { calcBaseStringProfile, calcStringFrameMod } from './string-profile.js';
 import { calcTensionModifier, buildTensionContext } from './tension.js';
 import { calcHybridInteraction } from './hybrid.js';
 import { OBS_TIERS, IDENTITY_FAMILIES, WTTN_ATTRS } from './constants.js';
+import { FRAME_META as DEFAULT_FRAME_META, FRAME_NOVELTY_PROFILE } from '../data/loader.js';
 import type {
   Racquet,
   FrameMeta,
+  FrameBaseScores,
+  FrameNoveltyAdjustment,
+  FrameNoveltyBreakdown,
+  FrameNoveltyProfile,
   StringConfig,
   SetupStats,
   SetupAttributes,
@@ -18,7 +23,25 @@ import type {
   TensionContext,
   IdentityResult,
   ClassifyResult,
+  NoveltyBreakdown,
+  NoveltyContext,
+  NoveltySignal,
+  SetupDebug,
 } from './types';
+
+const ZERO_NOVELTY_ADJUSTMENT: FrameNoveltyAdjustment = {
+  power: 0,
+  spin: 0,
+  control: 0,
+  launch: 0,
+  comfort: 0,
+  stability: 0,
+  forgiveness: 0,
+  feel: 0,
+  maneuverability: 0,
+  durability: 0,
+  playability: 0
+};
 
 /**
  * PREDICTION LAYER 4 — Full setup prediction.
@@ -28,7 +51,17 @@ import type {
  * @returns final attribute scores + debug info
  */
 export function predictSetup(racquet: Racquet, stringConfig: StringConfig, frameMeta?: Record<string, FrameMeta>): SetupStats {
-  const frameBase = calcFrameBase(racquet, frameMeta);
+  const rawFrameBase = calcFrameBase(racquet, frameMeta);
+  const metaSource = frameMeta || (DEFAULT_FRAME_META as Record<string, FrameMeta>);
+  const resolvedFrameMeta = metaSource[racquet.id] || { aeroBonus: 0, comfortTech: 0, spinTech: 0, genBonus: 0 };
+  const frameNoveltyProfile = (FRAME_NOVELTY_PROFILE as Record<string, FrameNoveltyProfile>)[racquet.id] || null;
+  const noveltyContext = {
+    racquet,
+    frameMeta: resolvedFrameMeta,
+    frameNoveltyProfile
+  };
+  const frameNovelty = computeNoveltyBreakdown(rawFrameBase, noveltyContext);
+  const frameBase = applyFrameNovelty(rawFrameBase, frameNovelty.attributeBoosts);
 
   let stringMod: StringFrameMod;
   let stringProfile: StringProfileScores;
@@ -89,49 +122,363 @@ export function predictSetup(racquet: Racquet, stringConfig: StringConfig, frame
   };
 
   stats._debug = {
+    rawFrameBase,
     frameBase,
+    frameNovelty,
     stringProfile,
     stringMod,
     tensionMod,
     _frameDebug: frameBase._frameDebug,
-    hybridInteraction: stringConfig.isHybrid ? calcHybridInteraction(stringConfig.mains, stringConfig.crosses) : null
+    hybridInteraction: stringConfig.isHybrid ? calcHybridInteraction(stringConfig.mains, stringConfig.crosses) : null,
+    noveltyContext
   };
 
   return stats;
 }
 
-// Novelty/Anomaly Bonus System — rewards rare high-performing combos
-function computeNoveltyBonus(stats: SetupAttributes): number {
-  const pwr = stats.power;
-  const spn = stats.spin;
-  const ctl = stats.control;
-  const triad = (pwr + spn + ctl) / 3;
+function clampFloat(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
+}
 
-  const highCount = [pwr >= 55, spn >= 68, ctl >= 70].filter(Boolean).length;
+function round2(value: number): number {
+  return Math.round(value * 100) / 100;
+}
 
-  if (highCount >= 2 && triad >= 64) {
-    const triadExcess = Math.max(0, triad - 64);
-    let bonus = Math.min(triadExcess * 0.6, 5);
+function cloneAdjustment(): FrameNoveltyAdjustment {
+  return { ...ZERO_NOVELTY_ADJUSTMENT };
+}
 
-    if (highCount === 3) {
-      bonus = Math.min(bonus * 1.4, 6);
-    }
+function addAdjustment(target: FrameNoveltyAdjustment, patch: Partial<FrameNoveltyAdjustment>, scale: number = 1): void {
+  for (const [key, value] of Object.entries(patch) as Array<[keyof FrameNoveltyAdjustment, number | undefined]>) {
+    if (!value) continue;
+    target[key] = round2(target[key] + value * scale);
+  }
+}
 
-    if (stats.forgiveness >= 65) {
-      bonus *= 0.5;
-    } else if (stats.forgiveness >= 60) {
-      bonus *= 0.75;
-    }
+function applyFrameNovelty(frameBase: FrameBaseScores, boosts: FrameNoveltyAdjustment): FrameBaseScores {
+  return {
+    ...frameBase,
+    power: clamp(frameBase.power + boosts.power),
+    spin: clamp(frameBase.spin + boosts.spin),
+    control: clamp(frameBase.control + boosts.control),
+    launch: clamp(frameBase.launch + boosts.launch),
+    comfort: clamp(frameBase.comfort + boosts.comfort),
+    stability: clamp(frameBase.stability + boosts.stability),
+    forgiveness: clamp(frameBase.forgiveness + boosts.forgiveness),
+    feel: clamp(frameBase.feel + boosts.feel),
+    maneuverability: clamp(frameBase.maneuverability + boosts.maneuverability),
+    durability: clamp(frameBase.durability + boosts.durability),
+    playability: clamp(frameBase.playability + boosts.playability)
+  };
+}
 
-    return bonus;
+function getPatternDensity(pattern: string): number {
+  const [mains, crosses] = pattern.split('x').map(Number);
+  return mains * crosses;
+}
+
+function getAverageBeam(beamWidth: number[]): number {
+  return beamWidth.reduce((sum, width) => sum + width, 0) / beamWidth.length;
+}
+
+function scoreCluster(values: number[], thresholds: number[], base: number, weight: number, maxScore: number, bonus: number = 0): number {
+  const qualifies = values.every((value, idx) => value >= thresholds[idx]);
+  if (!qualifies) return 0;
+  const excess = values.reduce((sum, value, idx) => sum + Math.max(0, value - thresholds[idx]), 0);
+  return round2(Math.min(base + excess * weight + bonus, maxScore));
+}
+
+function getNoveltyContext(stats: SetupAttributes, noveltyContext?: NoveltyContext | null): NoveltyContext | null {
+  if (noveltyContext) return noveltyContext;
+  const debug = (stats as SetupStats)._debug as SetupDebug | undefined;
+  return debug?.noveltyContext || null;
+}
+
+function getNoveltySourceStats(stats: SetupAttributes): SetupAttributes {
+  const debug = (stats as SetupStats)._debug as SetupDebug | undefined;
+  return debug?.rawFrameBase || stats;
+}
+
+function computeOutcomeContradictionScore(stats: SetupAttributes, noveltyContext: NoveltyContext | null): { bonus: number; signals: NoveltySignal[]; archetypes: string[]; attributeBoosts: FrameNoveltyAdjustment } {
+  const candidates: NoveltySignal[] = [];
+  const attributeBoosts = cloneAdjustment();
+  const hintWeights = noveltyContext?.frameNoveltyProfile?.hintWeights || {
+    controlBomber: 0,
+    plushLauncher: 0,
+    stableWhipper: 0,
+    preciseSpinner: 0,
+    comfortableAttacker: 0
+  };
+
+  const controlBomber = scoreCluster(
+    [stats.power, stats.control, stats.spin],
+    [61, 69, 68],
+    0.65,
+    0.07,
+    2.15,
+    stats.launch >= 58 ? 0.1 : 0
+  ) + hintWeights.controlBomber * 0.18;
+  if (controlBomber > 0) {
+    candidates.push({
+      id: 'controlBomber',
+      label: 'Control bomber',
+      source: 'outcome',
+      score: round2(controlBomber),
+      detail: hintWeights.controlBomber > 0
+        ? 'Power, control, and spin all clear their normal tradeoff zone together; review hints reinforce the frame leaning.'
+        : 'Power, control, and spin all clear their normal tradeoff zone together.'
+    });
+    addAdjustment(attributeBoosts, {
+      power: 0.12 + controlBomber * 0.08,
+      control: 0.16 + controlBomber * 0.1,
+      spin: 0.14 + controlBomber * 0.09,
+      launch: 0.04 + controlBomber * 0.03
+    });
   }
 
-  if (stats.comfort >= 62 && ctl >= 70 && stats.feel >= 65) {
-    const comfortExcess = Math.max(0, stats.comfort - 60);
-    return Math.min(comfortExcess * 0.4, 3);
+  const plushLauncher = scoreCluster(
+    [stats.power, stats.comfort, stats.forgiveness],
+    [63, 66, 63],
+    0.55,
+    0.06,
+    1.85
+  ) + hintWeights.plushLauncher * 0.18;
+  if (plushLauncher > 0) {
+    candidates.push({
+      id: 'plushLauncher',
+      label: 'Plush launcher',
+      source: 'outcome',
+      score: round2(plushLauncher),
+      detail: hintWeights.plushLauncher > 0
+        ? 'Easy power, arm-friendliness, and forgiveness are all elevated at once; review hints support the contradiction.'
+        : 'Easy power, arm-friendliness, and forgiveness are all elevated at once.'
+    });
+    addAdjustment(attributeBoosts, {
+      power: 0.1 + plushLauncher * 0.06,
+      comfort: 0.2 + plushLauncher * 0.12,
+      forgiveness: 0.14 + plushLauncher * 0.08,
+      feel: 0.04 + plushLauncher * 0.03
+    });
   }
 
-  return 0;
+  const stableWhipper = scoreCluster(
+    [stats.stability, stats.maneuverability, stats.spin],
+    [58, 60, 72],
+    0.55,
+    0.05,
+    2.05,
+    stats.power >= 60 ? 0.1 : 0
+  ) + hintWeights.stableWhipper * 0.18;
+  if (stableWhipper > 0) {
+    candidates.push({
+      id: 'stableWhipper',
+      label: 'Stable whipper',
+      source: 'outcome',
+      score: round2(stableWhipper),
+      detail: hintWeights.stableWhipper > 0
+        ? 'Stability stays high without giving up whip speed or spin access; review hints reinforce the frame character.'
+        : 'Stability stays high without giving up whip speed or spin access.'
+    });
+    addAdjustment(attributeBoosts, {
+      stability: 0.12 + stableWhipper * 0.08,
+      maneuverability: 0.16 + stableWhipper * 0.1,
+      spin: 0.1 + stableWhipper * 0.07
+    });
+  }
+
+  const preciseSpinner = scoreCluster(
+    [stats.control, stats.spin, stats.launch],
+    [69, 68, 55],
+    0.55,
+    0.06,
+    1.75,
+    stats.feel >= 64 ? 0.1 : 0
+  ) + hintWeights.preciseSpinner * 0.18;
+  if (preciseSpinner > 0) {
+    candidates.push({
+      id: 'preciseSpinner',
+      label: 'Precise spinner',
+      source: 'outcome',
+      score: round2(preciseSpinner),
+      detail: hintWeights.preciseSpinner > 0
+        ? 'Launch and spin stay lively while directional confidence remains strong; reviewer hints support the aimed-spin profile.'
+        : 'Launch and spin stay lively while directional confidence remains strong.'
+    });
+    addAdjustment(attributeBoosts, {
+      control: 0.14 + preciseSpinner * 0.08,
+      spin: 0.1 + preciseSpinner * 0.06,
+      launch: 0.08 + preciseSpinner * 0.05,
+      feel: 0.04 + preciseSpinner * 0.03
+    });
+  }
+
+  const comfortableAttacker = scoreCluster(
+    [stats.comfort, stats.power, stats.feel],
+    [67, 64, 63],
+    0.5,
+    0.06,
+    1.65,
+    stats.control >= 66 ? 0.1 : 0
+  ) + hintWeights.comfortableAttacker * 0.18;
+  if (comfortableAttacker > 0) {
+    candidates.push({
+      id: 'comfortableAttacker',
+      label: 'Comfortable attacker',
+      source: 'outcome',
+      score: round2(comfortableAttacker),
+      detail: hintWeights.comfortableAttacker > 0
+        ? 'The frame finishes points with pace but still feels cushioned and connected; review hints lean the same way.'
+        : 'The frame finishes points with pace but still feels cushioned and connected.'
+    });
+    addAdjustment(attributeBoosts, {
+      comfort: 0.16 + comfortableAttacker * 0.09,
+      power: 0.12 + comfortableAttacker * 0.07,
+      feel: 0.12 + comfortableAttacker * 0.06,
+      control: 0.04 + comfortableAttacker * 0.03
+    });
+  }
+
+  const signals = candidates.sort((a, b) => b.score - a.score).slice(0, 3);
+  const bonus = round2(Math.min(signals.reduce((sum, signal) => sum + signal.score, 0), 4.2));
+  return { bonus, signals, archetypes: signals.map((signal) => signal.id), attributeBoosts };
+}
+
+function computeSpecContradictionScore(stats: SetupAttributes, noveltyContext: NoveltyContext | null): { bonus: number; signals: NoveltySignal[]; attributeBoosts: FrameNoveltyAdjustment } {
+  if (!noveltyContext) return { bonus: 0, signals: [], attributeBoosts: cloneAdjustment() };
+
+  const { racquet, frameMeta } = noveltyContext;
+  const avgBeam = getAverageBeam(racquet.beamWidth);
+  const patternDensity = getPatternDensity(racquet.pattern);
+  const candidates: NoveltySignal[] = [];
+  const attributeBoosts = cloneAdjustment();
+
+  const densePatternSpin = patternDensity >= 320
+    ? scoreCluster([stats.spin, stats.control], [69, 68], 0.35, 0.04, 0.85)
+    : 0;
+  if (densePatternSpin > 0) {
+    candidates.push({
+      id: 'densePatternSpinSurprise',
+      label: 'Dense-pattern spin surprise',
+      source: 'spec',
+      score: densePatternSpin,
+      detail: 'A denser layout is still producing standout spin without losing control.'
+    });
+    addAdjustment(attributeBoosts, {
+      spin: 0.06 + densePatternSpin * 0.05,
+      control: 0.05 + densePatternSpin * 0.04
+    });
+  }
+
+  const powerComfortSurprise = (racquet.stiffness >= 66 || avgBeam >= 23 || frameMeta.aeroBonus >= 1.5)
+    ? scoreCluster([stats.power, stats.comfort], [62, 64], 0.35, 0.055, 0.95)
+    : 0;
+  if (powerComfortSurprise > 0) {
+    candidates.push({
+      id: 'powerComfortSurprise',
+      label: 'Power-comfort surprise',
+      source: 'spec',
+      score: powerComfortSurprise,
+      detail: 'The frame spec leans modern and punchy, yet the final result still lands plush.'
+    });
+    addAdjustment(attributeBoosts, {
+      comfort: 0.08 + powerComfortSurprise * 0.05,
+      feel: 0.03 + powerComfortSurprise * 0.03
+    });
+  }
+
+  const stableWhipSurprise = (racquet.swingweight >= 323 || racquet.strungWeight >= 324)
+    ? scoreCluster([stats.stability, stats.maneuverability], [66, 66], 0.3, 0.05, 0.85, stats.spin >= 68 ? 0.08 : 0)
+    : 0;
+  if (stableWhipSurprise > 0) {
+    candidates.push({
+      id: 'stableWhipSurprise',
+      label: 'Stable-whip spec surprise',
+      source: 'spec',
+      score: stableWhipSurprise,
+      detail: 'The mass profile suggests plow, but the outcome still swings fast and lively.'
+    });
+    addAdjustment(attributeBoosts, {
+      stability: 0.05 + stableWhipSurprise * 0.04,
+      maneuverability: 0.06 + stableWhipSurprise * 0.04
+    });
+  }
+
+  const openPatternPrecision = patternDensity <= 304
+    ? scoreCluster([stats.control, stats.spin], [70, 67], 0.3, 0.045, 0.75)
+    : 0;
+  if (openPatternPrecision > 0) {
+    candidates.push({
+      id: 'openPatternPrecisionSurprise',
+      label: 'Open-pattern precision surprise',
+      source: 'spec',
+      score: openPatternPrecision,
+      detail: 'An open spin-friendly layout is still holding strong point-to-point precision.'
+    });
+    addAdjustment(attributeBoosts, {
+      control: 0.05 + openPatternPrecision * 0.04,
+      spin: 0.02 + openPatternPrecision * 0.02
+    });
+  }
+
+  const signals = candidates.sort((a, b) => b.score - a.score).slice(0, 2);
+  const bonus = round2(Math.min(signals.reduce((sum, signal) => sum + signal.score, 0), 1.8));
+  return { bonus, signals, attributeBoosts };
+}
+
+function computeRarityBonus(noveltyContext: NoveltyContext | null, matchedContradictions: number): { bonus: number; signals: NoveltySignal[] } {
+  const profile = noveltyContext?.frameNoveltyProfile;
+  if (!profile || matchedContradictions <= 0 || profile.rarityScore <= 0) {
+    return { bonus: 0, signals: [] };
+  }
+
+  const multiplier = matchedContradictions >= 3 ? 0.7 : matchedContradictions === 2 ? 0.55 : 0.35;
+  let bonus = profile.rarityScore * multiplier;
+  if (profile.bucketSize <= 3 && matchedContradictions >= 2) bonus += 0.12;
+  bonus = round2(Math.min(bonus, 0.8));
+
+  if (bonus <= 0 || profile.rarityTags.length === 0) {
+    return { bonus: 0, signals: [] };
+  }
+
+  const topTags = [...profile.rarityTags].sort((a, b) => b.score - a.score).slice(0, 2);
+  const tagWeight = topTags.reduce((sum, tag) => sum + tag.score, 0) || 1;
+  const signals = topTags.map((tag, idx) => ({
+    id: idx === 0 ? 'frameRarityAmplifier' : `frameRarityAmplifier${idx + 1}`,
+    label: idx === 0 ? 'Rare frame profile' : `Rare frame trait: ${tag.label}`,
+    source: 'rarity' as const,
+    score: round2((tag.score / tagWeight) * bonus),
+    detail: `Bucket ${profile.bucketKey} has ${profile.bucketSize} frame${profile.bucketSize === 1 ? '' : 's'}; ${tag.label} helps amplify the contradiction.`
+  }));
+
+  return { bonus, signals };
+}
+
+export function computeNoveltyBreakdown(stats: SetupAttributes, noveltyContext?: NoveltyContext | null): FrameNoveltyBreakdown {
+  const sourceStats = getNoveltySourceStats(stats);
+  const resolvedContext = getNoveltyContext(stats, noveltyContext);
+  const outcome = computeOutcomeContradictionScore(sourceStats, resolvedContext);
+  const spec = computeSpecContradictionScore(sourceStats, resolvedContext);
+  const rarity = computeRarityBonus(resolvedContext, outcome.signals.length + spec.signals.length);
+  const attributeBoosts = cloneAdjustment();
+  addAdjustment(attributeBoosts, outcome.attributeBoosts);
+  addAdjustment(attributeBoosts, spec.attributeBoosts);
+  const rarityMultiplier = 1 + rarity.bonus * 0.12;
+  const amplifiedBoosts = cloneAdjustment();
+  addAdjustment(amplifiedBoosts, attributeBoosts, rarityMultiplier);
+  for (const key of Object.keys(amplifiedBoosts) as Array<keyof FrameNoveltyAdjustment>) {
+    amplifiedBoosts[key] = round2(clampFloat(amplifiedBoosts[key], 0, 2.5));
+  }
+  const totalBonus = round2(Math.min(outcome.bonus + spec.bonus + rarity.bonus, 6));
+
+  return {
+    totalBonus,
+    outcomeBonus: outcome.bonus,
+    specBonus: spec.bonus,
+    rarityBonus: rarity.bonus,
+    archetypes: outcome.archetypes,
+    signals: [...outcome.signals, ...spec.signals, ...rarity.signals].sort((a, b) => b.score - a.score),
+    attributeBoosts: amplifiedBoosts
+  };
 }
 
 /**
@@ -154,8 +501,6 @@ export function computeCompositeScore(stats: SetupAttributes, tensionContext: Te
             + stats.durability * 0.04;
 
   let scaled = 22 + (raw - 58) * 8.5;
-
-  scaled += computeNoveltyBonus(stats);
 
   // Tension sanity penalty
   if (tensionContext) {

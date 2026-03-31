@@ -16,6 +16,7 @@ The app lets users:
 - compare multiple setups side by side
 - generate optimized and recommended builds
 - save, restore, and share loadouts
+- persist the current active loadout and saved loadouts across refreshes via local storage
 
 Primary URL: `https://zaldytb.github.io/loadout-lab/`  
 Mirror: `https://loadout-lab.vercel.app`
@@ -98,12 +99,13 @@ The engine is deterministic: identical inputs always yield identical outputs.
 
 Pipeline stages:
 
-- **L0:** frame physics normalization  
-- **L1:** string profile and frame coupling  
-- **L2:** tension effects  
-- **L3:** hybrid interaction  
+- **L0:** frame physics normalization
+- **L0.5:** frame contradiction modeling from `_meta`, `_novelty`, and generated rarity profile
+- **L1:** string profile and frame coupling
+- **L2:** tension effects
+- **L3:** hybrid interaction
 
-Outputs include 11 attribute scores, build identity / archetype, OBS composite score and tier.
+Outputs include 11 attribute scores, build identity / archetype, and an OBS composite score that reflects frame-led contradictions through the attribute model itself, plus tension sanity penalties.
 
 ## State model
 
@@ -111,8 +113,12 @@ The **active loadout** is the source of truth for the live app.
 
 - `src/state/useAppStore.ts` — backing Zustand store for loadout + app state
 - `src/state/store.ts` — stable active/saved loadout facade for runtime and non-React code
-- `src/state/setup-sync.ts` — racquet/string setup from the active loadout
+- `src/state/loadout.ts` — saved-loadout CRUD plus localStorage persistence for saved lists
+- `src/state/active-loadout-storage.ts` — active-loadout localStorage persistence and boot restore helpers
+- `src/state/setup-sync.ts` — racquet/string setup derived from the active loadout
 - `src/state/app-state.ts` — stable facade for mode, compare slots, charts, and dock editor context
+
+At startup, `src/ui/pages/shell.ts` hydrates saved loadouts first, then restores the active loadout from local storage so dock, overview, tune, and compare flows survive a hard refresh.
 
 Most non-React modules should still depend on `store.ts` / `app-state.ts`; React components can use the hooks/selectors layered over `useAppStore.ts`.
 
@@ -126,8 +132,13 @@ Most non-React modules should still depend on `store.ts` / `app-state.ts`; React
 
 **Generated (never hand-edit):**
 
-- `src/data/generated.ts` — produced by `npm run export` / `npm run pipeline`, used by the app
+- `src/data/generated.ts` — produced by `npm run export` / `npm run pipeline`, used by the app (`RACQUETS`, `STRINGS`, `FRAME_META`, `FRAME_NOVELTY_PROFILE`)
 - `data.ts` — root compatibility re-export produced by `npm run export` / `npm run pipeline`
+
+For frames, authoring now splits into two internal modeling blocks:
+
+- `_meta` for construction / technology tendencies
+- `_novelty` for reviewer-authored contradiction hints that are applied at the frame stage before string blending
 
 ```bash
 npm run validate          # schema validation
@@ -150,7 +161,7 @@ Before pushing:
 npm run typecheck && npm run canary && npm run build
 ```
 
-Manual smoke (after UI or engine changes): overview hero/radar, tune apply flow, compare slots/editor, compendium/strings, dock save/activate, leaderboard tab roundtrip.
+Manual smoke (after UI or engine changes): overview hero/radar, tune apply flow, compare slots/editor, compendium/strings, dock save/activate, leaderboard tab roundtrip, and refresh persistence for both active and saved loadouts.
 
 ## Deployment
 

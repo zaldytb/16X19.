@@ -1,0 +1,254 @@
+[
+  {
+    "archetype": "comfortableAttacker",
+    "count": 581,
+    "examples": [
+      {
+        "frameId": "head-squared-2026",
+        "stringId": "babolat-vs-touch-16",
+        "tension": "50/48",
+        "obs": 93.5,
+        "novelty": 5.2,
+        "archetypes": [
+          "plushLauncher",
+          "comfortableAttacker"
+        ],
+        "identity": "Comfort Cannon"
+      },
+      {
+        "frameId": "head-squared-2026",
+        "stringId": "babolat-vs-touch-16",
+        "tension": "52/50",
+        "obs": 94.1,
+        "novelty": 5,
+        "archetypes": [
+          "plushLauncher",
+          "comfortableAttacker"
+        ],
+        "identity": "Comfort Cannon"
+      },
+      {
+        "frameId": "wilson-clash-100-pro-v3-2025",
+        "stringId": "babolat-vs-touch-16",
+        "tension": "52/50",
+        "obs": 87.1,
+        "novelty": 5,
+        "archetypes": [
+          "plushLauncher",
+          "comfortableAttacker"
+        ],
+        "identity": "Comfort Cannon"
+      },
+      {
+        "frameId": "head-squared-2026",
+        "stringId": "wilson-nxt-16",
+        "tension": "50/48",
+        "obs": 84.9,
+        "novelty": 5,
+        "archetypes": [
+          "plushLauncher",
+          "comfortableAttacker"
+        ],
+        "identity": "Comfort Cannon"
+      },
+      {
+        "frameId": "wilson-clash-100-pro-v3-2025",
+        "stringId": "babolat-vs-touch-16",
+        "tension": "50/48",
+        "obs": 84.8,
+        "novelty": 5,
+        "archetypes": [
+          "plushLauncher",
+          "comfortableAttacker"
+        ],
+        "identity": "Comfort Cannon"
+      },
+      {
+        "frameId": "wilson-clash-100-pro-v2",
+        "stringId": "babolat-vs-touch-16",
+        "tension": "50/48",
+        "obs": 82.1,
+        "novelty": 4.9,
+        "archetypes": [
+          "plushLauncher",
+          "comfortableAttacker"
+        ],
+        "identity": "Comfort Cannon"
+      },
+      {
+        "frameId": "wilson-clash-100-pro-v3-2025",
+        "stringId": "wilson-nxt-16",
+        "tension": "50/48",
+        "obs": 74.4,
+        "novelty": 4.9,
+        "archetypes": [
+          "plushLauncher",
+          "comfortableAttacker"
+        ],
+        "identity": "Comfort Cannon"
+      },
+      {
+        "frameId": "head-squared-2026",
+        "stringId": "babolat-vs-touch-16",
+        "tension": "55/53",
+        "obs": 95.5,
+        "novelty": 4.7,
+        "archetypes": [
+          "comfortableAttacker",
+          "plushLauncher"
+        ],
+        "identity": "Whip Master"
+      },
+      {
+        "frameId": "wilson-clash-100-pro-v3-2025",
+        "stringId": "babolat-vs-touch-16",
+        "tension": "55/53",
+        "obs": 87.6,
+        "novelty": 4.7,
+        "archetypes": [
+          "comfortableAttacker",
+          "plushLauncher"
+        ],
+        "identity": "Comfort Cannon"
+      },
+      {
+        "frameId": "head-speed-mp-2026",
+        "stringId": "babolat-vs-touch-16",
+        "tension": "50/48",
+        "obs": 86.1,
+        "novelty": 4.7,
+        "archetypes": [
+          "plushLauncher",
+          "comfortableAttacker"
+        ],
+        "identity": "Comfort Cannon"
+      }
+    ]
+  },
+  {
+    "archetype": "plushLauncher",
+    "count": 366,
+    "examples": [
+      {
+        "frameId": "head-squared-2026",
+        "stringId": "babolat-vs-touch-16",
+        "tension": "50/48",
+        "obs": 93.5,
+        "novelty": 5.2,
+        "archetypes": [
+          "plushLauncher",
+          "comfortableAttacker"
+        ],
+        "identity": "Comfort Cannon"
+      },
+      {
+        "frameId": "head-squared-2026",
+        "stringId": "babolat-vs-touch-16",
+        "tension": "52/50",
+        "obs": 94.1,
+        "novelty": 5,
+        "archetypes": [
+          "plushLauncher",
+          "comfortableAttacker"
+        ],
+        "identity": "Comfort Cannon"
+      },
+      {
+        "frameId": "wilson-clash-100-pro-v3-2025",
+        "stringId": "babolat-vs-touch-16",
+        "tension": "52/50",
+        "obs": 87.1,
+        "novelty": 5,
+        "archetypes": [
+          "plushLauncher",
+          "comfortableAttacker"
+        ],
+        "identity": "Comfort Cannon"
+      },
+      {
+        "frameId": "head-squared-2026",
+        "stringId": "wilson-nxt-16",
+        "tension": "50/48",
+        "obs": 84.9,
+        "novelty": 5,
+        "archetypes": [
+          "plushLauncher",
+          "comfortableAttacker"
+        ],
+        "identity": "Comfort Cannon"
+      },
+      {
+        "frameId": "wilson-clash-100-pro-v3-2025",
+        "stringId": "babolat-vs-touch-16",
+        "tension": "50/48",
+        "obs": 84.8,
+        "novelty": 5,
+        "archetypes": [
+          "plushLauncher",
+          "comfortableAttacker"
+        ],
+        "identity": "Comfort Cannon"
+      },
+      {
+        "frameId": "wilson-clash-100-pro-v2",
+        "stringId": "babolat-vs-touch-16",
+        "tension": "50/48",
+        "obs": 82.1,
+        "novelty": 4.9,
+        "archetypes": [
+          "plushLauncher",
+          "comfortableAttacker"
+        ],
+        "identity": "Comfort Cannon"
+      },
+      {
+        "frameId": "wilson-clash-100-pro-v3-2025",
+        "stringId": "wilson-nxt-16",
+        "tension": "50/48",
+        "obs": 74.4,
+        "novelty": 4.9,
+        "archetypes": [
+          "plushLauncher",
+          "comfortableAttacker"
+        ],
+        "identity": "Comfort Cannon"
+      },
+      {
+        "frameId": "head-squared-2026",
+        "stringId": "babolat-vs-touch-16",
+        "tension": "55/53",
+        "obs": 95.5,
+        "novelty": 4.7,
+        "archetypes": [
+          "comfortableAttacker",
+          "plushLauncher"
+        ],
+        "identity": "Whip Master"
+      },
+      {
+        "frameId": "wilson-clash-100-pro-v3-2025",
+        "stringId": "babolat-vs-touch-16",
+        "tension": "55/53",
+        "obs": 87.6,
+        "novelty": 4.7,
+        "archetypes": [
+          "comfortableAttacker",
+          "plushLauncher"
+        ],
+        "identity": "Comfort Cannon"
+      },
+      {
+        "frameId": "head-speed-mp-2026",
+        "stringId": "babolat-vs-touch-16",
+        "tension": "50/48",
+        "obs": 86.1,
+        "novelty": 4.7,
+        "archetypes": [
+          "plushLauncher",
+          "comfortableAttacker"
+        ],
+        "identity": "Comfort Cannon"
+      }
+    ]
+  }
+]

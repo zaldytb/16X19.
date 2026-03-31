@@ -20,7 +20,7 @@ npm run preview      # Preview production build
 
 # Validation (run before every commit)
 npm run typecheck    # TypeScript check -- must be zero errors
-npm run canary       # 5 regression tests -- must pass with zero OBS drift
+npm run canary       # regression canaries (OBS + frame novelty profile + archetype) -- refresh baselines after intentional scoring changes
 npm run test:runtime # Runtime hardening tests (refresh plans, DOM contracts)
 
 # Data pipeline (when modifying pipeline/data/*.json)
@@ -63,13 +63,16 @@ Treat those `*-runtime-bridge.ts` files as internal callback registries for lazy
 Centralized single-source-of-truth store:
 
 - `useAppStore.ts` -- backing Zustand store for loadout + app state
-- `store.ts` -- active/saved loadout facade used by runtime and non-React code
-- `loadout.ts` -- CRUD operations, localStorage persistence
+- `store.ts` -- active/saved loadout facade used by runtime and non-React code; setting the active loadout also persists it
+- `loadout.ts` -- saved-loadout CRUD operations and saved-list localStorage persistence
+- `active-loadout-storage.ts` -- active-loadout localStorage helpers used for refresh-safe restore
 - `setup-sync.ts` -- `getCurrentSetup()`, cross-page state synchronization
 - `app-state.ts` -- mode, compare slots, radar/slot colors, dock editor context facade
 - `presets.ts` -- top builds generation
 
 All pages derive their initial state from `getCurrentSetup()`. The active loadout is the canonical source. Prefer the `store.ts` / `app-state.ts` facades for runtime code; use Zustand hooks/selectors only where React ownership is helpful.
+
+On boot, `src/ui/pages/shell.ts` hydrates saved loadouts and then restores the active loadout from local storage. Refresh persistence is therefore part of the expected runtime contract.
 
 ### Data layer
 
@@ -78,7 +81,7 @@ All pages derive their initial state from `getCurrentSetup()`. The active loadou
 - `src/data/generated.ts` -- **generated app data module** from `npm run export`; commit after regenerating
 - `data.ts` -- **generated compatibility module** from `npm run export`; commit after regenerating
 - `pipeline/schemas/` -- JSON schemas used by `npm run validate`
-- `src/data/loader.ts` -- imports `RACQUETS`, `STRINGS`, `FRAME_META` from `src/data/generated.ts`
+- `src/data/loader.ts` -- imports `RACQUETS`, `STRINGS`, `FRAME_META`, `FRAME_NOVELTY_PROFILE` from `src/data/generated.ts`
 
 ### UI pages (`src/ui/pages/`)
 
@@ -149,9 +152,10 @@ Values outside **engine norm** lose discrimination (clamped to 0 or 1 in normali
 ### Export flow
 
 `npm run export` runs `pipeline/scripts/export-to-app.ts`:
-1. Strips `_provenance`, `_meta`, `brand`, `_staging` from each frame
-2. Extracts `_meta` into a separate `FRAME_META` keyed lookup
-3. Writes `RACQUETS[]`, `STRINGS[]`, `FRAME_META{}` to `src/data/generated.ts`
+
+1. Strips `_provenance`, `_meta`, `_novelty`, `brand`, `_staging` from each frame
+2. Extracts `_meta` into `FRAME_META` and folds `_novelty` + catalog rarity into `FRAME_NOVELTY_PROFILE`
+3. Writes `RACQUETS[]`, `STRINGS[]`, `FRAME_META{}`, `FRAME_NOVELTY_PROFILE{}` to `src/data/generated.ts`
 4. Writes root `data.ts` compatibility re-export
 
 ---
@@ -167,6 +171,7 @@ Raw frame specs + string TWU data + tension + gauge
   |
   v
 [L0] calcFrameBase()           -> 11 frame base scores
+     frame novelty pass        -> contradiction-based frame stat adjustments
 [L1] calcBaseStringProfile()   -> 7 string profile scores
      applyGaugeModifier()      -> adjusted string properties (if non-reference gauge)
 [L2] calcStringFrameMod()      -> 6 string-frame interaction deltas
@@ -175,7 +180,7 @@ Raw frame specs + string TWU data + tension + gauge
   |
   v
 [Final] predictSetup()         -> weighted blend: frame 72% + string 28%
-        computeCompositeScore() -> OBS 0-100 (weighted avg + novelty + penalties)
+        computeCompositeScore() -> OBS 0-100 (weighted avg + tension penalties)
         generateIdentity()      -> archetype + description + tags
 ```
 
@@ -225,7 +230,7 @@ Each starts at a base value (50, except forgiveness at 48), then adds weighted c
 
 **Playability** (base 50): `+(1-raNorm)*12-4`, `+comfortTech*2`, `+genBonus*0.5`
 
-#### Tradeoff enforcement
+#### Tradeoff enforcement (string layer)
 
 Three natural physics-based ceilings are soft-enforced (excess taxed from the higher attribute):
 
@@ -242,6 +247,19 @@ compress(val, spread=0.85) = clamp(62 + (val - 62) * spread, 30, 90)
 ```
 
 Forgiveness uses `spread=0.92` (wider range for its narrower natural variance). Final `clamp(0, 100)` applied after rounding.
+
+### L0.5: Frame contradiction modeling (`composite.ts`)
+
+After `calcFrameBase()`, the engine applies a small frame-stage contradiction pass before strings are blended in.
+
+Inputs:
+
+- frame-base outcomes from `calcFrameBase()`
+- raw frame specs (`headSize`, `pattern`, `beamWidth`, `swingweight`, `stiffness`, etc.)
+- `FRAME_NOVELTY_PROFILE` (bucket rarity + percentile context)
+- reviewer-authored `_novelty` hints exported into `FRAME_NOVELTY_PROFILE.hintWeights`
+
+The pass produces a small attribute boost map rather than a user-facing novelty number. Those boosts are then included in the normal frame/string blend, so the user reads the contradiction from the final stat shape and OBS.
 
 ---
 
@@ -442,14 +460,26 @@ raw = weighted sum of all 11 attributes
 scaled = 22 + (raw - 58) * 8.5
 ```
 
-#### Novelty bonus (rewards rare high-performing combos)
+#### Frame-stage contradiction modeling
 
-If 2+ of (power>=55, spin>=68, control>=70) pass AND triad avg >= 64:
+Novelty is no longer a separate OBS add-on. Instead, the engine applies a small frame-stage contradiction adjustment **after** `calcFrameBase()` and **before** string blending.
 
-- Bonus = min(triadExcess \* 0.6, 5). Triple pass: x1.4, cap 6.
-- High forgiveness (>=65) halves bonus; >=60 reduces by 25%.
+That contradiction pass combines:
 
-Alternate path: if comfort>=62 AND control>=70 AND feel>=65 -> up to +3.
+1. **Outcome contradiction archetypes** from the frame base itself:
+   - `controlBomber`: power + control + spin
+   - `plushLauncher`: power + comfort + forgiveness
+   - `stableWhipper`: stability + maneuverability + spin
+   - `preciseSpinner`: control + spin/launch
+   - `comfortableAttacker`: comfort + put-away power + feel/control
+2. **Spec contradiction checks**:
+   - denser pattern but still standout spin
+   - firmer/thicker power platform but still strong comfort
+   - heavier / more stable platform that still preserves whip speed
+3. **Rarity amplification** from build-time `FRAME_NOVELTY_PROFILE`
+4. **Reviewer-authored `_novelty` hints** in `frames.json`, exported into `FRAME_NOVELTY_PROFILE.hintWeights`
+
+The result is a small attribute boost map applied to frame stats before strings/tension are blended in. Users infer the contradiction from the final stat shape and OBS; novelty itself stays an internal modeling tool.
 
 #### Tension sanity penalties
 
@@ -467,7 +497,7 @@ Alternate path: if comfort>=62 AND control>=70 AND feel>=65 -> up to +3.
 | Condition | Penalty |
 | --------- | ------- |
 | abs(diff) > 10 (extreme) | 12 + (excess * 5) |
-| Mains too tight (open: >6, dense: >4) | excess * 3 (open) or * 4 (dense) |
+| Mains too tight (open: >6, dense: >4) | `excess * 3` (open) or `excess * 4` (dense) |
 | Crosses too tight (open: >4) | excess * 3 |
 | Crosses too tight (dense: >6) | excess * 2.5 |
 
@@ -521,11 +551,12 @@ Alternate path: if comfort>=62 AND control>=70 AND feel>=65 -> up to +3.
 - **Never edit `src/data/generated.ts` or `data.ts` directly** -- both are generated. Modify `pipeline/data/frames.json` or `pipeline/data/strings.json`, then run `npm run pipeline`.
 - **Swingweight spelling** -- field name in JSON data is `swingweight` (lowercase 'w'), not `swingWeight`.
 - **TypeScript strict mode** -- `src/` (engine, state, UI) must pass `npm run typecheck` with zero errors.
-- **Canary tests have zero drift tolerance** -- any OBS score change (even 0.1) will fail. If you intentionally change engine math, run `npm run canary:baseline` to re-record.
+- **Canary baselines must be refreshed after intentional scoring changes** -- `npm run canary` now checks OBS, frame novelty breakdown/archetypes, and identity expectations. If you intentionally change engine math, run `npm run canary:baseline` to re-record.
 - **Tailwind setup is mixed on purpose** -- the app uses `@tailwindcss/vite`, and `index.html` still carries inline Tailwind config/runtime tokens. Treat both as load-bearing unless you are doing a dedicated styling audit.
 - **Import paths end in `.js`** -- TypeScript files under `src/` use `.js` extensions in imports (bundler resolution to `.ts` sources). This is intentional.
 - **Route aliasing** -- `pathToMode()` in `src/routing/modePaths.ts` intentionally aliases `/strings` and `/leaderboard` back to the Compendium shell mode so shared nav state stays coherent.
 - **Stale client state** -- a "working" UI can show wrong numbers if store/setup-sync are out of date. When scores look off, verify the store and `getCurrentSetup()` first.
+- **Persistence contract** -- active loadout and saved loadouts are expected to survive refresh via local storage. If a refresh loses the current build, inspect `src/state/active-loadout-storage.ts`, `src/state/store.ts`, and shell boot restore in `src/ui/pages/shell.ts`.
 - **Tune page sensitivity** -- when changing Tune, verify together: delta card, OBS in Tune, WTTN, recommendations, loadout switching while Tune is open, slider -> apply.
 
 ---

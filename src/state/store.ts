@@ -3,6 +3,7 @@
 // (Now backed by Zustand store for React integration)
 
 import type { Loadout } from '../engine/types.js';
+import { persistActiveLoadout } from './active-loadout-storage.js';
 import { useAppStore } from './useAppStore.js';
 
 // ─── Getters ─────────────────────────────────────
@@ -17,6 +18,7 @@ export function getSavedLoadouts(): Loadout[] {
 // ─── Setters ─────────────────────────────────────
 export function setActiveLoadout(lo: Loadout | null): void {
   useAppStore.getState().setActiveLoadout(lo);
+  persistActiveLoadout(lo);
 }
 
 export function setSavedLoadouts(arr: Loadout[]): void {

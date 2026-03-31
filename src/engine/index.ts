@@ -54,6 +54,7 @@ export {
 // Composite / scoring
 export {
   predictSetup,
+  computeNoveltyBreakdown,
   computeCompositeScore,
   getObsTier,
   getObsScoreColor,

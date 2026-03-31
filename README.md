@@ -18,8 +18,8 @@ The app lets users:
 - save, restore, and share loadouts
 - persist the current active loadout and saved loadouts across refreshes via local storage
 
-Primary URL: `https://zaldytb.github.io/loadout-lab/`  
-Mirror: `https://loadout-lab.vercel.app`
+Primary URL: `https://github.com/zaldytb/16X19.`  
+Mirror: `https://16x19.vercel.app/`
 
 ## Stack
 

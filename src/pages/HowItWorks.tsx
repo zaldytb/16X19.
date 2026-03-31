@@ -30,18 +30,28 @@ export function HowItWorks() {
         {/* SECTION 2: THE MODELING CHAIN */}
         <div className="hiw-section">
           <div className="hiw-section-num">02</div>
-          <h2 className="hiw-section-title">The Four-Layer Pipeline</h2>
+          <h2 className="hiw-section-title">The Prediction Pipeline</h2>
           <div className="hiw-section-body">
             <p>
-              Every build score flows through four distinct layers. Each layer transforms raw properties into progressively higher-level predictions. Nothing is skipped; nothing is averaged away.
+              Every build score flows through frame physics, a frame-stage contradiction pass, then the string stack, tension, optional hybrid blending, and finally the composite score. Each stage transforms inputs into the next; the engine is deterministic — same setup, same numbers.
             </p>
 
             <div className="hiw-pipeline">
               <div className="hiw-pipeline-layer">
                 <div className="hiw-pipeline-badge">L0</div>
                 <div className="hiw-pipeline-content">
-                  <h3>Frame Physics</h3>
-                  <p>Raw frame specs — head size, beam width, weight, balance, stiffness (RA), swingweight — normalized and transformed into 9 base capability scores. This is pure physics: how much energy the frame stores, how stable it is at contact, how much it flexes on impact. Technology bonuses (aero, comfortTech, spinTech) are applied here. No string interaction yet.</p>
+                  <h3>Frame physics</h3>
+                  <p>Raw frame specs — head size, beam width, weight, balance, stiffness (RA), swingweight, pattern — are normalized into <strong>11</strong> frame-base attributes. Technology bonuses from catalog metadata (<code>aeroBonus</code>, <code>comfortTech</code>, <code>spinTech</code>, <code>genBonus</code>) apply here. Soft tradeoff caps keep unrealistic power/control combinations in check. No string interaction yet.</p>
+                </div>
+              </div>
+              <div className="hiw-pipeline-connector">
+                <svg width="2" height="32" viewBox="0 0 2 32"><line x1="1" y1="0" x2="1" y2="32" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.3"/></svg>
+              </div>
+              <div className="hiw-pipeline-layer">
+                <div className="hiw-pipeline-badge">L0.5</div>
+                <div className="hiw-pipeline-content">
+                  <h3>Frame contradiction modeling</h3>
+                  <p>After the frame base is computed, a small internal pass can nudge attributes when the frame behaves like a &quot;contradiction cluster&quot; — e.g. high control with high spin, or stability with maneuverability — using outcome signals, spec-vs-expectation checks, bucket rarity, and optional reviewer hints exported at build time. This shapes the frame contribution <strong>before</strong> strings are blended in. There is no separate novelty score in the UI; you read the effect through the stat bars and OBS like everything else.</p>
                 </div>
               </div>
               <div className="hiw-pipeline-connector">
@@ -50,8 +60,8 @@ export function HowItWorks() {
               <div className="hiw-pipeline-layer">
                 <div className="hiw-pipeline-badge">L1</div>
                 <div className="hiw-pipeline-content">
-                  <h3>String Profile</h3>
-                  <p>Material composition and physical properties — stiffness, tension loss, spin potential, gauge. Each string type (poly, gut, multi, synthetic) has a base character profile plus a modifier layer that captures the specific product's deviation from its category baseline. A Luxilon ALU Power doesn't score like a generic co-poly. Frame coupling modifiers apply here.</p>
+                  <h3>String profile, coupling &amp; hybrid</h3>
+                  <p>TWU-style lab scores and material properties feed a string profile (power, spin, control, comfort, feel, durability, playability). Non-reference gauges run through a gauge modifier. String–frame interaction deltas capture how stiff/soft strings mate with the frame. <strong>Hybrids:</strong> mains and crosses get pairing rules (gut×poly, poly×poly, etc.) and weighted blends merged into the string-side mods and profile <em>before</em> tension is applied. Full-bed setups skip the hybrid step.</p>
                 </div>
               </div>
               <div className="hiw-pipeline-connector">
@@ -60,35 +70,25 @@ export function HowItWorks() {
               <div className="hiw-pipeline-layer">
                 <div className="hiw-pipeline-badge">L2</div>
                 <div className="hiw-pipeline-content">
-                  <h3>Tension Modifier</h3>
-                  <p>Pattern-aware tension effects enter here. This layer models how each stat responds to tension changes — not linearly, but through response curves tuned per-string-category. Lower tension doesn't just "add power" uniformly; it changes the energy transfer profile, dwell time, and snapback window. Open patterns (≤18 crosses) reward mains-tighter differentials; dense patterns (≥20 crosses) prefer near-equal tension.</p>
+                  <h3>Tension modifier</h3>
+                  <p>Average tension vs the frame&apos;s recommended window drives level effects on power, control, launch, comfort, spin, feel, and playability. A pattern-aware mains/crosses differential model applies here: open patterns (≤18 crosses) vs dense (≥20 crosses) change what counts as a sensible split. These deltas sit on top of the merged string-side profile.</p>
                 </div>
               </div>
               <div className="hiw-pipeline-connector">
                 <svg width="2" height="32" viewBox="0 0 2 32"><line x1="1" y1="0" x2="1" y2="32" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.3"/></svg>
               </div>
               <div className="hiw-pipeline-layer">
-                <div className="hiw-pipeline-badge">L3</div>
+                <div className="hiw-pipeline-badge">Final</div>
                 <div className="hiw-pipeline-content">
-                  <h3>Hybrid Interaction</h3>
-                  <p>For hybrid setups: mains and crosses are scored independently with their own string profiles, then blended with pairing-specific bonuses/penalties (gut×poly, multi×poly, etc.). The blending isn't 50/50 — it's physics-informed, favoring mains for spin/power and crosses for control/feel. Full-bed setups skip this layer.</p>
-                </div>
-              </div>
-              <div className="hiw-pipeline-connector">
-                <svg width="2" height="32" viewBox="0 0 2 32"><line x1="1" y1="0" x2="1" y2="32" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.3"/></svg>
-              </div>
-              <div className="hiw-pipeline-layer">
-                <div className="hiw-pipeline-badge">OBS</div>
-                <div className="hiw-pipeline-content">
-                  <h3>Composite Scoring</h3>
-                  <p>All 11 stats collapse into the <strong>Overall Build Score</strong> — a weighted composite representing the build's total predicted performance envelope. The weights aren't equal: power and spin carry more than durability, because that's how equipment performance maps to on-court impact. The OBS feeds the 10-tier rank ladder from "Delete This" to "Max Aura."</p>
+                  <h3>Blend &amp; composite</h3>
+                  <p>Frame-led attributes are mixed with string-led contributions (roughly <strong>72% frame / 28% string</strong> for most stats; stability, forgiveness, and maneuverability stay frame-driven; durability and playability lean on strings plus tension). The result is the 11 setup attributes. The app also derives an <strong>identity archetype</strong> and tags from those scores. <strong>OBS</strong> is computed from the attributes with fixed weights, then tension sanity penalties if you stray far outside the frame&apos;s tension range or use extreme mains/crosses spreads.</p>
                 </div>
               </div>
             </div>
 
             <div className="hiw-callout">
               <div className="hiw-callout-icon">⚡</div>
-              <p>Hybrid stringing activates <strong>Layer 3</strong> — mains and crosses are scored independently with their own string profiles, then blended with pairing-specific bonuses (gut×poly, multi×poly, etc.). The blending isn't 50/50 — mains dominate spin/power, crosses dominate control/feel. It's physics-informed.</p>
+              <p>Hybrids fold extra pairing logic into <strong>L1</strong>. Tune mode is mostly <strong>L2</strong> (tension and differential) while holding the racquet and string choice fixed — you see how the profile moves before you apply.</p>
             </div>
           </div>
         </div>
@@ -157,10 +157,10 @@ export function HowItWorks() {
           <h2 className="hiw-section-title">The Overall Build Score</h2>
           <div className="hiw-section-body">
             <p>
-              The OBS is a <strong>weighted composite</strong> of all 11 stats, collapsed into a single number on a 0–100 scale. It's not a simple average — the weights reflect how much each stat contributes to real on-court performance impact.
+              The OBS is a <strong>weighted composite</strong> of all 11 stats, collapsed into a single number on a 0–100 scale. It&apos;s not a simple average — weights are fixed in code (for example, control and spin rank toward the top; launch and durability toward the bottom), then the sum is scaled onto the 0–100 band.
             </p>
             <p>
-              Power and spin carry more weight than durability. Control carries more than stability. Feel carries more than playability duration. These weights aren't arbitrary — they're calibrated against known equipment behavior and community consensus.
+              <strong>Important:</strong> unusual &quot;contradiction&quot; builds don&apos;t add a separate novelty bonus on top. Frame-stage modeling already feeds into the attribute bars; OBS then reflects those attributes plus tension penalties if your tension choices are far outside the frame&apos;s recommended window.
             </p>
             <div className="hiw-rank-preview">
               <h3>The Rank Ladder</h3>
@@ -193,7 +193,7 @@ export function HowItWorks() {
               Equipment data lives in <code>pipeline/data/</code> as JSON files. The app loads generated data from <code>src/data/generated.ts</code>, and also emits compatibility <code>data.ts</code> from the same source — never edit either generated file directly.
             </p>
             <p>
-              <strong>Source of truth:</strong> <code>frames.json</code> (281 racquets) and <code>strings.json</code> (52 strings). These are validated against schemas, then exported to <code>src/data/generated.ts</code> for the app and <code>data.ts</code> for compatibility.
+              <strong>Source of truth:</strong> <code>frames.json</code> (hundreds of racquets) and <code>strings.json</code> (50+ strings). They are validated against schemas, then exported to <code>src/data/generated.ts</code> for the app and <code>data.ts</code> for compatibility. Export also emits <code>FRAME_META</code> (technology bonuses) and <code>FRAME_NOVELTY_PROFILE</code> (bucket rarity, percentiles, and authored contradiction hints) — do not edit generated files by hand.
             </p>
             <p>
               <strong>Adding equipment:</strong> Use <code>npm run ingest:frame</code> or <code>npm run ingest:string</code> for interactive entry. Or batch import from CSV. After any addition, run <code>npm run pipeline</code> to validate, export, and run canary regression tests.
@@ -214,7 +214,7 @@ export function HowItWorks() {
           <h2 className="hiw-section-title">The Design System</h2>
           <div className="hiw-section-body">
             <p>
-              <strong>Digicraft Brutalism</strong> — a monochrome base with an artful red accent for data visualization. The palette is intentionally restrained: #1A1A1A (void), #DCDFE2 (platinum), #5E666C (storm), with #AF0000 (artful red) reserved exclusively for chart data and OBS visualization.
+              <strong>Digicraft Brutalism</strong> — a monochrome base with an orange accent for primary emphasis (<code>#FF4500</code> / <code>dc-accent</code>) and a deeper red (<code>#AF0000</code> / <code>dc-red</code>) where chart and data stress needs extra contrast. The palette stays restrained: #1A1A1A (void), #DCDFE2 (platinum), #5E666C (storm).
             </p>
             <p>
               Typography pairs Inter (UI) with JetBrains Mono (data). Halftone grain textures add analog warmth to digital precision. No drop shadows, no gradients, no decorative chrome. The interface gets out of the way so the numbers can speak.
@@ -232,7 +232,7 @@ export function HowItWorks() {
           <h2 className="hiw-section-title">What Tune Mode Does</h2>
           <div className="hiw-section-body">
             <p>
-              Tune mode exposes <strong>Layer 2</strong> of the pipeline — the tension modifier — as an interactive sandbox. When you drag tension from 40 to 70 lbs, you're not adjusting a linear multiplier. You're watching all 11 stats respond through their individual response curves simultaneously.
+              Tune mode exposes the <strong>tension stage (L2)</strong> — mains/crosses levels and differential — as an interactive sandbox. When you drag tension, you&apos;re not adjusting a single linear multiplier: you&apos;re watching all 11 stats respond through the model&apos;s tension and pattern-aware rules at once.
             </p>
             <p>
               This is the core insight: tension doesn't just change "power" or "control" in isolation. It reshapes the <em>entire stat profile</em>. A two-pound tension drop might increase power by 3 points, spin by 1.5, decrease control by 2, and barely touch feel. Tune mode lets you see all of that at once, in real time.
@@ -303,18 +303,31 @@ export function HowItWorks() {
         </div>
 
         <div className="hiw-section">
-          <div className="hiw-section-num">v4.0</div>
-          <h2 className="hiw-section-title">React Migration & Modernization</h2>
+          <div className="hiw-section-num">v4.1</div>
+          <h2 className="hiw-section-title">Engine pipeline &amp; data export</h2>
           <div className="hiw-section-body">
             <p>
-              <strong>Complete React componentization.</strong> All pages converted from imperative DOM manipulation to React component architecture. State management migrated to Zustand for predictable, reactive updates. CDN dependencies (Tailwind, Chart.js) moved to npm for version pinning and tree-shaking.
+              <strong>L0.5 frame contradiction modeling.</strong> After frame base scores are computed, a frame-stage pass can apply small attribute adjustments when specs and outcomes look like real-world &quot;shouldn&apos;t go together&quot; clusters. Reviewer hints and catalog rarity ship with export as <code>FRAME_NOVELTY_PROFILE</code>; there is no separate novelty score in the UI — the bars and OBS tell the story.
             </p>
             <p>
-              <strong>Window bridge elimination.</strong> The ~297-function global window bridge replaced with proper React props and hooks. HTML partials converted to JSX components. All onclick handlers replaced with React event handlers.
+              <strong>OBS</strong> is a weighted composite of the 11 attributes plus tension sanity penalties (out-of-range tension and extreme mains/crosses gaps). Canary tests guard regressions whenever generated data or engine math changes.
+            </p>
+          </div>
+        </div>
+
+        <div className="hiw-section">
+          <div className="hiw-section-num">v4.0</div>
+          <h2 className="hiw-section-title">React migration &amp; modernization</h2>
+          <div className="hiw-section-body">
+            <p>
+              <strong>Complete React componentization.</strong> Workspace UIs use React component architecture. State management uses Zustand for predictable updates. Tailwind and Chart.js are npm dependencies for version pinning and bundling.
+            </p>
+            <p>
+              <strong>Bridge cleanup.</strong> Feature code no longer relies on a large global <code>window.*</code> API; cross-module behavior uses direct imports, runtime callback registries, and React where appropriate. A thin boot/install path remains for shell bootstrap and legacy glue.
             </p>
             <div className="hiw-callout">
               <div className="hiw-callout-icon">◆</div>
-              <p>The app now uses a proper component tree with React Router for navigation. All state changes flow through Zustand and trigger React re-renders. No more imperative DOM manipulation or template string injection.</p>
+              <p>The app uses React Router for navigation. Loadout and app state flow through Zustand and stable facades so refresh restores the active build from local storage.</p>
             </div>
           </div>
         </div>
@@ -347,7 +360,7 @@ export function HowItWorks() {
               Complete repository audit and documentation pass. Deleted orphaned files (<code>split-app.js</code>, temp test artifacts). Added <code>calibrate</code> npm script for string estimation coefficient fitting. Updated <code>.gitignore</code> to exclude TWU scrape CSVs and enriched intermediates.
             </p>
             <p>
-              README rewritten with full architecture documentation: 4-layer prediction pipeline, Digicraft Brutalism design system, data pipeline workflows, TWU scraping tools, and complete file structure. How It Works page updated to match — 11 stats, corrected pipeline layers (L0-L3), Data Pipeline and Design System sections added.
+              README rewritten with full architecture documentation, data pipeline workflows, TWU tooling, and file structure. The How It Works page tracks the same pipeline stages as the live engine (including frame-stage contradiction modeling and export artifacts).
             </p>
           </div>
         </div>

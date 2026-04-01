@@ -6,12 +6,9 @@ import {
   buildTensionContext,
   computeCompositeScore,
   generateIdentity,
-  getObsTier,
-  applyGaugeModifier
 } from '../../engine/index.js';
 import type { Racquet, StringData, SetupAttributes, StringConfig, Loadout } from '../../engine/types.js';
 import { GAUGE_LABELS } from '../../engine/constants.js';
-import { getGaugeOptions } from '../../engine/index.js';
 import { STRINGS } from '../../data/loader.js';
 import { createLoadout, saveLoadout } from '../../state/loadout.js';
 import { persistActiveLoadout } from '../../state/active-loadout-storage.js';
@@ -24,18 +21,69 @@ import { renderDockPanel } from '../components/dock-renderers.js';
 import { renderOverviewDashboardViaBridge } from './overview-runtime-bridge.js';
 import { registerTuneRuntimeCallbacks } from './tune-runtime-bridge.js';
 import { _prevObsValues, animateOBSInContainer } from '../components/obs-animation.js';
-import {
-  generateRecommendedBuilds,
-  renderWhatToTryNext as renderSharedWhatToTryNext,
-  renderExplorePrompt as renderSharedExplorePrompt
-} from '../shared/recommendations.js';
+import { generateRecommendedBuilds, buildWhatToTryNextViewModel } from '../shared/recommendations.js';
 import { getScoredSetup } from '../../utils/performance.js';
+import { createElement } from 'react';
+import { flushSync } from 'react-dom';
+import { createRoot, type Root } from 'react-dom/client';
+
+/** Tracks createRoot + host element; invalidates when the route unmounts and DOM nodes are recreated. */
+type TuneReactMount = { root: Root | null; host: HTMLElement | null };
+
+function _ensureTuneReactRoot(mount: TuneReactMount, container: HTMLElement | null): Root | null {
+  if (!container) return null;
+  if (mount.root && mount.host) {
+    if (mount.host !== container || !mount.host.isConnected) {
+      mount.root.unmount();
+      mount.root = null;
+      mount.host = null;
+    }
+  }
+  if (!mount.root) {
+    mount.root = createRoot(container);
+    mount.host = container;
+  }
+  return mount.root;
+}
+import { OptimalBuildWindow } from '../../components/tune/OptimalBuildWindow.js';
+import { buildOptimalBuildWindowViewModel } from './tune-optimal-build-window-vm.js';
+import { TuneBestValueCallout } from '../../components/tune/TuneBestValueCallout.js';
+import { buildTuneBestValueViewModel } from './tune-best-value-vm.js';
+import { TuneObsBuildScore } from '../../components/tune/TuneObsBuildScore.js';
+import { buildTuneObsBuildScoreViewModel } from './tune-obs-build-score-vm.js';
+import { TuneHybridDimToggle } from '../../components/tune/TuneHybridDimToggle.js';
+import { buildTuneHybridDimToggleViewModel } from './tune-hybrid-dim-toggle-vm.js';
+import type { HybridDim } from './tune-hybrid-dim-toggle-vm.js';
+import { TuneDeltaVsBaseline } from '../../components/tune/TuneDeltaVsBaseline.js';
+import { buildTuneDeltaVsBaselineViewModel } from './tune-delta-vs-baseline-vm.js';
+import { TuneGaugeExplorer } from '../../components/tune/TuneGaugeExplorer.js';
+import { buildTuneGaugeExplorerViewModel } from './tune-gauge-explorer-vm.js';
+import { TuneWttn } from '../../components/tune/TuneWttn.js';
+import { TuneRecommendedBuilds } from '../../components/tune/TuneRecommendedBuilds.js';
+import { TuneExplorePrompt } from '../../components/tune/TuneExplorePrompt.js';
+import { TuneSliderAdornments } from '../../components/tune/TuneSliderAdornments.js';
+import { buildTuneRecsViewModel } from './tune-recommended-builds-vm.js';
+import { buildExplorePromptViewModel } from './tune-explore-prompt-vm.js';
+import { buildTuneSliderAdornmentsViewModel } from './tune-slider-adornments-vm.js';
+import { TuneSweepChart } from '../../components/tune/TuneSweepChart.js';
+import type { TuneSweepChartHandle } from '../../components/tune/TuneSweepChart.js';
 
 // Window extensions for external dependencies
 // Module-level state
 export let sweepChart: Chart | null = null;
 let _tuneRefreshing = false;
 let _pendingTuneRenderFrame: number | null = null;
+const _optimalBuildWindowMount: TuneReactMount = { root: null, host: null };
+const _tuneBestValueMount: TuneReactMount = { root: null, host: null };
+const _tuneObsMount: TuneReactMount = { root: null, host: null };
+const _tuneHybridToggleMount: TuneReactMount = { root: null, host: null };
+const _tuneDeltaVsBaselineMount: TuneReactMount = { root: null, host: null };
+const _tuneGaugeExplorerMount: TuneReactMount = { root: null, host: null };
+const _tuneRecsMount: TuneReactMount = { root: null, host: null };
+const _tuneWttnMount: TuneReactMount = { root: null, host: null };
+const _tuneExploreMount: TuneReactMount = { root: null, host: null };
+const _tuneSliderAdornmentsMount: TuneReactMount = { root: null, host: null };
+const _tuneSweepChartMount: TuneReactMount = { root: null, host: null };
 
 export const tuneState = {
   baselineTension: 55,
@@ -68,15 +116,12 @@ export const tuneState = {
 
 type RecommendedCandidate = ReturnType<typeof generateRecommendedBuilds>['all'][number];
 
-// Chart.js type
-type Chart = {
-  destroy: () => void;
-  data?: { labels?: number[]; datasets?: Array<Record<string, unknown>> };
-  options?: Record<string, unknown>;
-  update?: (mode?: string) => void;
-};
+// Chart.js instance (global Chart from index.html CDN; owned by TuneSweepChart.tsx)
+type Chart = TuneSweepChartHandle;
 
-declare const Chart: new (ctx: CanvasRenderingContext2D, config: Record<string, unknown>) => Chart;
+function _onTuneSweepChartReady(chart: Chart | null): void {
+  sweepChart = chart;
+}
 
 registerTuneRuntimeCallbacks({
   initTuneMode,
@@ -87,10 +132,6 @@ registerTuneRuntimeCallbacks({
     tuneState.explored = null;
   },
   refreshSweepChart: (setup) => {
-    if (sweepChart) {
-      sweepChart.destroy();
-      sweepChart = null;
-    }
     renderSweepChart(setup);
   },
 });
@@ -303,13 +344,11 @@ export function initTuneMode(setup: { racquet: Racquet; stringConfig: StringConf
   renderOptimalBuildWindow(sliderMin, sliderMax);
   renderDeltaVsBaseline();
   renderGaugeExplorer(setup);
-  renderBaselineMarker(sliderMin, sliderMax);
-  renderOptimalZone(sliderMin, sliderMax);
+  renderTuneSliderAdornments(sliderMin, sliderMax);
   renderSweepChart(setup);
   renderBestValueMove();
   renderOverallBuildScore(setup, true);
   renderRecommendedBuilds(setup);
-  renderOriginalTensionMarker();
 
   // Reset Apply button
   const applyBtn = document.getElementById('tune-apply-btn');
@@ -432,62 +471,12 @@ export function renderOptimalBuildWindow(sMin: number, sMax: number): void {
   const container = document.getElementById('optimal-content');
   if (!container) return;
 
-  const w = tuneState.optimalWindow;
-  if (!w) {
-    container.innerHTML = '<p class="tune-muted">No data</p>';
-    return;
-  }
+  const vm = buildOptimalBuildWindowViewModel(sMin, sMax, tuneState.optimalWindow, tuneState.sweepData);
+  if (vm.status === 'skip') return;
 
-  const anchorStats = tuneState.sweepData?.find(d => d.tension === w.anchor)?.stats;
-  if (!anchorStats) return;
-
-  const scaleMin = sMin || w.low - 10;
-  const scaleMax = sMax || w.high + 10;
-  const scaleRange = scaleMax - scaleMin || 1;
-
-  const fillLeft = ((w.low - scaleMin) / scaleRange) * 100;
-  const fillRight = ((w.high - scaleMin) / scaleRange) * 100;
-  const fillWidth = fillRight - fillLeft;
-
-  let anchorPct = ((w.anchor - scaleMin) / scaleRange) * 100;
-  anchorPct = Math.max(2, Math.min(98, anchorPct));
-
-  container.innerHTML = `
-    <div class="optimal-range">
-      <div class="optimal-range-visual">
-        <span class="optimal-range-low">${scaleMin}</span>
-        <div class="optimal-range-bar">
-          <div class="optimal-range-fill" style="left:${fillLeft}%;width:${fillWidth}%"></div>
-          <div class="optimal-range-anchor" style="left:${anchorPct}%">
-            <span class="optimal-anchor-label">${w.anchor} lbs</span>
-          </div>
-        </div>
-        <span class="optimal-range-high">${scaleMax}</span>
-      </div>
-      <p class="optimal-reason">${w.reason}</p>
-    </div>
-    <div class="optimal-stats-grid">
-      <div class="optimal-stat">
-        <span class="optimal-stat-label">Control</span>
-        <span class="optimal-stat-value${anchorStats.control > 70 ? ' high' : ''}">${anchorStats.control}</span>
-      </div>
-      <div class="optimal-stat-divider"></div>
-      <div class="optimal-stat">
-        <span class="optimal-stat-label">Comfort</span>
-        <span class="optimal-stat-value${anchorStats.comfort > 70 ? ' high' : ''}">${anchorStats.comfort}</span>
-      </div>
-      <div class="optimal-stat-divider"></div>
-      <div class="optimal-stat">
-        <span class="optimal-stat-label">Spin</span>
-        <span class="optimal-stat-value${anchorStats.spin > 70 ? ' high' : ''}">${anchorStats.spin}</span>
-      </div>
-      <div class="optimal-stat-divider"></div>
-      <div class="optimal-stat">
-        <span class="optimal-stat-label">Power</span>
-        <span class="optimal-stat-value${anchorStats.power > 70 ? ' high' : ''}">${anchorStats.power}</span>
-      </div>
-    </div>
-  `;
+  const root = _ensureTuneReactRoot(_optimalBuildWindowMount, container);
+  if (!root) return;
+  root.render(createElement(OptimalBuildWindow, { model: vm }));
 }
 
 /**
@@ -498,85 +487,39 @@ export function renderDeltaVsBaseline(): void {
   const data = tuneState.sweepData;
   if (!container || !data) return;
 
-  const baselineEntry = data.find(d => d.tension === tuneState.baselineTension);
-  const exploredEntry = data.find(d => d.tension === tuneState.exploredTension);
+  const baselineEntry = data.find((d) => d.tension === tuneState.baselineTension);
+  const exploredEntry = data.find((d) => d.tension === tuneState.exploredTension);
   if (!baselineEntry || !exploredEntry) return;
 
   const base = baselineEntry.stats;
   const explored = exploredEntry.stats;
-  const deltaKeys: Array<keyof SetupAttributes> = ['control', 'power', 'comfort', 'spin', 'launch', 'feel', 'playability'];
-  const deltaLabels = ['Control', 'Power', 'Comfort', 'Spin', 'Launch', 'Feel', 'Playability'];
-
   const isAtBaseline = tuneState.exploredTension === tuneState.baselineTension;
   const setup = getCurrentSetup();
-  const isHybrid = setup?.stringConfig.isHybrid;
-  const dim = tuneState.hybridDimension;
-
-  let baseLabel = `Baseline: ${tuneState.baselineTension} lbs`;
-  let exploreLabel = isAtBaseline ? 'At baseline' : `Exploring: ${tuneState.exploredTension} lbs`;
-  if (isHybrid && setup) {
-    if (dim === 'mains') {
-      baseLabel = `Mains Baseline: ${tuneState.baselineTension} lbs`;
-      exploreLabel = isAtBaseline ? 'At baseline' : `Mains: ${tuneState.exploredTension} lbs`;
-    } else if (dim === 'crosses') {
-      baseLabel = `Crosses Baseline: ${tuneState.baselineTension} lbs`;
-      exploreLabel = isAtBaseline ? 'At baseline' : `Crosses: ${tuneState.exploredTension} lbs`;
-    } else {
-      const diff = setup.stringConfig.mainsTension - setup.stringConfig.crossesTension;
-      baseLabel = `Linked Baseline: M ${tuneState.baselineTension} / X ${Math.max(0, tuneState.baselineTension - diff)} lbs`;
-      if (!isAtBaseline) {
-        exploreLabel = `Linked: M ${tuneState.exploredTension} / X ${Math.max(0, tuneState.exploredTension - diff)} lbs`;
-      }
-    }
-  }
-
   const isFirstRender = !container.querySelector('.delta-stats-grid');
+
+  const vm = buildTuneDeltaVsBaselineViewModel(
+    base,
+    explored,
+    isAtBaseline,
+    setup,
+    tuneState.baselineTension,
+    tuneState.exploredTension,
+    tuneState.hybridDimension,
+    isFirstRender
+  );
+
+  const root = _ensureTuneReactRoot(_tuneDeltaVsBaselineMount, container);
+  if (!root) return;
+  flushSync(() => {
+    root.render(createElement(TuneDeltaVsBaseline, { model: vm }));
+  });
+
   if (isFirstRender) {
-    const renderBatteryBar = (value: number): string => {
-      const segments = 20;
-      let segmentsHtml = '';
-      const filledCount = Math.round((value / 100) * segments);
-
-      for (let i = 0; i < segments; i++) {
-        let segClass = '';
-        if (i < filledCount) {
-          const segValue = (i / segments) * 100;
-          segClass = segValue >= 70 ? 'high' : 'filled';
-        } else {
-          segClass = 'empty';
-        }
-        segmentsHtml += `<div class="stat-bar-segment ${segClass}"></div>`;
-      }
-
-      return segmentsHtml;
-    };
-
-    container.innerHTML = `
-      <div class="delta-header-row">
-        <span class="delta-baseline-label">${baseLabel}</span>
-        <span class="delta-explored-label" id="delta-explored-label">${exploreLabel}</span>
-      </div>
-      <div class="delta-stats-grid">
-        ${deltaKeys.map((key, i) => {
-          const diff = Math.round((explored[key] as number) - (base[key] as number));
-          const cls = diff > 0 ? 'delta-positive' : diff < 0 ? 'delta-negative' : 'delta-neutral';
-          const sign = diff > 0 ? '+' : '';
-          return `
-            <div class="delta-stat-row" data-stat="${String(key)}">
-              <span class="delta-stat-label">${deltaLabels[i]}</span>
-              <div class="stat-bar-track" id="delta-track-${String(key)}" data-baseline="${base[key]}" data-explored="${explored[key]}">
-                ${renderBatteryBar(explored[key] as number)}
-              </div>
-              <span class="delta-stat-diff ${cls}" id="delta-diff-${String(key)}">${isAtBaseline ? '—' : `${sign}${diff}`}</span>
-            </div>
-          `;
-        }).join('')}
-      </div>
-    `;
-
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        container.querySelectorAll('.stat-bar-track').forEach((track, idx) => {
+        const host = document.getElementById('delta-content');
+        if (!host) return;
+        host.querySelectorAll('.stat-bar-track').forEach((track, idx) => {
           const trackEl = track as HTMLElement;
           const exploredValue = parseFloat(trackEl.dataset.explored || '0');
           const segments = trackEl.querySelectorAll('.stat-bar-segment');
@@ -592,78 +535,7 @@ export function renderDeltaVsBaseline(): void {
         });
       });
     });
-  } else {
-    _updateDeltaBatteryBars(base, explored, isAtBaseline);
-    const exploreLabelEl = document.getElementById('delta-explored-label');
-    if (exploreLabelEl) exploreLabelEl.textContent = exploreLabel;
   }
-}
-
-/**
- * Update delta battery bars
- */
-function _updateDeltaBatteryBars(baseStats: SetupAttributes, exploredStats: SetupAttributes, isAtBaseline: boolean): void {
-  const deltaKeys: Array<keyof SetupAttributes> = ['control', 'power', 'comfort', 'spin', 'launch', 'feel', 'playability'];
-  const segments = 20;
-
-  deltaKeys.forEach((key) => {
-    const baseVal = Math.round(baseStats[key] as number);
-    const exploredVal = Math.round(exploredStats[key] as number);
-    const diff = exploredVal - baseVal;
-
-    const track = document.getElementById(`delta-track-${String(key)}`) as HTMLElement | null;
-    const diffEl = document.getElementById(`delta-diff-${String(key)}`);
-    if (!track) return;
-
-    const baseFilled = Math.round((baseVal / 100) * segments);
-    const exploredFilled = Math.round((exploredVal / 100) * segments);
-
-    let segmentsHtml = '';
-    for (let i = 0; i < segments; i++) {
-      let segClass = 'empty';
-
-      if (isAtBaseline) {
-        if (i < baseFilled) {
-          const segValue = (i / segments) * 100;
-          segClass = segValue >= 70 ? 'high active' : 'filled active';
-        }
-      } else {
-        if (exploredVal > baseVal) {
-          if (i < baseFilled) {
-            const segValue = (i / segments) * 100;
-            segClass = segValue >= 70 ? 'high active' : 'filled active';
-          } else if (i < exploredFilled) {
-            segClass = 'high active';
-          }
-        } else if (exploredVal < baseVal) {
-          if (i < exploredFilled) {
-            const segValue = (i / segments) * 100;
-            segClass = segValue >= 70 ? 'high active' : 'filled active';
-          } else if (i < baseFilled) {
-            segClass = 'empty';
-          }
-        } else {
-          if (i < baseFilled) {
-            const segValue = (i / segments) * 100;
-            segClass = segValue >= 70 ? 'high active' : 'filled active';
-          }
-        }
-      }
-
-      segmentsHtml += `<div class="stat-bar-segment ${segClass}"></div>`;
-    }
-
-    track.innerHTML = segmentsHtml;
-    track.dataset.baseline = String(baseVal);
-    track.dataset.explored = String(exploredVal);
-
-    if (diffEl) {
-      const cls = diff > 0 ? 'delta-positive' : diff < 0 ? 'delta-negative' : 'delta-neutral';
-      const sign = diff > 0 ? '+' : '';
-      diffEl.className = `delta-stat-diff ${cls}`;
-      diffEl.textContent = isAtBaseline ? '—' : `${sign}${diff}`;
-    }
-  });
 }
 
 /**
@@ -672,142 +544,24 @@ function _updateDeltaBatteryBars(baseStats: SetupAttributes, exploredStats: Setu
 export function renderGaugeExplorer(setup: { racquet: Racquet; stringConfig: StringConfig }): void {
   const container = document.getElementById('gauge-explore-content');
   if (!container) return;
-  if (!setup) { container.innerHTML = ''; return; }
-
-  const { racquet, stringConfig } = setup;
-  const sections: Array<{
-    label: string | null;
-    string: StringData;
-    buildConfig: (gaugedStr: StringData) => StringConfig;
-  }> = [];
-
-  if (stringConfig.isHybrid) {
-    const hybridConfig = stringConfig as { mains: StringData; crosses: StringData; mainsTension: number; crossesTension: number };
-    if (hybridConfig.mains) {
-      sections.push({
-        label: 'MAINS',
-        string: hybridConfig.mains,
-        buildConfig: (gaugedStr) => ({
-          isHybrid: true,
-          mains: gaugedStr,
-          crosses: hybridConfig.crosses,
-          mainsTension: hybridConfig.mainsTension,
-          crossesTension: hybridConfig.crossesTension
-        } as StringConfig)
-      });
-    }
-    if (hybridConfig.crosses) {
-      sections.push({
-        label: 'CROSSES',
-        string: hybridConfig.crosses,
-        buildConfig: (gaugedStr) => ({
-          isHybrid: true,
-          mains: hybridConfig.mains,
-          crosses: gaugedStr,
-          mainsTension: hybridConfig.mainsTension,
-          crossesTension: hybridConfig.crossesTension
-        } as StringConfig)
-      });
-    }
-  } else {
-    const fullConfig = stringConfig as { string: StringData; mainsTension: number; crossesTension: number };
-    if (fullConfig.string) {
-      sections.push({
-        label: null,
-        string: fullConfig.string,
-        buildConfig: (gaugedStr) => ({
-          isHybrid: false,
-          string: gaugedStr,
-          mainsTension: fullConfig.mainsTension,
-          crossesTension: fullConfig.crossesTension
-        } as StringConfig)
-      });
-    }
+  if (!setup) {
+    const gr = _ensureTuneReactRoot(_tuneGaugeExplorerMount, container);
+    if (gr) gr.render(null);
+    else container.innerHTML = '';
+    return;
   }
 
-  if (sections.length === 0) { container.innerHTML = ''; return; }
+  const vm = buildTuneGaugeExplorerViewModel(setup);
+  if (vm.kind === 'empty') {
+    const gr = _ensureTuneReactRoot(_tuneGaugeExplorerMount, container);
+    if (gr) gr.render(null);
+    else container.innerHTML = '';
+    return;
+  }
 
-  const gaugeKeys = ['spin', 'power', 'control', 'comfort', 'feel', 'durability', 'playability'];
-  const gaugeLabels = ['Spin', 'Power', 'Control', 'Comfort', 'Feel', 'Durability', 'Playability'];
-
-  let html = '';
-  sections.forEach((section, secIdx) => {
-    const baseStr = section.string;
-    const originalStr = baseStr;
-    const currentGauge = baseStr.gaugeNum;
-    const gaugeOptions = getGaugeOptions(originalStr);
-
-    const gaugeResults = gaugeOptions.map((g: number) => {
-      const gaugedStr = applyGaugeModifier(originalStr, g);
-      const config = section.buildConfig(gaugedStr);
-      const stats = predictSetup(racquet, config);
-      const tensionCtx = buildTensionContext(config, racquet);
-      const obs = computeCompositeScore(stats, tensionCtx);
-      return { gauge: g, stats, obs: +obs.toFixed(1), isCurrent: Math.abs(g - currentGauge) < 0.005 };
-    });
-
-    const currentResult = gaugeResults.find(r => r.isCurrent);
-    if (!currentResult) return;
-
-    if (section.label) {
-      html += `<div class="gauge-explore-section-label">${section.label}: ${originalStr.name}</div>`;
-    } else {
-      html += `<div class="gauge-explore-section-label">${originalStr.name}</div>`;
-    }
-
-    html += `<div class="gauge-explore-grid" style="--gauge-cols: ${gaugeOptions.length}">`;
-
-    // Header row
-    html += `<div class="gauge-explore-header">`;
-    html += `<span class="gauge-explore-stat-label"></span>`;
-    gaugeResults.forEach((r: typeof gaugeResults[0]) => {
-      const shortLabel = r.gauge >= 1.30 ? '16' : r.gauge >= 1.25 ? '16L' : r.gauge >= 1.20 ? '17' : '18';
-      const mmLabel = `${r.gauge.toFixed(2)}`;
-      const currentCls = r.isCurrent ? ' gauge-current' : '';
-      html += `<button class="gauge-explore-col-header${currentCls}" data-tune-action="applyGauge" data-gauge="${r.gauge}" data-section="${secIdx}" title="${r.isCurrent ? 'Current gauge' : 'Click to apply this gauge'}">
-        <span class="gauge-col-short">${shortLabel}</span>
-        <span class="gauge-col-mm">${mmLabel}</span>
-        ${r.isCurrent ? '<span class="gauge-col-tag">current</span>' : '<span class="gauge-col-tag gauge-col-apply">apply</span>'}
-      </button>`;
-    });
-    html += `</div>`;
-
-    // Stat rows
-    gaugeKeys.forEach((key, i) => {
-      html += `<div class="gauge-explore-row">`;
-      html += `<span class="gauge-explore-stat-label">${gaugeLabels[i]}</span>`;
-      gaugeResults.forEach((r: typeof gaugeResults[0]) => {
-        const val = r.stats[key as keyof SetupAttributes] as number;
-        const baseVal = currentResult.stats[key as keyof SetupAttributes] as number;
-        const diff = val - baseVal;
-        const cls = r.isCurrent ? 'gauge-val-current' : diff > 0 ? 'gauge-val-positive' : diff < 0 ? 'gauge-val-negative' : 'gauge-val-neutral';
-        const diffStr = r.isCurrent ? '' : (diff > 0 ? `+${diff}` : `${diff}`);
-        html += `<span class="gauge-explore-cell ${cls}">
-          <span class="gauge-cell-val">${val}</span>
-          ${diffStr ? `<span class="gauge-cell-diff">${diffStr}</span>` : ''}
-        </span>`;
-      });
-      html += `</div>`;
-    });
-
-    // OBS row
-    html += `<div class="gauge-explore-row gauge-explore-obs-row">`;
-    html += `<span class="gauge-explore-stat-label gauge-obs-label">OBS</span>`;
-    gaugeResults.forEach((r: typeof gaugeResults[0]) => {
-      const diff = r.obs - currentResult.obs;
-      const cls = r.isCurrent ? 'gauge-val-current' : diff > 0.5 ? 'gauge-val-positive' : diff < -0.5 ? 'gauge-val-negative' : 'gauge-val-neutral';
-      const diffStr = r.isCurrent ? '' : (diff > 0 ? `+${diff.toFixed(1)}` : diff.toFixed(1));
-      html += `<span class="gauge-explore-cell gauge-obs-cell ${cls}">
-        <span class="gauge-cell-val">${r.obs}</span>
-        ${diffStr ? `<span class="gauge-cell-diff">${diffStr}</span>` : ''}
-      </span>`;
-    });
-    html += `</div>`;
-
-    html += `</div>`;
-  });
-
-  container.innerHTML = html;
+  const gr = _ensureTuneReactRoot(_tuneGaugeExplorerMount, container);
+  if (!gr) return;
+  gr.render(createElement(TuneGaugeExplorer, { model: vm }));
 }
 
 function _setGaugeSelectByMm(select: HTMLSelectElement | null, mm: number): void {
@@ -887,139 +641,49 @@ export function _applyGaugeSelection(gaugeMm: number, sectionIndex: number): voi
 }
 
 /**
- * Render baseline marker
+ * Slider track adornments: optimal zone, baseline marker, original tension marker (React).
  */
-export function renderBaselineMarker(sliderMin: number, sliderMax: number): void {
-  const marker = document.getElementById('baseline-marker');
-  if (!marker) return;
-  const range = sliderMax - sliderMin;
-  const pct = ((tuneState.baselineTension - sliderMin) / range) * 100;
-  marker.style.left = `${Math.max(0, Math.min(100, pct))}%`;
+export function renderTuneSliderAdornments(sliderMin: number, sliderMax: number): void {
+  const container = document.getElementById('tune-slider-adornments-root');
+  if (!container) return;
+
+  const vm = buildTuneSliderAdornmentsViewModel(
+    sliderMin,
+    sliderMax,
+    tuneState.baselineTension,
+    tuneState.optimalWindow,
+    tuneState.originalTension
+  );
+  const r = _ensureTuneReactRoot(_tuneSliderAdornmentsMount, container);
+  if (!r) return;
+  r.render(createElement(TuneSliderAdornments, { model: vm }));
 }
 
 /**
- * Render optimal zone
+ * Render sweep chart (React TuneSweepChart → Chart.js; annotations read live tensions via getter).
  */
-export function renderOptimalZone(sliderMin: number, sliderMax: number): void {
-  const zone = document.getElementById('slider-optimal-zone');
-  const w = tuneState.optimalWindow;
-  if (!zone || !w) return;
-
-  const range = sliderMax - sliderMin;
-  const left = ((w.low - sliderMin) / range) * 100;
-  const width = ((w.high - w.low) / range) * 100;
-
-  zone.style.left = `${Math.max(0, left)}%`;
-  zone.style.width = `${Math.min(100 - left, width)}%`;
-}
-
-/**
- * Render sweep chart
- */
-export function renderSweepChart(setup: { racquet: Racquet }): void {
+export function renderSweepChart(_setup: { racquet: Racquet }): void {
   const data = tuneState.sweepData;
   if (!data || data.length === 0) return;
 
-  const canvas = document.getElementById('sweep-chart') as HTMLCanvasElement | null;
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
+  const container = document.getElementById('sweep-chart-root');
+  if (!container) return;
 
-  const tensions = data.map(d => d.tension);
-  const isDark = document.documentElement.dataset.theme === 'dark';
+  const chartTheme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+  const r = _ensureTuneReactRoot(_tuneSweepChartMount, container);
+  if (!r) return;
 
-  const curveColors = {
-    control: { border: '#AF0000', fill: 'rgba(175, 0, 0, 0.06)' },
-    spin: { border: '#CCFF00', fill: 'rgba(204, 255, 0, 0.04)' },
-    power: { border: '#C8A87C', fill: 'rgba(200, 168, 124, 0.05)' },
-    comfort: { border: '#A78BFA', fill: 'rgba(167, 139, 250, 0.05)' }
-  };
-
-  const datasets = [
-    { label: 'Control', data: data.map(d => d.stats.control), borderColor: curveColors.control.border, backgroundColor: curveColors.control.fill, fill: true, tension: 0.3, borderWidth: 2.5, borderDash: [], pointRadius: 0, pointHoverRadius: 0, pointHitRadius: 8 },
-    { label: 'Spin', data: data.map(d => d.stats.spin), borderColor: curveColors.spin.border, backgroundColor: curveColors.spin.fill, fill: true, tension: 0.3, borderWidth: 2, borderDash: [], pointRadius: 0, pointHoverRadius: 0, pointHitRadius: 8 },
-    { label: 'Power', data: data.map(d => d.stats.power), borderColor: curveColors.power.border, backgroundColor: curveColors.power.fill, fill: true, tension: 0.3, borderWidth: 2, borderDash: [], pointRadius: 0, pointHoverRadius: 0, pointHitRadius: 8 },
-    { label: 'Comfort', data: data.map(d => d.stats.comfort), borderColor: curveColors.comfort.border, backgroundColor: curveColors.comfort.fill, fill: true, tension: 0.3, borderWidth: 2, borderDash: [], pointRadius: 0, pointHoverRadius: 0, pointHitRadius: 8 }
-  ];
-
-  const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)';
-  const tickColor = isDark ? 'rgba(255,255,255,0.30)' : 'rgba(0,0,0,0.30)';
-  const legendColor = isDark ? 'rgba(255,255,255,0.50)' : 'rgba(0,0,0,0.48)';
-
-  const baselinePlugin = {
-    id: 'tuneAnnotations',
-    afterDraw(chart: { ctx: CanvasRenderingContext2D; chartArea: { left: number; right: number; top: number; bottom: number }; scales: { x: { getPixelForValue: (v: number) => number } } }) {
-      const { ctx, chartArea, scales } = chart;
-      const xScale = scales.x;
-
-      const bx = xScale.getPixelForValue(tuneState.baselineTension);
-      if (bx >= chartArea.left && bx <= chartArea.right) {
-        ctx.save();
-        ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.20)';
-        ctx.lineWidth = 1;
-        ctx.setLineDash([4, 4]);
-        ctx.beginPath();
-        ctx.moveTo(bx, chartArea.top);
-        ctx.lineTo(bx, chartArea.bottom);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.fillStyle = isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.40)';
-        ctx.font = "500 10px 'Inter', sans-serif";
-        ctx.textAlign = 'center';
-        ctx.fillText('BASELINE', bx, chartArea.top - 6);
-        ctx.restore();
-      }
-
-      if (tuneState.exploredTension !== tuneState.baselineTension) {
-        const ex = xScale.getPixelForValue(tuneState.exploredTension);
-        if (ex >= chartArea.left && ex <= chartArea.right) {
-          ctx.save();
-          ctx.strokeStyle = isDark ? 'rgba(220, 223, 226, 0.8)' : 'rgba(26, 26, 26, 0.7)';
-          ctx.lineWidth = 1.5;
-          ctx.setLineDash([]);
-          ctx.beginPath();
-          ctx.moveTo(ex, chartArea.top);
-          ctx.lineTo(ex, chartArea.bottom);
-          ctx.stroke();
-          ctx.fillStyle = isDark ? 'rgba(220, 223, 226, 0.8)' : 'rgba(26, 26, 26, 0.7)';
-          ctx.font = "600 10px 'Inter', sans-serif";
-          ctx.textAlign = 'center';
-          ctx.fillText('EXPLORED', ex, chartArea.top - 6);
-          ctx.restore();
-        }
-      }
-    }
-  };
-
-  const nextData = { labels: tensions, datasets };
-  const nextOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: { mode: 'index', intersect: false },
-    plugins: {
-      legend: { position: 'top', align: 'end', labels: { color: legendColor, usePointStyle: true, boxWidth: 8, font: { size: 10, family: "'JetBrains Mono', monospace" } } },
-      tooltip: { backgroundColor: isDark ? 'rgba(20,20,20,0.95)' : 'rgba(255,255,255,0.95)', titleColor: isDark ? '#fff' : '#1a1a1a', bodyColor: isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)', borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)', borderWidth: 1, padding: 10, displayColors: true, callbacks: { label: (item: { dataset: { label: string }; raw: number }) => `  ${item.dataset.label}: ${item.raw}` } }
-    },
-    scales: {
-      x: { title: { display: true, text: 'Tension (lbs)', font: { family: "'Inter', sans-serif", size: 11, weight: '500' }, color: tickColor }, grid: { color: gridColor, lineWidth: 0.5 }, ticks: { font: { family: "'JetBrains Mono', monospace", size: 10 }, color: tickColor, stepSize: 2 } },
-      y: { min: 0, max: 100, title: { display: true, text: 'Rating', font: { family: "'Inter', sans-serif", size: 11, weight: '500' }, color: tickColor }, grid: { color: gridColor, lineWidth: 0.5 }, ticks: { font: { family: "'JetBrains Mono', monospace", size: 10 }, color: tickColor, stepSize: 25 } }
-    },
-    animation: { duration: 400, easing: 'easeOutQuart' }
-  };
-
-  // Always destroy + recreate: in-place Chart.js updates often fail when tension range /
-  // label count changes after applying WTTN or recommended builds (new string / frame).
-  if (sweepChart) {
-    sweepChart.destroy();
-    sweepChart = null;
-  }
-
-  sweepChart = new Chart(ctx, {
-    type: 'line',
-    data: nextData,
-    options: nextOptions,
-    plugins: [baselinePlugin]
-  });
+  r.render(
+    createElement(TuneSweepChart, {
+      sweepData: data,
+      getTensions: () => ({
+        baselineTension: tuneState.baselineTension,
+        exploredTension: tuneState.exploredTension,
+      }),
+      chartTheme,
+      onChartReady: _onTuneSweepChartReady,
+    })
+  );
 }
 
 /**
@@ -1027,29 +691,41 @@ export function renderSweepChart(setup: { racquet: Racquet }): void {
  */
 export function renderBestValueMove(): void {
   const container = document.getElementById('slider-best-value');
-  const data = tuneState.sweepData;
-  const w = tuneState.optimalWindow;
-  if (!container || !data || !w) { container && (container.innerHTML = ''); return; }
+  if (!container) return;
 
-  const current = tuneState.exploredTension;
-  const isInZone = current >= w.low && current <= w.high;
+  const vm = buildTuneBestValueViewModel(tuneState.sweepData, tuneState.optimalWindow, tuneState.exploredTension);
+  if (vm.status === 'empty') {
+    const br = _ensureTuneReactRoot(_tuneBestValueMount, container);
+    if (br) br.render(createElement(TuneBestValueCallout, { model: vm }));
+    else container.innerHTML = '';
+    return;
+  }
 
-  if (isInZone) {
-    container.innerHTML = `<div class="best-value-callout best-value-ok">
-      <span class="best-value-icon">●</span>
-      <span>You're in the optimal zone (${w.low}–${w.high} lbs). No adjustment needed.</span>
-    </div>`;
-  } else {
-    const anchor = w.anchor;
-    const diff = anchor - current;
-    const direction = diff > 0 ? 'up' : 'down';
-    const SVG_CHEV_UP = '<svg width="10" height="10" viewBox="0 0 10 10" style="display:inline-block;vertical-align:middle"><path d="M2 7L5 3L8 7" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="square"/></svg>';
-    const SVG_CHEV_DOWN = '<svg width="10" height="10" viewBox="0 0 10 10" style="display:inline-block;vertical-align:middle"><path d="M2 3L5 7L8 3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="square"/></svg>';
-    const arrowIcon = diff > 0 ? SVG_CHEV_UP : SVG_CHEV_DOWN;
-    container.innerHTML = `<div class="best-value-callout best-value-move">
-      <span class="best-value-icon">${arrowIcon}</span>
-      <span><strong>Best Value Move:</strong> ${direction} ${Math.abs(diff)} lbs to ${anchor} lbs for peak balanced performance.</span>
-    </div>`;
+  const br = _ensureTuneReactRoot(_tuneBestValueMount, container);
+  if (!br) return;
+  br.render(createElement(TuneBestValueCallout, { model: vm }));
+}
+
+function _onHybridDimSelect(dim: HybridDim): void {
+  tuneState.hybridDimension = dim;
+  const setup = getCurrentSetup();
+  if (setup) {
+    tuneState.baselineTension = getHybridBaselineTension(setup.stringConfig, dim);
+    tuneState.exploredTension = tuneState.baselineTension;
+    const slider = document.getElementById('tune-slider') as HTMLInputElement | null;
+    if (slider) slider.value = String(tuneState.baselineTension);
+    updateSliderLabel();
+    runTensionSweep(setup);
+    calculateOptimalWindow(setup);
+    renderOptimalBuildWindow(parseInt(slider?.min || '30'), parseInt(slider?.max || '75'));
+    renderDeltaVsBaseline();
+    renderGaugeExplorer(setup);
+    renderTuneSliderAdornments(parseInt(slider?.min || '30'), parseInt(slider?.max || '75'));
+    renderSweepChart(setup);
+    renderBestValueMove();
+    _recomputeExploredState();
+    renderOverallBuildScore(setup, true);
+    renderRecommendedBuilds(setup);
   }
 }
 
@@ -1060,76 +736,26 @@ export function renderTuneHybridToggle(stringConfig: StringConfig): void {
   const container = document.getElementById('tune-hybrid-toggle');
   if (!container) return;
 
-  const hasSplitTensions = stringConfig.isHybrid || (stringConfig.mainsTension !== undefined && stringConfig.crossesTension !== undefined);
-  if (!hasSplitTensions) {
-    container.innerHTML = '';
+  const vm = buildTuneHybridDimToggleViewModel(stringConfig, tuneState.hybridDimension);
+
+  if (!vm.visible) {
+    const hr = _ensureTuneReactRoot(_tuneHybridToggleMount, container);
+    if (hr) hr.render(null);
+    else container.innerHTML = '';
     (container as HTMLElement).style.display = 'none';
     return;
   }
+
   (container as HTMLElement).style.display = 'flex';
 
-  const dims = [
-    { key: 'linked', label: 'Linked' },
-    { key: 'mains', label: 'Mains' },
-    { key: 'crosses', label: 'Crosses' }
-  ];
-
-  container.innerHTML = dims.map(d => {
-    const isActive = tuneState.hybridDimension === d.key;
-    return `<button class="tune-dim-btn${isActive ? ' active' : ''}" data-dim="${d.key}">${d.label}</button>`;
-  }).join('');
-
-  container.querySelectorAll('.tune-dim-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const dim = (btn as HTMLElement).dataset.dim as 'mains' | 'crosses' | 'linked';
-      tuneState.hybridDimension = dim;
-      const setup = getCurrentSetup();
-      if (setup) {
-        tuneState.baselineTension = getHybridBaselineTension(setup.stringConfig, dim);
-        tuneState.exploredTension = tuneState.baselineTension;
-        const slider = document.getElementById('tune-slider') as HTMLInputElement | null;
-        if (slider) slider.value = String(tuneState.baselineTension);
-        updateSliderLabel();
-        runTensionSweep(setup);
-        calculateOptimalWindow(setup);
-        renderOptimalBuildWindow(parseInt(slider?.min || '30'), parseInt(slider?.max || '75'));
-        renderDeltaVsBaseline();
-        renderGaugeExplorer(setup);
-        renderBaselineMarker(parseInt(slider?.min || '30'), parseInt(slider?.max || '75'));
-        renderOptimalZone(parseInt(slider?.min || '30'), parseInt(slider?.max || '75'));
-        renderSweepChart(setup);
-        renderBestValueMove();
-        _recomputeExploredState();
-        renderOriginalTensionMarker();
-        renderOverallBuildScore(setup, true);
-        renderRecommendedBuilds(setup);
-      }
-    });
-  });
-}
-
-/**
- * Render original tension marker
- */
-export function renderOriginalTensionMarker(): void {
-  const slider = document.getElementById('tune-slider') as HTMLInputElement | null;
-  if (!slider || !slider.parentElement || !tuneState.originalTension) return;
-
-  const container = slider.parentElement;
-  const oldMarker = container.querySelector('.tune-original-marker');
-  if (oldMarker) oldMarker.remove();
-
-  const min = parseInt(slider.min, 10);
-  const max = parseInt(slider.max, 10);
-  const pct = ((tuneState.originalTension - min) / (max - min)) * 100;
-
-  const marker = document.createElement('div');
-  marker.className = 'tune-original-marker';
-  marker.style.left = `calc(${pct}% - 1px)`;
-  marker.title = `Original: ${tuneState.originalTension} lbs`;
-  marker.innerHTML = `<span class="tune-original-label">Start: ${tuneState.originalTension}</span>`;
-  container.style.position = 'relative';
-  container.appendChild(marker);
+  const hr = _ensureTuneReactRoot(_tuneHybridToggleMount, container);
+  if (!hr) return;
+  hr.render(
+    createElement(TuneHybridDimToggle, {
+      model: vm,
+      onSelectDim: _onHybridDimSelect,
+    })
+  );
 }
 
 /**
@@ -1257,53 +883,23 @@ export function renderOverallBuildScore(
   if (!container) return;
 
   const inTuneMode = getCurrentMode() === 'tune';
-  const stats = inTuneMode && tuneState.explored?.stats
-    ? tuneState.explored.stats
-    : getScoredSetup(setup).stats;
-  const score = inTuneMode && typeof tuneState.explored?.obs === 'number'
-    ? tuneState.explored.obs
-    : getScoredSetup(setup).obs;
+  const vm = buildTuneObsBuildScoreViewModel(
+    setup,
+    inTuneMode,
+    tuneState.explored,
+    typeof tuneState.baseline?.obs === 'number' ? tuneState.baseline.obs : null
+  );
 
-  const tier = getObsTier(score);
-  let deltaHTML = '';
-  if (inTuneMode && typeof tuneState.baseline?.obs === 'number') {
-    const delta = score - tuneState.baseline.obs;
-    if (Math.abs(delta) > 0.05) {
-      const sign = delta > 0 ? '+' : '';
-      const deltaCls = delta > 0 ? 'obs-delta-pos' : 'obs-delta-neg';
-      deltaHTML = `<span class="obs-delta-chip ${deltaCls}">${sign}${delta.toFixed(1)}</span>`;
-    }
-  }
-
-  const segments = 10;
-  const filled = Math.min(segments, Math.max(0, Math.ceil(score / 10)));
-  let batteryHTML = '<div class="obs-battery">';
-  for (let i = 0; i < segments; i++) {
-    const isFilled = i < filled;
-    const isTopTier = i >= 8;
-    const segClass = isFilled
-      ? (isTopTier ? 'obs-battery-seg obs-battery-filled obs-battery-top' : 'obs-battery-seg obs-battery-filled')
-      : 'obs-battery-seg';
-    batteryHTML += `<div class="${segClass}"></div>`;
-  }
-  batteryHTML += '</div>';
-
-  const rankClass = tier.label === 'S Rank' ? 'obs-rank-badge s-rank' : 'obs-rank-badge';
-  container.innerHTML = `
-    <div class="obs-top-row">
-      <div class="obs-score-group">
-        <span class="obs-score-value">${score.toFixed(1)}</span>
-        ${deltaHTML}
-      </div>
-      <span class="${rankClass}">${tier.label}</span>
-    </div>
-    ${batteryHTML}
-  `;
+  const or = _ensureTuneReactRoot(_tuneObsMount, container);
+  if (!or) return;
+  flushSync(() => {
+    or.render(createElement(TuneObsBuildScore, { model: vm }));
+  });
 
   if (animate) {
-    animateOBSInContainer(container, '.obs-score-value', score, 400, _prevObsValues.tune);
+    animateOBSInContainer(container, '.obs-score-value', vm.score, 400, _prevObsValues.tune);
   }
-  _prevObsValues.tune = score;
+  _prevObsValues.tune = vm.score;
 }
 
 function _getCurrentRecommendationKey(stringConfig: StringConfig): string | null {
@@ -1327,48 +923,6 @@ function _getRecommendationKey(candidate: RecommendedCandidate): string {
   return candidate.type === 'hybrid'
     ? `hybrid:${candidate.mainsId}/${candidate.crossesId}`
     : `full:${candidate.stringId}`;
-}
-
-function _renderRecommendationItem(
-  setup: { racquet: Racquet; stringConfig: StringConfig },
-  candidate: RecommendedCandidate,
-  rank: number,
-  currentOBS: number,
-  currentKey: string | null
-): string {
-  const isCurrent = currentKey === _getRecommendationKey(candidate);
-  const delta = candidate.score - currentOBS;
-  const deltaStr = delta > 0 ? `+${delta.toFixed(1)}` : delta.toFixed(1);
-  const deltaCls =
-    delta > 0.5 ? 'recs-delta-positive' : delta < -0.5 ? 'recs-delta-negative' : 'recs-delta-neutral';
-  const tensionLabel =
-    candidate.type === 'hybrid'
-      ? `M:${candidate.tension} / X:${candidate.tension - 2} lbs`
-      : `${candidate.tension} lbs`;
-  const stringId = candidate.stringId || candidate.string?.id || '';
-  const mainsId = candidate.mainsId || '';
-  const crossesId = candidate.crossesId || '';
-
-  return `
-    <div class="recs-item ${isCurrent ? 'recs-item-current' : ''}">
-      <div class="recs-rank">${rank}</div>
-      <div class="recs-info">
-        <div class="recs-name">${candidate.label} ${candidate.gauge ? `<span class="recs-gauge">${candidate.gauge}</span>` : ''}</div>
-        <div class="recs-meta">
-          <span class="recs-tension-rec">${tensionLabel}</span>
-          ${isCurrent ? '<span class="recs-badge-current">CURRENT</span>' : ''}
-        </div>
-      </div>
-      <div class="recs-composite">
-        <span class="recs-composite-value">${candidate.score.toFixed(1)}</span>
-        <span class="recs-composite-delta ${deltaCls}">${isCurrent ? 'YOU' : deltaStr}</span>
-      </div>
-      <div class="recs-action-row">
-        <button class="recs-apply-btn" data-tune-action="applyRec" data-racquet-id="${setup.racquet.id}" data-string-id="${stringId}" data-tension="${candidate.tension}" data-type="${candidate.type}" data-mains-id="${mainsId}" data-crosses-id="${crossesId}">Apply</button>
-        <button class="recs-save-btn" data-tune-action="saveRec" data-racquet-id="${setup.racquet.id}" data-string-id="${stringId}" data-tension="${candidate.tension}" data-type="${candidate.type}" data-mains-id="${mainsId}" data-crosses-id="${crossesId}">Save</button>
-      </div>
-    </div>
-  `;
 }
 
 function _buildTuneRecommendationLoadout(
@@ -1413,7 +967,10 @@ export function renderWhatToTryNext(
 ): void {
   const container = document.getElementById('wttn-content');
   if (!container) return;
-  container.innerHTML = renderSharedWhatToTryNext(container, setup, candidates);
+  const vm = buildWhatToTryNextViewModel(setup, candidates);
+  const wr = _ensureTuneReactRoot(_tuneWttnMount, container);
+  if (!wr) return;
+  wr.render(createElement(TuneWttn, { model: vm }));
 }
 
 export function renderExplorePrompt(
@@ -1425,20 +982,28 @@ export function renderExplorePrompt(
   const container = document.getElementById('explore-content');
   if (!row || !container) return;
 
+  const vm = buildExplorePromptViewModel(setup, isCurrentInTop, topBuilds);
+
   if (setup.stringConfig.isHybrid) {
     row.classList.remove('hidden');
-    renderSharedExplorePrompt(container, setup, isCurrentInTop, topBuilds);
+    const er = _ensureTuneReactRoot(_tuneExploreMount, container);
+    if (!er) return;
+    er.render(createElement(TuneExplorePrompt, { model: vm }));
     return;
   }
 
   if (isCurrentInTop) {
     row.classList.add('hidden');
-    container.innerHTML = '';
+    const er = _ensureTuneReactRoot(_tuneExploreMount, container);
+    if (er) er.render(null);
+    else container.innerHTML = '';
     return;
   }
 
   row.classList.remove('hidden');
-  renderSharedExplorePrompt(container, setup, isCurrentInTop, topBuilds);
+  const er = _ensureTuneReactRoot(_tuneExploreMount, container);
+  if (!er) return;
+  er.render(createElement(TuneExplorePrompt, { model: vm }));
 }
 
 export function renderRecommendedBuilds(setup: { racquet: Racquet; stringConfig: StringConfig }): void {
@@ -1449,29 +1014,10 @@ export function renderRecommendedBuilds(setup: { racquet: Racquet; stringConfig:
   const currentKey = _getCurrentRecommendationKey(setup.stringConfig);
   const topCombined = [...recommendations.fullBed, ...recommendations.hybrid];
 
-  container.innerHTML = `
-    <div class="recs-split">
-      <div class="recs-panel">
-        <div class="recs-panel-header">
-          <span class="recs-panel-title">FULL BED</span>
-          <span class="recs-panel-sub">Single string, both directions</span>
-        </div>
-        <div class="recs-list">
-          ${recommendations.fullBed.map((candidate, index) => _renderRecommendationItem(setup, candidate, index + 1, recommendations.currentOBS, currentKey)).join('')}
-        </div>
-      </div>
-      <div class="recs-panel">
-        <div class="recs-panel-header">
-          <span class="recs-panel-title">HYBRID</span>
-          <span class="recs-panel-sub">Mains / Crosses pairing</span>
-        </div>
-        <div class="recs-list">
-          ${recommendations.hybrid.map((candidate, index) => _renderRecommendationItem(setup, candidate, index + 1, recommendations.currentOBS, currentKey)).join('')}
-        </div>
-      </div>
-    </div>
-    <p class="recs-footnote">Composite score across all 11 stats at optimal tension for <strong>${setup.racquet.name.replace(/\s+\d+g$/, '')}</strong>. Delta is vs your current build.</p>
-  `;
+  const recsVm = buildTuneRecsViewModel(setup, recommendations, currentKey);
+  const rr = _ensureTuneReactRoot(_tuneRecsMount, container);
+  if (!rr) return;
+  rr.render(createElement(TuneRecommendedBuilds, { model: recsVm }));
 
   renderExplorePrompt(setup, recommendations.isCurrentInTop, topCombined);
   renderWhatToTryNext(setup, recommendations.all);

@@ -55,8 +55,19 @@ export function Tune() {
                     <span className="slider-label-max" id="slider-label-max">70</span>
                   </div>
                   <div className="slider-track" id="slider-track">
-                    <div className="slider-optimal-zone" id="slider-optimal-zone"></div>
-                    <div className="slider-baseline-marker" id="slider-baseline-marker"></div>
+                    <div
+                      id="tune-slider-adornments-root"
+                      className="tune-slider-adornments-root"
+                      style={{
+                        position: 'absolute',
+                        left: 0,
+                        right: 0,
+                        top: 0,
+                        bottom: 0,
+                        pointerEvents: 'none',
+                        zIndex: 1,
+                      }}
+                    />
                     <input type="range" className="tune-slider" id="tune-slider" min="40" max="70" step="1" defaultValue="55" />
                   </div>
                   <div className="slider-value-display">
@@ -75,9 +86,7 @@ export function Tune() {
               <div className="flex items-center px-0.5 py-4 border-b border-dc-border">
                 <h3 className="tune-card-title font-mono text-[11px] font-bold tracking-[0.15em] text-dc-platinum uppercase">Response across tension</h3>
               </div>
-              <div className="sweep-chart-container px-0.5">
-                <canvas id="sweep-chart"></canvas>
-              </div>
+              <div className="sweep-chart-container px-0.5" id="sweep-chart-root" />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="tune-card bg-white dark:bg-dc-void-lift border border-dc-border rounded-lg hover:border-dc-storm transition-colors duration-200" id="tune-card-delta">

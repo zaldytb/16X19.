@@ -38,7 +38,7 @@ interface Classification {
   family: string;
 }
 
-interface Candidate {
+export interface Candidate {
   type: 'full' | 'hybrid';
   label: string;
   gauge?: string;
@@ -302,20 +302,43 @@ function generateWhySentence(
 }
 
 // ============================================
-// WTTN RENDERING
+// WTTN VIEW MODEL (React / parity with former innerHTML)
 // ============================================
 
-export function renderWhatToTryNext(
-  container: HTMLElement,
+export type WttnViewModel =
+  | { kind: 'empty'; message: string }
+  | {
+      kind: 'buckets';
+      racquetId: string;
+      buckets: Array<{
+        bucketKey: 'closest' | 'more' | 'corrective';
+        title: string;
+        iconSvg: string;
+        buildName: string;
+        gaugeSpan: { text: string } | null;
+        isHybrid: boolean;
+        tensionLabel: string;
+        why: string;
+        displayGains: Array<{ attrLabel: string; delta: number }>;
+        displayLosses: Array<{ attrLabel: string; delta: number }>;
+        netDir: string;
+        stringId: string;
+        mainsId: string;
+        crossesId: string;
+        tension: number;
+        pickType: 'full' | 'hybrid';
+      }>;
+    };
+
+export function buildWhatToTryNextViewModel(
   setup: { racquet: Racquet; stringConfig: StringConfig },
   allCandidates: Candidate[]
-): string {
+): WttnViewModel {
   const { racquet, stringConfig } = setup;
 
   const currentStats = predictSetup(racquet, stringConfig);
   const classification = classifySetupForWTTN(currentStats);
 
-  // Build current build key for exclusion
   let currentBuildKey: string | null = null;
   if (stringConfig.isHybrid) {
     const mId = stringConfig.mains?.id || (stringConfig as unknown as Record<string, string>).mainsId || '';
@@ -330,7 +353,6 @@ export function renderWhatToTryNext(
     return `full:${c.stringId || (c.string && c.string.id) || ''}`;
   }
 
-  // Score and filter candidates
   const scored = allCandidates
     .filter((c) => getCandidateKey(c) !== currentBuildKey)
     .map((c) => {
@@ -345,14 +367,15 @@ export function renderWhatToTryNext(
     });
 
   if (scored.length < 3) {
-    return '<p class="wttn-empty">Not enough alternative builds to generate contextual recommendations.</p>';
+    return {
+      kind: 'empty',
+      message: 'Not enough alternative builds to generate contextual recommendations.',
+    };
   }
 
-  // Step 1: Closest Better
   scored.sort((a, b) => (b.closestScore || 0) - (a.closestScore || 0));
   const closest = scored[0];
 
-  // Step 2: More of What You Want
   const DISTINCTNESS_PENALTY = 15;
   for (const c of scored) {
     const sim = candidateSimilarity(c.stats, closest.stats);
@@ -362,7 +385,6 @@ export function renderWhatToTryNext(
   const more =
     scored.find((c) => getCandidateKey(c) !== getCandidateKey(closest)) || scored[0];
 
-  // Step 3: Corrective
   for (const c of scored) {
     const simClosest = candidateSimilarity(c.stats, closest.stats);
     const simMore = candidateSimilarity(c.stats, more.stats);
@@ -377,7 +399,7 @@ export function renderWhatToTryNext(
         getCandidateKey(c) !== getCandidateKey(more)
     ) || scored[0];
 
-  const buckets: WTTNBucket[] = [
+  const bucketDefs: WTTNBucket[] = [
     {
       key: 'closest',
       title: 'Closest Better Version',
@@ -398,62 +420,58 @@ export function renderWhatToTryNext(
     },
   ];
 
-  return buckets
-    .map((b) => {
-      const { pick, key, title, icon } = b;
-      const gains = topGains(pick.deltas || {}, 4);
-      const losses = topLosses(pick.deltas || {}, 3);
-      const netDir = generateNetDirection(gains, losses);
-      const why = generateWhySentence(key, gains, losses, classification);
+  const buckets = bucketDefs.map((b) => {
+    const { pick, key, title, icon } = b;
+    const gains = topGains(pick.deltas || {}, 4);
+    const losses = topLosses(pick.deltas || {}, 3);
+    const netDir = generateNetDirection(gains, losses);
+    const why = generateWhySentence(key, gains, losses, classification);
 
-      const displayGains = gains.slice(0, 4).filter((g) => g.delta >= 1);
-      const displayLosses = losses.slice(0, 3).filter((l) => l.delta <= -1);
+    const displayGains = gains
+      .slice(0, 4)
+      .filter((g) => g.delta >= 1)
+      .map((g) => ({ attrLabel: WTTN_ATTR_LABELS[g.attr], delta: g.delta }));
+    const displayLosses = losses
+      .slice(0, 3)
+      .filter((l) => l.delta <= -1)
+      .map((l) => ({ attrLabel: WTTN_ATTR_LABELS[l.attr], delta: l.delta }));
 
-      const stringId =
-        pick.stringId || (pick.string ? pick.string.id : '');
-      const mainsId = pick.mainsId || '';
-      const crossesId = pick.crossesId || '';
+    const stringId = pick.stringId || (pick.string ? pick.string.id : '');
+    const mainsId = pick.mainsId || '';
+    const crossesId = pick.crossesId || '';
 
-      return `
-        <div class="wttn-card" data-bucket="${key}">
-          <div class="wttn-bucket-header">
-            <div class="wttn-bucket-icon">${icon}</div>
-            <span class="wttn-bucket-label">${title}</span>
-          </div>
-          <div>
-            <div class="wttn-build-name">${pick.label || (pick.string && pick.string.name) || 'Unknown'} ${pick.gauge ? `<span class="wttn-gauge">${pick.gauge}</span>` : pick.string ? `<span class="wttn-gauge">${pick.string.gauge}</span>` : ''}</div>
-            <div class="wttn-build-meta">
-              ${pick.type === 'hybrid' ? '<span class="recs-type-badge recs-type-hybrid">HYBRID</span>' : '<span class="recs-type-badge recs-type-full">FULL BED</span>'}
-              <span class="wttn-build-tension">${pick.type === 'hybrid' ? `M:${pick.tension} / X:${pick.tension - 2} lbs` : `${pick.tension} lbs`}</span>
-            </div>
-          </div>
-          <p class="wttn-why">${why}</p>
-          <div class="wttn-deltas">
-            ${displayGains.length > 0 ? `<div class="wttn-delta-row">
-              <span class="wttn-delta-label">Gain</span>
-              <div class="wttn-delta-chips">
-                ${displayGains.map((g) => `<span class="wttn-chip wttn-chip-gain">${WTTN_ATTR_LABELS[g.attr]} +${g.delta}</span>`).join('')}
-              </div>
-            </div>` : ''}
-            ${displayLosses.length > 0 ? `<div class="wttn-delta-row">
-              <span class="wttn-delta-label">Give Up</span>
-              <div class="wttn-delta-chips">
-                ${displayLosses.map((l) => `<span class="wttn-chip wttn-chip-loss">${WTTN_ATTR_LABELS[l.attr]} ${l.delta}</span>`).join('')}
-              </div>
-            </div>` : ''}
-          </div>
-          <div class="wttn-net">
-            <span class="wttn-net-label">Net</span>
-            <span class="wttn-net-phrase">${netDir}</span>
-          </div>
-          <div class="wttn-action-row">
-            <button class="wttn-apply-btn" data-tune-action="wttnApply" data-string-id="${stringId}" data-tension="${pick.tension}" data-type="${pick.type}" data-mains-id="${mainsId}" data-crosses-id="${crossesId}">Apply</button>
-            <button class="wttn-save-btn" data-tune-action="wttnSave" data-string-id="${stringId}" data-tension="${pick.tension}" data-type="${pick.type}" data-mains-id="${mainsId}" data-crosses-id="${crossesId}" data-frame-id="${racquet.id}">Save</button>
-          </div>
-        </div>
-      `;
-    })
-    .join('');
+    const buildName = pick.label || (pick.string && pick.string.name) || 'Unknown';
+    let gaugeSpan: { text: string } | null = null;
+    if (pick.gauge) {
+      gaugeSpan = { text: pick.gauge };
+    } else if (pick.string) {
+      gaugeSpan = { text: pick.string.gauge };
+    }
+
+    return {
+      bucketKey: key,
+      title,
+      iconSvg: icon,
+      buildName,
+      gaugeSpan,
+      isHybrid: pick.type === 'hybrid',
+      tensionLabel:
+        pick.type === 'hybrid'
+          ? `M:${pick.tension} / X:${pick.tension - 2} lbs`
+          : `${pick.tension} lbs`,
+      why,
+      displayGains,
+      displayLosses,
+      netDir,
+      stringId,
+      mainsId,
+      crossesId,
+      tension: pick.tension,
+      pickType: pick.type,
+    };
+  });
+
+  return { kind: 'buckets', racquetId: racquet.id, buckets };
 }
 
 // ============================================
@@ -606,49 +624,3 @@ export function generateRecommendedBuilds(
   };
 }
 
-// ============================================
-// EXPLORE PROMPT
-// ============================================
-
-export function renderExplorePrompt(
-  container: HTMLElement,
-  setup: { racquet: Racquet; stringConfig: StringConfig },
-  isCurrentInTop: boolean,
-  topBuilds: Candidate[]
-): void {
-  const { stringConfig } = setup;
-
-  // If hybrid, always show full-bed nudge
-  if (stringConfig.isHybrid) {
-    container.innerHTML = `
-      <div class="explore-prompt">
-        <div class="explore-icon">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3v14m-5-5l5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
-        <div class="explore-text">
-          <p class="explore-headline">Curious how a full-bed setup compares?</p>
-          <p class="explore-body">Your hybrid is dialed in — but the top-rated strings above are scored as full-bed setups. Try swapping to one of them on the main page and re-enter Tune to see how the response curves shift.</p>
-        </div>
-      </div>
-    `;
-    return;
-  }
-
-  if (isCurrentInTop) {
-    container.innerHTML = '';
-    return;
-  }
-
-  const topName = topBuilds[0]?.string?.name || 'a top-rated string';
-  container.innerHTML = `
-    <div class="explore-prompt">
-      <div class="explore-icon">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M10 7v3l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
-      <div class="explore-text">
-        <p class="explore-headline">Try a different string?</p>
-        <p class="explore-body">Your current string didn't make the top 5 for this frame. Consider switching to <strong>${topName}</strong> or another recommended build above — swap on the main page, then re-enter Tune to compare the tension response curves.</p>
-      </div>
-    </div>
-  `;
-}

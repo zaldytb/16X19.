@@ -38,7 +38,7 @@ npm run calibrate       # Re-fit string estimation coefficients
 
 Pipeline scripts live in `pipeline/scripts/*.ts` and run with **`tsx`** (TypeScript execution).
 
-**Pre-commit checklist:** `npm run typecheck && npm run canary && npm run build`
+**Pre-commit checklist:** `npm run typecheck && npm run canary && npm run build && npm run test:runtime`
 
 ---
 
@@ -50,11 +50,11 @@ TypeScript owns all live UI and engine code under `src/`. [`src/main.tsx`](src/m
 
 Cross-module behavior now prefers direct imports, delegated listeners, or explicit callback registries. Do not add new `window.*` globals as part of normal feature work.
 
-React Router routes live in `src/App.tsx`, with route wrappers in `src/pages/` and shell UI in `src/components/shell/`. Most imperative workspace behavior still lives in `src/ui/pages/`.
+React Router routes live in `src/App.tsx`, with route wrappers in `src/pages/` and shell UI in `src/components/shell/`. Workspace **orchestration** still lives in `src/ui/pages/*.ts` (e.g. `tune.ts`, `overview.ts`, `compare/`). The **Tune** workspace mounts declarative UI from **`src/components/tune/`** into placeholder DOM from `src/pages/Tune.tsx` via `createRoot` in `tune.ts`, using pure view-models (`tune-*-vm.ts`, shared helpers) and **`_ensureTuneReactRoot`** so roots survive lazy-route unmount. See **`docs/REACT-MIGRATION-PLAN.md`** (roadmap) and **`docs/REACT-MIGRATION-GUIDE.md`** (Zero-Pixel Protocol).
 
 ### Runtime coordination (`src/runtime/`)
 
-`src/runtime/coordinator.ts` is the refresh coordinator for route changes and shared state changes. It computes refresh plans and calls callback registries such as `src/ui/pages/overview-runtime-bridge.ts`, `src/ui/pages/tune-runtime-bridge.ts`, and `src/ui/pages/compare-runtime-bridge.ts`.
+`src/runtime/coordinator.ts` is the refresh coordinator for route changes and shared state changes. It computes **`getRefreshPlan(mode, changed)`** (includes **`compendium`** when the shell mode is compendium and loadout/mode changed) and calls callback registries such as `src/ui/pages/overview-runtime-bridge.ts`, `src/ui/pages/tune-runtime-bridge.ts`, and `src/ui/pages/compare-runtime-bridge.ts`.
 
 Treat those `*-runtime-bridge.ts` files as internal callback registries for lazy page modules, not as a revival of the old `window.*` bridge.
 
@@ -87,7 +87,13 @@ On boot, `src/ui/pages/shell.ts` hydrates saved loadouts and then restores the a
 
 Imperative page modules include `shell.ts`, `overview.ts`, `tune.ts`, `compare/`, `optimize.ts`, `compendium.ts`, `strings.ts`, `find-my-build.ts`, `my-loadouts.ts`, and `leaderboard.ts`. React route wrappers live separately under `src/pages/`.
 
+**Tune** — `tune.ts` drives sweep, slider, and recommendations; **React** components under `src/components/tune/` (OBS, delta, WTTN, gauge explorer, recs, sweep chart, slider adornments, etc.) are mounted into `Tune.tsx` hosts. Chart.js for the sweep uses the global `Chart` from `index.html` inside `tune-sweep-chart.ts`, with `TuneSweepChart.tsx` owning canvas lifecycle.
+
 The live Find My Build flow is the imperative `find-my-build.ts` module opened from Overview and dock actions, not a standalone routed workspace.
+
+### Further React migration
+
+After Tune, other workspaces should follow the same **Strangler Fig** pattern: one widget at a time, `createRoot` in the legacy module, dumb components + pure VMs, no visual drift — see **`docs/REACT-MIGRATION-GUIDE.md`** and **`docs/REACT-MIGRATION-PLAN.md`**.
 
 ---
 
@@ -557,7 +563,8 @@ The result is a small attribute boost map applied to frame stats before strings/
 - **Route aliasing** -- `pathToMode()` in `src/routing/modePaths.ts` intentionally aliases `/strings` and `/leaderboard` back to the Compendium shell mode so shared nav state stays coherent.
 - **Stale client state** -- a "working" UI can show wrong numbers if store/setup-sync are out of date. When scores look off, verify the store and `getCurrentSetup()` first.
 - **Persistence contract** -- active loadout and saved loadouts are expected to survive refresh via local storage. If a refresh loses the current build, inspect `src/state/active-loadout-storage.ts`, `src/state/store.ts`, and shell boot restore in `src/ui/pages/shell.ts`.
-- **Tune page sensitivity** -- when changing Tune, verify together: delta card, OBS in Tune, WTTN, recommendations, loadout switching while Tune is open, slider -> apply.
+- **Tune page sensitivity** -- when changing Tune, verify together: delta card, OBS in Tune, WTTN, recommendations, loadout switching while Tune is open, slider -> apply, sweep chart annotations after theme toggle.
+- **React migration (Zero-Pixel)** -- new workspace UI migrated from imperative TS must use the guide in `docs/REACT-MIGRATION-GUIDE.md`; do not change pixels or Tailwind output casually. Lazy routes require root invalidation (same idea as `_ensureTuneReactRoot`).
 
 ---
 

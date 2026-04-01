@@ -12,6 +12,8 @@ This folder holds **in-repo** guides you can treat like a lightweight wiki (GitH
 | [../AGENTS.md](../AGENTS.md) | Conventions for contributors and coding agents |
 | [../CLAUDE.md](../CLAUDE.md) | Claude Code commands and critical rules |
 | [../ts-migration-plan.md](../ts-migration-plan.md) | Post-migration architecture snapshot |
+| [REACT-MIGRATION-GUIDE.md](REACT-MIGRATION-GUIDE.md) | Zero-Pixel Protocol — rules for migrating `src/ui/pages/*.ts` UI to React |
+| [REACT-MIGRATION-PLAN.md](REACT-MIGRATION-PLAN.md) | Post–Tune React roadmap (next workspaces, gates, coordinator notes) |
 | [../tools/frame-gui/README.md](../tools/frame-gui/README.md) | Desktop CSV frame editor (Electron) |
 
 ## Quick commands

@@ -36,6 +36,10 @@ Pipeline tooling under **`pipeline/scripts/`** is **`.ts`** and is executed with
 npm run typecheck && npm run canary && npm run build
 ```
 
+## React UI migration (ongoing)
+
+The **Tune** workspace is migrated to the **Strangler Fig** pattern: dumb React components in **`src/components/tune/`**, mounted from **`src/ui/pages/tune.ts`** with `createRoot`, pure view-models in **`tune-*-vm.ts`**, and **`_ensureTuneReactRoot`** for lazy-route safety. Rules and process: **[docs/REACT-MIGRATION-GUIDE.md](docs/REACT-MIGRATION-GUIDE.md)**. Roadmap for Overview, Compare, and other workspaces: **[docs/REACT-MIGRATION-PLAN.md](docs/REACT-MIGRATION-PLAN.md)**.
+
 ## Optional follow-ups (non-blocking)
 
 - Remove or archive historical migration prompts (`codex-migration-prompt.md`, `migration-finish-prompt.md`, `walkthrough.md`) if you no longer need line-level audits of the old monolith.
@@ -44,7 +48,7 @@ npm run typecheck && npm run canary && npm run build
 
 ## Definition of done (met)
 
-- React routing is `src/main.tsx` → `src/App.tsx`, with imperative workspace logic still living under `src/ui/**/*.ts`.
+- React routing is `src/main.tsx` → `src/App.tsx`, with imperative workspace orchestration still living under `src/ui/**/*.ts` alongside React-mounted widgets where migrated.
 - Leaderboard is TypeScript (`leaderboard.ts`).
 - Startup flow is `src/main.tsx` → `src/App.tsx` → `runVanillaAppInit()`.
-- Automated gate passes: typecheck, canary, build.
+- Automated gate passes: typecheck, canary, build; **`npm run test:runtime`** covers coordinator refresh-plan contracts.

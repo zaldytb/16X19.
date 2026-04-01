@@ -25,7 +25,7 @@
 | Styling | Tailwind CSS 4.x via `@tailwindcss/vite`, with inline `index.html` config still present, plus `style.css` design tokens |
 | Package manager | npm |
 | Runtime | Node.js 20+ (pipeline via `tsx`) |
-| Charts | Chart.js npm package |
+| Charts | Chart.js (`chart.js` where imported; global `Chart` in `index.html` for Tune sweep) |
 | Deploy | GitHub Pages + Vercel |
 
 **Important:** Tailwind is wired through `@tailwindcss/vite`, and `index.html` still carries inline runtime config. Runtime-generated utility strings in TypeScript should stay verbatim to avoid styling drift.
@@ -53,7 +53,7 @@ The historical `app.js` monolith is **removed**. Live page logic now spans `src/
 
 ### 3. Runtime view coordination
 
-[`src/runtime/coordinator.ts`](src/runtime/coordinator.ts) is the cross-page refresh coordinator. It computes refresh plans from route + store changes and fans out through callback registries such as:
+[`src/runtime/coordinator.ts`](src/runtime/coordinator.ts) is the cross-page refresh coordinator. It computes refresh plans from route + store changes (including a **`compendium`** flag when that shell mode needs loadout sync) and fans out through callback registries such as:
 
 - [`src/ui/pages/overview-runtime-bridge.ts`](src/ui/pages/overview-runtime-bridge.ts)
 - [`src/ui/pages/tune-runtime-bridge.ts`](src/ui/pages/tune-runtime-bridge.ts)
@@ -89,7 +89,8 @@ loadout-lab/
 │   ├── main.tsx
 │   ├── App.tsx
 │   ├── components/
-│   │   └── shell/
+│   │   ├── shell/
+│   │   └── tune/               # Tune workspace widgets (mounted from ui/pages/tune.ts)
 │   ├── context/
 │   ├── global.d.ts
 │   ├── hooks/
@@ -205,7 +206,7 @@ The live wizard is the imperative module [`src/ui/pages/find-my-build.ts`](src/u
 **Automated gate (required before commit):**
 
 ```bash
-npm run typecheck && npm run canary && npm run build
+npm run typecheck && npm run canary && npm run build && npm run test:runtime
 ```
 
 **Manual smoke** after UI or engine work: overview hero/bars/radar/fit/warnings; tune; compare; compendium/strings; dock create/save/activate; leaderboard tab.
@@ -238,6 +239,8 @@ Actions: `https://github.com/zaldytb/loadout-lab/actions`
 
 ## Further reference
 
-- [ts-migration-plan.md](ts-migration-plan.md) — migration status and optional follow-ups  
+- [ts-migration-plan.md](ts-migration-plan.md) — TypeScript / bundler snapshot and React migration pointer  
+- [docs/REACT-MIGRATION-GUIDE.md](docs/REACT-MIGRATION-GUIDE.md) — Zero-Pixel Protocol for React UI migration  
+- [docs/REACT-MIGRATION-PLAN.md](docs/REACT-MIGRATION-PLAN.md) — post–Tune React roadmap  
 - [docs/README.md](docs/README.md) — documentation index  
 - [CLAUDE.md](CLAUDE.md) — Claude Code checklist and commands  

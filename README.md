@@ -18,15 +18,16 @@ The app lets users:
 - save, restore, and share loadouts
 - persist the current active loadout and saved loadouts across refreshes via local storage
 
-Primary URL: `https://github.com/zaldytb/16X19.`  
-Mirror: `https://16x19.vercel.app/`
+Primary site (GitHub Pages): `https://zaldytb.github.io/loadout-lab/`  
+Repository: `https://github.com/zaldytb/loadout-lab`  
+Mirror: `https://loadout-lab.vercel.app`
 
 ## Stack
 
 - **Vite 8** — dev server and production bundle
 - **TypeScript 6** — strict mode for `src/` (engine, state, UI)
 - **Tailwind CSS 4** — `@tailwindcss/vite` for the app build, with inline runtime config/tokens still declared in `index.html`; design tokens and component styles live in `style.css`
-- **Chart.js** — npm dependency used by overview, compare, and tune charts
+- **Chart.js** — `chart.js` npm package where modules import it (e.g. compare radar); `index.html` also loads Chart.js globally for the Tune tension sweep chart integration
 - **Node.js 20+** — data pipeline and tooling (`tsx` for TypeScript scripts)
 
 There is **no** root `app.js` monolith. The Vite entry is [`src/main.tsx`](src/main.tsx) (React + React Router). [`src/App.tsx`](src/App.tsx) mounts the shell and calls [`src/bridge/installWindowBridge.ts`](src/bridge/installWindowBridge.ts) for boot animation and vanilla shell/bootstrap wiring. Cross-module UI behavior now uses direct imports, delegated listeners, and callback registries rather than a `window.*` bridge.
@@ -48,8 +49,9 @@ npm run build
 | Engine | `src/engine/` | Deterministic prediction (L0–L3 + composite) |
 | State | `src/state/` | Zustand-backed loadout and app state, plus stable facades for runtime code |
 | React shell | `src/App.tsx`, `src/pages/`, `src/components/` | Routes, shell layout, workspace wrappers, header/dock/footer |
-| Runtime | `src/runtime/`, `src/ui/pages/*-runtime-bridge.ts` | Coordinator-driven refresh plans and cross-page callback registries |
-| UI | `src/ui/` | Imperative workspace modules, dock renderers, shared UI helpers |
+| React workspace widgets | `src/components/tune/` (and future `src/components/<workspace>/`) | Dumb Tune UI mounted from `src/ui/pages/tune.ts` via `createRoot`; pure view-models in `tune-*-vm.ts` / shared helpers |
+| Runtime | `src/runtime/`, `src/ui/pages/*-runtime-bridge.ts` | Coordinator-driven refresh plans (`getRefreshPlan` includes `compendium` where relevant) and cross-page callback registries |
+| UI | `src/ui/` | Imperative workspace orchestration (`tune.ts`, `overview.ts`, `compare/`, …), dock renderers, shared UI helpers |
 | Bootstrap | `src/bridge/installWindowBridge.ts` | Boot animation helpers and vanilla shell/bootstrap wiring |
 | Data | `pipeline/data/*.json` → `npm run export` → `src/data/generated.ts` + `data.ts` | Source of truth plus generated TypeScript data modules |
 
@@ -67,7 +69,7 @@ See [AGENTS.md](AGENTS.md) for agent-oriented detail and debugging notes.
 │   ├── main.tsx            # Vite entry (React root)
 │   ├── App.tsx             # React shell, routing, and startup wiring
 │   ├── bridge/             # boot sequence + vanilla shell/bootstrap helpers
-│   ├── components/         # React shell components (header, dock, footer, mobile tabs)
+│   ├── components/         # React shell + workspace widgets (e.g. tune/* mounted from ui/pages/tune.ts)
 │   ├── context/            # React providers (theme, etc.)
 │   ├── global.d.ts         # reserved for shared global typing (currently minimal)
 │   ├── hooks/              # React-facing selectors/hooks over shared app state
@@ -158,7 +160,7 @@ Pipeline scripts are **TypeScript** (`.ts`) and run with **`tsx`** (see `package
 Before pushing:
 
 ```bash
-npm run typecheck && npm run canary && npm run build
+npm run typecheck && npm run canary && npm run build && npm run test:runtime
 ```
 
 Manual smoke (after UI or engine changes): overview hero/radar, tune apply flow, compare slots/editor, compendium/strings, dock save/activate, leaderboard tab roundtrip, and refresh persistence for both active and saved loadouts.
@@ -179,5 +181,7 @@ Vercel mirror: `https://loadout-lab.vercel.app`
 - [AGENTS.md](AGENTS.md) — conventions for contributors and coding agents  
 - [docs/README.md](docs/README.md) — documentation index (“wiki”)  
 - [docs/Getting-Started.md](docs/Getting-Started.md) — setup, ingest, pipeline  
-- [ts-migration-plan.md](ts-migration-plan.md) — migration status and follow-ups  
+- [ts-migration-plan.md](ts-migration-plan.md) — TypeScript / bundler migration snapshot  
+- [docs/REACT-MIGRATION-GUIDE.md](docs/REACT-MIGRATION-GUIDE.md) — Zero-Pixel Protocol for React migration  
+- [docs/REACT-MIGRATION-PLAN.md](docs/REACT-MIGRATION-PLAN.md) — post–Tune React roadmap (Strangler Fig next steps)  
 - [CLAUDE.md](CLAUDE.md) — Claude Code project notes  

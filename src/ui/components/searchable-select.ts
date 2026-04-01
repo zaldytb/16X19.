@@ -27,6 +27,8 @@ interface SearchableSelectInstance {
   getValue: () => string;
   setValue: (val: string) => void;
   setOptions: (newOptions: CustomOption[]) => void;
+  updateConfig: (config: Partial<SearchableSelectOptions>) => void;
+  _container: HTMLElement;
   _cleanup: () => void;
 }
 
@@ -133,9 +135,9 @@ export function createSearchableSelect(
   container: HTMLElement,
   {
     type = 'racquet',
-    placeholder = 'Select...',
+    placeholder: initialPlaceholder = 'Select...',
     value = '',
-    onChange = () => {},
+    onChange: initialOnChange = () => {},
     id = '',
     options = null
   }: SearchableSelectOptions
@@ -152,6 +154,8 @@ export function createSearchableSelect(
   let items: (Racquet | StringData | CustomOption)[];
   let customOptions: CustomOption[] | null = options;
   let indexedOptions: IndexedOption[] = [];
+  let currentPlaceholder = initialPlaceholder;
+  let currentOnChange = initialOnChange;
   if (type === 'custom' && options) {
     items = options;
   } else {
@@ -217,7 +221,7 @@ export function createSearchableSelect(
       trigger.textContent = text;
       trigger.classList.remove('ss-placeholder');
     } else {
-      trigger.textContent = placeholder;
+      trigger.textContent = currentPlaceholder;
       trigger.classList.add('ss-placeholder');
     }
   }
@@ -334,7 +338,7 @@ export function createSearchableSelect(
     selectedValue = val;
     updateTrigger();
     closeDropdown();
-    onChange(val);
+    currentOnChange(val);
   }
 
   function openDropdown(): void {
@@ -444,6 +448,9 @@ export function createSearchableSelect(
     setValue: (val: string) => {
       selectedValue = val;
       updateTrigger();
+      if (isOpen()) {
+        queueRenderOptions(searchInput.value);
+      }
     },
     setOptions: (newOptions: CustomOption[]) => {
       if (type === 'custom') {
@@ -453,6 +460,31 @@ export function createSearchableSelect(
         queueRenderOptions(lastFilter);
       }
     },
+    updateConfig: (config: Partial<SearchableSelectOptions>) => {
+      if (typeof config.placeholder === 'string') {
+        currentPlaceholder = config.placeholder;
+      }
+      if (typeof config.onChange === 'function') {
+        currentOnChange = config.onChange;
+      }
+      if (config.id !== undefined) {
+        if (config.id) trigger.id = config.id;
+        else trigger.removeAttribute('id');
+      }
+      if (config.options !== undefined && type === 'custom') {
+        customOptions = config.options;
+        items = config.options || [];
+        indexedOptions = [];
+      }
+      if (typeof config.value === 'string') {
+        selectedValue = config.value;
+      }
+      updateTrigger();
+      if (isOpen()) {
+        queueRenderOptions(searchInput.value);
+      }
+    },
+    _container: container,
     _cleanup: () => {
       document.removeEventListener('click', onDocClick);
       if (pendingRenderFrame != null) {

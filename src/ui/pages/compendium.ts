@@ -1,5 +1,4 @@
 import { createElement } from 'react';
-import { flushSync } from 'react-dom';
 import { createRoot, type Root } from 'react-dom/client';
 import { RACQUETS, STRINGS } from '../../data/loader.js';
 import {
@@ -74,6 +73,7 @@ let _compCurrentBuilds: BuildWithArchetype[] = [];
 const _compendiumBuildCache: Record<string, BuildWithArchetype[]> = {};
 let _compPreviewFrame: number | null = null;
 let _compRosterTimer: number | null = null;
+let _compSelectorHydrationFrame: number | null = null;
 let _compLastRosterKey = '';
 let _compLastPreviewStats: SetupStats | null = null;
 
@@ -87,6 +87,27 @@ let _compHudFilters: CompFrameHudFilters = {
 };
 
 type CompendiumReactMount = { root: Root | null; host: HTMLElement | null };
+
+type SearchableSelectHandle = (typeof ssInstances)[string];
+
+const _compPerfEnabled =
+  typeof location !== 'undefined' &&
+  (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+
+function _measureCompPerf<T>(name: string, run: () => T): T {
+  const start = performance.now();
+  const result = run();
+  if (_compPerfEnabled) {
+    console.log(`[Perf][Compendium] ${name}: ${(performance.now() - start).toFixed(1)}ms`);
+  }
+  return result;
+}
+
+function _logCompPerf(name: string, start: number): void {
+  if (_compPerfEnabled) {
+    console.log(`[Perf][Compendium] ${name}: ${(performance.now() - start).toFixed(1)}ms`);
+  }
+}
 
 function _ensureCompendiumReactRoot(mount: CompendiumReactMount, container: HTMLElement | null): Root | null {
   if (!container) return null;
@@ -120,11 +141,27 @@ const _compRosterMount: CompendiumReactMount = { root: null, host: null };
 
 /** Unmount Compendium React roots when leaving the workspace (lazy route remount safety). */
 export function cleanupCompendiumPage(): void {
+  if (_compPreviewFrame != null) {
+    cancelAnimationFrame(_compPreviewFrame);
+    _compPreviewFrame = null;
+  }
+  if (_compSelectorHydrationFrame != null) {
+    cancelAnimationFrame(_compSelectorHydrationFrame);
+    _compSelectorHydrationFrame = null;
+  }
+  if (_compRosterTimer != null) {
+    window.clearTimeout(_compRosterTimer);
+    _compRosterTimer = null;
+  }
   _unmountCompendiumReactMount(_compHeroMount);
   _unmountCompendiumReactMount(_compStringModulatorMount);
   _unmountCompendiumReactMount(_compBaseProfileMount);
   _unmountCompendiumReactMount(_compTopBuildsMount);
   _unmountCompendiumReactMount(_compRosterMount);
+  disposeSearchableSelectContainer(ssInstances['comp-mains-select']?._container || null);
+  disposeSearchableSelectContainer(ssInstances['comp-crosses-select']?._container || null);
+  delete ssInstances['comp-mains-select'];
+  delete ssInstances['comp-crosses-select'];
   _compLastRosterKey = '';
 }
 
@@ -237,38 +274,93 @@ function _bindCompendiumControl(
   element.dataset.compBound = 'true';
 }
 
+function _ensureCompMainShell(): {
+  hero: HTMLElement;
+  modulator: HTMLElement;
+  baseProfile: HTMLElement;
+  topBuilds: HTMLElement;
+} | null {
+  const main = document.getElementById('comp-main');
+  if (!main) return null;
+
+  let hero = document.getElementById('comp-react-hero-root') as HTMLElement | null;
+  let modulator = document.getElementById('comp-react-string-modulator-root') as HTMLElement | null;
+  let baseProfile = document.getElementById('comp-react-base-profile-root') as HTMLElement | null;
+  let topBuilds = document.getElementById('comp-react-top-builds-root') as HTMLElement | null;
+
+  if (!hero || !modulator || !baseProfile || !topBuilds) {
+    main.replaceChildren();
+    hero = document.createElement('div');
+    hero.id = 'comp-react-hero-root';
+    modulator = document.createElement('div');
+    modulator.id = 'comp-react-string-modulator-root';
+    baseProfile = document.createElement('div');
+    baseProfile.id = 'comp-react-base-profile-root';
+    topBuilds = document.createElement('div');
+    topBuilds.id = 'comp-react-top-builds-root';
+    main.append(hero, modulator, baseProfile, topBuilds);
+  }
+
+  return { hero, modulator, baseProfile, topBuilds };
+}
+
+function _updateSelectHandle(
+  key: 'comp-mains-select' | 'comp-crosses-select',
+  container: HTMLElement | null,
+  config: Parameters<typeof createSearchableSelect>[1],
+): SearchableSelectHandle | null {
+  if (!container) return null;
+
+  const existing = ssInstances[key];
+  if (existing && existing._container === container && existing._container.isConnected) {
+    existing.updateConfig(config);
+    return existing;
+  }
+
+  if (existing) {
+    disposeSearchableSelectContainer(existing._container);
+    delete ssInstances[key];
+  }
+
+  const instance = createSearchableSelect(container, config);
+  ssInstances[key] = instance;
+  return instance;
+}
+
 export function initCompendium(): void {
-  const brandSel = document.getElementById('comp-filter-brand') as HTMLSelectElement | null;
-  if (!brandSel) return;
+  _measureCompPerf('initCompendium', () => {
+    const brandSel = document.getElementById('comp-filter-brand') as HTMLSelectElement | null;
+    if (!brandSel) return;
 
-  if (!brandSel.dataset.populated) {
-    const brands = [...new Set(RACQUET_DATA.map((r) => _extractBrand(r.name)))].sort();
-    brands.forEach((brand) => {
-      const option = document.createElement('option');
-      option.value = brand;
-      option.textContent = brand;
-      brandSel.appendChild(option);
-    });
-    brandSel.dataset.populated = 'true';
-  }
+    if (!brandSel.dataset.populated) {
+      const brands = [...new Set(RACQUET_DATA.map((r) => _extractBrand(r.name)))].sort();
+      brands.forEach((brand) => {
+        const option = document.createElement('option');
+        option.value = brand;
+        option.textContent = brand;
+        brandSel.appendChild(option);
+      });
+      brandSel.dataset.populated = 'true';
+    }
 
-  _bindCompendiumControl('comp-search', 'input', _compScheduleRosterRender);
-  _bindCompendiumControl('comp-filter-brand', 'change', _compRenderRoster);
-  _bindCompendiumControl('comp-filter-pattern', 'change', _compRenderRoster);
-  _bindCompendiumControl('comp-filter-stiffness', 'change', _compRenderRoster);
-  _bindCompendiumControl('comp-filter-headsize', 'change', _compRenderRoster);
-  _bindCompendiumControl('comp-filter-weight', 'change', _compRenderRoster);
+    _bindCompendiumControl('comp-search', 'input', _compScheduleRosterRender);
+    _bindCompendiumControl('comp-filter-brand', 'change', _compRenderRoster);
+    _bindCompendiumControl('comp-filter-pattern', 'change', _compRenderRoster);
+    _bindCompendiumControl('comp-filter-stiffness', 'change', _compRenderRoster);
+    _bindCompendiumControl('comp-filter-headsize', 'change', _compRenderRoster);
+    _bindCompendiumControl('comp-filter-weight', 'change', _compRenderRoster);
 
-  _compRenderRoster();
+    _measureCompPerf('first roster render', () => _compRenderRoster());
 
-  const setup = getCurrentSetup();
-  if (setup?.racquet) {
-    _compSelectFrame(setup.racquet.id);
-  } else if (RACQUET_DATA.length > 0) {
-    _compSelectFrame(RACQUET_DATA[0].id);
-  }
+    const setup = getCurrentSetup();
+    if (setup?.racquet) {
+      _compSelectFrame(setup.racquet.id);
+    } else if (RACQUET_DATA.length > 0) {
+      _compSelectFrame(RACQUET_DATA[0].id);
+    }
 
-  _bindCompendiumDelegates();
+    _bindCompendiumDelegates();
+  });
 }
 
 let _compDelegateBound = false;
@@ -389,13 +481,6 @@ export function _compSelectFrame(racquetId: string): void {
 
   const main = document.getElementById('comp-main');
   if (main) {
-    main.style.opacity = '0.3';
-    main.style.transition = 'opacity 150ms ease-out';
-    window.setTimeout(() => {
-      _compRenderMain(racquet);
-      main.style.opacity = '1';
-    }, 150);
-  } else {
     _compRenderMain(racquet);
   }
 }
@@ -413,52 +498,50 @@ export function _compSyncWithActiveLoadout(): void {
 }
 
 export function _compRenderMain(racquet: Racquet): void {
-  const main = document.getElementById('comp-main');
-  if (!main) return;
+  _measureCompPerf('main render', () => {
+    const shell = _ensureCompMainShell();
+    if (!shell) return;
 
-  const frameBase = calcFrameBase(racquet);
-  if (!_compendiumBuildCache[racquet.id]) {
-    _compendiumBuildCache[racquet.id] = _compGenerateTopBuilds(racquet, 6);
-  }
-  const builds = _compendiumBuildCache[racquet.id];
-  const sorted = [...builds].sort((a, b) => {
-    if (_compSortKey === 'score') return b.score - a.score;
-    return (b.stats[_compSortKey] || 0) - (a.stats[_compSortKey] || 0);
-  });
-  _compCurrentBuilds = sorted;
+    const frameBase = calcFrameBase(racquet);
+    if (!_compendiumBuildCache[racquet.id]) {
+      _compendiumBuildCache[racquet.id] = _compGenerateTopBuilds(racquet, 6);
+    }
+    const builds = _compendiumBuildCache[racquet.id];
+    const sorted = [...builds].sort((a, b) => {
+      if (_compSortKey === 'score') return b.score - a.score;
+      return (b.stats[_compSortKey] || 0) - (a.stats[_compSortKey] || 0);
+    });
+    _compCurrentBuilds = sorted;
 
-  const pills = _compGenerateHeroPills(frameBase, racquet);
-  const heroVm = buildCompRacketHeroVm(racquet, frameBase, pills);
-  setCompBaseObs(heroVm.baseObs);
+    const pills = _compGenerateHeroPills(frameBase, racquet);
+    const heroVm = buildCompRacketHeroVm(racquet, frameBase, pills);
+    setCompBaseObs(heroVm.baseObs);
 
-  _compLastPreviewStats = null;
-  const baseProfileGroups = buildCompBaseProfileVm(frameBase, null);
-  const sortTabsVm = buildCompSortTabsVm(_compSortKey as SortKeyVm);
-  const cardsVm = buildCompBuildCardsVm(sorted, frameBase, _compGenerateBuildReason);
+    _compLastPreviewStats = null;
+    const baseProfileGroups = buildCompBaseProfileVm(frameBase, null);
+    const sortTabsVm = buildCompSortTabsVm(_compSortKey as SortKeyVm);
+    const cardsVm = buildCompBuildCardsVm(sorted, frameBase, _compGenerateBuildReason);
 
-  main.innerHTML = `
-    <div id="comp-react-hero-root"></div>
-    <div id="comp-react-string-modulator-root"></div>
-    <div id="comp-react-base-profile-root"></div>
-    <div id="comp-react-top-builds-root"></div>
-  `;
+    const heroRoot = _ensureCompendiumReactRoot(_compHeroMount, shell.hero);
+    const stringModRoot = _ensureCompendiumReactRoot(_compStringModulatorMount, shell.modulator);
+    const baseRoot = _ensureCompendiumReactRoot(_compBaseProfileMount, shell.baseProfile);
+    const buildsRoot = _ensureCompendiumReactRoot(_compTopBuildsMount, shell.topBuilds);
 
-  const heroRoot = _ensureCompendiumReactRoot(_compHeroMount, document.getElementById('comp-react-hero-root'));
-  const stringModRoot = _ensureCompendiumReactRoot(
-    _compStringModulatorMount,
-    document.getElementById('comp-react-string-modulator-root'),
-  );
-  const baseRoot = _ensureCompendiumReactRoot(_compBaseProfileMount, document.getElementById('comp-react-base-profile-root'));
-  const buildsRoot = _ensureCompendiumReactRoot(_compTopBuildsMount, document.getElementById('comp-react-top-builds-root'));
-
-  flushSync(() => {
     heroRoot?.render(createElement(CompendiumRacketHero, { vm: heroVm }));
     stringModRoot?.render(createElement(CompendiumStringModulator));
     baseRoot?.render(createElement(CompendiumBaseProfile, { groups: baseProfileGroups }));
     buildsRoot?.render(createElement(CompendiumTopBuilds, { sortTabs: sortTabsVm, cards: cardsVm }));
-  });
 
-  _compInitStringInjector(racquet);
+    if (_compSelectorHydrationFrame != null) {
+      cancelAnimationFrame(_compSelectorHydrationFrame);
+    }
+    const selectorHydrationStart = performance.now();
+    _compSelectorHydrationFrame = requestAnimationFrame(() => {
+      _compSelectorHydrationFrame = null;
+      _compInitStringInjector(racquet);
+      _logCompPerf('selector hydration', selectorHydrationStart);
+    });
+  });
 }
 
 export function _compUpdateInjectModeUI(mode: CompMode): void {
@@ -513,10 +596,6 @@ export function _compInitStringInjector(racquet: Racquet): void {
   const mainsContainer = document.getElementById('comp-mains-select');
   const crossesContainer = document.getElementById('comp-crosses-select');
   if (!mainsContainer) return;
-  disposeSearchableSelectContainer(mainsContainer);
-  if (crossesContainer) disposeSearchableSelectContainer(crossesContainer);
-  delete ssInstances['comp-mains-select'];
-  delete ssInstances['comp-crosses-select'];
 
   const setup = getCurrentSetup();
   const isViewingActiveRacket = setup?.racquet?.id === racquet.id;
@@ -555,7 +634,7 @@ export function _compInitStringInjector(racquet: Racquet): void {
   if (mainsTensionEl) mainsTensionEl.value = String(mainsTension);
   if (crossesTensionEl) crossesTensionEl.value = String(crossesTension);
 
-  ssInstances['comp-mains-select'] = createSearchableSelect(mainsContainer, {
+  _updateSelectHandle('comp-mains-select', mainsContainer, {
     type: 'string',
     placeholder: 'Select String...',
     value: mainsId || '',
@@ -571,7 +650,7 @@ export function _compInitStringInjector(racquet: Racquet): void {
   });
 
   if (crossesContainer) {
-    ssInstances['comp-crosses-select'] = createSearchableSelect(crossesContainer, {
+    _updateSelectHandle('comp-crosses-select', crossesContainer, {
       type: 'string',
       placeholder: 'Select Cross String...',
       value: effectiveCrossesId,
@@ -730,13 +809,9 @@ export function _compApplyInjection(): void {
 export function _compClearInjection(): void {
   _compInjectState.mainsId = '';
   _compInjectState.crossesId = '';
-  delete ssInstances['comp-mains-select'];
-  delete ssInstances['comp-crosses-select'];
 
   const mainsContainer = document.getElementById('comp-mains-select');
   const crossesContainer = document.getElementById('comp-crosses-select');
-  if (mainsContainer) disposeSearchableSelectContainer(mainsContainer);
-  if (crossesContainer) disposeSearchableSelectContainer(crossesContainer);
 
   const mainsGauge = document.getElementById('comp-mains-gauge');
   const crossesGauge = document.getElementById('comp-crosses-gauge');
@@ -751,7 +826,7 @@ export function _compClearInjection(): void {
     if (mainsTensionEl) mainsTensionEl.value = String(midTension);
     if (crossesTensionEl) crossesTensionEl.value = String(midTension - 2);
 
-    ssInstances['comp-mains-select'] = createSearchableSelect(mainsContainer as HTMLElement, {
+    _updateSelectHandle('comp-mains-select', mainsContainer as HTMLElement, {
       type: 'string',
       placeholder: 'Select String...',
       value: '',
@@ -767,7 +842,7 @@ export function _compClearInjection(): void {
     });
 
     if (crossesContainer) {
-      ssInstances['comp-crosses-select'] = createSearchableSelect(crossesContainer, {
+      _updateSelectHandle('comp-crosses-select', crossesContainer, {
         type: 'string',
         placeholder: 'Select Cross String...',
         value: '',

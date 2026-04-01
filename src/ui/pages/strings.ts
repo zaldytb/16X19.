@@ -1,5 +1,4 @@
 import { createElement } from 'react';
-import { flushSync } from 'react-dom';
 import { createRoot, type Root } from 'react-dom/client';
 import { RACQUETS, STRINGS } from '../../data/loader.js';
 import {
@@ -62,6 +61,7 @@ let _stringsInitialized = false;
 let _stringFiltersBound = false;
 let _stringPreviewFrame: number | null = null;
 let _stringRosterTimer: number | null = null;
+let _stringModulatorHydrationFrame: number | null = null;
 let _stringLastRosterKey = '';
 
 let _stringHudFilters: StringHudFilters = {
@@ -72,6 +72,7 @@ let _stringHudFilters: StringHudFilters = {
 };
 
 type StringReactMount = { root: Root | null; host: HTMLElement | null };
+type SearchableSelectHandle = (typeof ssInstances)[string];
 
 function _ensureStringReactRoot(mount: StringReactMount, container: HTMLElement | null): Root | null {
   if (!container) return null;
@@ -102,9 +103,25 @@ const _stringDetailMount: StringReactMount = { root: null, host: null };
 const _stringFrameModulatorMount: StringReactMount = { root: null, host: null };
 
 export function cleanupStringsPage(): void {
+  if (_stringPreviewFrame != null) {
+    cancelAnimationFrame(_stringPreviewFrame);
+    _stringPreviewFrame = null;
+  }
+  if (_stringModulatorHydrationFrame != null) {
+    cancelAnimationFrame(_stringModulatorHydrationFrame);
+    _stringModulatorHydrationFrame = null;
+  }
+  if (_stringRosterTimer != null) {
+    window.clearTimeout(_stringRosterTimer);
+    _stringRosterTimer = null;
+  }
   _unmountStringReactMount(_stringRosterMount);
   _unmountStringReactMount(_stringDetailMount);
   _unmountStringReactMount(_stringFrameModulatorMount);
+  disposeSearchableSelectContainer(ssInstances['string-mod-frame']?._container || null);
+  disposeSearchableSelectContainer(ssInstances['string-mod-crosses-string']?._container || null);
+  delete ssInstances['string-mod-frame'];
+  delete ssInstances['string-mod-crosses-string'];
   _stringLastRosterKey = '';
 }
 
@@ -123,6 +140,51 @@ let _stringModState: StringModState = {
 
 function getInputValue(id: string): string {
   return (document.getElementById(id) as HTMLInputElement | HTMLSelectElement | null)?.value || '';
+}
+
+function _ensureStringMainShell(): {
+  detail: HTMLElement;
+  frameModulator: HTMLElement;
+} | null {
+  const main = document.getElementById('string-main');
+  if (!main) return null;
+
+  let detail = document.getElementById('string-react-detail-root') as HTMLElement | null;
+  let frameModulator = document.getElementById('string-react-frame-modulator-root') as HTMLElement | null;
+
+  if (!detail || !frameModulator) {
+    main.replaceChildren();
+    detail = document.createElement('div');
+    detail.id = 'string-react-detail-root';
+    frameModulator = document.createElement('div');
+    frameModulator.id = 'string-react-frame-modulator-root';
+    main.append(detail, frameModulator);
+  }
+
+  return { detail, frameModulator };
+}
+
+function _updateStringSelectHandle(
+  key: 'string-mod-frame' | 'string-mod-crosses-string',
+  container: HTMLElement | null,
+  config: Parameters<typeof createSearchableSelect>[1],
+): SearchableSelectHandle | null {
+  if (!container) return null;
+
+  const existing = ssInstances[key];
+  if (existing && existing._container === container && existing._container.isConnected) {
+    existing.updateConfig(config);
+    return existing;
+  }
+
+  if (existing) {
+    disposeSearchableSelectContainer(existing._container);
+    delete ssInstances[key];
+  }
+
+  const instance = createSearchableSelect(container, config);
+  ssInstances[key] = instance;
+  return instance;
 }
 
 function findStringById(stringId: string | null | undefined): StringData | null {
@@ -601,15 +663,8 @@ export function _stringFindBestFrames(stringId: string, limit = 4): SimilarFrame
 }
 
 export function _stringRenderMain(stringItem: StringData): void {
-  const main = document.getElementById('string-main');
-  if (!main) return;
-
-  const prevFrame = document.getElementById('string-mod-frame');
-  const prevCrosses = document.getElementById('string-mod-crosses-string');
-  disposeSearchableSelectContainer(prevFrame);
-  disposeSearchableSelectContainer(prevCrosses);
-  delete ssInstances['string-mod-frame'];
-  delete ssInstances['string-mod-crosses-string'];
+  const shell = _ensureStringMainShell();
+  if (!shell) return;
 
   const pills = _stringGeneratePills(stringItem);
   const similarStrings = _stringFindSimilarStrings(stringItem.id);
@@ -623,23 +678,19 @@ export function _stringRenderMain(stringItem: StringData): void {
     getFrameIdentityLabel,
   );
 
-  main.innerHTML = `
-    <div id="string-react-detail-root"></div>
-    <div id="string-react-frame-modulator-root"></div>
-  `;
+  const detailRoot = _ensureStringReactRoot(_stringDetailMount, shell.detail);
+  const frameModRoot = _ensureStringReactRoot(_stringFrameModulatorMount, shell.frameModulator);
 
-  const detailRoot = _ensureStringReactRoot(_stringDetailMount, document.getElementById('string-react-detail-root'));
-  const frameModRoot = _ensureStringReactRoot(
-    _stringFrameModulatorMount,
-    document.getElementById('string-react-frame-modulator-root'),
-  );
+  detailRoot?.render(createElement(StringCompendiumDetail, { vm: detailVm }));
+  frameModRoot?.render(createElement(StringFrameInjectionModulator));
 
-  flushSync(() => {
-    detailRoot?.render(createElement(StringCompendiumDetail, { vm: detailVm }));
-    frameModRoot?.render(createElement(StringFrameInjectionModulator));
+  if (_stringModulatorHydrationFrame != null) {
+    cancelAnimationFrame(_stringModulatorHydrationFrame);
+  }
+  _stringModulatorHydrationFrame = requestAnimationFrame(() => {
+    _stringModulatorHydrationFrame = null;
+    _stringInitModulator(stringItem);
   });
-
-  _stringInitModulator(stringItem);
 }
 
 export function _stringInitModulator(stringItem: StringData): void {
@@ -675,15 +726,13 @@ export function _stringInitModulator(stringItem: StringData): void {
   updateGaugeSelect('string-mod-gauge', 'Default', gaugesHtml, _stringModState.gauge);
 
   const frameContainer = document.getElementById('string-mod-frame');
-  if (frameContainer && !ssInstances['string-mod-frame']) {
-    ssInstances['string-mod-frame'] = createSearchableSelect(frameContainer, {
-      type: 'racquet',
-      placeholder: 'Select Frame...',
-      value: selectedFrame || '',
-      id: 'string-mod-frame-trigger',
-      onChange: (value) => _stringOnFrameChange(value),
-    });
-  }
+  _updateStringSelectHandle('string-mod-frame', frameContainer, {
+    type: 'racquet',
+    placeholder: 'Select Frame...',
+    value: selectedFrame || '',
+    id: 'string-mod-frame-trigger',
+    onChange: (value) => _stringOnFrameChange(value),
+  });
 
   const crossesContainer = document.getElementById('string-mod-crosses-string');
   const crossesOptions = STRING_DATA.filter((candidate) => candidate.id !== stringItem.id).map((candidate) => ({
@@ -691,18 +740,14 @@ export function _stringInitModulator(stringItem: StringData): void {
     label: candidate.name,
   }));
 
-  if (crossesContainer && !ssInstances['string-mod-crosses-string']) {
-    ssInstances['string-mod-crosses-string'] = createSearchableSelect(crossesContainer, {
-      type: 'custom',
-      placeholder: 'Same as mains...',
-      value: '',
-      id: 'string-mod-crosses-string-trigger',
-      options: crossesOptions,
-      onChange: (value) => _stringOnCrossesStringChange(value),
-    });
-  } else if (ssInstances['string-mod-crosses-string']) {
-    ssInstances['string-mod-crosses-string'].setOptions(crossesOptions);
-  }
+  _updateStringSelectHandle('string-mod-crosses-string', crossesContainer, {
+    type: 'custom',
+    placeholder: 'Same as mains...',
+    value: '',
+    id: 'string-mod-crosses-string-trigger',
+    options: crossesOptions,
+    onChange: (value) => _stringOnCrossesStringChange(value),
+  });
 
   updateGaugeSelect('string-mod-crosses-gauge', 'Same as mains', gaugesHtml, _stringModState.crossesGauge);
   hydrateFrameSelection(selectedFrame);

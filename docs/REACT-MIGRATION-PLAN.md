@@ -63,10 +63,11 @@ Still imperative: `renderOCSnapshot`, legacy `renderFitProfile` compatibility, d
 
 ## Find My Build (partial)
 
-The wizard remains imperative in `src/ui/pages/find-my-build.ts`, but the result surfaces are now React islands mounted into the Overview hosts.
+Wizard orchestration remains in `src/ui/pages/find-my-build.ts`. Step markup lives in `FmbWizardBody` (`src/components/find-my-build/FmbWizardBody.tsx`); result surfaces are React islands mounted into the Overview hosts.
 
 | Area | React component(s) | View-models / helpers | Mount host(s) |
 | --- | --- | --- | --- |
+| Wizard steps + nav chrome | `FmbWizardBody` | n/a | `#find-my-build` |
 | Profile summary card | `FmbResultsSummary` | `find-my-build-vm.ts` (`buildFmbSummaryViewModel`) | `#fmb-summary` |
 | Recommended frames + build rows + optimizer CTA | `FmbResultsDirections` | `find-my-build-vm.ts` (`buildFmbDirectionsViewModel`) | `#fmb-directions` |
 
@@ -85,8 +86,9 @@ Still imperative: step transitions, progress bar updates, answer selection, next
 | Top builds | `CompendiumTopBuilds` | `comp-top-builds-vm.ts` | `#comp-react-top-builds-root` |
 | HUD roster | `CompendiumFrameRoster` | inline filtering in `compendium.ts` | `#comp-frame-list` |
 | String modulator shell | `CompendiumStringModulator` | n/a | `#comp-react-string-modulator-root` |
+| Frame HUD shell (search + filters + roster host) | `CompendiumFrameHud` | n/a | `#comp-hud` (from `Compendium.tsx`) |
 
-Still imperative: HUD overlays, searchable selects, string injector init, preview computation, and delegated actions.
+Still imperative: roster population, searchable selects, string injector init, preview computation, and delegated actions.
 
 ### Strings tab (`strings.ts`)
 
@@ -95,8 +97,9 @@ Still imperative: HUD overlays, searchable selects, string injector init, previe
 | Detail surface | `StringCompendiumDetail` | `string-compendium-detail-vm.ts` | `#string-react-detail-root` |
 | HUD list | `StringCompendiumRoster` | inline filtering in `strings.ts` | `#string-list` |
 | Frame injection modulator shell | `StringFrameInjectionModulator` | n/a | `#string-react-frame-modulator-root` |
+| String HUD shell | `StringCompendiumHud` | n/a | `#string-hud` (from `Compendium.tsx`) |
 
-Still imperative: searchable selects, preview bars, change delegation, and modulator init.
+Still imperative: roster population, searchable selects, preview bars, change delegation, and modulator init.
 
 ### Leaderboard (`leaderboard.ts`)
 
@@ -141,13 +144,18 @@ Still imperative: callback registration, delegated click listener binding, and t
 
 ## Optimize workspace (partial)
 
-The page shell remains `src/pages/Optimize.tsx` and orchestration remains in `src/ui/pages/optimize.ts`, but the main results surface is now React.
+The page shell remains `src/pages/Optimize.tsx` and orchestration remains in `src/ui/pages/optimize.ts`.
 
 | Area | React component(s) | View-models / helpers | Mount host(s) |
 | --- | --- | --- | --- |
 | Loading / empty / results table / tension filter | `OptimizeResultsTable` | `optimize-results-vm.ts` (`buildOptimizeResultsViewModel`) | `#opt-results` |
+| Material / brand multiselect checklists | `OptimizeMultiselectChecks` | `optimize-filters-vm.ts` | `#opt-material-checks`, `#opt-brand-checks` |
+| Exclude string tags | `OptimizeExcludeTags` | `optimize-filters-vm.ts` (`buildOptimizeExcludeTagsVm`) | `#opt-exclude-tags` |
+| Upgrade mode checkbox | `OptimizeUpgradePanel` | (controlled in `optimize.ts`) | `#opt-react-upgrade-checkbox-root` |
 
-Still imperative: filter panel initialization, searchable dropdowns, material/brand checkbox population, exclude tag rendering, optimizer run loop, candidate generation/sorting, and document-level action delegation.
+Shared helper: `optimize-search-helpers.ts` (`filterOptSearchItems`) for frame / lock / exclude searchable dropdown filtering (dropdown DOM still imperative).
+
+Still imperative: `_initOptSearchable` dropdown wiring, hybrid lock + setup toggles, stat minimums + tension inputs, mobile filter toggle injection, optimizer run loop, and document-level `data-opt-action` delegation.
 
 ---
 
@@ -157,9 +165,9 @@ Still imperative: filter panel initialization, searchable dropdowns, material/br
 | --- | --- |
 | Tune / Overview | Migrated |
 | Compare | Core panels are React; follow-ups are incremental |
-| Compendium | Main surfaces are React; HUD overlays and searchable selects remain imperative |
-| Optimize | Results area is React; filter/search/init remain imperative |
-| Find My Build | Results are React; wizard flow remains imperative |
+| Compendium | Main surfaces + HUD shells are React; roster population and searchable selects remain imperative |
+| Optimize | Results + filter islands (material/brand, exclude tags, upgrade checkbox) are React; searchable dropdown wiring and run loop remain imperative |
+| Find My Build | Wizard shell + results are React; wizard state machine remains imperative |
 | My Loadouts | Dock list is React; callback bridge and delegation remain imperative |
 | Shell | Already React |
 
@@ -169,10 +177,10 @@ Do not rewrite a whole page in one PR. Continue one widget or bounded cluster at
 
 ## Suggested next moves
 
-1. Optimize filters: material/brand shells, exclude tags, and upgrade-mode panel
-2. Compendium HUD: `#comp-hud` / `#string-hud` if we want consistency work
-3. Find My Build wizard shell: only if step markup can stay zero-pixel identical
-4. SearchableSelect: optional thin React wrapper, otherwise keep the current vanilla pattern
+1. Optimize: optional React `OptimizeSearchDropdown` (or keep vanilla `_initOptSearchable` + `filterOptSearchItems`)
+2. Compendium: HUD filter rows + roster as React data if we want to retire imperative roster population
+3. Find My Build: migrate individual step panels to dumb components with VMs
+4. SearchableSelect: optional thin React wrapper for compendium/strings, otherwise keep vanilla + `flushSync`
 
 ---
 
@@ -202,3 +210,6 @@ Do not rewrite a whole page in one PR. Continue one widget or bounded cluster at
 - 2026-04-01: My Loadouts dock list migrated
 - 2026-04-01: Find My Build result surfaces migrated
 - 2026-04-01: Optimize results surface migrated
+- 2026-04-02: Optimize filter islands: `OptimizeMultiselectChecks`, `OptimizeExcludeTags`, `OptimizeUpgradePanel` + `optimize-filters-vm.ts`, `optimize-search-helpers.ts` (`filterOptSearchItems`); `flushSync` for material/brand; upgrade numeric fields stay in `Optimize.tsx` for stable IDs
+- 2026-04-02: Compendium HUD shells extracted to `CompendiumFrameHud` / `StringCompendiumHud` in `src/components/compendium/`
+- 2026-04-02: Find My Build wizard markup extracted to `FmbWizardBody` (`src/components/find-my-build/FmbWizardBody.tsx`)

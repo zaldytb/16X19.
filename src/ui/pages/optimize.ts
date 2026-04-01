@@ -2,6 +2,7 @@
 // Optimizer page - find best string setups for a frame
 
 import { createElement } from 'react';
+import { flushSync } from 'react-dom';
 import { createRoot, type Root } from 'react-dom/client';
 import { RACQUETS, STRINGS } from '../../data/loader.js';
 import { predictSetup, buildTensionContext, computeCompositeScore } from '../../engine/index.js';
@@ -20,7 +21,17 @@ import { getCurrentSetup } from '../../state/setup-sync.js';
 import { activateLoadout, switchMode } from './shell.js';
 import { getState as compareGetState, setSlotLoadout as compareSetSlotLoadout } from './compare/hooks/useCompareState.js';
 import { OptimizeResultsTable } from '../../components/optimize/OptimizeResultsTable.js';
+import { OptimizeMultiselectChecks } from '../../components/optimize/OptimizeMultiselectChecks.js';
+import { OptimizeExcludeTags } from '../../components/optimize/OptimizeExcludeTags.js';
+import { OptimizeUpgradePanel } from '../../components/optimize/OptimizeUpgradePanel.js';
 import { buildOptimizeResultsViewModel, getOptimizeCandidateKey, type OptimizeCandidateVmSource } from './optimize-results-vm.js';
+import {
+  buildOptimizeBrandChecksVm,
+  buildOptimizeExcludeTagsVm,
+  buildOptimizeMaterialChecksVm,
+  buildOptimizeMultiselectLabel,
+} from './optimize-filters-vm.js';
+import { filterOptSearchItems } from './optimize-search-helpers.js';
 
 type OptimizerLoadoutLike = {
   id: string;
@@ -60,10 +71,18 @@ let _optLastDisplayedCandidates: OptimizeCandidate[] = [];
 let _optTargetTension = '';
 let _optSavedCandidateKey: string | null = null;
 let _optSavedCandidateTimeout: number | null = null;
+let _optUpgradeMode = false;
 
 type OptimizeResultsReactMount = { root: Root | null; host: HTMLElement | null };
 
 const _optResultsMount: OptimizeResultsReactMount = { root: null, host: null };
+
+type OptimizeFilterReactMount = { root: Root | null; host: HTMLElement | null };
+
+const _optMaterialMount: OptimizeFilterReactMount = { root: null, host: null };
+const _optBrandMount: OptimizeFilterReactMount = { root: null, host: null };
+const _optExcludeMount: OptimizeFilterReactMount = { root: null, host: null };
+const _optUpgradeMount: OptimizeFilterReactMount = { root: null, host: null };
 
 function _ensureOptimizeResultsReactRoot(container: HTMLElement | null): Root | null {
   if (!container) return null;
@@ -79,6 +98,116 @@ function _ensureOptimizeResultsReactRoot(container: HTMLElement | null): Root | 
     _optResultsMount.host = container;
   }
   return _optResultsMount.root;
+}
+
+function _ensureOptimizeFilterReactRoot(mount: OptimizeFilterReactMount, container: HTMLElement | null): Root | null {
+  if (!container) return null;
+  if (mount.root && mount.host) {
+    if (mount.host !== container || !mount.host.isConnected) {
+      mount.root.unmount();
+      mount.root = null;
+      mount.host = null;
+    }
+  }
+  if (!mount.root) {
+    mount.root = createRoot(container);
+    mount.host = container;
+  }
+  return mount.root;
+}
+
+function _syncOptimizeMultiselectLabels(): void {
+  const matLabel = document.getElementById('opt-material-ms-label');
+  const brandLabel = document.getElementById('opt-brand-ms-label');
+  if (matLabel) {
+    matLabel.textContent = buildOptimizeMultiselectLabel(
+      'material',
+      STRING_MATERIALS.length,
+      _optAllowedMaterials,
+      STRING_MATERIALS,
+    );
+  }
+  if (brandLabel) {
+    brandLabel.textContent = buildOptimizeMultiselectLabel(
+      'brand',
+      STRING_BRANDS.length,
+      _optAllowedBrands,
+      STRING_BRANDS,
+    );
+  }
+}
+
+function _renderOptimizeMaterialBrandFilters(): void {
+  const matEl = document.getElementById('opt-material-checks');
+  const brandEl = document.getElementById('opt-brand-checks');
+  const matRoot = _ensureOptimizeFilterReactRoot(_optMaterialMount, matEl);
+  const brandRoot = _ensureOptimizeFilterReactRoot(_optBrandMount, brandEl);
+  if (!matRoot || !brandRoot) return;
+
+  const matVm = buildOptimizeMaterialChecksVm(STRING_MATERIALS, _optAllowedMaterials);
+  const brandVm = buildOptimizeBrandChecksVm(STRING_BRANDS, _optAllowedBrands);
+
+  flushSync(() => {
+    matRoot.render(
+      createElement(OptimizeMultiselectChecks, {
+        rows: matVm,
+        onToggle: (value: string, checked: boolean) => {
+          if (checked) {
+            _optAllowedMaterials.add(value);
+          } else {
+            _optAllowedMaterials.delete(value);
+          }
+          _renderOptimizeMaterialBrandFilters();
+        },
+      }),
+    );
+    brandRoot.render(
+      createElement(OptimizeMultiselectChecks, {
+        rows: brandVm,
+        onToggle: (value: string, checked: boolean) => {
+          if (checked) {
+            _optAllowedBrands.add(value);
+          } else {
+            _optAllowedBrands.delete(value);
+          }
+          _renderOptimizeMaterialBrandFilters();
+        },
+      }),
+    );
+  });
+  _syncOptimizeMultiselectLabels();
+}
+
+function _renderOptimizeExcludeTags(): void {
+  const el = document.getElementById('opt-exclude-tags');
+  const root = _ensureOptimizeFilterReactRoot(_optExcludeMount, el);
+  if (!root) return;
+  const vm = buildOptimizeExcludeTagsVm(_optExcludedStringIds, STRINGS);
+  root.render(
+    createElement(OptimizeExcludeTags, {
+      tags: vm,
+      onRemove: (id: string) => {
+        _optExcludedStringIds.delete(id);
+        _renderOptimizeExcludeTags();
+      },
+    }),
+  );
+}
+
+function _renderOptimizeUpgradePanel(): void {
+  const el = document.getElementById('opt-react-upgrade-checkbox-root');
+  const root = _ensureOptimizeFilterReactRoot(_optUpgradeMount, el);
+  if (!root) return;
+  root.render(
+    createElement(OptimizeUpgradePanel, {
+      upgradeMode: _optUpgradeMode,
+      onUpgradeModeChange: (checked: boolean) => {
+        _optUpgradeMode = checked;
+        document.getElementById('opt-upgrade-fields')?.classList.toggle('hidden', !checked);
+        _renderOptimizeUpgradePanel();
+      },
+    }),
+  );
 }
 
 function _setOptTargetTension(value: string, rerender = true): void {
@@ -162,51 +291,12 @@ export function initOptimize(): void {
     () => RACQUETS.map(r => ({ id: r.id, name: r.name }))
   );
 
-  // Material filter
+  // Material + brand filters (React islands)
   const materials = STRING_MATERIALS;
-  _optAllowedMaterials = new Set(materials);
-  const matContainer = document.getElementById('opt-material-checks');
-  if (matContainer) {
-    matContainer.innerHTML = '';
-    materials.forEach(mat => {
-      const item = document.createElement('label');
-      item.className = 'opt-ms-item active';
-      item.innerHTML = `<input type="checkbox" checked value="${mat}"><span>${mat}</span>`;
-      item.addEventListener('click', (e) => {
-        if ((e.target as HTMLElement).tagName !== 'INPUT') return;
-        const input = item.querySelector('input');
-        item.classList.toggle('active', input?.checked ?? false);
-        if (input?.checked) _optAllowedMaterials.add(mat);
-        else _optAllowedMaterials.delete(mat);
-        _updateOptMSLabel('opt-material-checks', 'opt-material-ms-label', 'material', materials.length);
-      });
-      matContainer.appendChild(item);
-    });
-    _updateOptMSLabel('opt-material-checks', 'opt-material-ms-label', 'material', materials.length);
-  }
-
-  // Brand filter
   const brands = STRING_BRANDS;
+  _optAllowedMaterials = new Set(materials);
   _optAllowedBrands = new Set(brands);
-  const brandContainer = document.getElementById('opt-brand-checks');
-  if (brandContainer) {
-    brandContainer.innerHTML = '';
-    brands.forEach(brand => {
-      const item = document.createElement('label');
-      item.className = 'opt-ms-item active';
-      item.innerHTML = `<input type="checkbox" checked value="${brand}"><span>${brand}</span>`;
-      item.addEventListener('click', (e) => {
-        if ((e.target as HTMLElement).tagName !== 'INPUT') return;
-        const input = item.querySelector('input');
-        item.classList.toggle('active', input?.checked ?? false);
-        if (input?.checked) _optAllowedBrands.add(brand);
-        else _optAllowedBrands.delete(brand);
-        _updateOptMSLabel('opt-brand-checks', 'opt-brand-ms-label', 'brand', brands.length);
-      });
-      brandContainer.appendChild(item);
-    });
-    _updateOptMSLabel('opt-brand-checks', 'opt-brand-ms-label', 'brand', brands.length);
-  }
+  _renderOptimizeMaterialBrandFilters();
 
   // Exclude strings searchable
   const exSearch = document.getElementById('opt-exclude-search') as HTMLInputElement | null;
@@ -219,11 +309,12 @@ export function initOptimize(): void {
       () => STRINGS.filter(s => !_optExcludedStringIds.has(s.id)).map(s => ({ id: s.id, name: s.name })),
       (id: string) => {
         _optExcludedStringIds.add(id);
-        _renderExcludeTags();
+        _renderOptimizeExcludeTags();
         exSearch.value = '';
       }
     );
   }
+  _renderOptimizeExcludeTags();
 
   // Hybrid lock
   const lockSection = document.getElementById('opt-hybrid-lock-section');
@@ -262,10 +353,7 @@ export function initOptimize(): void {
   // Wire run button
   document.getElementById('opt-run-btn')?.addEventListener('click', runOptimizer);
 
-  // Wire upgrade mode checkbox
-  document.getElementById('opt-upgrade-mode')?.addEventListener('change', (e) => {
-    document.getElementById('opt-upgrade-fields')?.classList.toggle('hidden', !(e.target as HTMLInputElement).checked);
-  });
+  _renderOptimizeUpgradePanel();
 
   // Wire sort change to re-sort existing results
   document.getElementById('opt-sort')?.addEventListener('change', () => {
@@ -391,12 +479,12 @@ function _initOptSearchable(
 
   function render(q: string) {
     const items = getItems();
-    const filtered = q ? items.filter(i => i.name.toLowerCase().includes(q.toLowerCase())) : items;
+    const filtered = filterOptSearchItems(items, q, 30);
     if (filtered.length === 0) {
       dropdownEl.classList.add('hidden');
       return;
     }
-    dropdownEl.innerHTML = filtered.slice(0, 30).map(i =>
+    dropdownEl.innerHTML = filtered.map(i =>
       `<div class="opt-search-item" data-id="${i.id}">${i.name}</div>`
     ).join('');
     dropdownEl.classList.remove('hidden');
@@ -424,21 +512,10 @@ function _initOptSearchable(
 }
 
 /**
- * Render exclude tags
+ * Render exclude tags (React); kept for external callers that trigger a refresh.
  */
 export function _renderExcludeTags(): void {
-  const container = document.getElementById('opt-exclude-tags');
-  if (!container) return;
-  container.innerHTML = Array.from(_optExcludedStringIds).map(id => {
-    const s = STRINGS.find(x => x.id === id);
-    return `<span class="opt-exclude-tag">${s ? s.name : id}<span class="opt-exclude-x" data-id="${id}">×</span></span>`;
-  }).join('');
-  container.querySelectorAll('.opt-exclude-x').forEach(x => {
-    x.addEventListener('click', () => {
-      _optExcludedStringIds.delete((x as HTMLElement).dataset.id || '');
-      _renderExcludeTags();
-    });
-  });
+  _renderOptimizeExcludeTags();
 }
 
 /**

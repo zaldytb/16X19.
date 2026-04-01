@@ -168,12 +168,10 @@ export function Optimize() {
             </div>
           </div>
 
-          {/* Upgrade mode */}
+          {/* Upgrade mode: checkbox island from optimize.ts; numeric fields stay for stable IDs */}
           <div className="opt-filter-section">
             <label className="opt-label">Upgrade Mode</label>
-            <label className="opt-checkbox-label">
-              <input type="checkbox" id="opt-upgrade-mode" /> Compare vs current build
-            </label>
+            <div id="opt-react-upgrade-checkbox-root"></div>
             <div className="opt-upgrade-fields hidden" id="opt-upgrade-fields">
               <div className="opt-min-row"><span>OBS ≥ current +</span><input type="number" id="opt-upgrade-obs" className="opt-min-input" defaultValue="0" placeholder="0" /></div>
               <div className="opt-min-row"><span>Max control loss</span><input type="number" id="opt-upgrade-ctl-loss" className="opt-min-input" defaultValue="5" placeholder="5" /></div>

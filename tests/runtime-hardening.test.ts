@@ -32,6 +32,7 @@ test('active loadout change refreshes overview and dock surfaces', () => {
     overview: true,
     tune: false,
     compare: false,
+    compendium: false,
   });
 });
 
@@ -42,6 +43,7 @@ test('mode switch to compare refreshes compare and dock context only', () => {
     overview: false,
     tune: false,
     compare: true,
+    compendium: false,
   });
 });
 
@@ -52,6 +54,18 @@ test('saved loadout change avoids recomputing active mode surface', () => {
     overview: false,
     tune: false,
     compare: false,
+    compendium: false,
+  });
+});
+
+test('active loadout change in compendium mode schedules compendium sync', () => {
+  assert.deepEqual(plan('compendium', { activeLoadout: true }), {
+    dockPanel: true,
+    dockContext: true,
+    overview: false,
+    tune: false,
+    compare: false,
+    compendium: true,
   });
 });
 

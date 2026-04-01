@@ -1,3 +1,6 @@
+import { createElement } from 'react';
+import { flushSync } from 'react-dom';
+import { createRoot, type Root } from 'react-dom/client';
 import { RACQUETS, STRINGS } from '../../data/loader.js';
 import {
   GAUGE_LABELS,
@@ -13,10 +16,18 @@ import type { Loadout, Racquet, SetupStats } from '../../engine/types.js';
 import { createLoadout, saveLoadout } from '../../state/loadout.js';
 import { generateBuildReason, generateTopBuilds, pickDiverseBuilds, type Build } from '../../state/presets.js';
 import { getCurrentSetup } from '../../state/setup-sync.js';
-import { createSearchableSelect, ssInstances } from '../components/searchable-select.js';
+import { CompendiumBaseProfile } from '../../components/compendium/CompendiumBaseProfile.js';
+import { CompendiumFrameRoster } from '../../components/compendium/CompendiumFrameRoster.js';
+import { CompendiumRacketHero } from '../../components/compendium/CompendiumRacketHero.js';
+import { CompendiumStringModulator } from '../../components/compendium/CompendiumStringModulator.js';
+import { CompendiumTopBuilds } from '../../components/compendium/CompendiumTopBuilds.js';
+import { createSearchableSelect, disposeSearchableSelectContainer, ssInstances } from '../components/searchable-select.js';
 import { activateLoadout, switchMode } from './shell.js';
 import { getState as compareGetState, setSlotLoadout as compareSetSlotLoadout } from './compare/hooks/useCompareState.js';
 import { getCompBaseObs, setCompBaseObs } from './comp-base-obs.js';
+import { buildCompBaseProfileVm } from './comp-base-profile-vm.js';
+import { buildCompRacketHeroVm } from './comp-racket-hero-vm.js';
+import { buildCompBuildCardsVm, buildCompSortTabsVm, type SortKeyVm } from './comp-top-builds-vm.js';
 
 // ---------------------------------------------------------------------------
 // Tab-activation callbacks — avoids circular import with strings.ts.
@@ -59,6 +70,49 @@ const _compendiumBuildCache: Record<string, BuildWithArchetype[]> = {};
 let _compPreviewFrame: number | null = null;
 let _compRosterTimer: number | null = null;
 let _compLastRosterKey = '';
+let _compLastPreviewStats: SetupStats | null = null;
+
+type CompendiumReactMount = { root: Root | null; host: HTMLElement | null };
+
+function _ensureCompendiumReactRoot(mount: CompendiumReactMount, container: HTMLElement | null): Root | null {
+  if (!container) return null;
+  if (mount.root && mount.host) {
+    if (mount.host !== container || !mount.host.isConnected) {
+      mount.root.unmount();
+      mount.root = null;
+      mount.host = null;
+    }
+  }
+  if (!mount.root) {
+    mount.root = createRoot(container);
+    mount.host = container;
+  }
+  return mount.root;
+}
+
+function _unmountCompendiumReactMount(mount: CompendiumReactMount): void {
+  if (mount.root) {
+    mount.root.unmount();
+    mount.root = null;
+    mount.host = null;
+  }
+}
+
+const _compHeroMount: CompendiumReactMount = { root: null, host: null };
+const _compStringModulatorMount: CompendiumReactMount = { root: null, host: null };
+const _compBaseProfileMount: CompendiumReactMount = { root: null, host: null };
+const _compTopBuildsMount: CompendiumReactMount = { root: null, host: null };
+const _compRosterMount: CompendiumReactMount = { root: null, host: null };
+
+/** Unmount Compendium React roots when leaving the workspace (lazy route remount safety). */
+export function cleanupCompendiumPage(): void {
+  _unmountCompendiumReactMount(_compHeroMount);
+  _unmountCompendiumReactMount(_compStringModulatorMount);
+  _unmountCompendiumReactMount(_compBaseProfileMount);
+  _unmountCompendiumReactMount(_compTopBuildsMount);
+  _unmountCompendiumReactMount(_compRosterMount);
+  _compLastRosterKey = '';
+}
 
 let _compInjectState: CompInjectState = {
   racquet: null,
@@ -210,6 +264,8 @@ function _bindCompendiumDelegates(): void {
   _compDelegateBound = true;
 
   document.addEventListener('click', (e: Event) => {
+    const shell = document.getElementById('mode-compendium');
+    if (shell && !shell.contains(e.target as Node)) return;
     const el = (e.target as Element).closest('[data-comp-action]') as HTMLElement | null;
     if (!el) return;
     const action = el.dataset.compAction!;
@@ -267,28 +323,15 @@ function _compSchedulePreviewStats(): void {
   });
 }
 
-function _updateSegmentTrack(
-  track: HTMLElement,
-  baseFilled: number,
-  previewFilled?: number,
-  deltaDirection?: 'up' | 'down' | null
-): void {
-  const existingSegments = Array.from(track.children) as HTMLElement[];
-  if (existingSegments.length !== 25) {
-    track.innerHTML = Array.from({ length: 25 }, (_, index) => `<div class="flex-1 h-full rounded-[1px] transition-colors duration-150" data-seg="${index}"></div>`).join('');
-  }
-
-  Array.from(track.children).forEach((segment, index) => {
-    const el = segment as HTMLElement;
-    el.className = 'flex-1 h-full rounded-[1px] transition-colors duration-150';
-
-    let bgClass = 'bg-black/10 dark:bg-white/10';
-    if (index < baseFilled) bgClass = 'bg-dc-void dark:bg-dc-platinum';
-    if (previewFilled != null && deltaDirection === 'up' && index < previewFilled) bgClass = 'bg-dc-red';
-    if (previewFilled != null && deltaDirection === 'down' && index >= previewFilled && index < baseFilled) bgClass = 'bg-dc-red/40';
-
-    el.classList.add(...bgClass.split(' '));
-  });
+function _compRenderBaseProfileReact(): void {
+  const base = _compInjectState.baseStats;
+  if (!base) return;
+  const root = _ensureCompendiumReactRoot(_compBaseProfileMount, document.getElementById('comp-react-base-profile-root'));
+  root?.render(
+    createElement(CompendiumBaseProfile, {
+      groups: buildCompBaseProfileVm(base, _compLastPreviewStats),
+    }),
+  );
 }
 
 export function _compGetFilteredRacquets(): Racquet[] {
@@ -325,24 +368,13 @@ export function _compRenderRoster(): void {
   if (rosterKey === _compLastRosterKey && list.children.length > 0) return;
   _compLastRosterKey = rosterKey;
 
-  list.innerHTML = racquets
-    .map((r) => {
-      const isActive = r.id === _compSelectedRacquetId;
-      const specs = `${r.strungWeight}g strung &middot; ${r.stiffness} RA &middot; ${r.pattern}`;
-      const baseClasses = 'bg-transparent border text-left flex flex-col justify-between gap-6 transition-all duration-200 cursor-pointer p-5';
-      const borderClasses = isActive ? 'border-dc-accent' : 'border-dc-platinum-dim hover:border-dc-platinum';
-      return `<button class="${baseClasses} ${borderClasses}" data-id="${r.id}" data-comp-action="selectFrame">
-      <div class="flex justify-between items-start gap-2">
-        <span class="text-lg font-semibold leading-tight tracking-tight text-dc-platinum">${r.name.replace(/\s+\d+g$/, '')}</span>
-        <span class="font-mono text-[13px] tracking-[0.15em] text-dc-platinum-dim mt-1">${r.year}</span>
-      </div>
-      <div class="flex flex-col gap-1">
-        <span class="font-mono text-[13px] uppercase tracking-[0.15em] text-dc-accent">${r.identity || r.pattern}</span>
-        <span class="font-mono text-[13px] font-semibold text-dc-platinum">${specs}</span>
-      </div>
-    </button>`;
-    })
-    .join('');
+  const root = _ensureCompendiumReactRoot(_compRosterMount, list);
+  root?.render(
+    createElement(CompendiumFrameRoster, {
+      racquets,
+      selectedRacquetId: _compSelectedRacquetId,
+    }),
+  );
 }
 
 export function _compSelectFrame(racquetId: string): void {
@@ -382,7 +414,6 @@ export function _compSyncWithActiveLoadout(): void {
   _compRenderRoster();
   if (_compSelectedRacquetId === activeRacquetId) {
     _compRenderMain(setup.racquet);
-    _compInitStringInjector(setup.racquet);
   } else {
     _compSelectFrame(activeRacquetId);
   }
@@ -404,202 +435,35 @@ export function _compRenderMain(racquet: Racquet): void {
   _compCurrentBuilds = sorted;
 
   const pills = _compGenerateHeroPills(frameBase, racquet);
-  const consoleHtml: string[] = [];
-  pills.bestFor.forEach((p) =>
-    consoleHtml.push(
-      `<span class="font-mono text-[13px] font-bold tracking-[0.05em] uppercase text-dc-platinum">[+] ${p.toUpperCase()}</span>`
-    )
-  );
-  pills.watchOut.forEach((p) =>
-    consoleHtml.push(
-      `<span class="font-mono text-[13px] font-bold tracking-[0.05em] uppercase text-dc-red">[-] ${p.toUpperCase()}</span>`
-    )
-  );
+  const heroVm = buildCompRacketHeroVm(racquet, frameBase, pills);
+  setCompBaseObs(heroVm.baseObs);
 
-  let statsHtml = '<div class="flex flex-col gap-6">';
-  const statGroups = [
-    { title: 'Attack', stats: [{ id: 'spin', label: 'Spin' }, { id: 'power', label: 'Power' }, { id: 'launch', label: 'Launch' }] },
-    {
-      title: 'Defense',
-      stats: [{ id: 'control', label: 'Control' }, { id: 'stability', label: 'Stability' }, { id: 'forgiveness', label: 'Forgiveness' }],
-    },
-    {
-      title: 'Touch',
-      stats: [{ id: 'feel', label: 'Feel' }, { id: 'comfort', label: 'Comfort' }, { id: 'maneuverability', label: 'Maneuverability' }],
-    },
-  ] as const;
-
-  statGroups.forEach((group) => {
-    statsHtml += `<div class="flex flex-col">
-      <h4 class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em] border-b border-dc-border pb-2 mb-3">${group.title}</h4>
-      <div class="flex flex-col gap-2.5">`;
-
-    group.stats.forEach((stat) => {
-      const val = Math.round((frameBase as any)[stat.id]);
-      const pct = Math.max(0, Math.min(100, val));
-      const totalSegments = 25;
-      const filledSegments = Math.round((pct / 100) * totalSegments);
-      let batteryHtml = `<div class="flex flex-1 gap-[2px] h-1.5 items-center" id="comp-track-${stat.id}" data-base="${val}">`;
-      for (let i = 0; i < totalSegments; i++) {
-        const bgClass = i < filledSegments ? 'bg-dc-void dark:bg-dc-platinum' : 'bg-black/10 dark:bg-white/10';
-        batteryHtml += `<div class="flex-1 h-full rounded-[1px] transition-colors duration-150 ${bgClass}" data-seg="${i}"></div>`;
-      }
-      batteryHtml += '</div>';
-
-      statsHtml += `
-        <div class="flex items-center gap-4 group" data-stat="${stat.id}">
-          <span class="font-mono text-[13px] text-dc-storm group-hover:text-dc-platinum transition-colors uppercase tracking-[0.15em] w-28">${stat.label}</span>
-          ${batteryHtml}
-          <span class="font-mono text-[13px] font-bold text-dc-platinum w-8 text-right" id="comp-val-${stat.id}">${val}</span>
-        </div>`;
-    });
-    statsHtml += '</div></div>';
-  });
-  statsHtml += '</div>';
-
-  const sortOptions: Array<{ key: SortKey; label: string }> = [
-    { key: 'score', label: 'OBS' },
-    { key: 'spin', label: 'Spin' },
-    { key: 'control', label: 'Control' },
-    { key: 'power', label: 'Power' },
-    { key: 'comfort', label: 'Comfort' },
-    { key: 'durability', label: 'Durability' },
-  ];
-  const sortTabsHtml = sortOptions
-    .map((s) => {
-      const isActive = _compSortKey === s.key;
-      const baseClasses = 'font-mono text-[12px] uppercase tracking-[0.1em] pb-2 transition-colors';
-      const activeClasses = isActive ? 'text-dc-accent border-b-2 border-dc-accent -mb-[9px] pb-[7px]' : 'text-dc-storm hover:text-dc-platinum';
-      return `<button class="${baseClasses} ${activeClasses}" data-comp-action="setSort" data-key="${s.key}">${s.label}</button>`;
-    })
-    .join('');
-
-  const cardsHtml = sorted.map((b, i) => _compRenderBuildCard(b, i, racquet, frameBase)).join('');
+  _compLastPreviewStats = null;
+  const baseProfileGroups = buildCompBaseProfileVm(frameBase, null);
+  const sortTabsVm = buildCompSortTabsVm(_compSortKey as SortKeyVm);
+  const cardsVm = buildCompBuildCardsVm(sorted, frameBase, _compGenerateBuildReason);
 
   main.innerHTML = `
-    <div class="relative flex flex-col items-start mb-8">
-      <div class="absolute top-6 right-6 md:top-8 md:right-8 flex flex-col items-end">
-        <span class="font-mono text-[13px] text-dc-storm tracking-[0.2em] mb-1">BASE SCORE</span>
-        <span class="font-mono text-5xl font-semibold leading-[0.85] text-dc-platinum">
-          ${(() => {
-            const fb = calcFrameBase(racquet);
-            const baseObs = Math.round(
-              fb.spin * 0.15 +
-                fb.power * 0.12 +
-                fb.control * 0.18 +
-                fb.comfort * 0.12 +
-                fb.feel * 0.1 +
-                fb.stability * 0.12 +
-                fb.forgiveness * 0.08 +
-                fb.maneuverability * 0.08
-            );
-            setCompBaseObs(baseObs);
-            return baseObs;
-          })()}<span class="text-xl text-dc-storm ml-1">OBS</span>
-        </span>
-        <div id="comp-string-delta" class="flex items-center gap-1 mt-1 opacity-0 transition-opacity duration-200">
-          <span class="font-mono text-lg font-bold text-dc-red">+</span>
-          <span class="font-mono text-lg font-bold text-dc-red" id="comp-string-delta-value">0</span>
-          <span class="font-mono text-xs text-dc-storm/60 ml-0.5">OBS</span>
-        </div>
-      </div>
-
-      <h2 class="text-5xl md:text-[4rem] font-semibold tracking-tight text-dc-platinum leading-none mb-0 pr-[120px] flex items-center gap-3 cursor-pointer group" data-comp-action="toggleHud">
-        ${racquet.name.replace(/\s+\d+g$/, ' ' + Math.round((racquet.strungWeight - 13) / 5) * 5 + 'g')}
-        <span class="text-2xl text-dc-red opacity-50 group-hover:opacity-100 transition-opacity">&#9662;</span>
-      </h2>
-
-      <div class="flex items-center gap-2 mt-4 font-mono text-[13px] flex-wrap">
-        <span class="text-dc-platinum">${racquet.year}</span>
-        <span class="text-dc-accent opacity-60 text-[13px]">//</span>
-        <span class="text-dc-storm uppercase tracking-[0.15em]">${racquet.identity || ''}</span>
-      </div>
-
-      ${racquet.notes ? `<p class="max-w-[650px] mt-6 text-sm leading-relaxed text-dc-storm">${racquet.notes}</p>` : ''}
-
-      <div class="grid grid-cols-3 md:grid-cols-6 gap-8 w-full mt-12 pt-8 border-t border-dc-border">
-        <div class="flex flex-col-reverse gap-1.5">
-          <span class="font-mono text-xl font-bold text-dc-platinum leading-none">${racquet.swingweight}</span>
-          <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">SWINGWEIGHT</span>
-        </div>
-        <div class="flex flex-col-reverse gap-1.5">
-          <span class="font-mono text-xl font-bold text-dc-platinum leading-none">${racquet.stiffness}</span>
-          <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">STIFFNESS</span>
-        </div>
-        <div class="flex flex-col-reverse gap-1.5">
-          <span class="font-mono text-xl font-bold text-dc-platinum leading-none">${racquet.pattern}</span>
-          <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">PATTERN</span>
-        </div>
-        <div class="flex flex-col-reverse gap-1.5">
-          <span class="font-mono text-xl font-bold text-dc-platinum leading-none">${racquet.headSize}</span>
-          <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">HEAD SIZE</span>
-        </div>
-        <div class="flex flex-col-reverse gap-1.5">
-          <span class="font-mono text-xl font-bold text-dc-platinum leading-none">${(racquet as any).balancePts}</span>
-          <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">BALANCE</span>
-        </div>
-        <div class="flex flex-col-reverse gap-1.5">
-          <span class="font-mono text-xl font-bold text-dc-platinum leading-none">${racquet.tensionRange[0]}-${racquet.tensionRange[1]}</span>
-          <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">TENSION</span>
-        </div>
-      </div>
-
-      ${consoleHtml.length > 0 ? `<div class="flex flex-wrap gap-4 w-full mt-8 p-0">${consoleHtml.join('')}</div>` : ''}
-    </div>
-
-    <div class="bg-transparent border border-dc-storm/30 p-5 md:p-6 mb-10 flex flex-col gap-5">
-      <div class="flex justify-between items-center border-b border-dc-storm/30 pb-3 mb-1">
-        <span class="font-mono text-[13px] text-dc-accent uppercase tracking-[0.2em]">//STRING MODULATOR</span>
-        <div class="flex gap-4">
-          <button class="comp-inject-mode-btn text-dc-accent border-dc-accent border-b-2 pb-1 font-mono text-[12px] uppercase tracking-widest hover:text-dc-platinum transition-colors" data-mode="fullbed" data-comp-action="setInjectMode">Full Bed</button>
-          <button class="comp-inject-mode-btn text-dc-storm border-transparent border-b-2 pb-1 font-mono text-[12px] uppercase tracking-widest hover:text-dc-platinum transition-colors" data-mode="hybrid" data-comp-action="setInjectMode">Hybrid</button>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-        <div class="flex flex-col gap-3" id="comp-mains-col">
-          <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]" id="comp-mains-label">// STRING</span>
-          <div id="comp-mains-select" class="comp-string-select-container"></div>
-          <div class="grid grid-cols-2 gap-4">
-            <select class="appearance-none bg-transparent border-b border-dc-storm/50 text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%2712%27%20height=%2712%27%20viewBox=%270%200%2024%2024%27%20fill=%27none%27%20stroke=%27%235E666C%27%20stroke-width=%272%27%20stroke-linecap=%27round%27%20stroke-linejoin=%27round%27%3E%3Cpolyline%20points=%276%209%2012%2015%2018%209%27%3E%3C/polyline%3E%3C/svg%3E')] bg-no-repeat bg-right pr-5 cursor-pointer" id="comp-mains-gauge">
-              <option value="">Gauge...</option>
-            </select>
-            <input type="number" class="bg-transparent border-b border-dc-storm/50 text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors" id="comp-mains-tension" value="52" min="30" max="70" step="1">
-          </div>
-        </div>
-
-        <div class="flex flex-col gap-3" id="comp-crosses-col">
-          <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]" id="comp-crosses-label">// CROSSES</span>
-          <div id="comp-crosses-select" class="comp-string-select-container" style="display:none;"></div>
-          <div class="grid grid-cols-2 gap-4">
-            <select class="appearance-none bg-transparent border-b border-dc-storm/50 text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%2712%27%20height=%2712%27%20viewBox=%270%200%2024%2024%27%20fill=%27none%27%20stroke=%27%235E666C%27%20stroke-width=%272%27%20stroke-linecap=%27round%27%20stroke-linejoin=%27round%27%3E%3Cpolyline%20points=%276%209%2012%2015%2018%209%27%3E%3C/polyline%3E%3C/svg%3E')] bg-no-repeat bg-right pr-5 cursor-pointer" id="comp-crosses-gauge">
-              <option value="">Gauge...</option>
-            </select>
-            <input type="number" class="bg-transparent border-b border-dc-storm/50 text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors" id="comp-crosses-tension" value="50" min="30" max="70" step="1">
-          </div>
-        </div>
-      </div>
-
-      <div class="flex gap-2 mt-2">
-        <button class="flex-1 font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-storm/50 text-dc-platinum hover:bg-dc-storm/20 hover:border-dc-storm transition-colors disabled:opacity-30 disabled:cursor-not-allowed" id="comp-inject-apply" disabled data-comp-action="applyInjection">Apply</button>
-        <button class="font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-storm/50 text-dc-storm hover:bg-dc-storm/10 hover:text-dc-platinum hover:border-dc-storm transition-colors" data-comp-action="clearInjection">Clear</button>
-      </div>
-    </div>
-
-    <div class="mb-12">
-      <h3 class="font-mono text-xs tracking-[0.15em] text-dc-platinum uppercase mb-1">// BASE FRAME PROFILE</h3>
-      <p class="text-xs text-dc-storm mb-6 italic">Frame-only characteristics before string influence</p>
-      ${statsHtml}
-    </div>
-
-    <div class="mb-12">
-      <div class="flex items-center justify-between mb-4 pb-2 border-b border-dc-border/50">
-        <h3 class="font-mono text-xs tracking-[0.15em] text-dc-platinum uppercase">//TOP BUILDS</h3>
-        <div class="flex gap-4 border-b border-transparent pb-0">${sortTabsHtml}</div>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">${cardsHtml}</div>
-    </div>
+    <div id="comp-react-hero-root"></div>
+    <div id="comp-react-string-modulator-root"></div>
+    <div id="comp-react-base-profile-root"></div>
+    <div id="comp-react-top-builds-root"></div>
   `;
+
+  const heroRoot = _ensureCompendiumReactRoot(_compHeroMount, document.getElementById('comp-react-hero-root'));
+  const stringModRoot = _ensureCompendiumReactRoot(
+    _compStringModulatorMount,
+    document.getElementById('comp-react-string-modulator-root'),
+  );
+  const baseRoot = _ensureCompendiumReactRoot(_compBaseProfileMount, document.getElementById('comp-react-base-profile-root'));
+  const buildsRoot = _ensureCompendiumReactRoot(_compTopBuildsMount, document.getElementById('comp-react-top-builds-root'));
+
+  flushSync(() => {
+    heroRoot?.render(createElement(CompendiumRacketHero, { vm: heroVm }));
+    stringModRoot?.render(createElement(CompendiumStringModulator));
+    baseRoot?.render(createElement(CompendiumBaseProfile, { groups: baseProfileGroups }));
+    buildsRoot?.render(createElement(CompendiumTopBuilds, { sortTabs: sortTabsVm, cards: cardsVm }));
+  });
 
   _compInitStringInjector(racquet);
 }
@@ -656,8 +520,10 @@ export function _compInitStringInjector(racquet: Racquet): void {
   const mainsContainer = document.getElementById('comp-mains-select');
   const crossesContainer = document.getElementById('comp-crosses-select');
   if (!mainsContainer) return;
-  mainsContainer.innerHTML = '';
-  if (crossesContainer) crossesContainer.innerHTML = '';
+  disposeSearchableSelectContainer(mainsContainer);
+  if (crossesContainer) disposeSearchableSelectContainer(crossesContainer);
+  delete ssInstances['comp-mains-select'];
+  delete ssInstances['comp-crosses-select'];
 
   const setup = getCurrentSetup();
   const isViewingActiveRacket = setup?.racquet?.id === racquet.id;
@@ -824,49 +690,16 @@ export function _compPreviewStats(): void {
   if (applyBtn) applyBtn.disabled = false;
 }
 
-export function _compRenderPreviewBars(baseStats: SetupStats, previewStats: SetupStats): void {
-  const statKeys = ['spin', 'power', 'control', 'launch', 'feel', 'comfort', 'stability', 'forgiveness', 'maneuverability'] as const;
-  const segments = 25;
-
-  statKeys.forEach((k) => {
-    const baseVal = baseStats[k] != null ? Math.round(baseStats[k]) : 50;
-    const previewVal = previewStats[k] != null ? Math.round(previewStats[k]) : 50;
-    const baseFilled = Math.round((baseVal / 100) * segments);
-    const previewFilled = Math.round((previewVal / 100) * segments);
-    const track = document.getElementById(`comp-track-${k}`);
-    if (!track) return;
-    const deltaDirection = previewVal > baseVal ? 'up' : previewVal < baseVal ? 'down' : null;
-    _updateSegmentTrack(track, baseFilled, previewFilled, deltaDirection);
-    (track as HTMLElement).dataset.hasPreview = 'true';
-
-    const valEl = document.getElementById(`comp-val-${k}`);
-    if (valEl) {
-      const diff = previewVal - baseVal;
-      let diffColor = 'text-dc-storm';
-      if (diff > 0) diffColor = 'text-dc-red';
-      if (diff < 0) diffColor = 'text-dc-accent';
-      valEl.innerHTML = `<span class="text-dc-storm">${baseVal}</span><span class="text-dc-storm mx-1">&rarr;</span><span class="${diffColor}">${previewVal}</span>`;
-    }
-  });
+export function _compRenderPreviewBars(_baseStats: SetupStats, previewStats: SetupStats): void {
+  _compLastPreviewStats = previewStats;
+  _compRenderBaseProfileReact();
 }
 
 export function _compClearPreview(): void {
   const { baseStats } = _compInjectState;
   if (!baseStats) return;
-  const statKeys = ['spin', 'power', 'control', 'launch', 'feel', 'comfort', 'stability', 'forgiveness', 'maneuverability'] as const;
-  const segments = 25;
-
-  statKeys.forEach((k) => {
-    const baseVal = baseStats[k] != null ? Math.round(baseStats[k]) : 50;
-    const baseFilled = Math.round((baseVal / 100) * segments);
-    const track = document.getElementById(`comp-track-${k}`);
-    if (track) {
-      _updateSegmentTrack(track, baseFilled);
-      delete (track as HTMLElement).dataset.hasPreview;
-    }
-    const valEl = document.getElementById(`comp-val-${k}`);
-    if (valEl) valEl.innerHTML = `<span class="text-dc-platinum">${baseVal}</span>`;
-  });
+  _compLastPreviewStats = null;
+  _compRenderBaseProfileReact();
 
   const applyBtn = document.getElementById('comp-inject-apply') as HTMLButtonElement | null;
   if (applyBtn) applyBtn.disabled = true;
@@ -909,8 +742,8 @@ export function _compClearInjection(): void {
 
   const mainsContainer = document.getElementById('comp-mains-select');
   const crossesContainer = document.getElementById('comp-crosses-select');
-  if (mainsContainer) mainsContainer.innerHTML = '';
-  if (crossesContainer) crossesContainer.innerHTML = '';
+  if (mainsContainer) disposeSearchableSelectContainer(mainsContainer);
+  if (crossesContainer) disposeSearchableSelectContainer(crossesContainer);
 
   const mainsGauge = document.getElementById('comp-mains-gauge');
   const crossesGauge = document.getElementById('comp-crosses-gauge');
@@ -964,58 +797,6 @@ export function _compGenerateTopBuilds(racquet: Racquet, count: number): BuildWi
 
 export function _compPickDiverseBuilds(builds: BuildWithArchetype[], count: number): BuildWithArchetype[] {
   return pickDiverseBuilds(builds, count) as BuildWithArchetype[];
-}
-
-export function _compRenderBuildCard(build: BuildWithArchetype, index: number, _racquet: Racquet, frameStats: SetupStats): string {
-  const isFeatured = index === 0;
-  const cardClasses = isFeatured
-    ? 'relative bg-transparent border border-dc-accent shadow-[0_0_15px_rgba(255,69,0,0.05)] p-5 flex flex-col transition-colors duration-200 col-span-full'
-    : 'relative bg-transparent border border-dc-storm/30 hover:border-dc-storm p-5 flex flex-col transition-colors duration-200';
-  const badgeHtml = isFeatured
-    ? '<div class="absolute -top-[1px] -left-[1px] bg-dc-accent text-dc-ink font-mono text-[10px] font-bold uppercase tracking-widest px-2 py-0.5">BEST OVERALL</div>'
-    : '';
-  const reasonHtml = isFeatured
-    ? `<div class="text-xs text-dc-storm mb-4 pl-3 border-l-2 border-dc-storm italic">${_compGenerateBuildReason(build, frameStats)}</div>`
-    : '';
-  const isHybrid = build.type === 'hybrid';
-  const stringLabel = isHybrid ? build.label || build.string.name : build.string.name;
-  const metaLabel = isHybrid ? `Hybrid &middot; M:${build.tension} / X:${build.crossesTension}` : `Full Bed &middot; ${build.tension} lbs`;
-  const s = build.stats;
-  const statEntries = [
-    { key: 'SPIN', val: Math.round(s.spin) },
-    { key: 'PWR', val: Math.round(s.power) },
-    { key: 'CTRL', val: Math.round(s.control) },
-    { key: 'CMF', val: Math.round(s.comfort) },
-    { key: 'FEEL', val: Math.round(s.feel) },
-    { key: 'DUR', val: Math.round(s.durability) },
-  ]
-    .sort((a, b) => b.val - a.val)
-    .slice(0, 3);
-  const statsHtml = statEntries
-    .map(
-      (st) =>
-        `<span class="font-mono text-[13px] text-dc-storm tracking-widest">[${st.key} <b class="text-xs text-dc-platinum font-semibold ml-0.5">${st.val}</b>]</span>`
-    )
-    .join('');
-
-  return `
-    <div class="${cardClasses}">
-      ${badgeHtml}
-      <div class="flex justify-between items-start my-1.5">
-        <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">${build.archetype}</span>
-        <span class="font-mono text-4xl md:text-5xl font-semibold text-dc-platinum leading-[0.8] tracking-tighter">${build.score.toFixed(1)}</span>
-      </div>
-      <div class="text-base font-semibold text-dc-platinum tracking-tight mb-0.5 pr-12 leading-tight">${stringLabel}</div>
-      <div class="font-mono text-[12px] text-dc-storm mb-4">${metaLabel}</div>
-      ${reasonHtml}
-      <div class="grid grid-cols-3 gap-2 mt-auto mb-4">
-        <button class="bg-transparent border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-ink font-mono text-[13px] uppercase tracking-widest py-1.5 transition-colors text-center" data-comp-action="buildAction" data-action-name="setActive" data-index="${index}">Set Active</button>
-        <button class="bg-transparent border border-dc-storm/50 dark:border-dc-storm/30 text-dc-storm hover:border-dc-storm hover:bg-dc-storm/10 hover:text-dc-platinum font-mono text-[13px] uppercase tracking-widest py-1.5 transition-colors text-center" data-comp-action="buildAction" data-action-name="tune" data-index="${index}">Tune</button>
-        <button class="bg-transparent border border-dc-storm/50 dark:border-dc-storm/30 text-dc-storm hover:border-dc-storm hover:bg-dc-storm/10 hover:text-dc-platinum font-mono text-[13px] uppercase tracking-widest py-1.5 transition-colors text-center" data-comp-action="buildAction" data-action-name="save" data-index="${index}">Save</button>
-      </div>
-      <div class="flex flex-wrap gap-3 pt-3 border-t border-dc-storm/30 dark:border-dc-storm/20">${statsHtml}</div>
-    </div>
-  `;
 }
 
 export function _compSetSort(key: SortKey): void {

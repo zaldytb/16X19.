@@ -1,3 +1,6 @@
+import { createElement } from 'react';
+import { flushSync } from 'react-dom';
+import { createRoot, type Root } from 'react-dom/client';
 import { RACQUETS, STRINGS } from '../../data/loader.js';
 import {
   GAUGE_LABELS,
@@ -11,9 +14,13 @@ import {
 import type { Racquet, SetupStats, StringConfig, StringData } from '../../engine/types.js';
 import { createLoadout, saveLoadout } from '../../state/loadout.js';
 import { syncStringCompendiumWithActiveLoadout } from '../../state/setup-sync.js';
-import { createSearchableSelect, ssInstances } from '../components/searchable-select.js';
+import { createSearchableSelect, disposeSearchableSelectContainer, ssInstances } from '../components/searchable-select.js';
 import { activateLoadout, switchMode } from './shell.js';
+import { StringCompendiumDetail } from '../../components/strings/StringCompendiumDetail.js';
+import { StringFrameInjectionModulator } from '../../components/strings/StringFrameInjectionModulator.js';
+import { StringCompendiumRoster } from '../../components/strings/StringCompendiumRoster.js';
 import { getCompBaseObs, setCompBaseObs } from './comp-base-obs.js';
+import { buildStringCompendiumDetailVm } from './string-compendium-detail-vm.js';
 
 const RACQUET_DATA = RACQUETS as unknown as Racquet[];
 const STRING_DATA = STRINGS as unknown as StringData[];
@@ -51,6 +58,43 @@ let _stringFiltersBound = false;
 let _stringPreviewFrame: number | null = null;
 let _stringRosterTimer: number | null = null;
 let _stringLastRosterKey = '';
+
+type StringReactMount = { root: Root | null; host: HTMLElement | null };
+
+function _ensureStringReactRoot(mount: StringReactMount, container: HTMLElement | null): Root | null {
+  if (!container) return null;
+  if (mount.root && mount.host) {
+    if (mount.host !== container || !mount.host.isConnected) {
+      mount.root.unmount();
+      mount.root = null;
+      mount.host = null;
+    }
+  }
+  if (!mount.root) {
+    mount.root = createRoot(container);
+    mount.host = container;
+  }
+  return mount.root;
+}
+
+function _unmountStringReactMount(mount: StringReactMount): void {
+  if (mount.root) {
+    mount.root.unmount();
+    mount.root = null;
+    mount.host = null;
+  }
+}
+
+const _stringRosterMount: StringReactMount = { root: null, host: null };
+const _stringDetailMount: StringReactMount = { root: null, host: null };
+const _stringFrameModulatorMount: StringReactMount = { root: null, host: null };
+
+export function cleanupStringsPage(): void {
+  _unmountStringReactMount(_stringRosterMount);
+  _unmountStringReactMount(_stringDetailMount);
+  _unmountStringReactMount(_stringFrameModulatorMount);
+  _stringLastRosterKey = '';
+}
 
 let _stringModState: StringModState = {
   stringId: null,
@@ -280,6 +324,8 @@ function _bindStringDelegates(): void {
 
   // Click delegation
   document.addEventListener('click', (e: Event) => {
+    const shell = document.getElementById('mode-compendium');
+    if (shell && !shell.contains(e.target as Node)) return;
     const el = (e.target as Element).closest('[data-string-action]') as HTMLElement | null;
     if (!el) return;
     const action = el.dataset.stringAction!;
@@ -312,6 +358,8 @@ function _bindStringDelegates(): void {
 
   // Input delegation — tension number inputs
   document.addEventListener('input', (e: Event) => {
+    const shell = document.getElementById('mode-compendium');
+    if (shell && !shell.contains(e.target as Node)) return;
     const el = e.target as HTMLElement;
     if (el.dataset.stringAction !== 'tensionChange' || !el.dataset.stringArg) return;
     const type = el.dataset.stringArg as 'mains' | 'crosses';
@@ -320,6 +368,8 @@ function _bindStringDelegates(): void {
 
   // Change delegation — gauge selects
   document.addEventListener('change', (e: Event) => {
+    const shell = document.getElementById('mode-compendium');
+    if (shell && !shell.contains(e.target as Node)) return;
     const el = e.target as HTMLElement;
     const action = el.dataset.stringAction;
     if (action === 'gaugeChange') {
@@ -389,27 +439,15 @@ export function _stringRenderRoster(): void {
   const rosterKey = strings.map((item) => `${item.id}:${item.id === _stringSelectedId ? 1 : 0}`).join('|');
   if (rosterKey === _stringLastRosterKey && list.children.length > 0) return;
   _stringLastRosterKey = rosterKey;
-  list.innerHTML = strings
-    .map((stringItem) => {
-      const isActive = stringItem.id === _stringSelectedId;
-      const baseClasses = 'bg-transparent border text-left flex flex-col justify-between gap-4 transition-all duration-200 cursor-pointer p-4';
-      const borderClasses = isActive
-        ? 'border-dc-accent'
-        : 'border-dc-storm dark:border-dc-platinum-dim hover:border-dc-platinum';
-      const archetype = _stringGetArchetype(stringItem);
 
-      return `<button class="${baseClasses} ${borderClasses}" data-id="${stringItem.id}" data-string-action="selectString" data-string-arg="${stringItem.id}">
-      <div class="flex justify-between items-start gap-2">
-        <span class="text-base font-semibold leading-tight tracking-tight text-dc-platinum">${stringItem.name}</span>
-      </div>
-      <div class="flex flex-col gap-1">
-        <span class="font-mono text-[10px] uppercase tracking-[0.15em] text-dc-accent">${archetype}</span>
-        <span class="font-mono text-[12px] text-dc-storm">${stringItem.material} // ${stringItem.shape}</span>
-        <span class="font-mono text-[13px] font-semibold text-dc-platinum">${Math.round(stringItem.stiffness)} lb/in</span>
-      </div>
-    </button>`;
-    })
-    .join('');
+  const root = _ensureStringReactRoot(_stringRosterMount, list);
+  root?.render(
+    createElement(StringCompendiumRoster, {
+      strings,
+      selectedStringId: _stringSelectedId,
+      getArchetype: _stringGetArchetype,
+    }),
+  );
 }
 
 export function _stringGetArchetype(stringItem: StringData): string {
@@ -566,218 +604,40 @@ export function _stringRenderMain(stringItem: StringData): void {
   const main = document.getElementById('string-main');
   if (!main) return;
 
+  const prevFrame = document.getElementById('string-mod-frame');
+  const prevCrosses = document.getElementById('string-mod-crosses-string');
+  disposeSearchableSelectContainer(prevFrame);
+  disposeSearchableSelectContainer(prevCrosses);
   delete ssInstances['string-mod-frame'];
   delete ssInstances['string-mod-crosses-string'];
 
   const pills = _stringGeneratePills(stringItem);
-  const consoleHtml: string[] = [];
-  pills.bestFor.forEach((pill) =>
-    consoleHtml.push(`<span class="font-mono text-[13px] font-bold tracking-[0.05em] uppercase text-dc-platinum">[+] ${pill}</span>`)
-  );
-  pills.watchOut.forEach((pill) =>
-    consoleHtml.push(`<span class="font-mono text-[13px] font-bold tracking-[0.05em] uppercase text-dc-red">[-] ${pill}</span>`)
-  );
-
-  const batteryHtml = _stringRenderBatteryBars(stringItem);
   const similarStrings = _stringFindSimilarStrings(stringItem.id);
   const bestFrames = _stringFindBestFrames(stringItem.id);
-
-  const similarHtml = similarStrings
-    .map((similar) => {
-      const archetype = _stringGetArchetype(similar);
-      return `<div class="bg-transparent border border-dc-border hover:border-dc-storm p-4 flex flex-col cursor-pointer transition-colors group" data-string-action="selectString" data-string-arg="${similar.id}">
-      <div class="flex justify-between items-start mb-2">
-        <span class="font-mono text-[10px] text-dc-storm uppercase tracking-widest group-hover:text-dc-platinum transition-colors">${archetype}</span>
-        <span class="font-mono text-lg font-bold text-dc-platinum">${similar.twScore.spin || 0}<span class="text-[13px] text-dc-storm ml-1">SPIN</span></span>
-      </div>
-      <div class="text-sm font-semibold text-dc-platinum mb-1">${similar.name}</div>
-      <div class="font-mono text-[13px] text-dc-storm">${similar.material} // ${similar.shape}</div>
-    </div>`;
-    })
-    .join('');
-
-  const framesHtml = bestFrames
-    .map((frameResult) => {
-      return `<div class="bg-transparent border border-dc-border hover:border-dc-storm p-4 flex flex-col cursor-pointer transition-colors group" data-string-action="goToFrame" data-string-arg="${frameResult.racquet.id}">
-      <div class="flex justify-between items-start mb-2">
-        <span class="font-mono text-[10px] text-dc-storm uppercase tracking-widest group-hover:text-dc-platinum transition-colors">${getFrameIdentityLabel(frameResult.racquet)}</span>
-        <span class="font-mono text-lg font-bold text-dc-accent">${frameResult.obs.toFixed(1)}</span>
-      </div>
-      <div class="text-sm font-semibold text-dc-platinum mb-1">${frameResult.racquet.name.replace(/\s+\d+g$/, '')}</div>
-      <div class="font-mono text-[13px] text-dc-storm">${frameResult.racquet.pattern} // ${frameResult.racquet.strungWeight}g strung</div>
-    </div>`;
-    })
-    .join('');
-
-  const twScores = stringItem.twScore || {};
-  const twuComposite = Math.round(
-    (twScores.control || 50) * 0.16 +
-      (twScores.spin || 50) * 0.13 +
-      (twScores.comfort || 50) * 0.13 +
-      (twScores.power || 50) * 0.11 +
-      (twScores.feel || 50) * 0.1 +
-      (twScores.durability || 50) * 0.07 +
-      (twScores.playabilityDuration || 50) * 0.06
+  const detailVm = buildStringCompendiumDetailVm(
+    stringItem,
+    pills,
+    similarStrings,
+    bestFrames,
+    _stringGetArchetype,
+    getFrameIdentityLabel,
   );
 
-  const notes = typeof stringItem.notes === 'string' ? stringItem.notes : '';
-
   main.innerHTML = `
-    <div class="relative flex flex-col items-start mb-8">
-      <div class="absolute top-6 right-6 md:top-8 md:right-8 flex flex-col items-end">
-        <span class="font-mono text-[13px] text-dc-storm tracking-[0.2em] mb-1">TWU SCORE</span>
-        <span class="font-mono text-5xl font-semibold leading-[0.85] text-dc-platinum">
-          ${twuComposite}
-        </span>
-      </div>
-
-      <h2 class="text-5xl md:text-[4rem] font-semibold tracking-tight text-dc-platinum leading-none mb-0 pr-[120px] flex items-center gap-3 cursor-pointer group" data-string-action="toggleHud">
-        ${stringItem.name}
-        <span class="text-2xl text-dc-red opacity-50 group-hover:opacity-100 transition-opacity">&#9660;</span>
-      </h2>
-
-      <div class="flex items-center gap-2 mt-4 font-mono text-[13px] flex-wrap">
-        <span class="text-dc-platinum">${stringItem.material.toUpperCase()}</span>
-        <span class="text-dc-accent opacity-60 text-[13px]">//</span>
-        <span class="text-dc-storm uppercase tracking-[0.15em]">${stringItem.shape}</span>
-      </div>
-
-      ${notes ? `<p class="max-w-[650px] mt-6 text-sm leading-relaxed text-dc-storm">${notes}</p>` : ''}
-
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 w-full mt-12 pt-8 border-t border-dc-border">
-        <div class="flex flex-col-reverse gap-1.5">
-          <span class="font-mono text-xl font-bold text-dc-platinum leading-none">${Math.round(stringItem.stiffness)}</span>
-          <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">STIFFNESS (lb/in)</span>
-        </div>
-        <div class="flex flex-col-reverse gap-1.5">
-          <span class="font-mono text-xl font-bold text-dc-platinum leading-none">${stringItem.spinPotential || '&mdash;'}</span>
-          <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">SPIN POTENTIAL</span>
-        </div>
-        <div class="flex flex-col-reverse gap-1.5">
-          <span class="font-mono text-xl font-bold text-dc-platinum leading-none">${stringItem.tensionLoss || '&mdash;'}%</span>
-          <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">TENSION LOSS</span>
-        </div>
-        <div class="flex flex-col-reverse gap-1.5">
-          <span class="font-mono text-xl font-bold text-dc-platinum leading-none">${stringItem.stiffness > 200 ? 'High' : stringItem.stiffness > 180 ? 'Med' : 'Low'}</span>
-          <span class="font-mono text-[9px] text-dc-storm tracking-[0.3em] uppercase">SNAPBACK</span>
-        </div>
-      </div>
-
-      ${consoleHtml.length > 0 ? `<div class="flex flex-wrap gap-4 w-full mt-8 p-0">${consoleHtml.join('')}</div>` : ''}
-    </div>
-
-    <div class="mb-12">
-      <h3 class="font-mono text-xs tracking-[0.15em] text-dc-platinum uppercase mb-1">// STRING TELEMETRY</h3>
-      <p class="text-xs text-dc-storm mb-6 italic">Intrinsic characteristics from Tennis Warehouse testing</p>
-      ${batteryHtml}
-    </div>
-
-    <div class="bg-transparent border border-dc-storm/30 p-5 md:p-6 mb-10 flex flex-col gap-5">
-      <div class="flex justify-between items-center border-b border-dc-storm/30 pb-3 mb-1">
-        <span class="font-mono text-[13px] text-dc-accent uppercase tracking-[0.2em]">//FRAME INJECTION</span>
-        <div class="flex gap-4">
-          <button class="string-mod-mode-btn text-dc-accent border-dc-accent border-b-2 pb-1 font-mono text-[12px] uppercase tracking-widest hover:text-dc-platinum transition-colors" data-mode="fullbed" data-string-action="setModMode" data-string-arg="fullbed">Full Bed</button>
-          <button class="string-mod-mode-btn text-dc-storm border-transparent border-b-2 pb-1 font-mono text-[12px] uppercase tracking-widest hover:text-dc-platinum transition-colors" data-mode="hybrid" data-string-action="setModMode" data-string-arg="hybrid">Hybrid</button>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="flex flex-col gap-3">
-          <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">// SELECT FRAME</span>
-          <div id="string-mod-frame" data-placeholder="Select Frame..."></div>
-          <p class="text-[12px] text-dc-storm italic">Required: Choose a frame to inject this string into</p>
-        </div>
-
-        <div class="flex flex-col gap-3">
-          <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">// PROJECTED OBS</span>
-          <div id="string-mod-obs" class="flex items-center">
-            <span class="font-mono text-4xl font-bold text-dc-storm">&mdash;</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="flex flex-col gap-3">
-          <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">// MAINS STRING</span>
-          <div id="string-mod-mains-name" class="font-mono text-sm text-dc-platinum py-2 border-b border-dc-storm/30">
-            Select a string first
-          </div>
-        </div>
-
-        <div class="flex flex-col gap-3" id="string-mod-crosses-string-col" style="display:none;">
-          <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">// CROSSES STRING</span>
-          <div id="string-mod-crosses-string" data-placeholder="Same as mains..."></div>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="flex flex-col gap-3">
-          <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">// MAINS GAUGE</span>
-          <select id="string-mod-gauge" class="appearance-none bg-white dark:bg-dc-void border-b border-dc-storm/50 text-dc-platinum font-mono text-sm py-2 px-2 outline-none focus:border-dc-accent transition-colors cursor-pointer" data-string-action="gaugeChange">
-            <option value="">Default</option>
-          </select>
-        </div>
-
-        <div class="flex flex-col gap-3" id="string-mod-crosses-gauge-col" style="display:none;">
-          <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">// CROSSES GAUGE</span>
-          <select id="string-mod-crosses-gauge" class="appearance-none bg-white dark:bg-dc-void border-b border-dc-storm/50 text-dc-platinum font-mono text-sm py-2 px-2 outline-none focus:border-dc-accent transition-colors cursor-pointer" data-string-action="crossesGaugeChange">
-            <option value="">Same as mains</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-        <div class="flex flex-col gap-3" id="string-mod-mains-col">
-          <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]">// MAINS TENSION</span>
-          <input type="number" id="string-mod-mains-tension" class="bg-transparent border-b border-dc-storm/50 text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors" value="52" min="30" max="70" step="1" data-string-action="tensionChange" data-string-arg="mains">
-        </div>
-
-        <div class="flex flex-col gap-3" id="string-mod-crosses-col">
-          <span class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em]" id="string-mod-crosses-label">// CROSSES TENSION</span>
-          <input type="number" id="string-mod-crosses-tension" class="bg-transparent border-b border-dc-storm/50 text-dc-platinum font-mono text-sm py-2 outline-none focus:border-dc-accent transition-colors" value="50" min="30" max="70" step="1" data-string-action="tensionChange" data-string-arg="crosses">
-        </div>
-      </div>
-
-      <div class="border-t border-dc-storm/30 pt-4 mt-2">
-        <h4 class="font-mono text-[13px] text-dc-storm uppercase tracking-[0.2em] mb-4">// LIVE PREVIEW</h4>
-        <div class="flex flex-col gap-2.5">
-          ${['spin', 'power', 'control', 'feel', 'comfort']
-            .map(
-              (stat) => `
-            <div class="flex items-center gap-4 group" data-stat="${stat}">
-              <span class="font-mono text-[13px] text-dc-storm group-hover:text-dc-platinum transition-colors uppercase tracking-[0.15em] w-20">${stat}</span>
-              <div class="flex flex-1 gap-[2px] h-1.5 items-center" id="string-track-${stat}">
-                ${Array(25)
-                  .fill(0)
-                  .map(() => `<div class="flex-1 h-full rounded-[1px] bg-black/10 dark:bg-white/10"></div>`)
-                  .join('')}
-              </div>
-              <span class="font-mono text-[13px] font-bold text-dc-platinum w-16 text-right" id="string-val-${stat}">&mdash;</span>
-            </div>`
-            )
-            .join('')}
-        </div>
-      </div>
-
-      <div class="flex gap-2 mt-2">
-        <button class="flex-1 font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-ink transition-colors disabled:opacity-30 disabled:cursor-not-allowed" id="string-mod-add" disabled data-string-action="addToLoadout">Add to Loadout</button>
-        <button class="flex-1 font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-platinum text-dc-platinum hover:bg-dc-platinum hover:text-dc-void transition-colors disabled:opacity-30 disabled:cursor-not-allowed" id="string-mod-activate" disabled data-string-action="setActive">Set Active</button>
-        <button class="font-mono text-[12px] uppercase tracking-widest px-4 py-2 border border-dc-storm/50 text-dc-storm hover:bg-dc-storm/10 hover:text-dc-platinum hover:border-dc-storm transition-colors" data-string-action="clearPreview">Clear</button>
-      </div>
-    </div>
-
-    <div class="mb-12">
-      <h3 class="font-mono text-xs tracking-[0.15em] text-dc-platinum uppercase mb-1">// BEST PAIRED WITH</h3>
-      <p class="text-xs text-dc-storm mb-6 italic">Top performing frames with this string (52 lbs)</p>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">${framesHtml}</div>
-    </div>
-
-    <div class="mb-12">
-      <h3 class="font-mono text-xs tracking-[0.15em] text-dc-platinum uppercase mb-1">// SIMILAR STRINGS</h3>
-      <p class="text-xs text-dc-storm mb-6 italic">Alternatives with similar performance profiles</p>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">${similarHtml}</div>
-    </div>
+    <div id="string-react-detail-root"></div>
+    <div id="string-react-frame-modulator-root"></div>
   `;
+
+  const detailRoot = _ensureStringReactRoot(_stringDetailMount, document.getElementById('string-react-detail-root'));
+  const frameModRoot = _ensureStringReactRoot(
+    _stringFrameModulatorMount,
+    document.getElementById('string-react-frame-modulator-root'),
+  );
+
+  flushSync(() => {
+    detailRoot?.render(createElement(StringCompendiumDetail, { vm: detailVm }));
+    frameModRoot?.render(createElement(StringFrameInjectionModulator));
+  });
 
   _stringInitModulator(stringItem);
 }

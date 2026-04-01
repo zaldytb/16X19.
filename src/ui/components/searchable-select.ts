@@ -466,6 +466,16 @@ export function createSearchableSelect(
   return instance;
 }
 
+/** Destroy dropdown listeners and clear registry before removing container (e.g. React remount). */
+export function disposeSearchableSelectContainer(container: HTMLElement | null): void {
+  if (!container) return;
+  const inst = _ssRegistry.get(container);
+  if (inst?._cleanup) inst._cleanup();
+  _ssRegistry.delete(container);
+  container.innerHTML = '';
+  container.classList.remove('searchable-select');
+}
+
 // Store references to searchable select instances
 export const ssInstances: Record<string, SearchableSelectInstance> = {};
 

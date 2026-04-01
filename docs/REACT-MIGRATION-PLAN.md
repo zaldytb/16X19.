@@ -54,9 +54,50 @@ Orchestrated by **`src/ui/pages/overview.ts`** with **`_ensureOverviewReactRoot`
 
 ---
 
+## Compendium workspace (partial)
+
+Orchestrated by **`src/ui/pages/compendium.ts`**, **`src/ui/pages/strings.ts`**, and **`src/ui/pages/leaderboard.ts`** with **`_ensureCompendiumReactRoot`** / **`_ensureStringReactRoot`** (same invalidation semantics as Overview). **`cleanupCompendiumPage`**, **`cleanupStringsPage`**, and **`cleanupLeaderboardPage`** run from **`Compendium.tsx`** on unmount. **`comp-base-obs`** contract unchanged.
+
+### Racket Bible (`compendium.ts`)
+
+| Area | React component(s) | View-models / helpers | Mount host(s) |
+| --- | --- | --- | --- |
+| Hero + spec grid + pills | `CompendiumRacketHero` | `comp-racket-hero-vm.ts` | `#comp-react-hero-root` |
+| Base frame profile (+ string-mod preview overlay) | `CompendiumBaseProfile` | `comp-base-profile-vm.ts` (`buildCompBaseProfileVm(frameBase, previewStats)`) | `#comp-react-base-profile-root` |
+| Top builds | `CompendiumTopBuilds` | `comp-top-builds-vm.ts` | `#comp-react-top-builds-root` |
+| HUD roster | `CompendiumFrameRoster` | (inline filters in `compendium.ts`) | `#comp-frame-list` |
+| String modulator | `CompendiumStringModulator` | — | `#comp-react-string-modulator-root` |
+
+**Still imperative:** `createSearchableSelect` on mains/crosses, **`_compInitStringInjector`**, base-profile preview via **`_compRenderBaseProfileReact`** (engine-driven), and **`data-comp-action`** delegation.
+
+### Strings tab (`strings.ts`)
+
+| Area | React component(s) | View-models / helpers | Mount host(s) |
+| --- | --- | --- | --- |
+| Detail (hero, telemetry, best frames, similar) | `StringCompendiumDetail` | `string-compendium-detail-vm.ts` | `#string-react-detail-root` |
+| HUD list | `StringCompendiumRoster` | — | `#string-list` |
+| Frame injection modulator | `StringFrameInjectionModulator` | — | `#string-react-frame-modulator-root` |
+
+**Still imperative:** **`_stringInitModulator`**, SearchableSelects (with **`disposeSearchableSelectContainer`** before re-render), **`_stringRenderPreviewBars`** (updates preview segments under the modulator), tension/gauge **`change`** delegation. **`data-string-action`** delegation scoped to **`#mode-compendium`**.
+
+### Leaderboard (`leaderboard.ts`)
+
+Orchestrated by **`leaderboard.ts`** with **`_ensureLbResultsReactRoot`** (results) and **`_ensureLbShellReactRoot`** (filter shell). **`#comp-leaderboard-root`** wraps **`#lb2-shell-react-root`** (sticky controls + stats) and sibling **`#lb2-results`**. **`cleanupLeaderboardPage`** clears the root, **`_unmountLbShellReact`**, and **`_lbUnmountAllResultsReact`**.
+
+| Area | React component(s) | View-models / helpers | Mount host(s) |
+| --- | --- | --- | --- |
+| Filter / stat shell | `LeaderboardShell` | `leaderboard-shell-vm.ts` | `#lb2-shell-react-root` |
+| Builds table | `LeaderboardBuildResults` | `leaderboard-results-vm.ts` | `#lb2-build-results-react` (under `#lb2-results`) |
+| Frames table | `LeaderboardFrameResults` | `leaderboard-results-vm.ts` | `#lb2-frame-results-react` |
+| Strings table | `LeaderboardStringResults` | `leaderboard-results-vm.ts` | `#lb2-string-results-react` |
+
+**Still imperative:** **`_runLbv2`** scheduling, **`count`** text on **`#lb2-count`**, and **`data-lb-action`** / **`data-lb-arg`** delegation on `document` (click + change for filter selects).
+
+---
+
 ## What’s left (other workspaces)
 
-Imperative modules still own most of: **Compare**, **Compendium / strings**, **Optimize**, **Find My Build**, **My Loadouts**, **Leaderboard**, plus **shell** chrome that isn’t already in `src/components/shell/`.
+Imperative modules still own most of: **Compare** (remaining slices if any), **Optimize**, **Find My Build**, **My Loadouts**, plus **shell** chrome that isn’t already in `src/components/shell/`. **Compendium** still has SearchableSelect wiring, **`_compInitStringInjector`** / **`_stringInitModulator`**, and the **HUD overlays** (`#comp-hud`, `#string-hud` in `Compendium.tsx`) — migrating the full HUD (search + filters + roster) is a **separate** slice; not started here.
 
 **Do not** rewrite a full page in one PR. For each slice:
 
@@ -69,8 +110,8 @@ Imperative modules still own most of: **Compare**, **Compendium / strings**, **O
 Suggested **non-binding** order (dependencies and churn vary):
 
 1. **Compare** — panel rows that mirror the Tune pattern (VM + mount + bridge).
-2. **Compendium / strings** — table or list cells as small widgets first.
-3. **Optimize / Find My Build / Leaderboard** — as needed when touching those files.
+2. **Compendium** — optional React wrapper for SearchableSelect; modulator shells + leaderboard filter shell are React (`#comp-react-string-modulator-root`, `#string-react-frame-modulator-root`, `#lb2-shell-react-root`); result tables use `#lb2-build-results-react` / `#lb2-frame-results-react` / `#lb2-string-results-react`.
+3. **Optimize / Find My Build** — as needed when touching those files.
 
 The **shell** (`App.tsx`, `src/components/shell/`) is already React-first; extend it only when a feature truly belongs in the shell, not to bypass the widget rule.
 
@@ -112,3 +153,7 @@ The **shell** (`App.tsx`, `src/components/shell/`) is already React-first; exten
 
 - **2026-04** — Initial post–Tune plan: Tune widget inventory, integration patterns, remaining workspaces, gates.
 - **2026-04** — Overview dashboard migrated: `src/components/overview/*`, `overview-*-vm.ts`, `overview-radar-chart.ts`, `_ensureOverviewReactRoot`.
+- **2026-04-01** — Compendium milestone: Racket Bible + Strings tab React islands (`src/components/compendium/*`, `src/components/strings/*`), VM modules, modulator HTML shells, `#comp-leaderboard-root` + `cleanupLeaderboardPage`, `Compendium.tsx` cleanup for comp/strings/leaderboard roots.
+- **2026-04-01** — Compendium follow-up: base-profile **preview overlay** in React (`buildCompBaseProfileVm` + optional preview), `disposeSearchableSelectContainer` in `searchable-select.ts`, comp/string **delegation** gated on `#mode-compendium`.
+- **2026-04-01** — Leaderboard v2 result tables: `LeaderboardBuildResults` / `LeaderboardFrameResults` / `LeaderboardStringResults`, `src/components/leaderboard/leaderboard-results-vm.ts`, hosts `#lb2-build-results-react`, `#lb2-frame-results-react`, `#lb2-string-results-react`, `_lbUnmountAllResultsReact` in `cleanupLeaderboardPage` and before loading spinners.
+- **2026-04-01** — Compendium modulator shells + leaderboard filter shell: `CompendiumStringModulator` (`#comp-react-string-modulator-root`), `StringFrameInjectionModulator` (`#string-react-frame-modulator-root`), `LeaderboardShell` + `leaderboard-shell-vm.ts` (`#lb2-shell-react-root`); removed `comp-modulator-shell.ts` / `string-modulator-shell.ts` / imperative `_buildShellHTML`; HUD overlays remain in `Compendium.tsx` (deferred).

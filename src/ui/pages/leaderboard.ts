@@ -6,25 +6,40 @@
 // The question is: "I want [spin/power/control/etc] — what frame?"
 //
 // Depends on: RACQUETS, STRINGS, predictSetup, computeCompositeScore,
-//             buildTensionContext, generateIdentity, getObsScoreColor,
+//             buildTensionContext, generateIdentity,
 //             createLoadout, activateLoadout, switchMode
 
+import { createElement } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
 import { RACQUETS, STRINGS } from '../../data/loader.js';
 import {
   predictSetup,
   computeCompositeScore,
   buildTensionContext,
   generateIdentity,
-  getObsScoreColor,
   calcFrameBase,
   calcBaseStringProfile,
 } from '../../engine/index.js';
+import { LeaderboardBuildResults } from '../../components/leaderboard/LeaderboardBuildResults.js';
+import { LeaderboardFrameResults } from '../../components/leaderboard/LeaderboardFrameResults.js';
+import { LeaderboardStringResults } from '../../components/leaderboard/LeaderboardStringResults.js';
+import type { LbBuildResultInput } from '../../components/leaderboard/leaderboard-results-vm.js';
+import {
+  buildLeaderboardBuildRows,
+  buildLeaderboardFrameRows,
+  buildLeaderboardStringRows,
+} from '../../components/leaderboard/leaderboard-results-vm.js';
+import { LeaderboardShell } from '../../components/leaderboard/LeaderboardShell.js';
+import {
+  buildLeaderboardShellVm,
+  type LbShellStatOptionVm,
+  type LeaderboardShellVm,
+} from '../../components/leaderboard/leaderboard-shell-vm.js';
 import { createLoadout } from '../../state/loadout.js';
 import { activateLoadout, switchMode } from '../pages/shell.js';
 import { addLoadoutToNextAvailableSlot } from './compare/compare-slot-api.js';
 import { initCompendium, _compSelectFrame, _compSwitchTab } from '../pages/compendium.js';
 import { _stringSelectString } from '../pages/strings.js';
-import { RACQUET_BRANDS, STRING_BRANDS } from '../../utils/performance-derived.js';
 import {
   getCachedValue,
   measurePerformance,
@@ -97,6 +112,87 @@ let _lbv2State: Lbv2State = {
 let _lbv2ShellMounted = false;
 let _lbv2RunToken = 0;
 
+const LB_BUILD_RESULTS_HOST_ID = 'lb2-build-results-react';
+const LB_FRAME_RESULTS_HOST_ID = 'lb2-frame-results-react';
+const LB_STRING_RESULTS_HOST_ID = 'lb2-string-results-react';
+
+type LbResultsReactMount = { root: Root | null; host: HTMLElement | null };
+
+const _lbBuildResultsMount: LbResultsReactMount = { root: null, host: null };
+const _lbFrameResultsMount: LbResultsReactMount = { root: null, host: null };
+const _lbStringResultsMount: LbResultsReactMount = { root: null, host: null };
+const _lbShellMount: LbResultsReactMount = { root: null, host: null };
+
+function _ensureLbResultsReactRoot(mount: LbResultsReactMount, container: HTMLElement | null): Root | null {
+  if (!container) return null;
+  if (mount.root && mount.host) {
+    if (mount.host !== container || !mount.host.isConnected) {
+      mount.root.unmount();
+      mount.root = null;
+      mount.host = null;
+    }
+  }
+  if (!mount.root) {
+    mount.root = createRoot(container);
+    mount.host = container;
+  }
+  return mount.root;
+}
+
+function _unmountLbResultsReactMount(mount: LbResultsReactMount): void {
+  if (mount.root) {
+    mount.root.unmount();
+    mount.root = null;
+    mount.host = null;
+  }
+}
+
+function _lbUnmountAllResultsReact(): void {
+  _unmountLbResultsReactMount(_lbBuildResultsMount);
+  _unmountLbResultsReactMount(_lbFrameResultsMount);
+  _unmountLbResultsReactMount(_lbStringResultsMount);
+}
+
+function _ensureLbShellReactRoot(container: HTMLElement | null): Root | null {
+  return _ensureLbResultsReactRoot(_lbShellMount, container);
+}
+
+function _unmountLbShellReact(): void {
+  _unmountLbResultsReactMount(_lbShellMount);
+}
+
+function _lbDefaultLeaderboardPanelHtml(): string {
+  return `
+    <div class="flex flex-col min-h-full">
+      <div id="lb2-shell-react-root"></div>
+      <div class="flex-1" id="lb2-results">
+        <div class="flex flex-col items-center justify-center py-16 gap-4">
+          <div class="w-7 h-7 border-2 border-dc-storm/30 border-t-dc-accent rounded-full animate-spin"></div>
+          <span class="font-mono text-[10px] uppercase tracking-[0.15em] text-dc-storm">Computing…</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+function _lbShellVm(): LeaderboardShellVm {
+  return buildLeaderboardShellVm(
+    {
+      statKey: _lbv2State.statKey,
+      filterType: _lbv2State.filterType,
+      viewMode: _lbv2State.viewMode,
+      frameFilters: { ..._lbv2State.frameFilters },
+      stringFilters: { ..._lbv2State.stringFilters },
+    },
+    LB_STATS as LbShellStatOptionVm[],
+  );
+}
+
+function _lbRenderShellReact(): void {
+  const host = document.getElementById('lb2-shell-react-root');
+  const root = _ensureLbShellReactRoot(host);
+  root?.render(createElement(LeaderboardShell, { vm: _lbShellVm() }));
+}
+
 // ── Stat options shown to the user ───────────────────────────────────────────
 
 interface StatOption {
@@ -120,13 +216,15 @@ const LB_STATS: StatOption[] = [
 
 // ── Entry point ───────────────────────────────────────────────────────────────
 
+const LEADERBOARD_ROOT_ID = 'comp-leaderboard-root';
+
 function initLeaderboard(): void {
   _lbv2State.initialized = true;
-  const panel = document.getElementById('comp-tab-leaderboard');
+  const panel = document.getElementById(LEADERBOARD_ROOT_ID);
   if (!panel) return;
   const shellMounted = !!panel.querySelector('#lb2-results');
   if (!_lbv2ShellMounted || !shellMounted) {
-    panel.innerHTML = _buildShellHTML();
+    panel.innerHTML = _lbDefaultLeaderboardPanelHtml();
     _lbv2ShellMounted = true;
   }
   _syncLbv2Shell();
@@ -207,295 +305,15 @@ function _bindLeaderboardDelegates(): void {
   });
 }
 
-// ── Shell HTML (pure Tailwind) ────────────────────────────────────────────────
-
-function _buildShellHTML(): string {
-  const statPills = LB_STATS.map(s => {
-    const active = s.key === _lbv2State.statKey;
-    return `<button
-      class="lb2-stat-pill flex shrink-0 items-center gap-1.5 md:gap-2 px-2.5 py-1.5 md:px-4 md:py-2.5 border font-mono text-[9px] md:text-[10px] font-bold uppercase tracking-[0.12em] transition-all duration-150 cursor-pointer whitespace-nowrap ${
-        active
-          ? 'border-dc-accent text-dc-accent bg-dc-accent/5'
-          : 'border-dc-storm/40 text-dc-storm hover:border-dc-storm hover:text-dc-platinum'
-      }"
-      data-stat="${s.key}"
-      data-lb-action="setStat" data-lb-arg="${s.key}"
-      title="${s.desc}"
-    >
-      <span>${s.icon}</span>
-      <span>${s.label}</span>
-    </button>`;
-  }).join('');
-
-  const typePills = [
-    { v: 'both',   l: 'All' },
-    { v: 'full',   l: 'Full Bed' },
-    { v: 'hybrid', l: 'Hybrid' },
-  ].map(({ v, l }) => {
-    const active = v === _lbv2State.filterType;
-    return `<button
-      class="px-3 py-1.5 border font-mono text-[9px] font-bold uppercase tracking-[0.1em] transition-all duration-150 cursor-pointer ${
-        active
-          ? 'border-dc-accent text-dc-accent bg-dc-accent/5'
-          : 'border-dc-storm/40 text-dc-storm hover:border-dc-storm hover:text-dc-platinum'
-      }"
-      data-type-filter="${v}"
-      data-lb-action="setFilter" data-lb-arg="${v}"
-    >${l}</button>`;
-  }).join('');
-
-  // View mode tabs — Builds / Frames / Strings
-  const viewTabs = [
-    { v: 'builds',  l: 'Builds',  sub: 'frame + string' },
-    { v: 'frames',  l: 'Frames',  sub: 'frame only'     },
-    { v: 'strings', l: 'Strings', sub: 'string only'    },
-  ].map(({ v, l, sub }) => {
-    const active = v === _lbv2State.viewMode;
-    return `<button
-      class="flex shrink-0 flex-row md:flex-col items-center md:items-start gap-1.5 md:gap-0 px-3 py-1.5 md:px-4 md:py-2 border-b-2 font-mono transition-all duration-150 cursor-pointer ${
-        active
-          ? 'border-dc-accent text-dc-accent'
-          : 'border-transparent text-dc-storm hover:text-dc-platinum hover:border-dc-storm/40'
-      }"
-      data-view-mode="${v}"
-      data-lb-action="setView" data-lb-arg="${v}"
-    >
-      <span class="text-[10px] font-bold uppercase tracking-[0.12em]">${l}</span>
-      <span class="hidden md:inline text-[8px] tracking-[0.08em] opacity-60">${sub}</span>
-    </button>`;
-  }).join('');
-
-  // Type filter only relevant for builds tab
-  const showTypeFilter = _lbv2State.viewMode === 'builds';
-
-  // Frame filters — only shown on frames tab
-  const showFrameFilters = _lbv2State.viewMode === 'frames';
-  const ff = _lbv2State.frameFilters;
-
-  // Derive brand list dynamically from RACQUETS
-  const brands: string[] = RACQUET_BRANDS;
-
-  const sel = (id: string, val: string, opts: Array<{v: string; l: string}>, placeholder: string): string =>
-    `<select
-      id="${id}"
-      class="lbv2-filter-select bg-transparent border border-dc-storm/40 text-dc-storm font-mono text-[9px] px-2 py-1.5 cursor-pointer hover:border-dc-storm focus:border-dc-accent focus:text-dc-platinum transition-colors outline-none shrink-0"
-      data-lb-action="setFrameFilter" data-lb-arg="${id.replace('lb2-ff-','')}"
-    >
-      <option value="">${placeholder}</option>
-      ${opts.map(o => `<option value="${o.v}" ${val === o.v ? 'selected' : ''}>${o.l}</option>`).join('')}
-    </select>`;
-
-  const frameFilterRow = `
-    <div class="${showFrameFilters ? '' : 'hidden'}" id="lb2-frame-filters-row">
-      <div class="lbv2-filter-scroll -mx-3 px-3 md:mx-0 md:px-0">
-        <div class="flex items-center gap-2 flex-nowrap md:flex-wrap min-w-min pb-0.5">
-      <span class="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-dc-storm shrink-0">Filter</span>
-      ${sel('lb2-ff-brand', ff.brand, brands.map(b => ({ v: b, l: b })), 'All brands')}
-      ${sel('lb2-ff-pattern', ff.pattern, [
-        { v: '16x19', l: '16x19' },
-        { v: '16x20', l: '16x20' },
-        { v: '16x18', l: '16x18' },
-        { v: '18x20', l: '18x20' },
-        { v: '18x19', l: '18x19' },
-      ], 'All patterns')}
-      ${sel('lb2-ff-headSize', ff.headSize, [
-        { v: '95',   l: '≤95 sq in' },
-        { v: '97',   l: '97 sq in' },
-        { v: '98',   l: '98 sq in' },
-        { v: '99',   l: '99 sq in' },
-        { v: '100',  l: '100 sq in' },
-        { v: '102+', l: '102+ sq in' },
-      ], 'All head sizes')}
-      ${sel('lb2-ff-weight', ff.weight, [
-        { v: 'ultralight', l: '< 285g' },
-        { v: 'light',      l: '285–305g' },
-        { v: 'medium',     l: '305–320g' },
-        { v: 'heavy',      l: '320–340g' },
-        { v: 'tour',       l: '> 340g' },
-      ], 'All weights')}
-      ${sel('lb2-ff-stiffness', ff.stiffness, [
-        { v: 'soft',   l: 'Soft (≤59 RA)' },
-        { v: 'medium', l: 'Medium (60–65)' },
-        { v: 'stiff',  l: 'Stiff (66+)' },
-      ], 'All stiffness')}
-      ${sel('lb2-ff-year', ff.year, [
-        { v: '2026',  l: '2026' },
-        { v: '2025',  l: '2025' },
-        { v: '2024',  l: '2024' },
-        { v: 'older', l: '≤2023' },
-      ], 'All years')}
-      ${Object.values(ff).some(v => v !== '') ? `
-        <button
-          class="font-mono text-[9px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-storm/30 text-dc-storm/60 hover:border-dc-red hover:text-dc-red transition-colors shrink-0"
-          data-lb-action="clearFrameFilters"
-        >Clear</button>` : ''}
-        </div>
-      </div>
-    </div>`;
-
-  // String filters — only shown on strings tab
-  const showStringFilters = _lbv2State.viewMode === 'strings';
-  const sf = _lbv2State.stringFilters;
-
-  const stringBrands: string[] = STRING_BRANDS;
-
-  const ssel = (id: string, val: string, opts: Array<{v: string; l: string}>, placeholder: string): string =>
-    `<select
-      id="${id}"
-      class="lbv2-filter-select bg-transparent border border-dc-storm/40 text-dc-storm font-mono text-[9px] px-2 py-1.5 cursor-pointer hover:border-dc-storm focus:border-dc-accent focus:text-dc-platinum transition-colors outline-none shrink-0"
-      data-lb-action="setStringFilter" data-lb-arg="${id.replace('lb2-sf-','')}"
-    >
-      <option value="">${placeholder}</option>
-      ${opts.map(o => `<option value="${o.v}" ${val === o.v ? 'selected' : ''}>${o.l}</option>`).join('')}
-    </select>`;
-
-  const stringFilterRow = `
-    <div class="${showStringFilters ? '' : 'hidden'}" id="lb2-string-filters-row">
-      <div class="lbv2-filter-scroll -mx-3 px-3 md:mx-0 md:px-0">
-        <div class="flex items-center gap-2 flex-nowrap md:flex-wrap min-w-min pb-0.5">
-      <span class="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-dc-storm shrink-0">Filter</span>
-      ${ssel('lb2-sf-brand', sf.brand, stringBrands.map(b => ({ v: b, l: b })), 'All brands')}
-      ${ssel('lb2-sf-material', sf.material, [
-        { v: 'Polyester',              l: 'Polyester' },
-        { v: 'Co-Polyester (elastic)', l: 'Co-Poly (elastic)' },
-        { v: 'Natural Gut',            l: 'Natural Gut' },
-        { v: 'Multifilament',          l: 'Multifilament' },
-        { v: 'Synthetic Gut',          l: 'Synthetic Gut' },
-      ], 'All materials')}
-      ${ssel('lb2-sf-shape', sf.shape, [
-        { v: 'round',      l: 'Round' },
-        { v: 'pentagon',   l: 'Pentagon' },
-        { v: 'hexagonal',  l: 'Hexagonal' },
-        { v: 'octagonal',  l: 'Octagonal' },
-        { v: 'square',     l: 'Square' },
-        { v: 'textured',   l: 'Textured / Rough' },
-      ], 'All shapes')}
-      ${ssel('lb2-sf-gauge', sf.gauge, [
-        { v: 'thin',  l: 'Thin (≤1.20mm)' },
-        { v: 'mid',   l: 'Mid (1.21–1.27mm)' },
-        { v: 'thick', l: 'Thick (≥1.28mm)' },
-      ], 'All gauges')}
-      ${ssel('lb2-sf-stiffness', sf.stiffness, [
-        { v: 'soft',   l: 'Soft (< 180 lb/in)' },
-        { v: 'medium', l: 'Medium (180–215)' },
-        { v: 'stiff',  l: 'Stiff (> 215)' },
-      ], 'All stiffness')}
-      ${Object.values(sf).some(v => v !== '') ? `
-        <button
-          class="font-mono text-[9px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-storm/30 text-dc-storm/60 hover:border-dc-red hover:text-dc-red transition-colors shrink-0"
-          data-lb-action="clearStringFilters"
-        >Clear</button>` : ''}
-        </div>
-      </div>
-    </div>`;
-
-  return `
-    <div class="flex flex-col min-h-full">
-
-      <!-- View mode tabs -->
-      <div class="lbv2-view-tabs border-b border-dc-storm/20 px-3 pt-2 md:px-5 md:pt-3 overflow-x-auto">
-        <div class="flex min-w-min">
-        ${viewTabs}
-        </div>
-      </div>
-
-      <!-- Sticky controls -->
-      <div class="sticky top-0 z-10 bg-dc-void-deep border-b border-dc-storm/20 px-3 py-2 md:px-5 md:py-4 flex flex-col gap-2 md:gap-3">
-
-        <!-- Primary question: horizontal scroll on narrow screens -->
-        <div class="flex flex-col gap-1.5 md:flex-row md:items-baseline md:gap-3">
-          <span class="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-dc-storm shrink-0">Show me</span>
-          <div class="lbv2-stat-scroll -mx-3 px-3 md:mx-0 md:px-0">
-            <div class="flex gap-2 flex-nowrap" id="lb2-stat-pills">
-            ${statPills}
-            </div>
-          </div>
-        </div>
-
-        <!-- Secondary filter (builds tab only) -->
-        <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 ${showTypeFilter ? '' : 'hidden'}" id="lb2-type-filter-row">
-          <span class="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-dc-storm shrink-0">Setup type</span>
-          <div class="flex gap-1.5 flex-wrap">
-            ${typePills}
-          </div>
-        </div>
-
-        <!-- Frame filters (frames tab only) -->
-        ${frameFilterRow}
-
-        <!-- String filters (strings tab only) -->
-        ${stringFilterRow}
-
-        <div class="flex justify-end pt-0.5 border-t border-dc-storm/10 md:border-0 md:pt-0">
-          <span class="font-mono text-[9px] text-dc-storm/50 tabular-nums" id="lb2-count"></span>
-        </div>
-
-      </div>
-
-      <!-- Results -->
-      <div class="flex-1" id="lb2-results">
-        <div class="flex flex-col items-center justify-center py-16 gap-4">
-          <div class="w-7 h-7 border-2 border-dc-storm/30 border-t-dc-accent rounded-full animate-spin"></div>
-          <span class="font-mono text-[10px] uppercase tracking-[0.15em] text-dc-storm">Computing…</span>
-        </div>
-      </div>
-
-    </div>
-  `;
-}
+// ── Shell (React: LeaderboardShell in #lb2-shell-react-root; results in #lb2-results) ──
 
 function _syncLbv2Shell(): void {
-  const panel = document.getElementById('comp-tab-leaderboard');
+  const panel = document.getElementById(LEADERBOARD_ROOT_ID);
   if (!panel) return;
-  if (!panel.querySelector('#lb2-results')) {
-    panel.innerHTML = _buildShellHTML();
+  if (!panel.querySelector('#lb2-results') || !panel.querySelector('#lb2-shell-react-root')) {
+    panel.innerHTML = _lbDefaultLeaderboardPanelHtml();
   }
-
-  const showTypeFilter = _lbv2State.viewMode === 'builds';
-  panel.querySelector('#lb2-type-filter-row')?.classList.toggle('hidden', !showTypeFilter);
-  panel.querySelector('#lb2-frame-filters-row')?.classList.toggle('hidden', _lbv2State.viewMode !== 'frames');
-  panel.querySelector('#lb2-string-filters-row')?.classList.toggle('hidden', _lbv2State.viewMode !== 'strings');
-
-  panel.querySelectorAll<HTMLElement>('[data-type-filter]').forEach((button) => {
-    const isActive = button.dataset.typeFilter === _lbv2State.filterType;
-    button.classList.toggle('border-dc-accent', isActive);
-    button.classList.toggle('text-dc-accent', isActive);
-    button.classList.toggle('bg-dc-accent/5', isActive);
-    button.classList.toggle('border-dc-storm/40', !isActive);
-    button.classList.toggle('text-dc-storm', !isActive);
-  });
-
-  panel.querySelectorAll<HTMLElement>('[data-view-mode]').forEach((button) => {
-    const isActive = button.dataset.viewMode === _lbv2State.viewMode;
-    button.classList.toggle('border-dc-accent', isActive);
-    button.classList.toggle('text-dc-accent', isActive);
-    button.classList.toggle('border-transparent', !isActive);
-    button.classList.toggle('text-dc-storm', !isActive);
-  });
-
-  const ffBrand = panel.querySelector('#lb2-ff-brand') as HTMLSelectElement | null;
-  const ffPattern = panel.querySelector('#lb2-ff-pattern') as HTMLSelectElement | null;
-  const ffHeadSize = panel.querySelector('#lb2-ff-headSize') as HTMLSelectElement | null;
-  const ffWeight = panel.querySelector('#lb2-ff-weight') as HTMLSelectElement | null;
-  const ffStiffness = panel.querySelector('#lb2-ff-stiffness') as HTMLSelectElement | null;
-  const ffYear = panel.querySelector('#lb2-ff-year') as HTMLSelectElement | null;
-  const sfBrand = panel.querySelector('#lb2-sf-brand') as HTMLSelectElement | null;
-  const sfMaterial = panel.querySelector('#lb2-sf-material') as HTMLSelectElement | null;
-  const sfShape = panel.querySelector('#lb2-sf-shape') as HTMLSelectElement | null;
-  const sfGauge = panel.querySelector('#lb2-sf-gauge') as HTMLSelectElement | null;
-  const sfStiffness = panel.querySelector('#lb2-sf-stiffness') as HTMLSelectElement | null;
-
-  if (ffBrand) ffBrand.value = _lbv2State.frameFilters.brand;
-  if (ffPattern) ffPattern.value = _lbv2State.frameFilters.pattern;
-  if (ffHeadSize) ffHeadSize.value = _lbv2State.frameFilters.headSize;
-  if (ffWeight) ffWeight.value = _lbv2State.frameFilters.weight;
-  if (ffStiffness) ffStiffness.value = _lbv2State.frameFilters.stiffness;
-  if (ffYear) ffYear.value = _lbv2State.frameFilters.year;
-  if (sfBrand) sfBrand.value = _lbv2State.stringFilters.brand;
-  if (sfMaterial) sfMaterial.value = _lbv2State.stringFilters.material;
-  if (sfShape) sfShape.value = _lbv2State.stringFilters.shape;
-  if (sfGauge) sfGauge.value = _lbv2State.stringFilters.gauge;
-  if (sfStiffness) sfStiffness.value = _lbv2State.stringFilters.stiffness;
+  _lbRenderShellReact();
 }
 
 // ── State setters ─────────────────────────────────────────────────────────────
@@ -504,20 +322,6 @@ function _lbv2SetStat(key: string): void {
   if (_lbv2State.statKey === key) return;
   _lbv2State.statKey = key;
   _lbv2State.results = null;
-
-  // Update pill active states
-  document.querySelectorAll('.lb2-stat-pill').forEach(btn => {
-    const el = btn as HTMLElement;
-    const isActive = el.dataset.stat === key;
-    el.className = el.className
-      .replace(/border-dc-accent|text-dc-accent|bg-dc-accent\/5|border-dc-storm\/40|text-dc-storm|hover:border-dc-storm|hover:text-dc-platinum/g, '').trim();
-    if (isActive) {
-      el.classList.add('border-dc-accent', 'text-dc-accent', 'bg-dc-accent/5');
-    } else {
-      el.classList.add('border-dc-storm/40', 'text-dc-storm', 'hover:border-dc-storm', 'hover:text-dc-platinum');
-    }
-  });
-
   _syncLbv2Shell();
   _runLbv2();
 }
@@ -580,6 +384,8 @@ function _runLbv2(): void {
   if (!resultsEl) return;
   const runToken = ++_lbv2RunToken;
 
+  _lbUnmountAllResultsReact();
+
   const statMeta = LB_STATS.find(s => s.key === _lbv2State.statKey);
   resultsEl.innerHTML = `
     <div class="flex flex-col items-center justify-center py-16 gap-4">
@@ -613,10 +419,13 @@ function _runLbv2(): void {
         _renderLbv2Results(results as BuildResult[]);
       }
     } catch (err) {
-      if (resultsEl) resultsEl.innerHTML = `
+      if (resultsEl) {
+        _lbUnmountAllResultsReact();
+        resultsEl.innerHTML = `
         <div class="flex items-center justify-center py-16 font-mono text-[11px] text-dc-red/70">
           Error: ${(err as Error).message}
         </div>`;
+      }
       console.error('Leaderboard error:', err);
     }
   }, 16));
@@ -642,7 +451,7 @@ interface BestResult {
   cfg: BuildConfig;
 }
 
-interface BuildResult {
+export interface BuildResult {
   type: 'full' | 'hybrid';
   racquet: Racquet;
   string: StringData | null;
@@ -817,6 +626,8 @@ function _renderLbv2Results(results: BuildResult[]): void {
   const resultsEl = document.getElementById('lb2-results');
   if (!resultsEl) return;
 
+  _lbUnmountAllResultsReact();
+
   if (!results || results.length === 0) {
     resultsEl.innerHTML = `
       <div class="flex items-center justify-center py-16 font-mono text-[11px] text-dc-storm">
@@ -826,139 +637,25 @@ function _renderLbv2Results(results: BuildResult[]): void {
   }
 
   const statMeta = LB_STATS.find(s => s.key === _lbv2State.statKey) || LB_STATS[0];
-  const isObs    = _lbv2State.statKey === 'obs';
+  const isObs = _lbv2State.statKey === 'obs';
   const statLabel = isObs ? 'OBS' : statMeta.label.replace('Most ', '').replace('Best ', '');
 
-  const rows = results.slice(0, 50).map((entry, i) => {
-    const rank       = i + 1;
-    const isFeatured = rank === 1;
-    const rankValDisplay = isObs
-      ? entry.rankVal.toFixed(1)
-      : Math.round(entry.rankVal);
+  resultsEl.innerHTML = `<div id="${LB_BUILD_RESULTS_HOST_ID}"></div>`;
+  const host = document.getElementById(LB_BUILD_RESULTS_HOST_ID);
+  const root = _ensureLbResultsReactRoot(_lbBuildResultsMount, host);
+  if (!root) return;
 
-    const tensionLabel = entry.type === 'hybrid'
-      ? `M${entry.tension} / X${entry.crossesTension}`
-      : `${entry.tension} lbs`;
-
-    const typeTag = entry.type === 'hybrid'
-      ? `<span class="font-mono text-[8px] font-bold px-1.5 py-0.5 border border-emerald-500/30 text-emerald-400 bg-emerald-400/5">H</span>`
-      : `<span class="font-mono text-[8px] font-bold px-1.5 py-0.5 border border-dc-storm/30 text-dc-storm">F</span>`;
-
-    // Top 3 stats for this entry
-    const topStats = ['spin', 'power', 'control', 'comfort', 'feel', 'stability']
-      .map(k => ({ k, v: (entry.stats as unknown as Record<string, number>)[k] }))
-      .sort((a, b) => b.v - a.v)
-      .slice(0, 3)
-      .map(({ k, v }) => {
-        const high = v >= 70;
-        return `<span class="font-mono text-[8px] font-bold px-1.5 py-0.5 border ${
-          high
-            ? 'border-emerald-500/25 text-emerald-400 bg-emerald-400/5'
-            : 'border-dc-storm/20 text-dc-storm'
-        }">${k.slice(0,3).toUpperCase()} ${v}</span>`;
-      }).join('');
-
-    // Frame name — truncate
-    const frameName = entry.frameLabel.length > 30
-      ? entry.frameLabel.slice(0, 30) + '…'
-      : entry.frameLabel;
-    const stringName = entry.stringLabel.length > 35
-      ? entry.stringLabel.slice(0, 35) + '…'
-      : entry.stringLabel;
-
-    const archetype = entry.identity?.archetype || '—';
-
-    // Action handler data attrs
-    const mainsId   = entry.mains?.id   || '';
-    const crossesId = entry.crosses?.id || '';
-    const stringId  = entry.type === 'hybrid' ? mainsId : (entry.string?.id || '');
-
-    return `
-      <tr class="group border-b border-dc-storm/10 transition-colors hover:bg-dc-void-lift/50 ${
-        isFeatured ? 'bg-dc-accent/[0.03]' : ''
-      }">
-        <!-- Rank -->
-        <td class="px-4 py-3 w-10 text-center">
-          <span class="font-mono text-[11px] font-bold ${isFeatured ? 'text-dc-accent' : 'text-dc-storm/60'}">${rank}</span>
-        </td>
-
-        <!-- Type -->
-        <td class="px-2 py-3 w-8">${typeTag}</td>
-
-        <!-- Frame + String -->
-        <td class="px-3 py-3 min-w-[160px]">
-          <div class="font-sans text-[12px] font-semibold text-dc-platinum leading-tight" title="${entry.frameLabel}">${frameName}</div>
-          <div class="font-mono text-[9px] text-dc-storm mt-0.5" title="${entry.stringLabel}">${stringName}</div>
-        </td>
-
-        <!-- Tension -->
-        <td class="px-3 py-3 w-24">
-          <span class="font-mono text-[10px] text-dc-storm/70">${tensionLabel}</span>
-        </td>
-
-        <!-- Primary stat (the ranked one) -->
-        <td class="px-3 py-3 w-20 text-right">
-          <span class="font-mono text-[18px] font-bold leading-none ${isFeatured ? 'text-dc-accent' : 'text-dc-platinum'}">${rankValDisplay}</span>
-          <div class="font-mono text-[7px] uppercase tracking-[0.15em] text-dc-storm mt-0.5 text-right">${statLabel}</div>
-        </td>
-
-        <!-- OBS (always shown) -->
-        ${!isObs ? `
-        <td class="px-3 py-3 w-16 text-right">
-          <span class="font-mono text-[12px] font-semibold" style="color:${getObsScoreColor(entry.obs)}">${entry.obs}</span>
-          <div class="font-mono text-[7px] uppercase tracking-[0.15em] text-dc-storm mt-0.5 text-right">OBS</div>
-        </td>` : `<td class="w-4"></td>`}
-
-        <!-- Archetype -->
-        <td class="px-3 py-3 hidden md:table-cell">
-          <span class="font-mono text-[9px] text-dc-storm/70 leading-tight">${archetype}</span>
-        </td>
-
-        <!-- Top stats -->
-        <td class="px-3 py-3 hidden lg:table-cell">
-          <div class="flex gap-1.5 flex-wrap">${topStats}</div>
-        </td>
-
-        <!-- Actions -->
-        <td class="px-3 py-3 w-24">
-          <div class="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              class="font-mono text-[8px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-ink transition-colors"
-              data-lb-action="view" data-racquet-id="${entry.racquet.id}" data-string-id="${stringId}" data-tension="${entry.tension}" data-type="${entry.type}" data-mains-id="${mainsId}" data-crosses-id="${crossesId}" data-crosses-tension="${entry.crossesTension}"
-            >View</button>
-            <button
-              class="font-mono text-[8px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-storm/40 text-dc-storm hover:border-dc-storm hover:text-dc-platinum transition-colors"
-              data-lb-action="compare" data-racquet-id="${entry.racquet.id}" data-string-id="${stringId}" data-tension="${entry.tension}" data-type="${entry.type}" data-mains-id="${mainsId}" data-crosses-id="${crossesId}" data-crosses-tension="${entry.crossesTension}"
-            >Cmp</button>
-          </div>
-        </td>
-      </tr>`;
-  }).join('');
-
-  resultsEl.innerHTML = `
-    <div class="overflow-x-auto">
-      <table class="w-full border-collapse">
-        <thead>
-          <tr class="border-b border-dc-storm/20">
-            <th class="px-4 py-2.5 text-left font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-dc-storm/60 w-10">#</th>
-            <th class="px-2 py-2.5 w-8"></th>
-            <th class="px-3 py-2.5 text-left font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-dc-storm/60">Frame / String</th>
-            <th class="px-3 py-2.5 text-left font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-dc-storm/60">Tension</th>
-            <th class="px-3 py-2.5 text-right font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-dc-accent">${statLabel}</th>
-            ${!isObs ? `<th class="px-3 py-2.5 text-right font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-dc-storm/60">OBS</th>` : `<th class="w-4"></th>`}
-            <th class="px-3 py-2.5 text-left font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-dc-storm/60 hidden md:table-cell">Identity</th>
-            <th class="px-3 py-2.5 text-left font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-dc-storm/60 hidden lg:table-cell">Stats</th>
-            <th class="w-24"></th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
-    <div class="px-5 py-3 border-t border-dc-storm/10 flex justify-between items-center">
-      <span class="font-mono text-[9px] text-dc-storm/50">${results.length} builds scored · best setup per frame×string at optimal tension</span>
-      <span class="font-mono text-[9px] text-dc-storm/50">${statMeta.icon} ${statMeta.desc}</span>
-    </div>
-  `;
+  const rows = buildLeaderboardBuildRows(results as LbBuildResultInput[], _lbv2State.statKey);
+  root.render(
+    createElement(LeaderboardBuildResults, {
+      rows,
+      primaryStatColumnLabel: statLabel,
+      isObs,
+      footerLeft: `${results.length} builds scored · best setup per frame×string at optimal tension`,
+      footerIcon: statMeta.icon,
+      footerDesc: statMeta.desc,
+    }),
+  );
 }
 
 // ── Frames-only computation ───────────────────────────────────────────────────
@@ -1031,89 +728,35 @@ function _renderLbv2Frames(results: FrameResult[]): void {
   const resultsEl = document.getElementById('lb2-results');
   if (!resultsEl) return;
 
+  _lbUnmountAllResultsReact();
+
   if (!results || results.length === 0) {
     resultsEl.innerHTML = `<div class="flex items-center justify-center py-16 font-mono text-[11px] text-dc-storm">No results.</div>`;
     return;
   }
 
-  const statMeta  = LB_STATS.find(s => s.key === _lbv2State.statKey) || LB_STATS[0];
-  const isObs     = _lbv2State.statKey === 'obs';
-  const statLabel = isObs ? 'Score' : statMeta.label.replace('Most ', '').replace('Best ', '');
+  const statMeta = LB_STATS.find(s => s.key === _lbv2State.statKey) || LB_STATS[0];
+  const statLabel = _lbv2State.statKey === 'obs' ? 'Score' : statMeta.label.replace('Most ', '').replace('Best ', '');
 
-  // Secondary stats to always show for context
   const contextStats = ['spin', 'power', 'control', 'comfort', 'stability', 'maneuverability']
     .filter(k => k !== _lbv2State.statKey)
     .slice(0, 4);
 
-  const rows = results.slice(0, 50).map(function(entry: FrameResult, i: number) {
-    const rank       = i + 1;
-    const isFeatured = rank === 1;
-    const fb         = entry.frameBase as unknown as Record<string, number>;
+  resultsEl.innerHTML = `<div id="${LB_FRAME_RESULTS_HOST_ID}"></div>`;
+  const host = document.getElementById(LB_FRAME_RESULTS_HOST_ID);
+  const root = _ensureLbResultsReactRoot(_lbFrameResultsMount, host);
+  if (!root) return;
 
-    const specChips = contextStats.map(function(k) {
-      const v    = Math.round(fb[k] || 0);
-      const high = v >= 68;
-      return `<span class="font-mono text-[8px] font-bold px-1.5 py-0.5 border ${
-        high
-          ? 'border-emerald-500/25 text-emerald-400 bg-emerald-400/5'
-          : 'border-dc-storm/20 text-dc-storm'
-      }">${k.slice(0,3).toUpperCase()} ${v}</span>`;
-    }).join('');
-
-    const frameName = entry.frameLabel.length > 36
-      ? entry.frameLabel.slice(0, 36) + '…'
-      : entry.frameLabel;
-
-    const r = entry.racquet;
-    const specLine = `${r.strungWeight}g · SW ${r.swingweight} · ${r.stiffness} RA · ${r.pattern} · ${r.headSize} sq in`;
-
-    return `
-      <tr class="group border-b border-dc-storm/10 transition-colors hover:bg-dc-void-lift/50 ${isFeatured ? 'bg-dc-accent/[0.03]' : ''}">
-        <td class="px-4 py-3 w-10 text-center">
-          <span class="font-mono text-[11px] font-bold ${isFeatured ? 'text-dc-accent' : 'text-dc-storm/60'}">${rank}</span>
-        </td>
-        <td class="px-3 py-3 min-w-[200px]">
-          <div class="font-sans text-[12px] font-semibold text-dc-platinum leading-tight">${frameName}</div>
-          <div class="font-mono text-[9px] text-dc-storm/60 mt-0.5">${specLine}</div>
-        </td>
-        <td class="px-3 py-3 w-20 text-right">
-          <span class="font-mono text-[18px] font-bold leading-none ${isFeatured ? 'text-dc-accent' : 'text-dc-platinum'}">${entry.rankVal}</span>
-          <div class="font-mono text-[7px] uppercase tracking-[0.15em] text-dc-storm mt-0.5 text-right">${statLabel}</div>
-        </td>
-        <td class="px-3 py-3 hidden md:table-cell">
-          <div class="flex gap-1.5 flex-wrap">${specChips}</div>
-        </td>
-        <td class="px-3 py-3 w-20">
-          <div class="opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              class="font-mono text-[8px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-ink transition-colors"
-              data-lb-action="viewFrame" data-racquet-id="${r.id}"
-            >View</button>
-          </div>
-        </td>
-      </tr>`;
-  }).join('');
-
-  resultsEl.innerHTML = `
-    <div class="overflow-x-auto">
-      <table class="w-full border-collapse">
-        <thead>
-          <tr class="border-b border-dc-storm/20">
-            <th class="px-4 py-2.5 text-left font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-dc-storm/60 w-10">#</th>
-            <th class="px-3 py-2.5 text-left font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-dc-storm/60">Frame</th>
-            <th class="px-3 py-2.5 text-right font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-dc-accent">${statLabel}</th>
-            <th class="px-3 py-2.5 text-left font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-dc-storm/60 hidden md:table-cell">Stats</th>
-            <th class="w-20"></th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
-    <div class="px-5 py-3 border-t border-dc-storm/10 flex justify-between items-center">
-      <span class="font-mono text-[9px] text-dc-storm/50">${results.length} frames · base physics, no string interaction</span>
-      <span class="font-mono text-[9px] text-dc-storm/50">${statMeta.icon} ${statMeta.desc}</span>
-    </div>
-  `;
+  const rows = buildLeaderboardFrameRows(results, contextStats);
+  root.render(
+    createElement(LeaderboardFrameResults, {
+      rows,
+      primaryStatColumnLabel: statLabel,
+      footerLeft: `${results.length} frames · base physics, no string interaction`,
+      footerIcon: statMeta.icon,
+      footerDesc: statMeta.desc,
+    }),
+  );
 }
 
 // ── Strings-only computation ──────────────────────────────────────────────────
@@ -1179,96 +822,35 @@ function _renderLbv2Strings(results: StringResult[]): void {
   const resultsEl = document.getElementById('lb2-results');
   if (!resultsEl) return;
 
+  _lbUnmountAllResultsReact();
+
   if (!results || results.length === 0) {
     resultsEl.innerHTML = `<div class="flex items-center justify-center py-16 font-mono text-[11px] text-dc-storm">No results.</div>`;
     return;
   }
 
-  const statMeta  = LB_STATS.find(s => s.key === _lbv2State.statKey) || LB_STATS[0];
-  const isObs     = _lbv2State.statKey === 'obs';
-  const statLabel = isObs ? 'Score' : statMeta.label.replace('Most ', '').replace('Best ', '');
+  const statMeta = LB_STATS.find(s => s.key === _lbv2State.statKey) || LB_STATS[0];
+  const statLabel = _lbv2State.statKey === 'obs' ? 'Score' : statMeta.label.replace('Most ', '').replace('Best ', '');
 
   const contextStats = ['spin', 'power', 'control', 'comfort', 'feel', 'durability', 'playability']
     .filter(k => k !== _lbv2State.statKey)
     .slice(0, 4);
 
-  const rows = results.slice(0, 50).map(function(entry: StringResult, i: number) {
-    const rank       = i + 1;
-    const isFeatured = rank === 1;
-    const s          = entry.string;
-    const p          = entry.profile as unknown as Record<string, number>;
+  resultsEl.innerHTML = `<div id="${LB_STRING_RESULTS_HOST_ID}"></div>`;
+  const host = document.getElementById(LB_STRING_RESULTS_HOST_ID);
+  const root = _ensureLbResultsReactRoot(_lbStringResultsMount, host);
+  if (!root) return;
 
-    const matTag = (function() {
-      const m = (s.material || '').toLowerCase();
-      if (m.includes('natural gut')) return `<span class="font-mono text-[8px] font-bold px-1.5 py-0.5 border border-amber-500/30 text-amber-400 bg-amber-400/5">GUT</span>`;
-      if (m.includes('multifilament')) return `<span class="font-mono text-[8px] font-bold px-1.5 py-0.5 border border-sky-500/30 text-sky-400 bg-sky-400/5">MULTI</span>`;
-      if (m.includes('co-polyester')) return `<span class="font-mono text-[8px] font-bold px-1.5 py-0.5 border border-purple-500/25 text-purple-400 bg-purple-400/5">CO-POLY</span>`;
-      if (m.includes('synthetic')) return `<span class="font-mono text-[8px] font-bold px-1.5 py-0.5 border border-dc-storm/30 text-dc-storm">SYN GUT</span>`;
-      return `<span class="font-mono text-[8px] font-bold px-1.5 py-0.5 border border-dc-storm/30 text-dc-storm">POLY</span>`;
-    })();
-
-    const statChips = contextStats.map(function(k) {
-      const v    = Math.round(p[k] || 0);
-      const high = v >= 68;
-      return `<span class="font-mono text-[8px] font-bold px-1.5 py-0.5 border ${
-        high
-          ? 'border-emerald-500/25 text-emerald-400 bg-emerald-400/5'
-          : 'border-dc-storm/20 text-dc-storm'
-      }">${k.slice(0,3).toUpperCase()} ${v}</span>`;
-    }).join('');
-
-    const specLine = `${s.gauge} · ${s.shape} · ${Math.round(s.stiffness)} lb/in`;
-
-    return `
-      <tr class="group border-b border-dc-storm/10 transition-colors hover:bg-dc-void-lift/50 ${isFeatured ? 'bg-dc-accent/[0.03]' : ''}">
-        <td class="px-4 py-3 w-10 text-center">
-          <span class="font-mono text-[11px] font-bold ${isFeatured ? 'text-dc-accent' : 'text-dc-storm/60'}">${rank}</span>
-        </td>
-        <td class="px-3 py-3 min-w-[180px]">
-          <div class="flex items-center gap-2">
-            <span class="font-sans text-[12px] font-semibold text-dc-platinum leading-tight">${s.name}</span>
-            ${matTag}
-          </div>
-          <div class="font-mono text-[9px] text-dc-storm/60 mt-0.5">${specLine}</div>
-        </td>
-        <td class="px-3 py-3 w-20 text-right">
-          <span class="font-mono text-[18px] font-bold leading-none ${isFeatured ? 'text-dc-accent' : 'text-dc-platinum'}">${entry.rankVal}</span>
-          <div class="font-mono text-[7px] uppercase tracking-[0.15em] text-dc-storm mt-0.5 text-right">${statLabel}</div>
-        </td>
-        <td class="px-3 py-3 hidden md:table-cell">
-          <div class="flex gap-1.5 flex-wrap">${statChips}</div>
-        </td>
-        <td class="px-3 py-3 w-20">
-          <div class="opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              class="font-mono text-[8px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-ink transition-colors"
-              data-lb-action="viewString" data-string-id="${s.id}"
-            >View</button>
-          </div>
-        </td>
-      </tr>`;
-  }).join('');
-
-  resultsEl.innerHTML = `
-    <div class="overflow-x-auto">
-      <table class="w-full border-collapse">
-        <thead>
-          <tr class="border-b border-dc-storm/20">
-            <th class="px-4 py-2.5 text-left font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-dc-storm/60 w-10">#</th>
-            <th class="px-3 py-2.5 text-left font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-dc-storm/60">String</th>
-            <th class="px-3 py-2.5 text-right font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-dc-accent">${statLabel}</th>
-            <th class="px-3 py-2.5 text-left font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-dc-storm/60 hidden md:table-cell">Stats</th>
-            <th class="w-20"></th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
-    <div class="px-5 py-3 border-t border-dc-storm/10 flex justify-between items-center">
-      <span class="font-mono text-[9px] text-dc-storm/50">${results.length} strings · intrinsic profile, no frame interaction</span>
-      <span class="font-mono text-[9px] text-dc-storm/50">${statMeta.icon} ${statMeta.desc}</span>
-    </div>
-  `;
+  const rows = buildLeaderboardStringRows(results, contextStats);
+  root.render(
+    createElement(LeaderboardStringResults, {
+      rows,
+      primaryStatColumnLabel: statLabel,
+      footerLeft: `${results.length} strings · intrinsic profile, no frame interaction`,
+      footerIcon: statMeta.icon,
+      footerDesc: statMeta.desc,
+    }),
+  );
 }
 
 
@@ -1363,4 +945,13 @@ function _lbv2Compare(racquetId: string, stringId: string, tension: number, type
 
   switchMode('compare');
 }
+
+export function cleanupLeaderboardPage(): void {
+  _lbUnmountAllResultsReact();
+  _unmountLbShellReact();
+  const root = document.getElementById(LEADERBOARD_ROOT_ID);
+  if (root) root.innerHTML = '';
+  _lbv2ShellMounted = false;
+}
+
 export { initLeaderboard };

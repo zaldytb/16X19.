@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
-import { initCompendium, _compSwitchTab, _compToggleHud } from '../ui/pages/compendium.js';
-import { _stringToggleHud } from '../ui/pages/strings.js';
+import { cleanupCompendiumPage, initCompendium, _compSwitchTab, _compToggleHud } from '../ui/pages/compendium.js';
+import { cleanupLeaderboardPage } from '../ui/pages/leaderboard.js';
+import { cleanupStringsPage, _stringToggleHud } from '../ui/pages/strings.js';
 
 interface CompendiumProps {
   initialTab?: 'rackets' | 'strings' | 'leaderboard';
@@ -12,6 +13,11 @@ export function Compendium({ initialTab = 'rackets' }: CompendiumProps) {
     if (initialTab !== 'rackets') {
       _compSwitchTab(initialTab);
     }
+    return () => {
+      cleanupCompendiumPage();
+      cleanupStringsPage();
+      cleanupLeaderboardPage();
+    };
   }, [initialTab]);
 
   return (
@@ -111,7 +117,9 @@ export function Compendium({ initialTab = 'rackets' }: CompendiumProps) {
         </div>
       </div>
 
-      <div className={`comp-tab-panel ${initialTab === 'leaderboard' ? '' : 'hidden'}`} id="comp-tab-leaderboard"></div>
+      <div className={`comp-tab-panel ${initialTab === 'leaderboard' ? '' : 'hidden'}`} id="comp-tab-leaderboard">
+        <div id="comp-leaderboard-root" className="min-h-full" />
+      </div>
     </section>
   );
 }

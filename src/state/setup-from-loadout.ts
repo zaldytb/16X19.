@@ -67,3 +67,9 @@ export function getSetupFromLoadout(loadout: Loadout | null): SetupResult | null
   _cachedSetupResult = result;
   return result;
 }
+
+/** Call when the active loadout identity changes so the next resolve is not stale. */
+export function invalidateSetupFromLoadoutCache(): void {
+  _cachedSetupKey = null;
+  _cachedSetupResult = null;
+}

@@ -17,6 +17,13 @@ let worker: Worker | null = null;
 let seqCounter = 0;
 const pending = new Map<number, { resolve: (r: WorkerResult) => void; reject: (e: Error) => void }>();
 
+function resetWorker(): void {
+  if (worker) {
+    worker.terminate();
+    worker = null;
+  }
+}
+
 function getWorker(): Worker | null {
   if (typeof Worker === 'undefined') return null;
   if (!worker) {
@@ -32,6 +39,7 @@ function getWorker(): Worker | null {
     worker.onerror = (err) => {
       pending.forEach((p) => p.reject(new Error(err.message || 'Worker error')));
       pending.clear();
+      resetWorker();
     };
   }
   return worker;
@@ -63,10 +71,15 @@ function postEngineJob(job: WorkerJob): Promise<WorkerResult> {
     return Promise.resolve(runSyncFallback(job));
   }
   const seq = ++seqCounter;
-  return new Promise((resolve, reject) => {
+  const workerJob = new Promise<WorkerResult>((resolve, reject) => {
     pending.set(seq, { resolve, reject });
     const msg: MainToWorker = { seq, action: 'run', job };
     w.postMessage(msg);
+  });
+  return workerJob.catch((error) => {
+    pending.delete(seq);
+    resetWorker();
+    return runSyncFallback(job);
   });
 }
 

@@ -15,6 +15,7 @@ import { persistActiveLoadout } from '../../state/active-loadout-storage.js';
 import { getActiveLoadout, getSavedLoadouts, setActiveLoadout, getCurrentMode } from '../../state/imperative.js';
 import { syncViews } from '../../runtime/coordinator.js';
 import { getCurrentSetup, getSetupFromLoadout } from '../../state/setup-sync.js';
+import { invalidateSetupFromLoadoutCache } from '../../state/setup-from-loadout.js';
 import { activateLoadout, commitEditorToLoadout } from './shell.js';
 import { renderDockPanel } from '../components/dock-renderers.js';
 import { renderOverviewDashboardViaBridge } from './overview-runtime-bridge.js';
@@ -27,7 +28,6 @@ import {
 } from '../shared/recommendations.js';
 import { getScoredSetup } from '../../utils/performance.js';
 import { createElement } from 'react';
-import { flushSync } from 'react-dom';
 import { createRoot, type Root } from 'react-dom/client';
 
 /** Tracks createRoot + host element; invalidates when the route unmounts and DOM nodes are recreated. */
@@ -75,6 +75,8 @@ import type { TuneSweepChartHandle } from '../../components/tune/TuneSweepChart.
 // Module-level state
 export let sweepChart: Chart | null = null;
 let _tuneRefreshing = false;
+let _pendingTuneRefresh = false;
+let _tuneRecRenderToken = 0;
 let _pendingTuneRenderFrame: number | null = null;
 const _optimalBuildWindowMount: TuneReactMount = { root: null, host: null };
 const _tuneBestValueMount: TuneReactMount = { root: null, host: null };
@@ -126,11 +128,20 @@ function _onTuneSweepChartReady(chart: Chart | null): void {
   sweepChart = chart;
 }
 
+function _resetPendingTuneRenderState(): void {
+  _tuneRecRenderToken += 1;
+  if (_pendingTuneRenderFrame != null) {
+    cancelAnimationFrame(_pendingTuneRenderFrame);
+    _pendingTuneRenderFrame = null;
+  }
+}
+
 registerTuneRuntimeCallbacks({
   initTuneMode,
   refreshTuneIfActive,
   onTuneSliderInput,
   resetPreviewState: () => {
+    _resetPendingTuneRenderState();
     tuneState.baseline = null;
     tuneState.explored = null;
   },
@@ -158,9 +169,14 @@ function _applyTuneInteractionFrame(): void {
  * Refresh tune panels if tune mode is active
  */
 export function refreshTuneIfActive(): void {
-  if (getCurrentMode() !== 'tune' || _tuneRefreshing) return;
+  if (getCurrentMode() !== 'tune') return;
+  if (_tuneRefreshing) {
+    _pendingTuneRefresh = true;
+    return;
+  }
   _tuneRefreshing = true;
   try {
+    invalidateSetupFromLoadoutCache();
     const setup = getCurrentSetup();
     if (setup) {
       initTuneMode(setup);
@@ -170,6 +186,10 @@ export function refreshTuneIfActive(): void {
     }
   } finally {
     _tuneRefreshing = false;
+    if (_pendingTuneRefresh) {
+      _pendingTuneRefresh = false;
+      queueMicrotask(() => refreshTuneIfActive());
+    }
   }
 }
 
@@ -262,6 +282,8 @@ function _tuneLoadoutSignature(lo: Loadout): string {
 export function initTuneMode(setup: { racquet: Racquet; stringConfig: StringConfig }): void {
   const { racquet, stringConfig } = setup;
   const activeLoadout = getActiveLoadout();
+
+  _resetPendingTuneRenderState();
 
   // Snapshot baseline from activeLoadout
   if (activeLoadout && (!tuneState.baseline || tuneState.baseline._signature !== _tuneLoadoutSignature(activeLoadout))) {
@@ -409,8 +431,10 @@ function _bindTuneDelegates(): void {
  */
 export function runTensionSweep(setup: { racquet: Racquet; stringConfig: StringConfig }): void {
   const { racquet, stringConfig } = setup;
-  const sweepMin = Math.max(racquet.tensionRange[0] - 5, 30);
-  const sweepMax = Math.min(racquet.tensionRange[1] + 5, 75);
+  const rawMin = Math.max(racquet.tensionRange[0] - 5, 30);
+  const rawMax = Math.min(racquet.tensionRange[1] + 5, 75);
+  const sweepMin = Math.min(rawMin, rawMax);
+  const sweepMax = Math.max(rawMin, rawMax);
   const results: Array<{ tension: number; stats: SetupAttributes }> = [];
 
   for (let t = sweepMin; t <= sweepMax; t++) {
@@ -513,9 +537,7 @@ export function renderDeltaVsBaseline(): void {
 
   const root = _ensureTuneReactRoot(_tuneDeltaVsBaselineMount, container);
   if (!root) return;
-  flushSync(() => {
-    root.render(createElement(TuneDeltaVsBaseline, { model: vm }));
-  });
+  root.render(createElement(TuneDeltaVsBaseline, { model: vm }));
 
   if (isFirstRender) {
     requestAnimationFrame(() => {
@@ -667,17 +689,25 @@ export function renderTuneSliderAdornments(sliderMin: number, sliderMax: number)
  */
 export function renderSweepChart(_setup: { racquet: Racquet }): void {
   const data = tuneState.sweepData;
-  if (!data || data.length === 0) return;
-
   const container = document.getElementById('sweep-chart-root');
   if (!container) return;
 
-  const chartTheme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
   const r = _ensureTuneReactRoot(_tuneSweepChartMount, container);
   if (!r) return;
 
+  if (!data || data.length === 0) {
+    r.render(null);
+    sweepChart = null;
+    return;
+  }
+
+  const chartTheme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+  const loadout = getActiveLoadout();
+  const sweepKey = `${loadout?.id ?? 'none'}|${data[0]?.tension}-${data[data.length - 1]?.tension}|${data.length}`;
+
   r.render(
     createElement(TuneSweepChart, {
+      key: sweepKey,
       sweepData: data,
       getTensions: () => ({
         baselineTension: tuneState.baselineTension,
@@ -895,9 +925,7 @@ export function renderOverallBuildScore(
 
   const or = _ensureTuneReactRoot(_tuneObsMount, container);
   if (!or) return;
-  flushSync(() => {
-    or.render(createElement(TuneObsBuildScore, { model: vm }));
-  });
+  or.render(createElement(TuneObsBuildScore, { model: vm }));
 
   if (animate) {
     animateOBSInContainer(container, '.obs-score-value', vm.score, 400, _prevObsValues.tune);
@@ -1013,7 +1041,9 @@ export async function renderRecommendedBuilds(setup: { racquet: Racquet; stringC
   const container = document.getElementById('recs-content');
   if (!container) return;
 
+  const token = ++_tuneRecRenderToken;
   const recommendations = await generateRecommendedBuilds(setup);
+  if (token !== _tuneRecRenderToken) return;
   const currentKey = _getCurrentRecommendationKey(setup.stringConfig);
   const topCombined = [...recommendations.fullBed, ...recommendations.hybrid];
 

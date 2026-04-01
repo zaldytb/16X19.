@@ -64,7 +64,7 @@ export function buildFmbDirectionsViewModel(
     frames: rankedFrames.map((frame, frameIdx) => ({
       frameIdx,
       frameName: frame.racquet.name,
-      frameMeta: `${frame.racquet.headSize}" \u00B7 ${frame.racquet.weight}g \u00B7 ${frame.racquet.pattern}`,
+      frameMeta: `${frame.racquet.headSize}" \u00B7 ${frame.racquet.strungWeight}g \u00B7 ${frame.racquet.pattern}`,
       builds: frame.topBuilds.map((build, buildIdx) => {
         const isHybrid = build.type === 'hybrid';
         const name = isHybrid

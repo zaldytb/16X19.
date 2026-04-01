@@ -1571,18 +1571,13 @@ body {
   color: var(--dc-void);
 }
 
+/* FMB result hosts — inner React surfaces own cards (FmbResultsSummary / FmbResultsDirections) */
 .fmb-summary {
-  background: var(--dc-void-lift);
-  border: 1px solid var(--dc-border);
-  border-radius: var(--dc-radius-md);
-  padding: var(--space-5);
   margin-bottom: var(--space-4);
 }
 
 .fmb-directions {
-  font-size: 0.9rem;
-  color: var(--dc-platinum);
-  line-height: 1.6;
+  min-width: 0;
 }
 
 /* ═══ OVERVIEW HERO BAND ═══ */

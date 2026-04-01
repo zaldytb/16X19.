@@ -5,14 +5,12 @@ import { createElement } from 'react';
 import { flushSync } from 'react-dom';
 import { createRoot, type Root } from 'react-dom/client';
 import { RACQUETS, STRINGS } from '../../data/loader.js';
-import { predictSetup, buildTensionContext, computeCompositeScore } from '../../engine/index.js';
-import type { Racquet, StringData, SetupAttributes, StringConfig } from '../../engine/types.js';
+import type { Racquet, StringData, SetupAttributes } from '../../engine/types.js';
 import {
   STRING_BRANDS,
   STRING_MATERIALS,
   getCachedValue,
   getScoredSetup,
-  measurePerformance,
   scheduleRender,
 } from '../../utils/performance.js';
 import { createLoadout, saveLoadout } from '../../state/loadout.js';
@@ -32,6 +30,7 @@ import {
   buildOptimizeMultiselectLabel,
 } from './optimize-filters-vm.js';
 import { OptimizeSearchDropdown } from '../../components/optimize/OptimizeSearchDropdown.js';
+import { runOptimizerScanAsync, optimizerDtosToCandidates } from '../../workers/engine-worker-client.js';
 
 type OptimizerLoadoutLike = {
   id: string;
@@ -548,13 +547,6 @@ export function runOptimizer(): void {
   scheduleRender('optimizer:run', () => {
     void _runOptimizerCore(resultsEl, countEl, runToken);
   });
-  return;
-
-  _renderOptimizeResultsState(resultsEl, null, _optLastSortBy || 'obs', _optLastCurrentOBS);
-
-  scheduleRender('optimizer:run', () => {
-    void _runOptimizerCore(resultsEl, countEl, runToken);
-  });
 }
 
 /**
@@ -566,7 +558,6 @@ async function _runOptimizerCore(resultsEl: HTMLElement | null, countEl: HTMLEle
 
   const lockSide = (document.getElementById('opt-lock-side') as HTMLSelectElement | null)?.value || 'none';
   const lockStringId = (document.getElementById('opt-lock-string-value') as HTMLInputElement | null)?.value || '';
-  const lockedString = lockStringId ? STRINGS.find(s => s.id === lockStringId) : null;
 
   function isStringAllowed(s: StringData): boolean {
     if (_optExcludedStringIds.has(s.id)) return false;
@@ -628,146 +619,33 @@ async function _runOptimizerCore(resultsEl: HTMLElement | null, countEl: HTMLEle
     currentOBS = scored.obs;
   }
 
-  const midTension = Math.round((racquet.tensionRange[0] + racquet.tensionRange[1]) / 2);
-  const sweepMin = Math.max(tensionMin, 30);
-  const sweepMax = Math.min(tensionMax, 75);
+  const filteredStringIds = filteredStrings.map((s) => s.id);
 
-  function findOptimalTension(buildConfig: { isHybrid: boolean; string?: StringData; mains?: StringData; crosses?: StringData }) {
-    let bestScore = -1, bestTension = midTension, bestStats: SetupAttributes | null = null;
-    for (let t = sweepMin; t <= sweepMax; t += 1) {
-      const cfg = { ...buildConfig, mainsTension: t, crossesTension: t - (buildConfig.isHybrid ? 2 : 0) };
-      const scored = getScoredSetup({ racquet, stringConfig: cfg as StringConfig });
-      const stats = scored.stats;
-      if (!stats) continue;
-      const score = scored.obs;
-      if (score > bestScore) {
-        bestScore = score;
-        bestTension = t;
-        bestStats = stats;
-      }
-    }
-    return { score: bestScore, tension: bestTension, stats: bestStats };
-  }
-
-  const candidates: NonNullable<typeof _optLastCandidates> = [];
-  const fullResults = new Map<string, ReturnType<typeof findOptimalTension>>();
-
-  async function yieldBack(counter: number): Promise<boolean> {
-    if (runToken !== _optRunToken) return true;
-    if (counter % 24 !== 0) return false;
-    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-    return runToken !== _optRunToken;
-  }
-
-  // Full bed candidates
-  if (setupType === 'full' || setupType === 'both') {
-    for (let index = 0; index < filteredStrings.length; index += 1) {
-      const s = filteredStrings[index];
-      const result = findOptimalTension({ isHybrid: false, string: s });
-      fullResults.set(s.id, result);
-      if (result.stats) {
-        candidates.push({
-          type: 'full',
-          label: s.name,
-          gauge: (s.gauge || '').replace(/\s*\(.*\)/, ''),
-          tension: result.tension,
-          crossesTension: result.tension,
-          score: result.score,
-          stats: result.stats,
-          stringData: s,
-          racquet
-        });
-      }
-      if (await yieldBack(index + 1)) return;
-    }
-  }
-
-  // Hybrid candidates
-  if (setupType === 'hybrid' || setupType === 'both') {
-    let hybridMainsPool: StringData[], hybridCrossesPool: StringData[];
-
-    if (lockSide === 'mains' && lockedString) {
-      hybridMainsPool = [lockedString];
-      hybridCrossesPool = filteredStrings.filter(s => s.id !== lockedString.id);
-    } else if (lockSide === 'crosses' && lockedString) {
-      hybridMainsPool = filteredStrings;
-      hybridCrossesPool = [lockedString];
-    } else {
-      const tempFullForRanking: Array<{ stringId: string; score: number }> = [];
-      filteredStrings.forEach(s => {
-        const result = fullResults.get(s.id) || findOptimalTension({ isHybrid: false, string: s });
-        fullResults.set(s.id, result);
-        if (result.stats) tempFullForRanking.push({ stringId: s.id, score: result.score });
-      });
-      tempFullForRanking.sort((a, b) => b.score - a.score);
-      const topMainsIds = new Set(tempFullForRanking.slice(0, 12).map(c => c.stringId));
-      filteredStrings.forEach(s => {
-        if (s.material === 'Natural Gut' || s.material === 'Multifilament') topMainsIds.add(s.id);
-      });
-      hybridMainsPool = filteredStrings.filter(s => topMainsIds.has(s.id));
-
-      hybridCrossesPool = filteredStrings.filter(s => {
-        const shape = (s.shape || '').toLowerCase();
-        const isRoundSlick = shape.includes('round') || shape.includes('slick') || shape.includes('coated');
-        const isElastic = s.material === 'Co-Polyester (elastic)';
-        const isSoftPoly = s.material === 'Polyester' && s.stiffness < 200;
-        return isRoundSlick || isElastic || isSoftPoly;
-      });
-    }
-
-    let hybridCounter = 0;
-    for (const mains of hybridMainsPool) {
-      for (const cross of hybridCrossesPool) {
-        if (cross.id === mains.id) continue;
-        const result = findOptimalTension({ isHybrid: true, mains, crosses: cross });
-        if (result.stats && result.score > 0) {
-          candidates.push({
-            type: 'hybrid',
-            label: `${mains.name} / ${cross.name}`,
-            gauge: ((mains.gauge || '').replace(/\s*\(.*\)/, '') + '/' + (cross.gauge || '').replace(/\s*\(.*\)/, '')),
-            tension: result.tension,
-            crossesTension: result.tension - 2,
-            score: result.score,
-            stats: result.stats,
-            mainsData: mains,
-            crossesData: cross,
-            racquet
-          });
-        }
-        hybridCounter += 1;
-        if (await yieldBack(hybridCounter)) return;
-      }
-    }
-  }
-
-  // Filter by stat minimums
-  let filteredCandidates = candidates.filter(c => {
-    return c.stats.spin >= mins.spin &&
-           c.stats.control >= mins.control &&
-           c.stats.power >= mins.power &&
-           c.stats.comfort >= mins.comfort &&
-           c.stats.feel >= mins.feel &&
-           c.stats.durability >= mins.durability &&
-           c.stats.playability >= mins.playability &&
-           c.stats.stability >= mins.stability &&
-           c.stats.maneuverability >= mins.maneuverability;
-  });
-
-  // Upgrade mode filtering
-  if (upgradeMode && currentStats) {
-    filteredCandidates = filteredCandidates.filter(c => {
-      if (c.score < currentOBS + upgradeOBS) return false;
-      if (currentStats.control - c.stats.control > upgradeCtlLoss) return false;
-      if (currentStats.durability - c.stats.durability > upgradeDurLoss) return false;
-      return true;
+  let finalizedCandidates: NonNullable<typeof _optLastCandidates>;
+  try {
+    const dtos = await runOptimizerScanAsync({
+      racquetId: racquet.id,
+      filteredStringIds,
+      setupType: setupType as 'full' | 'hybrid' | 'both',
+      lockSide: lockSide as 'none' | 'mains' | 'crosses',
+      lockStringId: lockStringId || null,
+      tensionMin,
+      tensionMax,
+      sortBy,
+      mins,
+      upgradeMode,
+      currentOBS,
+      currentStats,
+      upgradeOBS,
+      upgradeCtlLoss,
+      upgradeDurLoss,
     });
+    finalizedCandidates = optimizerDtosToCandidates(dtos, racquet) as NonNullable<typeof _optLastCandidates>;
+  } catch (err) {
+    console.error('Optimizer scan failed:', err);
+    if (runToken !== _optRunToken) return;
+    finalizedCandidates = [];
   }
-
-  // Sort
-  const finalizedCandidates = measurePerformance('optimizer candidate generation', () => filteredCandidates.sort((a, b) => {
-    if (sortBy === 'obs') return b.score - a.score;
-    return ((b.stats as unknown as Record<string, number>)[sortBy] || 0) - ((a.stats as unknown as Record<string, number>)[sortBy] || 0);
-  }));
 
   if (runToken !== _optRunToken) return;
 

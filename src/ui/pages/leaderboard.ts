@@ -13,13 +13,11 @@ import { createElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { RACQUETS, STRINGS } from '../../data/loader.js';
 import {
-  predictSetup,
-  computeCompositeScore,
-  buildTensionContext,
-  generateIdentity,
   calcFrameBase,
   calcBaseStringProfile,
 } from '../../engine/index.js';
+import type { LeaderboardBuildComputeResult } from '../../compute/leaderboard-builds.js';
+import { runLeaderboardBuildsAsync } from '../../workers/engine-worker-client.js';
 import { LeaderboardBuildResults } from '../../components/leaderboard/LeaderboardBuildResults.js';
 import { LeaderboardFrameResults } from '../../components/leaderboard/LeaderboardFrameResults.js';
 import { LeaderboardStringResults } from '../../components/leaderboard/LeaderboardStringResults.js';
@@ -49,12 +47,9 @@ import {
 import type {
   Racquet,
   StringData,
-  StringConfig,
   SetupStats,
   FrameBaseScores,
   StringProfileScores,
-  TensionContext,
-  IdentityResult,
 } from '../../engine/types.js';
 
 interface Lbv2State {
@@ -115,6 +110,20 @@ let _lbv2RunToken = 0;
 const LB_BUILD_RESULTS_HOST_ID = 'lb2-build-results-react';
 const LB_FRAME_RESULTS_HOST_ID = 'lb2-frame-results-react';
 const LB_STRING_RESULTS_HOST_ID = 'lb2-string-results-react';
+
+const _lbBuildsWorkerCache = new Map<string, LeaderboardBuildComputeResult[]>();
+
+async function runLeaderboardBuildsCached(
+  statKey: string,
+  filterType: 'both' | 'full' | 'hybrid',
+): Promise<LeaderboardBuildComputeResult[]> {
+  const key = `${statKey}:${filterType}`;
+  const hit = _lbBuildsWorkerCache.get(key);
+  if (hit) return hit;
+  const results = await runLeaderboardBuildsAsync(statKey, filterType);
+  _lbBuildsWorkerCache.set(key, results);
+  return results;
+}
 
 type LbResultsReactMount = { root: Root | null; host: HTMLElement | null };
 
@@ -396,38 +405,41 @@ function _runLbv2(): void {
     </div>`;
 
   scheduleRender('leaderboard:run', () => setTimeout(() => {
-    if (runToken !== _lbv2RunToken) return;
-    try {
-      let results: unknown[];
-      if (_lbv2State.viewMode === 'frames') {
-        results = measurePerformance('leaderboard ranking generation', () => _computeLbv2Frames());
-      } else if (_lbv2State.viewMode === 'strings') {
-        results = measurePerformance('leaderboard ranking generation', () => _computeLbv2Strings());
-      } else {
-        results = measurePerformance('leaderboard ranking generation', () => _computeLbv2Results());
-      }
-      _lbv2State.results = results;
+    void (async () => {
+      if (runToken !== _lbv2RunToken) return;
+      try {
+        let results: unknown[];
+        if (_lbv2State.viewMode === 'frames') {
+          results = measurePerformance('leaderboard ranking generation', () => _computeLbv2Frames());
+        } else if (_lbv2State.viewMode === 'strings') {
+          results = measurePerformance('leaderboard ranking generation', () => _computeLbv2Strings());
+        } else {
+          results = await runLeaderboardBuildsCached(_lbv2State.statKey, _lbv2State.filterType);
+        }
+        if (runToken !== _lbv2RunToken) return;
+        _lbv2State.results = results;
 
-      const countEl = document.getElementById('lb2-count');
-      if (countEl) countEl.textContent = `${results.length} ${_lbv2State.viewMode}`;
+        const countEl = document.getElementById('lb2-count');
+        if (countEl) countEl.textContent = `${results.length} ${_lbv2State.viewMode}`;
 
-      if (_lbv2State.viewMode === 'frames') {
-        _renderLbv2Frames(results as FrameResult[]);
-      } else if (_lbv2State.viewMode === 'strings') {
-        _renderLbv2Strings(results as StringResult[]);
-      } else {
-        _renderLbv2Results(results as BuildResult[]);
-      }
-    } catch (err) {
-      if (resultsEl) {
-        _lbUnmountAllResultsReact();
-        resultsEl.innerHTML = `
+        if (_lbv2State.viewMode === 'frames') {
+          _renderLbv2Frames(results as FrameResult[]);
+        } else if (_lbv2State.viewMode === 'strings') {
+          _renderLbv2Strings(results as StringResult[]);
+        } else {
+          _renderLbv2Results(results as BuildResult[]);
+        }
+      } catch (err) {
+        if (resultsEl) {
+          _lbUnmountAllResultsReact();
+          resultsEl.innerHTML = `
         <div class="flex items-center justify-center py-16 font-mono text-[11px] text-dc-red/70">
           Error: ${(err as Error).message}
         </div>`;
+        }
+        console.error('Leaderboard error:', err);
       }
-      console.error('Leaderboard error:', err);
-    }
+    })();
   }, 16));
 }
 
@@ -451,22 +463,7 @@ interface BestResult {
   cfg: BuildConfig;
 }
 
-export interface BuildResult {
-  type: 'full' | 'hybrid';
-  racquet: Racquet;
-  string: StringData | null;
-  mains: StringData | null;
-  crosses: StringData | null;
-  tension: number;
-  crossesTension: number;
-  stats: SetupStats;
-  obs: number;
-  rankVal: number;
-  statKey: string;
-  identity: IdentityResult;
-  frameLabel: string;
-  stringLabel: string;
-}
+export type BuildResult = LeaderboardBuildComputeResult;
 
 interface FrameResult {
   racquet: Racquet;
@@ -481,143 +478,6 @@ interface StringResult {
   profile: StringProfileScores;
   rankVal: number;
   statKey: string;
-}
-
-// ── Computation ───────────────────────────────────────────────────────────────
-
-function _computeLbv2Results(): BuildResult[] {
-  const statKey    = _lbv2State.statKey;
-  const filterType = _lbv2State.filterType;
-  return getCachedValue(`lb:builds:${statKey}:${filterType}`, () => {
-  const candidates: BuildResult[] = [];
-
-  // Helper: find optimal tension for a config and return its stat value
-  function scoreConfig(racquet: Racquet, cfg: Omit<BuildConfig, 'mainsTension' | 'crossesTension'>): BestResult {
-    const sweepMin = Math.max(racquet.tensionRange[0] - 3, 30);
-    const sweepMax = Math.min(racquet.tensionRange[1] + 3, 70);
-    let best: BestResult = { score: -1, statVal: 0, obs: 0, tension: 53, stats: null, cfg: { ...cfg, mainsTension: 53, crossesTension: 51 } };
-
-    for (let t = sweepMin; t <= sweepMax; t += 2) {
-      const c: BuildConfig = Object.assign({}, cfg, {
-        mainsTension: t,
-        crossesTension: cfg.isHybrid ? t - 2 : t,
-      });
-      const stats = predictSetup(racquet, c as StringConfig);
-      if (!stats) continue;
-      const tCtx  = buildTensionContext(c as StringConfig, racquet);
-      const obs   = computeCompositeScore(stats, tCtx);
-      const rankVal = statKey === 'obs' ? obs : ((stats as unknown as Record<string, number>)[statKey] || 0);
-      if (rankVal > best.score) {
-        best = { score: rankVal, statVal: statKey === 'obs' ? obs : ((stats as unknown as Record<string, number>)[statKey] || 0), obs, tension: t, stats, cfg: c };
-      }
-    }
-    return best;
-  }
-
-  // ── Full-bed candidates ───────────────────────────────────────────────────
-  if (filterType !== 'hybrid') {
-    (RACQUETS as unknown as Racquet[]).forEach((racquet: Racquet) => {
-      (STRINGS as StringData[]).forEach((str: StringData) => {
-        const cfg = { isHybrid: false, string: str };
-        const best = scoreConfig(racquet, cfg);
-        if (!best.stats) return;
-
-        candidates.push({
-          type:        'full',
-          racquet,
-          string:      str,
-          mains:       null,
-          crosses:     null,
-          tension:     best.tension,
-          crossesTension: best.tension,
-          stats:       best.stats,
-          obs:         +best.obs.toFixed(1),
-          rankVal:     best.score,
-          statKey,
-          identity:    generateIdentity(best.stats, racquet, best.cfg as StringConfig),
-          frameLabel:  racquet.name,
-          stringLabel: str.name,
-        });
-      });
-    });
-  }
-
-  // ── Hybrid candidates ─────────────────────────────────────────────────────
-  if (filterType !== 'full') {
-    // Top 12 full-bed strings per racquet + gut/multi as mains candidates
-    // Cross pool: slick/round/elastic polys
-    const crossPool = (STRINGS as StringData[]).filter((s: StringData) => {
-      const shape = (s.shape || '').toLowerCase();
-      return shape.includes('round') || shape.includes('slick') ||
-             shape.includes('coated') || s.material === 'Co-Polyester (elastic)' ||
-             (s.material === 'Polyester' && s.stiffness < 195);
-    });
-
-    // Smart mains set: top strings overall + always gut/multi
-    const globalFull: Array<{id: string; score: number}> = [];
-    (STRINGS as StringData[]).forEach((s: StringData) => {
-      const cfg  = { isHybrid: false, string: s };
-      const mid  = 53;
-      const sc   = predictSetup((RACQUETS as unknown as Racquet[])[0], Object.assign({}, cfg, { mainsTension: mid, crossesTension: mid }) as StringConfig);
-      if (sc) globalFull.push({ id: s.id, score: (sc as unknown as Record<string, number>)[statKey] || computeCompositeScore(sc, null as unknown as TensionContext) || 0 });
-    });
-    globalFull.sort((a, b) => b.score - a.score);
-    const topMainsIds = new Set(globalFull.slice(0, 12).map(x => x.id));
-    (STRINGS as StringData[]).forEach((s: StringData) => {
-      if (s.material === 'Natural Gut' || s.material === 'Multifilament') {
-        topMainsIds.add(s.id);
-      }
-    });
-
-    (RACQUETS as unknown as Racquet[]).forEach((racquet: Racquet) => {
-      topMainsIds.forEach(mainsId => {
-        const mains = (STRINGS as StringData[]).find((s: StringData) => s.id === mainsId);
-        if (!mains) return;
-        crossPool.forEach((cross: StringData) => {
-          if (cross.id === mains.id) return;
-          const cfg = { isHybrid: true, mains, crosses: cross };
-          const best = scoreConfig(racquet, cfg);
-          if (!best.stats) return;
-
-          candidates.push({
-            type:          'hybrid',
-            racquet,
-            string:        mains,
-            mains,
-            crosses:       cross,
-            tension:       best.tension,
-            crossesTension: best.tension - 2,
-            stats:         best.stats,
-            obs:           +best.obs.toFixed(1),
-            rankVal:       best.score,
-            statKey,
-            identity:      generateIdentity(best.stats, racquet, best.cfg as StringConfig),
-            frameLabel:    racquet.name,
-            stringLabel:   mains.name + ' / ' + cross.name,
-          });
-        });
-      });
-    });
-  }
-
-  // Sort by rankVal desc, then deduplicate (keep best per frame×string key)
-  candidates.sort((a, b) => b.rankVal - a.rankVal);
-
-  const seen = new Set<string>();
-  const deduped: BuildResult[] = [];
-  for (const c of candidates) {
-    const key = c.racquet.id + '|' + (c.type === 'hybrid'
-      ? c.mains!.id + '/' + c.crosses!.id
-      : c.string!.id);
-    if (!seen.has(key)) {
-      seen.add(key);
-      deduped.push(c);
-    }
-    if (deduped.length >= 60) break;
-  }
-
-  return deduped;
-  });
 }
 
 // ── Results renderer (pure Tailwind) ─────────────────────────────────────────

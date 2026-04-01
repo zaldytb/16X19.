@@ -3,16 +3,15 @@
 
 import { createElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { RACQUETS } from '../../data/loader.js';
 import type { Racquet, StringData, Loadout } from '../../engine/types.js';
 import { createLoadout, saveLoadout } from '../../state/loadout.js';
-import { generateTopBuilds } from '../../state/presets.js';
 import type { Build } from '../../state/presets.js';
 import { renderDockContextPanel } from '../components/dock-renderers.js';
 import { activateLoadout, switchMode } from './shell.js';
 import { FmbResultsDirections } from '../../components/overview/FmbResultsDirections.js';
 import { FmbResultsSummary } from '../../components/overview/FmbResultsSummary.js';
 import { buildFmbDirectionsViewModel, buildFmbSummaryViewModel } from './find-my-build-vm.js';
+import { runFmbRankAsync } from '../../workers/engine-worker-client.js';
 
 // FMB Wizard state
 let _fmbStep: number | 'result' = 1;
@@ -169,8 +168,8 @@ export function fmbNext(): void {
     _fmbShowStep(_fmbStep + 1);
   } else if (_fmbStep === 5) {
     const profile = _fmbGenerateProfile(_fmbAnswers);
-    _fmbShowResults(profile);
     _fmbShowStep('result');
+    void _fmbShowResults(profile);
   }
 }
 
@@ -301,19 +300,68 @@ export function _fmbGenerateProfile(answers: typeof _fmbAnswers): {
 }
 
 /**
- * Show FMB results
+ * Show FMB results (async — heavy scoring runs in Web Worker)
  */
-export function _fmbShowResults(profile: ReturnType<typeof _fmbGenerateProfile>): void {
+export async function _fmbShowResults(profile: ReturnType<typeof _fmbGenerateProfile>): Promise<void> {
   const summaryEl = document.getElementById('fmb-summary');
   const directionsEl = document.getElementById('fmb-directions');
   if (!summaryEl || !directionsEl) return;
 
-  const rankedFrames = _fmbRankFrames(profile);
-  _fmbCurrentFrames = rankedFrames;
-
   const summaryRoot = _ensureFmbReactRoot(_fmbSummaryMount, summaryEl);
   const directionsRoot = _ensureFmbReactRoot(_fmbDirectionsMount, directionsEl);
   if (!summaryRoot || !directionsRoot) return;
+
+  const loading = createElement(
+    'div',
+    {
+      className:
+        'rounded-lg border border-dc-border border-dashed bg-black/[0.03] dark:bg-black/15 px-6 py-10 flex flex-col items-center justify-center gap-4',
+    },
+    createElement('div', {
+      className: 'h-8 w-8 border-2 border-dc-storm/30 border-t-dc-accent rounded-full animate-spin',
+    }),
+    createElement(
+      'div',
+      { className: 'text-center space-y-1' },
+      createElement(
+        'div',
+        { className: 'font-mono text-[10px] uppercase tracking-[0.2em] text-dc-accent' },
+        'Scoring',
+      ),
+      createElement(
+        'div',
+        { className: 'font-mono text-[11px] text-dc-storm' },
+        'Ranking frames and string builds…',
+      ),
+    ),
+  );
+  summaryRoot.render(loading);
+  directionsRoot.render(loading);
+
+  let rankedFrames;
+  try {
+    rankedFrames = await runFmbRankAsync({
+      statPriorities: profile.statPriorities,
+      minThresholds: profile.minThresholds,
+      sortBy: profile.sortBy,
+      notes: profile.notes,
+    });
+  } catch (err) {
+    const msg = (err as Error).message || String(err);
+    const errEl = createElement(
+      'div',
+      {
+        className:
+          'rounded-lg border border-red-500/40 bg-red-950/20 px-4 py-3 font-mono text-[11px] text-red-300/90',
+      },
+      `Error: ${msg}`,
+    );
+    summaryRoot.render(errEl);
+    directionsRoot.render(errEl);
+    return;
+  }
+
+  _fmbCurrentFrames = rankedFrames;
 
   summaryRoot.render(createElement(FmbResultsSummary, {
     model: buildFmbSummaryViewModel(_fmbAnswers, profile),
@@ -390,37 +438,6 @@ export function _fmbSearchDirection(direction: 'closest' | 'safer' | 'ceiling'):
       document.getElementById('opt-run-btn')?.click();
     });
   });
-}
-
-/**
- * Rank frames based on profile
- */
-export function _fmbRankFrames(profile: ReturnType<typeof _fmbGenerateProfile>): typeof _fmbCurrentFrames {
-  const ranked = (RACQUETS as unknown as Racquet[]).map(racquet => {
-    const topBuilds = generateTopBuilds(racquet, 3);
-
-    let score = 0;
-    if (topBuilds.length > 0) {
-      const bestBuild = topBuilds[0];
-      const stats = bestBuild.stats as unknown as Record<string, number>;
-
-      Object.entries(profile.statPriorities).forEach(([stat, weight]) => {
-        score += (stats[stat] || 0) * weight;
-      });
-
-      Object.entries(profile.minThresholds).forEach(([stat, min]) => {
-        const val = stats[stat] || 0;
-        if (val < min) score -= (min - val) * 2;
-      });
-
-      score += bestBuild.score * 0.5;
-    }
-
-    return { racquet, score, topBuilds };
-  });
-
-  ranked.sort((a, b) => b.score - a.score);
-  return ranked.slice(0, 5);
 }
 
 /**

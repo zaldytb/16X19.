@@ -1,9 +1,9 @@
 // Pure view-model for Tune recommended builds (#recs-content) — parity with _renderRecommendationItem + renderRecommendedBuilds shell.
 
-import { generateRecommendedBuilds } from '../shared/recommendations.js';
+import type { RecommendedBuildsResult } from '../shared/recommendations.js';
 import type { Racquet, StringConfig } from '../../engine/types.js';
 
-type RecPool = ReturnType<typeof generateRecommendedBuilds>;
+type RecPool = RecommendedBuildsResult;
 type RecCand = RecPool['fullBed'][number];
 
 export type TuneRecItemViewModel = {

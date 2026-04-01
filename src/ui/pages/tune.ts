@@ -20,7 +20,11 @@ import { renderDockPanel } from '../components/dock-renderers.js';
 import { renderOverviewDashboardViaBridge } from './overview-runtime-bridge.js';
 import { registerTuneRuntimeCallbacks } from './tune-runtime-bridge.js';
 import { _prevObsValues, animateOBSInContainer } from '../components/obs-animation.js';
-import { generateRecommendedBuilds, buildWhatToTryNextViewModel } from '../shared/recommendations.js';
+import {
+  generateRecommendedBuilds,
+  buildWhatToTryNextViewModel,
+  type RecommendedBuildsResult,
+} from '../shared/recommendations.js';
 import { getScoredSetup } from '../../utils/performance.js';
 import { createElement } from 'react';
 import { flushSync } from 'react-dom';
@@ -113,7 +117,7 @@ export const tuneState = {
   explored: null as { stats: SetupAttributes; obs: number; identity: { archetype: string; description: string } } | null
 };
 
-type RecommendedCandidate = ReturnType<typeof generateRecommendedBuilds>['all'][number];
+type RecommendedCandidate = RecommendedBuildsResult['all'][number];
 
 // Chart.js instance (global Chart from index.html CDN; owned by TuneSweepChart.tsx)
 type Chart = TuneSweepChartHandle;
@@ -347,7 +351,7 @@ export function initTuneMode(setup: { racquet: Racquet; stringConfig: StringConf
   renderSweepChart(setup);
   renderBestValueMove();
   renderOverallBuildScore(setup, true);
-  renderRecommendedBuilds(setup);
+  void renderRecommendedBuilds(setup);
 
   // Reset Apply button
   const applyBtn = document.getElementById('tune-apply-btn');
@@ -724,7 +728,7 @@ function _onHybridDimSelect(dim: HybridDim): void {
     renderBestValueMove();
     _recomputeExploredState();
     renderOverallBuildScore(setup, true);
-    renderRecommendedBuilds(setup);
+    void renderRecommendedBuilds(setup);
   }
 }
 
@@ -1005,11 +1009,11 @@ export function renderExplorePrompt(
   er.render(createElement(TuneExplorePrompt, { model: vm }));
 }
 
-export function renderRecommendedBuilds(setup: { racquet: Racquet; stringConfig: StringConfig }): void {
+export async function renderRecommendedBuilds(setup: { racquet: Racquet; stringConfig: StringConfig }): Promise<void> {
   const container = document.getElementById('recs-content');
   if (!container) return;
 
-  const recommendations = generateRecommendedBuilds(setup);
+  const recommendations = await generateRecommendedBuilds(setup);
   const currentKey = _getCurrentRecommendationKey(setup.stringConfig);
   const topCombined = [...recommendations.fullBed, ...recommendations.hybrid];
 

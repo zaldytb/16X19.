@@ -90,7 +90,8 @@ loadout-lab/
 │   ├── App.tsx
 │   ├── components/
 │   │   ├── shell/
-│   │   └── tune/               # Tune workspace widgets (mounted from ui/pages/tune.ts)
+│   │   ├── tune/               # Tune workspace widgets (mounted from ui/pages/tune.ts)
+│   │   └── overview/           # Overview dashboard widgets (mounted from ui/pages/overview.ts)
 │   ├── context/
 │   ├── global.d.ts
 │   ├── hooks/

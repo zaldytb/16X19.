@@ -38,7 +38,7 @@ npm run typecheck && npm run canary && npm run build
 
 ## React UI migration (ongoing)
 
-The **Tune** workspace is migrated to the **Strangler Fig** pattern: dumb React components in **`src/components/tune/`**, mounted from **`src/ui/pages/tune.ts`** with `createRoot`, pure view-models in **`tune-*-vm.ts`**, and **`_ensureTuneReactRoot`** for lazy-route safety. Rules and process: **[docs/REACT-MIGRATION-GUIDE.md](docs/REACT-MIGRATION-GUIDE.md)**. Roadmap for Overview, Compare, and other workspaces: **[docs/REACT-MIGRATION-PLAN.md](docs/REACT-MIGRATION-PLAN.md)**.
+The **Tune** workspace uses the **Strangler Fig** pattern (`src/components/tune/`, `src/ui/pages/tune.ts`, **`_ensureTuneReactRoot`**). The **Overview** dashboard uses the same approach (`src/components/overview/`, `src/ui/pages/overview.ts`, **`_ensureOverviewReactRoot`**). Rules and process: **[docs/REACT-MIGRATION-GUIDE.md](docs/REACT-MIGRATION-GUIDE.md)**. Roadmap for Compare and other workspaces: **[docs/REACT-MIGRATION-PLAN.md](docs/REACT-MIGRATION-PLAN.md)**.
 
 ## Optional follow-ups (non-blocking)
 

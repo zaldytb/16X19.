@@ -166,7 +166,7 @@ export function Overview() {
             </div>
             <div className="flex flex-col justify-between h-full items-center">
               <div className="relative w-full flex items-center justify-center">
-                <canvas id="radar-chart"></canvas>
+                <div id="radar-chart-root" className="w-full flex justify-center" />
               </div>
               <div className="w-full bg-black/5 dark:bg-black/20 border border-black/10 dark:border-white/5 rounded-md p-3 px-4" id="oc-foundation"></div>
             </div>

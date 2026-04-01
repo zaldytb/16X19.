@@ -18,9 +18,8 @@ The app lets users:
 - save, restore, and share loadouts
 - persist the current active loadout and saved loadouts across refreshes via local storage
 
-Primary site (GitHub Pages): `https://zaldytb.github.io/loadout-lab/`  
-Repository: `https://github.com/zaldytb/loadout-lab`  
-Mirror: `https://loadout-lab.vercel.app`
+Primary URL: `https://github.com/zaldytb/16X19.`  
+Mirror: `https://16x19.vercel.app/`
 
 ## Stack
 
@@ -49,7 +48,7 @@ npm run build
 | Engine | `src/engine/` | Deterministic prediction (L0–L3 + composite) |
 | State | `src/state/` | Zustand-backed loadout and app state, plus stable facades for runtime code |
 | React shell | `src/App.tsx`, `src/pages/`, `src/components/` | Routes, shell layout, workspace wrappers, header/dock/footer |
-| React workspace widgets | `src/components/tune/` (and future `src/components/<workspace>/`) | Dumb Tune UI mounted from `src/ui/pages/tune.ts` via `createRoot`; pure view-models in `tune-*-vm.ts` / shared helpers |
+| React workspace widgets | `src/components/tune/`, `src/components/overview/` | Dumb workspace UI mounted from `src/ui/pages/tune.ts` / `overview.ts` via `createRoot` + host invalidation helpers; pure view-models in `tune-*-vm.ts` / `overview-*-vm.ts` |
 | Runtime | `src/runtime/`, `src/ui/pages/*-runtime-bridge.ts` | Coordinator-driven refresh plans (`getRefreshPlan` includes `compendium` where relevant) and cross-page callback registries |
 | UI | `src/ui/` | Imperative workspace orchestration (`tune.ts`, `overview.ts`, `compare/`, …), dock renderers, shared UI helpers |
 | Bootstrap | `src/bridge/installWindowBridge.ts` | Boot animation helpers and vanilla shell/bootstrap wiring |

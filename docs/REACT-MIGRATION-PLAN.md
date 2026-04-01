@@ -36,9 +36,27 @@ Tune remains orchestrated by **`src/ui/pages/tune.ts`** (imperative lifecycle: s
 
 ---
 
+## Overview workspace (completed)
+
+Orchestrated by **`src/ui/pages/overview.ts`** with **`_ensureOverviewReactRoot`** (same invalidation semantics as Tune). **`renderDashboard`** remains the coordinator entry; **`radarTooltipHandler`** / chart helpers live in **`overview-radar-chart.ts`** and are re-exported from `overview.ts` for compatibility.
+
+| Area | React component(s) | View-models / helpers | Mount host(s) in `Overview.tsx` |
+| --- | --- | --- | --- |
+| Hero + CTAs | `OverviewHero` | `overview-hero-vm.ts` | `#overview-hero` |
+| Stat bars | `OverviewStatBars` | `overview-stat-bars-vm.ts` | `#stat-bars` |
+| Build DNA highlights | `OverviewBuildDnaHighlights` | `overview-build-dna-vm.ts` | `#build-dna-highlights` |
+| Radar chart | `OverviewRadarChart` | `overview-radar-chart.ts` (Chart.js + tooltip) | `#radar-chart-root` |
+| OC foundation | `OverviewOCFoundation` | `overview-oc-foundation-vm.ts` | `#oc-foundation` |
+| Fit profile card | `OverviewFitProfileCard` | `overview-fit-profile-vm.ts` | `#fit-grid` |
+| Warnings | `OverviewWarnings` | `overview-warnings-vm.ts` | `#warnings-list` |
+
+**Still imperative:** `renderOCSnapshot` (targets `#oc-snapshot`, not used on the main dashboard card), and **`renderFitProfile`** (single-line fit copy) if called from other modules. FMB wizard markup stays in `Overview.tsx` with logic in `find-my-build.ts`.
+
+---
+
 ## What’s left (other workspaces)
 
-Imperative modules still own most of: **Overview**, **Compare**, **Compendium / strings**, **Optimize**, **Find My Build**, **My Loadouts**, **Leaderboard**, plus **shell** chrome that isn’t already in `src/components/shell/`.
+Imperative modules still own most of: **Compare**, **Compendium / strings**, **Optimize**, **Find My Build**, **My Loadouts**, **Leaderboard**, plus **shell** chrome that isn’t already in `src/components/shell/`.
 
 **Do not** rewrite a full page in one PR. For each slice:
 
@@ -50,10 +68,9 @@ Imperative modules still own most of: **Overview**, **Compare**, **Compendium / 
 
 Suggested **non-binding** order (dependencies and churn vary):
 
-1. **Overview** — isolated cards / radar / hero chunks that are already logically separable.
-2. **Compare** — panel rows that mirror the Tune pattern (VM + mount + bridge).
-3. **Compendium / strings** — table or list cells as small widgets first.
-4. **Optimize / Find My Build / Leaderboard** — as needed when touching those files.
+1. **Compare** — panel rows that mirror the Tune pattern (VM + mount + bridge).
+2. **Compendium / strings** — table or list cells as small widgets first.
+3. **Optimize / Find My Build / Leaderboard** — as needed when touching those files.
 
 The **shell** (`App.tsx`, `src/components/shell/`) is already React-first; extend it only when a feature truly belongs in the shell, not to bypass the widget rule.
 
@@ -94,3 +111,4 @@ The **shell** (`App.tsx`, `src/components/shell/`) is already React-first; exten
 ## Changelog
 
 - **2026-04** — Initial post–Tune plan: Tune widget inventory, integration patterns, remaining workspaces, gates.
+- **2026-04** — Overview dashboard migrated: `src/components/overview/*`, `overview-*-vm.ts`, `overview-radar-chart.ts`, `_ensureOverviewReactRoot`.

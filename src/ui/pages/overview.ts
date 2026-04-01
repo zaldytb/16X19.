@@ -1,22 +1,11 @@
 // src/ui/pages/overview.ts
 // Overview page rendering - dashboard, hero, stat bars, radar chart
 
-import { RACQUETS, STRINGS } from '../../data/loader.js';
-import {
-  predictSetup,
-  generateIdentity,
-  getObsTier,
-  buildTensionContext,
-  computeCompositeScore
-} from '../../engine/index.js';
-import {
-  STAT_KEYS,
-  STAT_LABELS,
-  STAT_LABELS_FULL,
-  STAT_GROUPS
-} from '../../engine/constants.js';
+import { createElement } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
+
+import { buildTensionContext, computeCompositeScore } from '../../engine/index.js';
 import type { StringData, Racquet, SetupAttributes, StringConfig as EngineStringConfig } from '../../engine/types.js';
-import { getActiveLoadout } from '../../state/store.js';
 import { _prevObsValues, animateOBSInContainer } from '../components/obs-animation.js';
 import { renderMobileLoadoutPills } from '../components/dock-renderers.js';
 import { getScoredSetup, measurePerformance } from '../../utils/performance.js';
@@ -26,12 +15,56 @@ import { switchMode } from './shell.js';
 import { registerOverviewRuntimeCallbacks } from './overview-runtime-bridge.js';
 import { refreshTuneIfActiveViaBridge } from './tune-runtime-bridge.js';
 
+import { OverviewWarnings } from '../../components/overview/OverviewWarnings.js';
+import { buildOverviewWarningsViewModel } from './overview-warnings-vm.js';
+import { OverviewBuildDnaHighlights } from '../../components/overview/OverviewBuildDnaHighlights.js';
+import { buildOverviewBuildDnaViewModel } from './overview-build-dna-vm.js';
+import { OverviewOCFoundation } from '../../components/overview/OverviewOCFoundation.js';
+import { buildOverviewOCFoundationViewModel } from './overview-oc-foundation-vm.js';
+import { OverviewFitProfileCard } from '../../components/overview/OverviewFitProfileCard.js';
+import { buildOverviewFitProfileCardViewModel } from './overview-fit-profile-vm.js';
+import { OverviewStatBars } from '../../components/overview/OverviewStatBars.js';
+import { buildOverviewStatBarsViewModel } from './overview-stat-bars-vm.js';
+import { OverviewHero } from '../../components/overview/OverviewHero.js';
+import { buildOverviewHeroViewModel } from './overview-hero-vm.js';
+import { OverviewRadarChart } from '../../components/overview/OverviewRadarChart.js';
+import { statsToRadarData, type OverviewRadarChartHandle } from './overview-radar-chart.js';
+
+export { radarTooltipHandler, statsToRadarData } from './overview-radar-chart.js';
+
 type StringConfig = EngineStringConfig;
 
-registerOverviewRuntimeCallbacks({
-  renderDashboard,
-  renderRadarChart,
-});
+/** Tracks createRoot + host element; invalidates when route unmounts and DOM nodes are recreated. */
+type OverviewReactMount = { root: Root | null; host: HTMLElement | null };
+
+function _ensureOverviewReactRoot(mount: OverviewReactMount, container: HTMLElement | null): Root | null {
+  if (!container) return null;
+  if (mount.root && mount.host) {
+    if (mount.host !== container || !mount.host.isConnected) {
+      mount.root.unmount();
+      mount.root = null;
+      mount.host = null;
+    }
+  }
+  if (!mount.root) {
+    mount.root = createRoot(container);
+    mount.host = container;
+  }
+  return mount.root;
+}
+
+const _overviewHeroMount: OverviewReactMount = { root: null, host: null };
+const _overviewStatBarsMount: OverviewReactMount = { root: null, host: null };
+const _overviewDnaMount: OverviewReactMount = { root: null, host: null };
+const _overviewRadarMount: OverviewReactMount = { root: null, host: null };
+const _overviewOCMount: OverviewReactMount = { root: null, host: null };
+const _overviewFitMount: OverviewReactMount = { root: null, host: null };
+const _overviewWarningsMount: OverviewReactMount = { root: null, host: null };
+
+function _onOverviewRadarReady(_chart: OverviewRadarChartHandle | null): void {
+  void _chart;
+  /* Chart instance owned by OverviewRadarChart; callback reserved for parity with Tune sweep pattern */
+}
 
 /**
  * Render the main dashboard
@@ -60,23 +93,17 @@ export function renderDashboard(): void {
   const fitProfile = generateFitProfile(stats, racquet, stringConfig);
   const warnings = generateWarnings(racquet, stringConfig, stats);
 
-  // Hero Band
   renderOverviewHero(racquet, stringConfig, stats, identity, scored.obs);
 
-  // Stats
   renderStatBars(stats);
   renderRadarChart(stats);
 
-  // Fit
   renderFitProfileCard(fitProfile);
 
-  // Progressive depth
   renderOCFoundation(racquet, stringConfig, stats);
 
-  // Warnings
   renderWarnings(warnings);
 
-  // Refresh Tune mode if active
   refreshTuneIfActiveViaBridge();
 }
 
@@ -108,65 +135,23 @@ export function renderOverviewHero(
   const el = document.getElementById('overview-hero');
   if (!el) return;
 
-  const score = typeof precomputedObs === 'number'
-    ? precomputedObs
-    : computeCompositeScore(stats, buildTensionContext(stringConfig, racquet));
-  const tier = getObsTier(score);
+  const score =
+    typeof precomputedObs === 'number'
+      ? precomputedObs
+      : computeCompositeScore(stats, buildTensionContext(stringConfig, racquet));
 
-  // String name for meta line
-  let stringName: string;
-  if (stringConfig.isHybrid) {
-    stringName = `${stringConfig.mains.name} ${stringConfig.mains.gauge} / ${stringConfig.crosses.name} ${stringConfig.crosses.gauge}`;
-  } else {
-    stringName = `${stringConfig.string.name} ${stringConfig.string.gauge}`;
-  }
-  const tensionLabel = `M${stringConfig.mainsTension} / X${stringConfig.crossesTension}`;
+  const vm = buildOverviewHeroViewModel(racquet, stringConfig, stats, identity, precomputedObs);
+  const root = _ensureOverviewReactRoot(_overviewHeroMount, el);
+  if (!root) return;
+  root.render(createElement(OverviewHero, { model: vm }));
 
-  const tierClass = tier.label === 'S Rank' ? 's-rank' : '';
-
-  el.innerHTML = `
-    <div class="flex flex-col gap-6">
-      <!-- Score + Identity Row -->
-      <div class="flex flex-col lg:flex-row gap-8 lg:gap-12">
-        <!-- Score Block -->
-        <div class="hero-score shrink-0">
-          <span class="hero-obs-label">System Sync Rating</span>
-          <span class="hero-obs-value">${score.toFixed(1)}</span>
-          <span class="hero-obs-tier ${tierClass}">${tier.label}</span>
-        </div>
-        <!-- Identity Block -->
-        <div class="hero-identity flex-1 min-w-0">
-          <div class="hero-archetype">${identity.archetype}</div>
-          <div class="hero-desc">${identity.description}</div>
-          <div class="hero-terminal">
-            <span class="hero-terminal-value">${racquet.name.replace(/\s+\d+g$/, '')}</span><span class="hero-terminal-sep">//</span><span class="hero-terminal-value">${stringName}</span><span class="hero-terminal-sep">//</span><span class="hero-terminal-value">${tensionLabel}</span>
-          </div>
-        </div>
-      </div>
-      <!-- CTA Actions -->
-      <div class="mt-2 pt-6 border-t border-dc-storm/20">
-        <div class="flex gap-3">
-          <button 
-            class="flex-1 bg-transparent border border-dc-storm/40 dark:border-dc-storm/40 text-dc-platinum font-mono text-[12px] font-bold uppercase tracking-widest py-3 px-4 hover:border-dc-platinum dark:hover:border-dc-platinum hover:bg-dc-void/5 dark:hover:bg-dc-platinum/5 transition-colors flex items-center justify-center gap-2"
-            data-overview-action="switchMode" data-overview-arg="compendium"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-            //BACK TO BIBLE
-          </button>
-          <button 
-            class="flex-1 bg-dc-accent text-dc-ink font-mono text-[12px] font-bold uppercase tracking-widest py-3 px-4 hover:bg-dc-accent/90 transition-colors flex items-center justify-center gap-2"
-            data-overview-action="switchMode" data-overview-arg="tune"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v10"/><path d="M21 12h-6m-6 0H1"/></svg>
-            Tune This Build
-          </button>
-        </div>
-      </div>
-    </div>
-  `;
-
-  animateOBSInContainer(el, '.hero-obs-value', score, 500, _prevObsValues.hero);
-  _prevObsValues.hero = score;
+  queueMicrotask(() => {
+    const host = document.getElementById('overview-hero');
+    if (host) {
+      animateOBSInContainer(host, '.hero-obs-value', score, 500, _prevObsValues.hero);
+      _prevObsValues.hero = score;
+    }
+  });
 }
 
 /**
@@ -192,39 +177,10 @@ export function renderOCFoundation(
   const el = document.getElementById('oc-foundation');
   if (!el) return;
 
-  const sep = '<span class="oc-sep">/</span>';
-
-  let strStiff: number;
-  let strTensionLoss: string;
-  let strSpinPot: string;
-
-  if (stringConfig.isHybrid) {
-    const m = stringConfig.mains;
-    const x = stringConfig.crosses;
-    strStiff = Math.round((m.stiffness + x.stiffness) / 2);
-    strTensionLoss = ((m.tensionLoss + x.tensionLoss) / 2).toFixed(0);
-    strSpinPot = ((m.spinPotential + x.spinPotential) / 2).toFixed(1);
-  } else {
-    const s = stringConfig.string;
-    strStiff = Math.round(s.stiffness);
-    strTensionLoss = s.tensionLoss.toFixed(0);
-    strSpinPot = s.spinPotential.toFixed(1);
-  }
-
-  el.innerHTML = `
-    <div class="oc-foundation-group">
-      <span class="oc-foundation-group-title">[FRAME]</span>
-      <span class="oc-foundation-group-values">WGHT ${racquet.strungWeight}g strung ${sep} SW ${racquet.swingweight} ${sep} RA ${racquet.stiffness} ${sep} PAT ${racquet.pattern}</span>
-    </div>
-    <div class="oc-foundation-group">
-      <span class="oc-foundation-group-title">[STRNG]</span>
-      <span class="oc-foundation-group-values">STIF ${strStiff} ${sep} LOSS ${strTensionLoss}% ${sep} SPIN ${strSpinPot}</span>
-    </div>
-    <div class="oc-foundation-group">
-      <span class="oc-foundation-group-title">[MODEL]</span>
-      <span class="oc-foundation-group-values">POWR ${stats.power} ${sep} CTRL ${stats.control} ${sep} COMF ${stats.comfort}</span>
-    </div>
-  `;
+  const vm = buildOverviewOCFoundationViewModel(racquet, stringConfig, stats);
+  const root = _ensureOverviewReactRoot(_overviewOCMount, el);
+  if (!root) return;
+  root.render(createElement(OverviewOCFoundation, { model: vm }));
 }
 
 /**
@@ -273,60 +229,19 @@ export function renderStatBars(stats: SetupAttributes): void {
   const container = document.getElementById('stat-bars');
   if (!container) return;
 
-  const keyToLabel: Record<string, string> = {};
-  STAT_KEYS.forEach((k, i) => keyToLabel[k] = STAT_LABELS[i]);
-  const hasStructure = container.querySelectorAll('.stat-group').length === STAT_GROUPS.length;
-  if (!hasStructure) {
-    container.innerHTML = '';
-    STAT_GROUPS.forEach(group => {
-      const groupDiv = document.createElement('div');
-      groupDiv.className = 'stat-group';
-      groupDiv.innerHTML = '<div class="stat-group-label">' + group.label + '</div>';
+  const vm = buildOverviewStatBarsViewModel(stats);
+  const root = _ensureOverviewReactRoot(_overviewStatBarsMount, container);
+  if (!root) return;
+  root.render(createElement(OverviewStatBars, { model: vm }));
 
-      group.keys.forEach(key => {
-        const row = document.createElement('div');
-        row.className = 'stat-row';
-        row.dataset.statKey = key;
-        row.innerHTML = `
-          <div class="stat-row-header">
-            <span class="stat-label">${keyToLabel[key]}</span>
-            <span class="stat-value">0</span>
-          </div>
-          <div class="stat-bar-track" data-value="0">
-            ${Array.from({ length: 20 }, (_, index) => `<div class="stat-bar-segment empty" data-seg="${index}"></div>`).join('')}
-          </div>
-        `;
-        groupDiv.appendChild(row);
-      });
-
-      container.appendChild(groupDiv);
-    });
+  const dnaEl = document.getElementById('build-dna-highlights');
+  if (dnaEl) {
+    const dnaVm = buildOverviewBuildDnaViewModel(stats);
+    const dnaRoot = _ensureOverviewReactRoot(_overviewDnaMount, dnaEl);
+    if (dnaRoot) {
+      dnaRoot.render(createElement(OverviewBuildDnaHighlights, { model: dnaVm }));
+    }
   }
-
-  container.querySelectorAll<HTMLElement>('.stat-row').forEach((row) => {
-    const key = row.dataset.statKey || '';
-    const value = stats[key as keyof SetupAttributes] as number;
-    const isHigh = value > 70;
-    const track = row.querySelector('.stat-bar-track') as HTMLElement | null;
-    const valueEl = row.querySelector('.stat-value');
-    if (valueEl) valueEl.textContent = String(value);
-    if (!track) return;
-
-    track.dataset.value = String(value);
-    const segments = Array.from(track.querySelectorAll<HTMLElement>('.stat-bar-segment'));
-    const filledCount = Math.round((value / 100) * segments.length);
-
-    segments.forEach((seg, segIdx) => {
-      seg.classList.remove('filled', 'high', 'empty', 'active');
-      if (segIdx < filledCount) {
-        seg.classList.add(isHigh ? 'high' : 'filled', 'active');
-      } else {
-        seg.classList.add('empty');
-      }
-    });
-  });
-
-  renderBuildDNAHighlights(stats);
 }
 
 /**
@@ -336,180 +251,34 @@ export function renderBuildDNAHighlights(stats: SetupAttributes): void {
   const el = document.getElementById('build-dna-highlights');
   if (!el) return;
 
-  const entries = STAT_KEYS.map((k, i) => ({ key: k, label: STAT_LABELS[i], val: stats[k as keyof SetupAttributes] as number }));
-  const sorted = [...entries].sort((a, b) => b.val - a.val);
-  const top3 = sorted.slice(0, 3);
-  const bot2 = sorted.slice(-2).reverse();
-
-  const topLogs = top3.map(s =>
-    '<span class="dna-log-strong">[+] ' + s.label.toUpperCase() + ' ' + s.val + '</span>'
-  ).join('');
-  const botLogs = bot2.map(s =>
-    '<span class="dna-log-gap">[-] ' + s.label.toUpperCase() + ' ' + s.val + '</span>'
-  ).join('');
-
-  el.innerHTML = `
-    <div class="dna-highlights-row">
-      <span class="dna-highlights-label">STRONG</span>${topLogs}
-      <span class="dna-highlights-label">GAP</span>${botLogs}
-    </div>
-  `;
+  const vm = buildOverviewBuildDnaViewModel(stats);
+  const root = _ensureOverviewReactRoot(_overviewDnaMount, el);
+  if (!root) return;
+  root.render(createElement(OverviewBuildDnaHighlights, { model: vm }));
 }
-
-/**
- * Tooltip handler for radar chart
- */
-export function radarTooltipHandler(context: {
-  tooltip: {
-    opacity: number;
-    dataPoints?: Array<{ label: string; raw: number }>;
-    caretX: number;
-    caretY: number;
-  };
-  chart: { canvas: HTMLElement };
-}): void {
-  let tooltipEl = document.getElementById('chartjs-tooltip');
-
-  if (!tooltipEl) {
-    tooltipEl = document.createElement('div');
-    tooltipEl.id = 'chartjs-tooltip';
-    tooltipEl.className = 'chartjs-tooltip';
-    document.body.appendChild(tooltipEl);
-  }
-
-  const tooltip = context.tooltip;
-
-  if (tooltip.opacity === 0) {
-    tooltipEl.style.opacity = '0';
-    return;
-  }
-
-  const dataPoint = tooltip.dataPoints?.[0];
-  if (!dataPoint) return;
-
-  const label = dataPoint.label;
-  const value = dataPoint.raw;
-
-  tooltipEl.innerHTML = `
-    <div class="tooltip-label">// ${label}</div>
-    <div class="tooltip-value">
-      <div class="tooltip-marker"></div>
-      <span>${value}</span>
-    </div>
-  `;
-
-  const position = context.chart.canvas.getBoundingClientRect();
-  tooltipEl.style.opacity = '1';
-  tooltipEl.style.left = (position.left + window.scrollX + tooltip.caretX + 15) + 'px';
-  tooltipEl.style.top = (position.top + window.scrollY + tooltip.caretY - 10) + 'px';
-}
-
-// Chart.js type declaration
-type Chart = {
-  canvas?: HTMLCanvasElement;
-  data: { datasets: Array<{ data: number[]; borderColor: string; backgroundColor: string; pointBackgroundColor: string; pointBorderColor: string }>; labels: string[] };
-  options: { scales: { r: { grid: { color: string }; angleLines: { color: string }; pointLabels: { color: string } } } };
-  update: (mode: string) => void;
-  destroy?: () => void;
-};
-
-declare const Chart: new (
-  ctx: CanvasRenderingContext2D,
-  config: Record<string, unknown>
-) => Chart;
-
-let _currentRadarChart: Chart | null = null;
 
 /**
  * Render radar chart using Chart.js
  */
 export function renderRadarChart(stats: SetupAttributes): void {
-  const canvas = document.getElementById('radar-chart') as HTMLCanvasElement | null;
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
+  const container = document.getElementById('radar-chart-root');
+  if (!container) return;
 
-  const chartApi = Chart as unknown as {
-    getChart?: (key: HTMLCanvasElement) => Chart | undefined;
-  };
-  const staleChart = _currentRadarChart?.canvas && _currentRadarChart.canvas !== canvas
-    ? _currentRadarChart
-    : null;
-  if (staleChart) {
-    staleChart.destroy?.();
-    _currentRadarChart = null;
-  }
+  const chartTheme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+  const data = statsToRadarData(stats);
+  const statsDataKey = data.join(',');
 
-  const existingChart = _currentRadarChart || chartApi.getChart?.(canvas) || null;
-  if (existingChart && !_currentRadarChart) {
-    _currentRadarChart = existingChart;
-  }
+  const root = _ensureOverviewReactRoot(_overviewRadarMount, container);
+  if (!root) return;
 
-  const data = STAT_KEYS.map(k => stats[k as keyof SetupAttributes] as number);
-
-  const isDark = document.documentElement.dataset.theme === 'dark';
-  const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
-  const angleColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
-  const labelColor = isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.44)';
-  const accentColor = '#AF0000';
-  const fillColor = 'rgba(175, 0, 0, 0.06)';
-
-  if (existingChart) {
-    existingChart.data.datasets[0].data = data;
-    existingChart.data.datasets[0].borderColor = accentColor;
-    existingChart.data.datasets[0].backgroundColor = fillColor;
-    existingChart.data.datasets[0].pointBackgroundColor = accentColor;
-    existingChart.data.datasets[0].pointBorderColor = 'transparent';
-    existingChart.options.scales.r.grid.color = gridColor;
-    existingChart.options.scales.r.angleLines.color = angleColor;
-    existingChart.options.scales.r.pointLabels.color = labelColor;
-    existingChart.update('active');
-    return;
-  }
-
-  _currentRadarChart = new Chart(ctx, {
-    type: 'radar',
-    data: {
-      labels: STAT_LABELS_FULL,
-      datasets: [{
-        data,
-        backgroundColor: fillColor,
-        borderColor: accentColor,
-        borderWidth: 2,
-        pointBackgroundColor: accentColor,
-        pointBorderColor: 'transparent',
-        pointRadius: 3,
-        pointHoverRadius: 6,
-        hitRadius: 30
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      layout: { padding: 0 },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          enabled: false,
-          external: radarTooltipHandler
-        }
-      },
-      elements: {
-        point: { hitRadius: 30, hoverRadius: 6 }
-      },
-      scales: {
-        r: {
-          min: 0,
-          max: 100,
-          ticks: { display: false, stepSize: 20 },
-          grid: { color: gridColor, circular: true, lineWidth: 1 },
-          angleLines: { color: angleColor, lineWidth: 1 },
-          pointLabels: { display: false }
-        }
-      },
-      animation: { duration: 800, easing: 'easeOutQuart' }
-    }
-  });
+  root.render(
+    createElement(OverviewRadarChart, {
+      statsData: data,
+      statsDataKey,
+      chartTheme,
+      onChartReady: _onOverviewRadarReady,
+    })
+  );
 }
 
 /**
@@ -547,31 +316,10 @@ export function renderFitProfileCard(fitProfile: {
   const grid = document.getElementById('fit-grid');
   if (!grid) return;
 
-  const bestForList = Array.isArray(fitProfile.bestFor) ? fitProfile.bestFor : [];
-  const watchOutList = Array.isArray(fitProfile.watchOut) ? fitProfile.watchOut : [];
-  const bestForText = bestForList.join(', ') || 'Versatile all-court players';
-  const watchOutText =
-    watchOutList.length > 0 && !watchOutList[0].toLowerCase().includes('no major')
-      ? watchOutList.join(', ')
-      : 'No major red flags';
-  const tensionText = fitProfile.tensionRec || 'Use the frame range midpoint';
-
-  grid.innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;">
-      <div style="display:flex;flex-direction:column;gap:4px;min-width:0;">
-        <span class="dna-fit-label dna-fit-best">Best For</span>
-        <p class="dna-fit-line">${bestForText}</p>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:4px;min-width:0;">
-        <span class="dna-fit-label dna-fit-warn">Watch</span>
-        <p class="dna-fit-line">${watchOutText}</p>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:4px;min-width:0;">
-        <span class="dna-fit-label dna-fit-tension">Sweet Spot</span>
-        <p class="dna-fit-line">${tensionText}</p>
-      </div>
-    </div>
-  `;
+  const vm = buildOverviewFitProfileCardViewModel(fitProfile);
+  const root = _ensureOverviewReactRoot(_overviewFitMount, grid);
+  if (!root) return;
+  root.render(createElement(OverviewFitProfileCard, { model: vm }));
 }
 
 /**
@@ -584,20 +332,16 @@ export function renderWarnings(warnings: string[]): void {
 
   if (warnings.length === 0) {
     card.classList.add('hidden');
+    const root = _ensureOverviewReactRoot(_overviewWarningsMount, list);
+    if (root) root.render(createElement(OverviewWarnings, { model: { messages: [] } }));
     return;
   }
 
   card.classList.remove('hidden');
-  list.innerHTML = warnings.map(w => `
-    <div class="warning-item">
-      <svg class="warning-icon" width="14" height="14" viewBox="0 0 16 16" fill="none">
-        <path d="M8 2L1 14h14L8 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-        <line x1="8" y1="6" x2="8" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <circle cx="8" cy="12" r="0.8" fill="currentColor"/>
-      </svg>
-      <span>${w}</span>
-    </div>
-  `).join('');
+  const vm = buildOverviewWarningsViewModel(warnings);
+  const root = _ensureOverviewReactRoot(_overviewWarningsMount, list);
+  if (!root) return;
+  root.render(createElement(OverviewWarnings, { model: vm }));
 }
 
 /**
@@ -689,7 +433,6 @@ export function generateWarnings(
     }
   }
 
-  // Gut rain warning
   for (const s of allStrings) {
     if (s.material === 'Natural Gut') {
       warnings.push(`${s.name} is natural gut — avoid moisture/humidity. Not recommended for wet climates without protection.`);
@@ -698,3 +441,8 @@ export function generateWarnings(
 
   return warnings;
 }
+
+registerOverviewRuntimeCallbacks({
+  renderDashboard,
+  renderRadarChart,
+});

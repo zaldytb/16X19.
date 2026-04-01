@@ -22,6 +22,11 @@ import { CompendiumRacketHero } from '../../components/compendium/CompendiumRack
 import { CompendiumStringModulator } from '../../components/compendium/CompendiumStringModulator.js';
 import { CompendiumTopBuilds } from '../../components/compendium/CompendiumTopBuilds.js';
 import { createSearchableSelect, disposeSearchableSelectContainer, ssInstances } from '../components/searchable-select.js';
+import {
+  filterRacquetsForHud,
+  readCompFrameHudFiltersFromDom,
+  type CompFrameHudFilters,
+} from './comp-hud-filters-vm.js';
 import { activateLoadout, switchMode } from './shell.js';
 import { getState as compareGetState, setSlotLoadout as compareSetSlotLoadout } from './compare/hooks/useCompareState.js';
 import { getCompBaseObs, setCompBaseObs } from './comp-base-obs.js';
@@ -71,6 +76,15 @@ let _compPreviewFrame: number | null = null;
 let _compRosterTimer: number | null = null;
 let _compLastRosterKey = '';
 let _compLastPreviewStats: SetupStats | null = null;
+
+let _compHudFilters: CompFrameHudFilters = {
+  search: '',
+  brand: '',
+  pattern: '',
+  stiffness: '',
+  headsize: '',
+  weight: '',
+};
 
 type CompendiumReactMount = { root: Root | null; host: HTMLElement | null };
 
@@ -335,32 +349,11 @@ function _compRenderBaseProfileReact(): void {
 }
 
 export function _compGetFilteredRacquets(): Racquet[] {
-  const search = ((document.getElementById('comp-search') as HTMLInputElement | null)?.value || '').toLowerCase();
-  const brand = (document.getElementById('comp-filter-brand') as HTMLSelectElement | null)?.value || '';
-  const pattern = (document.getElementById('comp-filter-pattern') as HTMLSelectElement | null)?.value || '';
-  const stiffness = (document.getElementById('comp-filter-stiffness') as HTMLSelectElement | null)?.value || '';
-  const headsize = (document.getElementById('comp-filter-headsize') as HTMLSelectElement | null)?.value || '';
-  const weight = (document.getElementById('comp-filter-weight') as HTMLSelectElement | null)?.value || '';
-
-  return RACQUET_DATA.filter((r) => {
-    if (search && !r.name.toLowerCase().includes(search)) return false;
-    if (brand && !r.name.startsWith(brand)) return false;
-    if (pattern && r.pattern !== pattern) return false;
-    if (stiffness === 'soft' && r.stiffness > 59) return false;
-    if (stiffness === 'medium' && (r.stiffness < 60 || r.stiffness > 65)) return false;
-    if (stiffness === 'stiff' && r.stiffness < 66) return false;
-    if (headsize === '102' && r.headSize < 102) return false;
-    if (headsize && headsize !== '102' && r.headSize !== parseInt(headsize, 10)) return false;
-    if (weight === 'ultralight' && r.strungWeight >= 285) return false;
-    if (weight === 'light' && (r.strungWeight < 285 || r.strungWeight > 305)) return false;
-    if (weight === 'medium' && (r.strungWeight < 305 || r.strungWeight > 320)) return false;
-    if (weight === 'heavy' && (r.strungWeight < 320 || r.strungWeight > 340)) return false;
-    if (weight === 'tour' && r.strungWeight <= 340) return false;
-    return true;
-  });
+  return filterRacquetsForHud(RACQUET_DATA, _compHudFilters);
 }
 
 export function _compRenderRoster(): void {
+  _compHudFilters = readCompFrameHudFiltersFromDom();
   const list = document.getElementById('comp-frame-list');
   if (!list) return;
   const racquets = _compGetFilteredRacquets();

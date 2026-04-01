@@ -15,7 +15,7 @@ Across the repo, migrated surfaces follow the same rules:
 
 1. `createRoot(container).render(...)` from the owning legacy `.ts` module, not a second app root
 2. `_ensure*ReactRoot` invalidation when lazy routes unmount and hosts are recreated
-3. `flushSync` only when imperative follow-up in the same tick needs committed DOM
+3. `flushSync` only when imperative follow-up in the same tick needs committed DOM (see **SearchableSelect contract** below)
 4. pure view-model builders in `*-vm.ts`
 5. props-only leaf components under `src/components/<workspace>/`
 
@@ -63,11 +63,12 @@ Still imperative: `renderOCSnapshot`, legacy `renderFitProfile` compatibility, d
 
 ## Find My Build (partial)
 
-Wizard orchestration remains in `src/ui/pages/find-my-build.ts`. Step markup lives in `FmbWizardBody` (`src/components/find-my-build/FmbWizardBody.tsx`); result surfaces are React islands mounted into the Overview hosts.
+Wizard orchestration remains in `src/ui/pages/find-my-build.ts`. `FmbWizardBody` composes dumb step panels (`FmbWizardSteps.tsx`: `FmbStepSwing` … `FmbStepResult`) so IDs (`fmb-step-1` … `fmb-step-5`, `fmb-result`) stay stable for delegation. Result surfaces are React islands mounted into the Overview hosts.
 
 | Area | React component(s) | View-models / helpers | Mount host(s) |
 | --- | --- | --- | --- |
-| Wizard steps + nav chrome | `FmbWizardBody` | n/a | `#find-my-build` |
+| Wizard shell + nav chrome | `FmbWizardBody` | n/a | `#find-my-build` |
+| Step panels (dumb) | `FmbStepSwing`, `FmbStepBall`, `FmbStepCourt`, `FmbStepPainPoints`, `FmbStepPriorities`, `FmbStepResult` | n/a | (inside `#find-my-build`) |
 | Profile summary card | `FmbResultsSummary` | `find-my-build-vm.ts` (`buildFmbSummaryViewModel`) | `#fmb-summary` |
 | Recommended frames + build rows + optimizer CTA | `FmbResultsDirections` | `find-my-build-vm.ts` (`buildFmbDirectionsViewModel`) | `#fmb-directions` |
 
@@ -84,22 +85,22 @@ Still imperative: step transitions, progress bar updates, answer selection, next
 | Hero + spec grid + pills | `CompendiumRacketHero` | `comp-racket-hero-vm.ts` | `#comp-react-hero-root` |
 | Base frame profile | `CompendiumBaseProfile` | `comp-base-profile-vm.ts` | `#comp-react-base-profile-root` |
 | Top builds | `CompendiumTopBuilds` | `comp-top-builds-vm.ts` | `#comp-react-top-builds-root` |
-| HUD roster | `CompendiumFrameRoster` | inline filtering in `compendium.ts` | `#comp-frame-list` |
+| HUD roster | `CompendiumFrameRoster` | `comp-hud-filters-vm.ts` (`filterRacquetsForHud`, `readCompFrameHudFiltersFromDom`) | `#comp-frame-list` |
 | String modulator shell | `CompendiumStringModulator` | n/a | `#comp-react-string-modulator-root` |
 | Frame HUD shell (search + filters + roster host) | `CompendiumFrameHud` | n/a | `#comp-hud` (from `Compendium.tsx`) |
 
-Still imperative: roster population, searchable selects, string injector init, preview computation, and delegated actions.
+Still imperative: roster React mount scheduling, `createSearchableSelect` for modulator hosts, string injector init, preview computation, and delegated actions. Filter **predicates** no longer read the DOM inside the filter function; snapshot state is read once per roster render via the HUD filter VM.
 
 ### Strings tab (`strings.ts`)
 
 | Area | React component(s) | View-models / helpers | Mount host(s) |
 | --- | --- | --- | --- |
 | Detail surface | `StringCompendiumDetail` | `string-compendium-detail-vm.ts` | `#string-react-detail-root` |
-| HUD list | `StringCompendiumRoster` | inline filtering in `strings.ts` | `#string-list` |
+| HUD list | `StringCompendiumRoster` | `string-hud-filters-vm.ts` (`filterStringsForHud`, `readStringHudFiltersFromDom`) | `#string-list` |
 | Frame injection modulator shell | `StringFrameInjectionModulator` | n/a | `#string-react-frame-modulator-root` |
 | String HUD shell | `StringCompendiumHud` | n/a | `#string-hud` (from `Compendium.tsx`) |
 
-Still imperative: roster population, searchable selects, preview bars, change delegation, and modulator init.
+Still imperative: roster React mount scheduling, `createSearchableSelect`, preview bars, change delegation, and modulator init. Filter predicates use the string HUD filter VM (same pattern as frames).
 
 ### Leaderboard (`leaderboard.ts`)
 
@@ -148,14 +149,13 @@ The page shell remains `src/pages/Optimize.tsx` and orchestration remains in `sr
 
 | Area | React component(s) | View-models / helpers | Mount host(s) |
 | --- | --- | --- | --- |
+| Frame / lock / exclude searchable dropdowns | `OptimizeSearchDropdown` | `optimize-search-helpers.ts` (`filterOptSearchItems`) | `#opt-react-frame-search-root`, `#opt-react-lock-search-root`, `#opt-react-exclude-search-root` |
 | Loading / empty / results table / tension filter | `OptimizeResultsTable` | `optimize-results-vm.ts` (`buildOptimizeResultsViewModel`) | `#opt-results` |
 | Material / brand multiselect checklists | `OptimizeMultiselectChecks` | `optimize-filters-vm.ts` | `#opt-material-checks`, `#opt-brand-checks` |
 | Exclude string tags | `OptimizeExcludeTags` | `optimize-filters-vm.ts` (`buildOptimizeExcludeTagsVm`) | `#opt-exclude-tags` |
 | Upgrade mode checkbox | `OptimizeUpgradePanel` | (controlled in `optimize.ts`) | `#opt-react-upgrade-checkbox-root` |
 
-Shared helper: `optimize-search-helpers.ts` (`filterOptSearchItems`) for frame / lock / exclude searchable dropdown filtering (dropdown DOM still imperative).
-
-Still imperative: `_initOptSearchable` dropdown wiring, hybrid lock + setup toggles, stat minimums + tension inputs, mobile filter toggle injection, optimizer run loop, and document-level `data-opt-action` delegation.
+Still imperative: hybrid lock + setup toggles, stat minimums + tension inputs, mobile filter toggle injection, optimizer run loop (reads hidden inputs populated by React), and document-level `data-opt-action` delegation.
 
 ---
 
@@ -165,9 +165,9 @@ Still imperative: `_initOptSearchable` dropdown wiring, hybrid lock + setup togg
 | --- | --- |
 | Tune / Overview | Migrated |
 | Compare | Core panels are React; follow-ups are incremental |
-| Compendium | Main surfaces + HUD shells are React; roster population and searchable selects remain imperative |
-| Optimize | Results + filter islands (material/brand, exclude tags, upgrade checkbox) are React; searchable dropdown wiring and run loop remain imperative |
-| Find My Build | Wizard shell + results are React; wizard state machine remains imperative |
+| Compendium | Main surfaces + HUD shells + roster lists are React; **SearchableSelect** modulator hosts stay vanilla (see contract below) |
+| Optimize | Results + searchable dropdowns + filter islands are React; run loop and toggles remain imperative |
+| Find My Build | Wizard shell, step panels, and results are React; wizard state machine remains imperative |
 | My Loadouts | Dock list is React; callback bridge and delegation remain imperative |
 | Shell | Already React |
 
@@ -175,12 +175,23 @@ Do not rewrite a whole page in one PR. Continue one widget or bounded cluster at
 
 ---
 
+## SearchableSelect contract (completion standard)
+
+Compendium and Strings mount **vanilla** `createSearchableSelect` from `src/ui/components/searchable-select.ts` after React has committed the modulator host subtree. The required pattern is:
+
+1. **Commit first:** wrap the React render that owns the host container in `flushSync` from `react-dom` so the container exists before init.
+2. **Init once per committed host:** call `createSearchableSelect` with the same options API the module already uses.
+3. **Teardown on re-render:** call `disposeSearchableSelectContainer` (or the module’s existing dispose path) before the next `createSearchableSelect` when the host is about to be replaced.
+
+A thin React wrapper around the container is **optional** and only worth a spike if you need to deduplicate `flushSync` boilerplate; it is **not** required for migration “complete” status. Keyboard behavior and class strings in `searchable-select.ts` have high parity risk if reimplemented.
+
+---
+
 ## Suggested next moves
 
-1. Optimize: optional React `OptimizeSearchDropdown` (or keep vanilla `_initOptSearchable` + `filterOptSearchItems`)
-2. Compendium: HUD filter rows + roster as React data if we want to retire imperative roster population
-3. Find My Build: migrate individual step panels to dumb components with VMs
-4. SearchableSelect: optional thin React wrapper for compendium/strings, otherwise keep vanilla + `flushSync`
+1. Incremental polish: further lift HUD filter **UI** into controlled React if we ever need to remove remaining `read*HudFiltersFromDom` snapshots (optional; VMs already isolate predicates).
+2. Optional `SearchableSelectHost.tsx` spike only if duplicate `flushSync` patterns become painful.
+3. Continue one bounded cluster per PR for any new surfaces.
 
 ---
 
@@ -213,3 +224,7 @@ Do not rewrite a whole page in one PR. Continue one widget or bounded cluster at
 - 2026-04-02: Optimize filter islands: `OptimizeMultiselectChecks`, `OptimizeExcludeTags`, `OptimizeUpgradePanel` + `optimize-filters-vm.ts`, `optimize-search-helpers.ts` (`filterOptSearchItems`); `flushSync` for material/brand; upgrade numeric fields stay in `Optimize.tsx` for stable IDs
 - 2026-04-02: Compendium HUD shells extracted to `CompendiumFrameHud` / `StringCompendiumHud` in `src/components/compendium/`
 - 2026-04-02: Find My Build wizard markup extracted to `FmbWizardBody` (`src/components/find-my-build/FmbWizardBody.tsx`)
+- 2026-04-01: Optimize frame / lock / exclude search: `OptimizeSearchDropdown` + hosts in `Optimize.tsx`; `optimize-search-helpers.ts` shared filtering
+- 2026-04-01: Compendium + Strings HUD filtering: `comp-hud-filters-vm.ts`, `string-hud-filters-vm.ts` (pure predicates + DOM snapshot helpers)
+- 2026-04-01: Find My Build step panels split to `FmbWizardSteps.tsx` (composed by `FmbWizardBody`)
+- 2026-04-01: Documented SearchableSelect + `flushSync` + dispose as the completion contract (`REACT-MIGRATION-PLAN.md` SearchableSelect section)

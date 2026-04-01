@@ -31,7 +31,7 @@ import {
   buildOptimizeMaterialChecksVm,
   buildOptimizeMultiselectLabel,
 } from './optimize-filters-vm.js';
-import { filterOptSearchItems } from './optimize-search-helpers.js';
+import { OptimizeSearchDropdown } from '../../components/optimize/OptimizeSearchDropdown.js';
 
 type OptimizerLoadoutLike = {
   id: string;
@@ -72,6 +72,11 @@ let _optTargetTension = '';
 let _optSavedCandidateKey: string | null = null;
 let _optSavedCandidateTimeout: number | null = null;
 let _optUpgradeMode = false;
+let _optFrameQuery = '';
+let _optFrameHiddenId = 'current';
+let _optLockQuery = '';
+let _optLockHiddenId = '';
+let _optExcludeQuery = '';
 
 type OptimizeResultsReactMount = { root: Root | null; host: HTMLElement | null };
 
@@ -83,6 +88,9 @@ const _optMaterialMount: OptimizeFilterReactMount = { root: null, host: null };
 const _optBrandMount: OptimizeFilterReactMount = { root: null, host: null };
 const _optExcludeMount: OptimizeFilterReactMount = { root: null, host: null };
 const _optUpgradeMount: OptimizeFilterReactMount = { root: null, host: null };
+const _optFrameSearchMount: OptimizeFilterReactMount = { root: null, host: null };
+const _optLockSearchMount: OptimizeFilterReactMount = { root: null, host: null };
+const _optExcludeSearchMount: OptimizeFilterReactMount = { root: null, host: null };
 
 function _ensureOptimizeResultsReactRoot(container: HTMLElement | null): Root | null {
   if (!container) return null;
@@ -221,28 +229,114 @@ function _setOptTargetTension(value: string, rerender = true): void {
   renderOptimizerResults(_optLastCandidates, sortBy, _optLastCurrentOBS || 0);
 }
 
-function _syncOptimizeFrameInput(frameSearch: HTMLInputElement, frameValue: HTMLInputElement): void {
+function _syncOptimizeFrameState(): void {
   const activeLoadout = getActiveLoadout();
   const currentSetup = getCurrentSetup();
 
   if (activeLoadout?.frameId) {
     const activeFrame = RACQUETS.find((r) => r.id === activeLoadout.frameId);
     if (activeFrame) {
-      frameSearch.value = activeFrame.name;
-      frameValue.value = activeFrame.id;
+      _optFrameQuery = activeFrame.name;
+      _optFrameHiddenId = activeFrame.id;
       return;
     }
   }
 
   if (currentSetup?.racquet) {
-    frameSearch.value = currentSetup.racquet.name;
-    frameValue.value = currentSetup.racquet.id;
+    _optFrameQuery = currentSetup.racquet.name;
+    _optFrameHiddenId = currentSetup.racquet.id;
     return;
   }
 
-  if (!frameValue.value) {
-    frameValue.value = 'current';
+  if (!_optFrameHiddenId) {
+    _optFrameHiddenId = 'current';
   }
+}
+
+/**
+ * Sync frame search UI from shell / FMB after external DOM updates are no longer used.
+ */
+export function syncOptimizeFrameSelectionFromExternal(name: string, frameId: string): void {
+  _optFrameQuery = name;
+  _optFrameHiddenId = frameId;
+  _renderOptimizeSearchDropdowns();
+}
+
+function _renderOptimizeSearchDropdowns(): void {
+  const frameHost = document.getElementById('opt-react-frame-search-root');
+  const lockHost = document.getElementById('opt-react-lock-search-root');
+  const exHost = document.getElementById('opt-react-exclude-search-root');
+
+  const frameRoot = _ensureOptimizeFilterReactRoot(_optFrameSearchMount, frameHost);
+  const lockRoot = _ensureOptimizeFilterReactRoot(_optLockSearchMount, lockHost);
+  const exRoot = _ensureOptimizeFilterReactRoot(_optExcludeSearchMount, exHost);
+
+  const frameItems = RACQUETS.map((r) => ({ id: r.id, name: r.name }));
+  const lockItems = STRINGS.map((s) => ({ id: s.id, name: s.name }));
+  const exItems = STRINGS.filter((s) => !_optExcludedStringIds.has(s.id)).map((s) => ({ id: s.id, name: s.name }));
+
+  flushSync(() => {
+    frameRoot?.render(
+      createElement(OptimizeSearchDropdown, {
+        inputId: 'opt-frame-search',
+        dropdownId: 'opt-frame-dropdown',
+        hiddenId: 'opt-frame-value',
+        placeholder: 'Search frames...',
+        items: frameItems,
+        query: _optFrameQuery,
+        hiddenValue: _optFrameHiddenId,
+        onQueryChange: (q: string) => {
+          _optFrameQuery = q;
+          _renderOptimizeSearchDropdowns();
+        },
+        onSelectItem: (id: string, name: string) => {
+          _optFrameQuery = name;
+          _optFrameHiddenId = id;
+          _renderOptimizeSearchDropdowns();
+        },
+      }),
+    );
+    lockRoot?.render(
+      createElement(OptimizeSearchDropdown, {
+        inputId: 'opt-lock-string-search',
+        dropdownId: 'opt-lock-string-dropdown',
+        hiddenId: 'opt-lock-string-value',
+        placeholder: 'Search strings...',
+        items: lockItems,
+        query: _optLockQuery,
+        hiddenValue: _optLockHiddenId,
+        onQueryChange: (q: string) => {
+          _optLockQuery = q;
+          _renderOptimizeSearchDropdowns();
+        },
+        onSelectItem: (id: string, name: string) => {
+          _optLockQuery = name;
+          _optLockHiddenId = id;
+          _renderOptimizeSearchDropdowns();
+        },
+      }),
+    );
+    exRoot?.render(
+      createElement(OptimizeSearchDropdown, {
+        inputId: 'opt-exclude-search',
+        dropdownId: 'opt-exclude-dropdown',
+        hiddenId: null,
+        placeholder: 'Search to exclude...',
+        items: exItems,
+        query: _optExcludeQuery,
+        onQueryChange: (q: string) => {
+          _optExcludeQuery = q;
+          _renderOptimizeSearchDropdowns();
+        },
+        onSelectItem: (id: string) => {
+          _optExcludedStringIds.add(id);
+          _optExcludeQuery = '';
+          _renderOptimizeSearchDropdowns();
+          _renderOptimizeExcludeTags();
+        },
+      }),
+    );
+  });
 }
 
 function _restoreOptimizerResultsIfAvailable(): void {
@@ -271,25 +365,18 @@ function _getOptimizerCandidateAt(idx: number) {
  * Initialize the optimizer page
  */
 export function initOptimize(): void {
-  const frameSearch = document.getElementById('opt-frame-search') as HTMLInputElement | null;
-  const frameDropdown = document.getElementById('opt-frame-dropdown') as HTMLElement | null;
-  const frameValue = document.getElementById('opt-frame-value') as HTMLInputElement | null;
+  const frameHost = document.getElementById('opt-react-frame-search-root');
+  if (!frameHost) return;
 
-  if (!frameSearch || !frameDropdown || !frameValue) return;
+  _syncOptimizeFrameState();
 
-  _syncOptimizeFrameInput(frameSearch, frameValue);
-
-  if (frameSearch.dataset.optInitialized === 'true') {
+  if (frameHost.dataset.optInitialized === 'true') {
+    _renderOptimizeSearchDropdowns();
     return;
   }
-  frameSearch.dataset.optInitialized = 'true';
+  frameHost.dataset.optInitialized = 'true';
 
-  _initOptSearchable(
-    frameSearch,
-    frameDropdown,
-    frameValue,
-    () => RACQUETS.map(r => ({ id: r.id, name: r.name }))
-  );
+  _renderOptimizeSearchDropdowns();
 
   // Material + brand filters (React islands)
   const materials = STRING_MATERIALS;
@@ -298,45 +385,21 @@ export function initOptimize(): void {
   _optAllowedBrands = new Set(brands);
   _renderOptimizeMaterialBrandFilters();
 
-  // Exclude strings searchable
-  const exSearch = document.getElementById('opt-exclude-search') as HTMLInputElement | null;
-  const exDropdown = document.getElementById('opt-exclude-dropdown') as HTMLElement | null;
-  if (exSearch && exDropdown) {
-    _initOptSearchable(
-      exSearch,
-      exDropdown,
-      null,
-      () => STRINGS.filter(s => !_optExcludedStringIds.has(s.id)).map(s => ({ id: s.id, name: s.name })),
-      (id: string) => {
-        _optExcludedStringIds.add(id);
-        _renderOptimizeExcludeTags();
-        exSearch.value = '';
-      }
-    );
-  }
   _renderOptimizeExcludeTags();
 
   // Hybrid lock
   const lockSection = document.getElementById('opt-hybrid-lock-section');
   const lockSide = document.getElementById('opt-lock-side') as HTMLSelectElement | null;
   const lockStringWrap = document.getElementById('opt-lock-string-wrap');
-  const lockSearch = document.getElementById('opt-lock-string-search') as HTMLInputElement | null;
-  const lockDropdown = document.getElementById('opt-lock-string-dropdown') as HTMLElement | null;
-  const lockValue = document.getElementById('opt-lock-string-value') as HTMLInputElement | null;
-
-  if (lockSearch && lockDropdown && lockValue) {
-    _initOptSearchable(
-      lockSearch,
-      lockDropdown,
-      lockValue,
-      () => STRINGS.map(s => ({ id: s.id, name: s.name }))
-    );
-  }
 
   if (lockSide && lockStringWrap) {
     lockSide.addEventListener('change', () => {
       lockStringWrap.classList.toggle('hidden', lockSide.value === 'none');
-      if (lockSide.value === 'none' && lockValue) lockValue.value = '';
+      if (lockSide.value === 'none') {
+        _optLockQuery = '';
+        _optLockHiddenId = '';
+        _renderOptimizeSearchDropdowns();
+      }
     });
   }
 
@@ -464,52 +527,6 @@ document.addEventListener('click', (e) => {
     document.querySelectorAll('.opt-ms-dropdown').forEach(d => d.classList.add('hidden'));
   }
 });
-
-/**
- * Initialize searchable dropdown for optimizer
- */
-function _initOptSearchable(
-  inputEl: HTMLInputElement,
-  dropdownEl: HTMLElement,
-  hiddenEl: HTMLInputElement | null,
-  getItems: () => Array<{ id: string; name: string }>,
-  onSelect?: (id: string, name: string) => void
-): void {
-  let isOpen = false;
-
-  function render(q: string) {
-    const items = getItems();
-    const filtered = filterOptSearchItems(items, q, 30);
-    if (filtered.length === 0) {
-      dropdownEl.classList.add('hidden');
-      return;
-    }
-    dropdownEl.innerHTML = filtered.map(i =>
-      `<div class="opt-search-item" data-id="${i.id}">${i.name}</div>`
-    ).join('');
-    dropdownEl.classList.remove('hidden');
-    isOpen = true;
-
-    dropdownEl.querySelectorAll('.opt-search-item').forEach(item => {
-      item.addEventListener('mousedown', (e) => {
-        e.preventDefault();
-        const id = (item as HTMLElement).dataset.id || '';
-        const name = item.textContent || '';
-        if (hiddenEl) hiddenEl.value = id;
-        inputEl.value = name;
-        dropdownEl.classList.add('hidden');
-        isOpen = false;
-        if (onSelect) onSelect(id, name);
-      });
-    });
-  }
-
-  inputEl.addEventListener('focus', () => render(inputEl.value));
-  inputEl.addEventListener('input', () => render(inputEl.value));
-  inputEl.addEventListener('blur', () => {
-    setTimeout(() => { dropdownEl.classList.add('hidden'); isOpen = false; }, 150);
-  });
-}
 
 /**
  * Render exclude tags (React); kept for external callers that trigger a refresh.

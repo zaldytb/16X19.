@@ -330,8 +330,6 @@ export function _fmbSearchDirection(direction: 'closest' | 'safer' | 'ceiling'):
   const profile = _fmbGenerateProfile(_fmbAnswers);
   _fmbLastProfile = profile;
 
-  void import('./optimize.js').then(({ initOptimize }) => initOptimize());
-
   const mins: Record<string, number> = { spin: 0, control: 0, power: 0, comfort: 0, feel: 0, durability: 0, playability: 0, stability: 0, maneuverability: 0 };
   let sortBy = profile.sortBy;
 
@@ -377,18 +375,20 @@ export function _fmbSearchDirection(direction: 'closest' | 'safer' | 'ceiling'):
     typeBtn.classList.add('active');
   }
 
-  if (_fmbCurrentFrames && _fmbCurrentFrames.length > 0) {
-    const topFrame = _fmbCurrentFrames[0].racquet;
-    setVal('opt-frame-search', topFrame.name);
-    const frameValEl = document.getElementById('opt-frame-value') as HTMLInputElement | null;
-    if (frameValEl) frameValEl.value = topFrame.id;
-  }
+  const topFrameForOpt =
+    _fmbCurrentFrames && _fmbCurrentFrames.length > 0 ? _fmbCurrentFrames[0].racquet : null;
 
   closeFindMyBuild();
   switchMode('optimize');
 
   requestAnimationFrame(() => {
-    document.getElementById('opt-run-btn')?.click();
+    void import('./optimize.js').then(({ initOptimize, syncOptimizeFrameSelectionFromExternal }) => {
+      initOptimize();
+      if (topFrameForOpt) {
+        syncOptimizeFrameSelectionFromExternal(topFrameForOpt.name, topFrameForOpt.id);
+      }
+      document.getElementById('opt-run-btn')?.click();
+    });
   });
 }
 

@@ -338,11 +338,12 @@ export function activateLoadout(loadout: Loadout | null): void {
   updateDockEditorActionState();
   setActiveLoadout(loadout);
 
-  const optFrameSearch = document.getElementById('opt-frame-search') as HTMLInputElement | null;
-  const optFrameValue = document.getElementById('opt-frame-value') as HTMLInputElement | null;
   const racquet = RACQUETS.find((frame) => frame.id === loadout.frameId) as Racquet | undefined;
-  if (racquet && optFrameSearch) optFrameSearch.value = racquet.name;
-  if (racquet && optFrameValue) optFrameValue.value = racquet.id;
+  if (racquet) {
+    void import('./optimize.js').then((m) => {
+      m.syncOptimizeFrameSelectionFromExternal(racquet.name, racquet.id);
+    });
+  }
 
   syncRuntimeViews('activate-loadout', { activeLoadout: true, dockEditorContext: true });
 }

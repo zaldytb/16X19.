@@ -24,20 +24,10 @@ export function Optimize() {
             <button className="opt-run-btn" id="opt-run-btn">Search</button>
           </div>
 
-          {/* Frame selection (searchable) */}
+          {/* Frame selection (searchable React island; hidden input rendered inside component) */}
           <div className="opt-filter-section">
             <label className="opt-label">Frame</label>
-            <div className="opt-search-wrap" id="opt-frame-search-wrap">
-              <input
-                type="text"
-                id="opt-frame-search"
-                className="opt-search-input"
-                placeholder="Search frames..."
-                autoComplete="off"
-              />
-              <div className="opt-search-dropdown hidden" id="opt-frame-dropdown"></div>
-            </div>
-            <input type="hidden" id="opt-frame-value" value="current" />
+            <div id="opt-react-frame-search-root"></div>
           </div>
 
           {/* Setup type */}
@@ -61,17 +51,7 @@ export function Optimize() {
               </select>
             </div>
             <div className="opt-lock-string-wrap hidden" id="opt-lock-string-wrap">
-              <div className="opt-search-wrap">
-                <input
-                  type="text"
-                  id="opt-lock-string-search"
-                  className="opt-search-input"
-                  placeholder="Search strings..."
-                  autoComplete="off"
-                />
-                <div className="opt-search-dropdown hidden" id="opt-lock-string-dropdown"></div>
-              </div>
-              <input type="hidden" id="opt-lock-string-value" value="" />
+              <div id="opt-react-lock-search-root"></div>
             </div>
           </div>
 
@@ -113,14 +93,7 @@ export function Optimize() {
           <div className="opt-filter-section">
             <label className="opt-label">Exclude Strings</label>
             <div className="opt-exclude-wrap">
-              <input
-                type="text"
-                id="opt-exclude-search"
-                className="opt-search-input"
-                placeholder="Search to exclude..."
-                autoComplete="off"
-              />
-              <div className="opt-search-dropdown hidden" id="opt-exclude-dropdown"></div>
+              <div id="opt-react-exclude-search-root"></div>
             </div>
             <div className="opt-exclude-tags" id="opt-exclude-tags"></div>
           </div>

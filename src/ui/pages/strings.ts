@@ -21,6 +21,11 @@ import { StringFrameInjectionModulator } from '../../components/strings/StringFr
 import { StringCompendiumRoster } from '../../components/strings/StringCompendiumRoster.js';
 import { getCompBaseObs, setCompBaseObs } from './comp-base-obs.js';
 import { buildStringCompendiumDetailVm } from './string-compendium-detail-vm.js';
+import {
+  filterStringsForHud,
+  readStringHudFiltersFromDom,
+  type StringHudFilters,
+} from './string-hud-filters-vm.js';
 
 const RACQUET_DATA = RACQUETS as unknown as Racquet[];
 const STRING_DATA = STRINGS as unknown as StringData[];
@@ -58,6 +63,13 @@ let _stringFiltersBound = false;
 let _stringPreviewFrame: number | null = null;
 let _stringRosterTimer: number | null = null;
 let _stringLastRosterKey = '';
+
+let _stringHudFilters: StringHudFilters = {
+  search: '',
+  material: '',
+  shape: '',
+  stiffness: '',
+};
 
 type StringReactMount = { root: Root | null; host: HTMLElement | null };
 
@@ -393,20 +405,7 @@ export function _stringToggleHud(): void {
 }
 
 export function _stringGetFilteredStrings(): StringData[] {
-  const search = getInputValue('string-search').toLowerCase();
-  const material = getInputValue('string-filter-material');
-  const shape = getInputValue('string-filter-shape');
-  const stiffness = getInputValue('string-filter-stiffness');
-
-  return STRING_DATA.filter((stringItem) => {
-    if (search && !stringItem.name.toLowerCase().includes(search)) return false;
-    if (material && !stringItem.material.includes(material)) return false;
-    if (shape && !stringItem.shape.toLowerCase().includes(shape.toLowerCase())) return false;
-    if (stiffness === 'soft' && stringItem.stiffness >= 180) return false;
-    if (stiffness === 'medium' && (stringItem.stiffness < 180 || stringItem.stiffness > 210)) return false;
-    if (stiffness === 'stiff' && stringItem.stiffness <= 210) return false;
-    return true;
-  });
+  return filterStringsForHud(STRING_DATA, _stringHudFilters);
 }
 
 export function _stringSyncWithActiveLoadout(): void {
@@ -432,6 +431,7 @@ export function _stringSyncWithActiveLoadout(): void {
 }
 
 export function _stringRenderRoster(): void {
+  _stringHudFilters = readStringHudFiltersFromDom();
   const list = document.getElementById('string-list');
   if (!list) return;
 

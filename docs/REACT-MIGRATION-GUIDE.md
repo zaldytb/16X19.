@@ -39,14 +39,16 @@ Before translating *any* rendering logic to JSX, you must execute the following 
 
 ## 3. Strict State / UI Separation
 
-Legacy imperative modules (`src/ui/pages/*.ts`) often intertwine state calculation (reading `getCurrentSetup()` or `store.ts`) deeply within DOM manipulation rendering loops.
+Legacy imperative modules (`src/ui/pages/*.ts`) often intertwine state calculation (reading `getCurrentSetup()`, `useAppStore.getState()`, or helpers from `src/state/imperative.ts`) deeply within DOM manipulation rendering loops.
 
 If you attempt to migrate these simultaneously into a single complex React component, you will break the app's state flow.
+
+**Single source of truth:** Loadout and app state live in [`src/state/useAppStore.ts`](../src/state/useAppStore.ts). Vanilla modules use [`src/state/imperative.ts`](../src/state/imperative.ts) or `useAppStore.getState()`; derived setup uses [`src/state/setup-sync.ts`](../src/state/setup-sync.ts) / [`src/state/selectors.ts`](../src/state/selectors.ts). React islands should subscribe via `useAppStore` selectors or [`src/hooks/useStore.ts`](../src/hooks/useStore.ts) — not duplicate globals.
 
 **Before writing a `.tsx` file, split the legacy code:**
 
 ### Step 3a: Extract Pure Data
-Extract the calculations mapping `store.ts` to view-state into a pure helper function:
+Extract the calculations mapping store-backed inputs (e.g. active loadout → view-model) into a pure helper function:
 ```typescript
 // Legacy calculation extraction
 export function getRadarViewModel(setup: Setup): RadarData {
@@ -65,7 +67,7 @@ export function RadarWidget({ data }: { data: RadarData }) {
 ```
 
 ### Step 3c: Wrapper Hooking
-Only after the pure UI component is validated, wrap it in a container component that hooks into the Store and bridges the data.
+Only after the pure UI component is validated, wrap it in a container component that subscribes to Zustand (`useAppStore` or `hooks/useStore.ts`) and bridges the data into props.
 
 ---
 
@@ -74,5 +76,5 @@ Before submitting a migration PR/change, an agent must verify:
 - [ ] Has the widget been migrated in isolation using `createRoot` inside the Vanilla TS module?
 - [ ] Does the JSX match the legacy DOM node-for-node?
 - [ ] Are all Tailwind class strings identical to their legacy forms?
-- [ ] Is `app-state.ts` and `store.ts` completely separated from the presentation layer (using pure prop-driven components)?
+- [ ] Is imperative state access (`imperative.ts` / `getCurrentSetup()` / Zustand) kept out of leaf components — dumb widgets receive only props / view-models?
 - [ ] Does `npm run typecheck && npm run canary && npm run build` pass?

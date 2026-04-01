@@ -3,6 +3,7 @@
 
 import { create } from 'zustand';
 import type { Loadout } from '../engine/types.js';
+import { persistActiveLoadout } from './active-loadout-storage.js';
 
 export type AppMode =
   | 'overview'
@@ -18,7 +19,7 @@ export type DockEditorContext =
   | { kind: 'compare-overview' }
   | { kind: 'compare-slot'; slotId: string };
 
-interface AppState {
+export interface AppState {
   // Loadout state
   activeLoadout: Loadout | null;
   savedLoadouts: Loadout[];
@@ -57,8 +58,11 @@ export const useAppStore = create<AppState>((set, get) => ({
   slotColors: [],
   dockEditorContext: { kind: 'active' },
 
-  // Loadout actions
-  setActiveLoadout: (lo) => set({ activeLoadout: lo }),
+  // Loadout actions (persistence is coupled to active loadout changes)
+  setActiveLoadout: (lo) => {
+    set({ activeLoadout: lo });
+    persistActiveLoadout(lo);
+  },
   setSavedLoadouts: (arr) => set({ savedLoadouts: arr }),
   addSavedLoadout: (lo) => set({ savedLoadouts: [...get().savedLoadouts, lo] }),
   removeSavedLoadout: (id) => set({

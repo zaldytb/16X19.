@@ -2,7 +2,7 @@
 // Dock panel UI helpers and mode-specific renderers
 
 import type { Loadout } from '../../engine/types.js';
-import { getActiveLoadout } from '../../state/store.js';
+import { getActiveLoadout } from '../../state/imperative.js';
 
 /** Action link for dock context panel */
 export interface DockAction {

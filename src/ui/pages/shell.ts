@@ -9,15 +9,19 @@ import type { Loadout, Racquet, StringData, StringConfig } from '../../engine/ty
 import { createLoadout as createStateLoadout, loadSavedLoadouts, saveLoadout as stateSaveLoadout, saveLoadout, removeLoadout as stateRemoveLoadout, switchToLoadout as getSwitchedLoadout } from '../../state/loadout.js';
 import { loadActiveLoadout, loadActiveLoadoutId } from '../../state/active-loadout-storage.js';
 import { getCurrentSetup, getSetupFromLoadout } from '../../state/setup-sync.js';
-import { getActiveLoadout, getSavedLoadouts, setActiveLoadout, setSavedLoadouts, subscribe as subscribeStore } from '../../state/store.js';
 import {
+  getActiveLoadout,
+  getSavedLoadouts,
+  setActiveLoadout,
+  setSavedLoadouts,
+  subscribe as subscribeStore,
   getComparisonSlots,
   getCurrentMode,
   getDockEditorContext,
   setDockEditorContext,
   setCurrentMode,
   setSlotColors,
-} from '../../state/app-state.js';
+} from '../../state/imperative.js';
 import {
   addComparisonSlotFromHomeViaBridge,
   addComparisonSlotViaBridge,

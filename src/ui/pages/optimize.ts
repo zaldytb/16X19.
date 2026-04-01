@@ -16,7 +16,7 @@ import {
   scheduleRender,
 } from '../../utils/performance.js';
 import { createLoadout, saveLoadout } from '../../state/loadout.js';
-import { getActiveLoadout } from '../../state/store.js';
+import { getActiveLoadout } from '../../state/imperative.js';
 import { getCurrentSetup } from '../../state/setup-sync.js';
 import { activateLoadout, switchMode } from './shell.js';
 import { getState as compareGetState, setSlotLoadout as compareSetSlotLoadout } from './compare/hooks/useCompareState.js';

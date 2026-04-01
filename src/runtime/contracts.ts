@@ -1,4 +1,4 @@
-import type { DockEditorContext } from '../state/app-state.js';
+import type { DockEditorContext } from '../state/useAppStore.js';
 import { reportRuntimeIssue } from './diagnostics.js';
 
 export interface RuntimeContractResult {

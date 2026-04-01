@@ -60,17 +60,19 @@ Treat those `*-runtime-bridge.ts` files as internal callback registries for lazy
 
 ### State management (`src/state/`)
 
-Centralized single-source-of-truth store:
+Centralized single source of truth:
 
-- `useAppStore.ts` -- backing Zustand store for loadout + app state
-- `store.ts` -- active/saved loadout facade used by runtime and non-React code; setting the active loadout also persists it
+- `useAppStore.ts` -- Zustand store for loadout + app state; `setActiveLoadout` persists to localStorage
+- `imperative.ts` -- synchronous accessors for vanilla TS / runtime / shell (getters, setters, keyed `subscribe`); wraps `useAppStore.getState()` — use this instead of ad hoc globals
+- `selectors.ts` -- pure functions over `AppState` (e.g. `selectCurrentSetup`)
+- `setup-from-loadout.ts` -- pure `getSetupFromLoadout` and caching
+- `setup-sync.ts` -- `getCurrentSetup()`, compendium string sync; uses store + selectors
 - `loadout.ts` -- saved-loadout CRUD operations and saved-list localStorage persistence
-- `active-loadout-storage.ts` -- active-loadout localStorage helpers used for refresh-safe restore
-- `setup-sync.ts` -- `getCurrentSetup()`, cross-page state synchronization
-- `app-state.ts` -- mode, compare slots, radar/slot colors, dock editor context facade
+- `active-loadout-storage.ts` -- active-loadout localStorage helpers (called from the store action)
 - `presets.ts` -- top builds generation
+- `src/hooks/useStore.ts` -- React hooks over `useAppStore` where components subscribe to slices
 
-All pages derive their initial state from `getCurrentSetup()`. The active loadout is the canonical source. Prefer the `store.ts` / `app-state.ts` facades for runtime code; use Zustand hooks/selectors only where React ownership is helpful.
+All pages derive their initial state from `getCurrentSetup()`. The active loadout is the canonical source. React code should subscribe via `useAppStore` selectors or `hooks/useStore.ts`; imperative modules import from `imperative.ts` or call `useAppStore.getState()` directly.
 
 On boot, `src/ui/pages/shell.ts` hydrates saved loadouts and then restores the active loadout from local storage. Refresh persistence is therefore part of the expected runtime contract.
 
@@ -565,8 +567,8 @@ The result is a small attribute boost map applied to frame stats before strings/
 - **Tailwind setup is mixed on purpose** -- the app uses `@tailwindcss/vite`, and `index.html` still carries inline Tailwind config/runtime tokens. Treat both as load-bearing unless you are doing a dedicated styling audit.
 - **Import paths end in `.js`** -- TypeScript files under `src/` use `.js` extensions in imports (bundler resolution to `.ts` sources). This is intentional.
 - **Route aliasing** -- `pathToMode()` in `src/routing/modePaths.ts` intentionally aliases `/strings` and `/leaderboard` back to the Compendium shell mode so shared nav state stays coherent.
-- **Stale client state** -- a "working" UI can show wrong numbers if store/setup-sync are out of date. When scores look off, verify the store and `getCurrentSetup()` first.
-- **Persistence contract** -- active loadout and saved loadouts are expected to survive refresh via local storage. If a refresh loses the current build, inspect `src/state/active-loadout-storage.ts`, `src/state/store.ts`, and shell boot restore in `src/ui/pages/shell.ts`.
+- **Stale client state** -- a "working" UI can show wrong numbers if Zustand/setup-sync are out of date. When scores look off, verify `useAppStore` / `getCurrentSetup()` first.
+- **Persistence contract** -- active loadout and saved loadouts are expected to survive refresh via local storage. If a refresh loses the current build, inspect `src/state/active-loadout-storage.ts`, `useAppStore.setActiveLoadout`, and shell boot restore in `src/ui/pages/shell.ts`.
 - **Tune page sensitivity** -- when changing Tune, verify together: delta card, OBS in Tune, WTTN, recommendations, loadout switching while Tune is open, slider -> apply, sweep chart annotations after theme toggle.
 - **React migration (Zero-Pixel)** -- new workspace UI migrated from imperative TS must use the guide in `docs/REACT-MIGRATION-GUIDE.md`; do not change pixels or Tailwind output casually. Lazy routes require root invalidation (same idea as `_ensureTuneReactRoot`, `_ensureOverviewReactRoot`, `_ensureOptimizeResultsReactRoot`, etc.).
 

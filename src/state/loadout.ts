@@ -19,10 +19,10 @@ import {
   addSavedLoadout as _addSavedLoadout,
   removeSavedLoadout as _removeSavedLoadout,
   updateSavedLoadout as _updateSavedLoadout
-} from './store.js';
+} from './imperative.js';
 
 // Re-export the core store accessors from this loadout-focused surface.
-export { getActiveLoadout, getSavedLoadouts, setActiveLoadout, setSavedLoadouts } from './store.js';
+export { getActiveLoadout, getSavedLoadouts, setActiveLoadout, setSavedLoadouts } from './imperative.js';
 
 // Persistence helper
 const _store = (function(): Storage | null { 

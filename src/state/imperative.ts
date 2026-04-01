@@ -1,9 +1,53 @@
-// src/state/app-state.ts
-// Shared app runtime state for shell/page coordination.
-// (Now backed by Zustand store for React integration)
+// Imperative accessors for vanilla TS / runtime (Zustand is the only source of truth).
 
-import { useAppStore, type AppMode, type DockEditorContext } from './useAppStore.js';
+import type { Loadout } from '../engine/types.js';
+import {
+  useAppStore,
+  type AppMode,
+  type DockEditorContext,
+} from './useAppStore.js';
+
 export type { AppMode, DockEditorContext };
+
+export function getActiveLoadout(): Loadout | null {
+  return useAppStore.getState().activeLoadout;
+}
+
+export function getSavedLoadouts(): Loadout[] {
+  return useAppStore.getState().savedLoadouts;
+}
+
+export function setActiveLoadout(lo: Loadout | null): void {
+  useAppStore.getState().setActiveLoadout(lo);
+}
+
+export function setSavedLoadouts(arr: Loadout[]): void {
+  useAppStore.getState().setSavedLoadouts(arr);
+}
+
+export function addSavedLoadout(lo: Loadout): void {
+  useAppStore.getState().addSavedLoadout(lo);
+}
+
+export function removeSavedLoadout(id: string): void {
+  useAppStore.getState().removeSavedLoadout(id);
+}
+
+export function updateSavedLoadout(id: string, updates: Partial<Loadout>): void {
+  useAppStore.getState().updateSavedLoadout(id, updates);
+}
+
+export function subscribe(
+  key: 'activeLoadout' | 'savedLoadouts',
+  fn: () => void
+): () => void {
+  return useAppStore.subscribe((state, prevState) => {
+    const changed = key === 'activeLoadout'
+      ? state.activeLoadout !== prevState.activeLoadout
+      : state.savedLoadouts !== prevState.savedLoadouts;
+    if (changed) fn();
+  });
+}
 
 export function getCurrentMode(): AppMode {
   return useAppStore.getState().currentMode;

@@ -11,7 +11,7 @@ import {
 import { ThemeProvider } from './context/ThemeContext.js';
 import { registerRouterNavigate } from './routing/routerNavigate.js';
 import { pathToMode } from './routing/modePaths.js';
-import { getCurrentMode, setCurrentMode } from './state/app-state.js';
+import { useAppStore } from './state/useAppStore.js';
 import { syncViews } from './runtime/coordinator.js';
 import { runVanillaAppInit } from './bridge/installWindowBridge.js';
 import {
@@ -43,12 +43,13 @@ function RouterRegistration() {
   return null;
 }
 
-/** Keep app-state mode in sync with browser navigation. */
+/** Keep store mode in sync with browser navigation. */
 function RouteModeSync() {
   const location = useLocation();
   useLayoutEffect(() => {
     const mode = pathToMode(location.pathname);
-    if (mode !== getCurrentMode()) {
+    const { currentMode, setCurrentMode } = useAppStore.getState();
+    if (mode !== currentMode) {
       setCurrentMode(mode);
     }
     // Update active states on buttons

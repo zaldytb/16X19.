@@ -1,7 +1,8 @@
+import { useMemo } from 'react';
 import { useAppStore } from '../state/useAppStore.js';
-import { getCurrentSetup } from '../state/setup-sync.js';
+import { getSetupFromLoadout } from '../state/setup-from-loadout.js';
 
-export type CurrentSetup = NonNullable<ReturnType<typeof getCurrentSetup>>;
+export type CurrentSetup = NonNullable<ReturnType<typeof getSetupFromLoadout>>;
 
 export function useActiveLoadout() {
   return useAppStore((state) => state.activeLoadout);
@@ -14,11 +15,9 @@ export function useSavedLoadouts() {
 /** Canonical racquet/string setup from active loadout (null if none). */
 export function useCurrentSetup(): CurrentSetup | null {
   const activeLoadout = useAppStore((state) => state.activeLoadout);
-  if (!activeLoadout) return null;
-  return getCurrentSetup();
+  return useMemo(() => getSetupFromLoadout(activeLoadout), [activeLoadout]);
 }
 
-// Additional selectors for app state
 export function useCurrentMode() {
   return useAppStore((state) => state.currentMode);
 }

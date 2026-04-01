@@ -4,13 +4,13 @@
 import { RACQUETS, STRINGS } from '../../data/loader.js';
 import { getObsScoreColor, computeCompositeScore, buildTensionContext } from '../../engine/index.js';
 import type { Loadout } from '../../engine/types.js';
-import { getActiveLoadout, getSavedLoadouts } from '../../state/store.js';
+import { getActiveLoadout, getSavedLoadouts } from '../../state/imperative.js';
 import {
   getComparisonSlots as getAppComparisonSlots,
   getDockEditorContext as getAppDockEditorContext,
   getSlotColors as getAppSlotColors,
   getCurrentMode as getAppCurrentMode
-} from '../../state/app-state.js';
+} from '../../state/imperative.js';
 import { _dockGuidance, _dockIcons, _dockContextActions, _dockReturnEditorHome, _dockClearNonEditor, _dockRelocateEditorToContext } from './dock-panel.js';
 import { _prevObsValues, animateOBS } from './obs-animation.js';
 import { populateGaugeDropdown, setHybridMode, showFrameSpecs } from '../shared/helpers.js';

@@ -4,7 +4,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext.js';
-import { getCurrentMode, setCurrentMode } from '../../state/app-state.js';
+import { useAppStore } from '../../state/useAppStore.js';
+import type { AppMode } from '../../state/useAppStore.js';
 import { pathToMode } from '../../routing/modePaths.js';
 import { syncViews } from '../../runtime/coordinator.js';
 import { get16x19FaviconHref } from '../../ui/favicon.js';
@@ -77,8 +78,9 @@ export function Header() {
 
   const handleModeClick = useCallback(
     (mode: string, path: string) => {
-      if (mode !== getCurrentMode()) {
-        setCurrentMode(mode as any);
+      const { currentMode, setCurrentMode } = useAppStore.getState();
+      if (mode !== currentMode) {
+        setCurrentMode(mode as AppMode);
       }
       navigate(path);
       syncViews('mode-click', { mode: true, dockEditorContext: true });

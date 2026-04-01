@@ -1,5 +1,5 @@
 import { predictSetup } from '../engine/index.js';
-import { getCurrentMode, getSlotColors, setSlotColors } from '../state/app-state.js';
+import { getCurrentMode, getSlotColors, setSlotColors } from '../state/imperative.js';
 import { getCurrentSetup } from '../state/setup-sync.js';
 import { renderCompareRefreshViaBridge } from './pages/compare-runtime-bridge.js';
 import { renderOverviewRadarChartViaBridge } from './pages/overview-runtime-bridge.js';

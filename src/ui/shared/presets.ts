@@ -4,9 +4,8 @@
 import { RACQUETS, STRINGS } from '../../data/loader.js';
 import type { Racquet, StringConfig, StringData } from '../../engine/types.js';
 import type { Loadout } from '../../engine/types.js';
-import { getActiveLoadout, getSavedLoadouts } from '../../state/store.js';
+import { getActiveLoadout, getSavedLoadouts, getComparisonSlots } from '../../state/imperative.js';
 import { getCurrentSetup } from '../../state/setup-sync.js';
-import { getComparisonSlots } from '../../state/app-state.js';
 import { predictSetup, computeCompositeScore, buildTensionContext } from '../../engine/index.js';
 import { createLoadout } from '../../state/loadout.js';
 import { addLoadoutToPreferredSlot, addLoadoutToNextAvailableSlot } from '../pages/compare/compare-slot-api.js';

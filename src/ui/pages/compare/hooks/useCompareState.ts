@@ -1,6 +1,9 @@
 /**
  * Compare State Management
  * Centralized state store for compare functionality
+ *
+ * Note: this module still mirrors slot payloads into Zustand `comparisonSlots` via imperative
+ * setters. A future pass can lift compare UI state to be owned solely by the Zustand store.
  */
 
 import type { Loadout, SetupStats } from '../../../../engine/types.js';
@@ -9,7 +12,7 @@ import { getSlotColor, SLOT_COLORS } from '../types.js';
 import {
   getComparisonSlots as getAppComparisonSlots,
   setComparisonSlots as setAppComparisonSlots,
-} from '../../../../state/app-state.js';
+} from '../../../../state/imperative.js';
 import { normalizeCompareSlots } from '../../../../runtime/contracts.js';
 import { reportRuntimeIssue } from '../../../../runtime/diagnostics.js';
 import { notifyCompareStateChanged } from '../../../../runtime/compare-refresh-bridge.js';

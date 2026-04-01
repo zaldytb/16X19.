@@ -65,15 +65,13 @@ Those files are internal callback registries used to keep lazy page modules deco
 
 ### 4. Active loadout is source of truth
 
-- `src/state/store.ts` — active and saved loadouts  
-- `src/state/active-loadout-storage.ts` — active-loadout localStorage persistence and restore helpers  
-- `src/state/setup-sync.ts` — current racquet/string setup from the active loadout  
+[`src/state/useAppStore.ts`](src/state/useAppStore.ts) holds active and saved loadouts. [`src/state/imperative.ts`](src/state/imperative.ts) exposes the same fields for vanilla TS and the coordinator. [`src/state/active-loadout-storage.ts`](src/state/active-loadout-storage.ts) serializes the active loadout (invoked when the store sets active loadout). [`src/state/setup-sync.ts`](src/state/setup-sync.ts) exposes `getCurrentSetup()` and compendium sync derived from the active loadout.
 
 The active loadout and saved loadouts are expected to survive a hard refresh. Boot restore happens from `src/ui/pages/shell.ts` during `Shell.init()`.
 
 ### 5. Shared UI state
 
-[`src/state/useAppStore.ts`](src/state/useAppStore.ts) is the backing Zustand store. [`src/state/store.ts`](src/state/store.ts) and [`src/state/app-state.ts`](src/state/app-state.ts) are the stable facades most runtime code should import from. Prefer these over new ad hoc globals.
+Mode, compare slots, radar/slot colors, and dock editor context live on the same Zustand store. React surfaces should use `useAppStore` (or [`src/hooks/useStore.ts`](src/hooks/useStore.ts)); imperative code should import [`src/state/imperative.ts`](src/state/imperative.ts) or call `useAppStore.getState()` — not duplicate globals.
 
 ## Project structure
 
@@ -96,7 +94,7 @@ loadout-lab/
 │   │   └── overview/           # Overview dashboard widgets (mounted from ui/pages/overview.ts)
 │   ├── context/
 │   ├── global.d.ts
-│   ├── hooks/
+│   ├── hooks/                # e.g. useStore.ts — React hooks over Zustand
 │   ├── pages/
 │   │   ├── Workspaces.tsx
 │   │   ├── Overview.tsx
@@ -112,10 +110,12 @@ loadout-lab/
 │   ├── engine/
 │   ├── state/
 │   │   ├── useAppStore.ts
-│   │   ├── store.ts
+│   │   ├── imperative.ts
+│   │   ├── selectors.ts
+│   │   ├── setup-from-loadout.ts
 │   │   ├── loadout.ts
 │   │   ├── setup-sync.ts
-│   │   ├── app-state.ts
+│   │   ├── active-loadout-storage.ts
 │   │   └── presets.ts
 │   ├── ui/
 │   │   ├── pages/              # imperative page modules + runtime callback registries
@@ -194,7 +194,7 @@ Because Tune may mutate the active loadout directly before re-rendering, also ve
 
 ### Compare
 
-Compare runtime is TypeScript (`src/ui/pages/compare/`). Keep dock actions and `app-state` compare slots in sync with the compare module.
+Compare runtime is TypeScript (`src/ui/pages/compare/`). Keep dock actions and Zustand `comparisonSlots` (via the compare module’s mirror into the store) in sync.
 
 ### Overview
 
@@ -227,7 +227,7 @@ If you touched state, boot, dock, or tune/compare flows, also refresh the page a
 3. Dark mode: `data-theme="dark"` on `<html>`.  
 4. JSON field name: **`swingweight`** (lowercase `w`).  
 5. Import paths in TS often end in `.js` (bundler resolution to `.ts` sources).  
-6. Stale client state can produce a “working” UI with wrong numbers — verify store + setup-sync when scores look off.
+6. Stale client state can produce a “working” UI with wrong numbers — verify `useAppStore` / `getCurrentSetup()` when scores look off.
 7. Active-loadout persistence is separate from saved-loadout persistence — check both paths when debugging refresh regressions.
 
 ## Deployment

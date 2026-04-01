@@ -4,7 +4,7 @@
 import { createElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import type { Loadout } from '../../engine/types.js';
-import { getActiveLoadout, getSavedLoadouts } from '../../state/store.js';
+import { getActiveLoadout, getSavedLoadouts } from '../../state/imperative.js';
 import { MyLoadoutsList } from '../../components/shell/MyLoadoutsList.js';
 import { buildMyLoadoutsViewModel } from './my-loadouts-vm.js';
 

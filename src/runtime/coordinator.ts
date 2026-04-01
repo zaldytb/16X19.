@@ -1,10 +1,10 @@
-import { getActiveLoadout } from '../state/store.js';
 import {
+  getActiveLoadout,
   getComparisonSlots,
   getCurrentMode,
   getDockEditorContext,
   setDockEditorContext,
-} from '../state/app-state.js';
+} from '../state/imperative.js';
 import { renderCompareRefreshViaBridge } from '../ui/pages/compare-runtime-bridge.js';
 import { renderOverviewDashboardViaBridge } from '../ui/pages/overview-runtime-bridge.js';
 import { refreshTuneIfActiveViaBridge } from '../ui/pages/tune-runtime-bridge.js';

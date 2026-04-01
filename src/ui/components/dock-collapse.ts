@@ -2,7 +2,7 @@
 // Dock collapse rail functionality
 
 import { getObsScoreColor } from '../../engine/index.js';
-import { getActiveLoadout, getSavedLoadouts } from '../../state/store.js';
+import { getActiveLoadout, getSavedLoadouts } from '../../state/imperative.js';
 
 function getNumericObs(value: unknown): number {
   const numeric = typeof value === 'number' ? value : Number(value);

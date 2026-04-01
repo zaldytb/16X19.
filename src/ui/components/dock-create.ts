@@ -2,8 +2,7 @@
 // Dock create form handlers
 
 import { RACQUETS, STRINGS } from '../../data/loader.js';
-import { getActiveLoadout, getSavedLoadouts } from '../../state/store.js';
-import { getCurrentMode } from '../../state/app-state.js';
+import { getActiveLoadout, getSavedLoadouts, getCurrentMode } from '../../state/imperative.js';
 import { createLoadout, saveLoadout } from '../../state/loadout.js';
 import { activateLoadout, switchMode } from '../pages/shell.js';
 import { renderOverviewDashboardViaBridge } from '../pages/overview-runtime-bridge.js';

@@ -50,7 +50,7 @@ npm run build
 | Layer | Location | Role |
 | --- | --- | --- |
 | Engine | `src/engine/` | Deterministic prediction and OBS scoring |
-| State | `src/state/` | Zustand-backed loadout and app state, plus stable facades for runtime code |
+| State | `src/state/` | Zustand store (`useAppStore.ts`) as SSOT; `imperative.ts` for vanilla/runtime accessors; `selectors.ts` + `setup-from-loadout.ts` for derived setup |
 | React shell | `src/App.tsx`, `src/pages/`, `src/components/shell/` | Routes, shell layout, header/dock/footer, workspace wrappers |
 | React workspace widgets | `src/components/tune/`, `overview/`, `compare/`, `compendium/`, `strings/`, `leaderboard/`, `optimize/`, `shell/` | Strangler Fig islands mounted from owning `src/ui/pages/*.ts` modules via `createRoot` + `_ensure*ReactRoot`; pure view-models in `*-vm.ts` |
 | Runtime | `src/runtime/`, `src/ui/pages/*-runtime-bridge.ts` | Coordinator-driven refresh plans and cross-page callback registries |
@@ -121,14 +121,16 @@ Outputs include 11 attribute scores, build identity / archetype, and an OBS comp
 
 ## State model
 
-The **active loadout** is the source of truth for the live app.
+The **active loadout** is the source of truth for the live app. **Zustand** (`useAppStore`) holds loadout + app state; setting the active loadout persists via `active-loadout-storage` inside the store action.
 
-- `src/state/useAppStore.ts` - backing Zustand store for loadout + app state
-- `src/state/store.ts` - stable active/saved loadout facade for runtime and non-React code
+- `src/state/useAppStore.ts` - Zustand store (single source of truth for loadout + app fields)
+- `src/state/imperative.ts` - synchronous getters/setters and keyed `subscribe` for vanilla TS, runtime, and shell (wraps `useAppStore.getState()`)
+- `src/state/selectors.ts` - pure selectors over store state (e.g. `selectCurrentSetup`)
+- `src/state/setup-from-loadout.ts` - pure `getSetupFromLoadout` / racquet-string resolution with caching
+- `src/state/setup-sync.ts` - `getCurrentSetup()` and compendium sync helpers (derive from store + selectors)
 - `src/state/loadout.ts` - saved-loadout CRUD plus localStorage persistence for saved lists
-- `src/state/active-loadout-storage.ts` - active-loadout localStorage persistence and boot restore helpers
-- `src/state/setup-sync.ts` - racquet/string setup derived from the active loadout
-- `src/state/app-state.ts` - stable facade for mode, compare slots, charts, and dock editor context
+- `src/state/active-loadout-storage.ts` - active-loadout localStorage serialization used by the store
+- `src/hooks/useStore.ts` - React hooks wrapping `useAppStore` selectors (e.g. `useCurrentSetup`)
 
 At startup, `src/ui/pages/shell.ts` hydrates saved loadouts first, then restores the active loadout from local storage so dock, overview, tune, compare, and optimizer flows survive a hard refresh.
 

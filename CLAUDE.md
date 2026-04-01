@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Tennis Loadout Lab ("16X19") is a physics-based tennis equipment prediction engine. Users select racquets, strings, and tensions to get performance predictions across 11 attributes. It's a static SPA deployed to GitHub Pages (primary) and Vercel (mirror).
 
-**Stack:** Vite 8, TypeScript 6 (strict), React 19, Zustand 5, Tailwind CSS 4, Chart.js. Pipeline scripts run with `tsx` on Node 20+.
+**Stack:** Vite 8, TypeScript 6 (strict), React 19, Zustand 5, Tailwind CSS 4, Chart.js (dynamic `import('chart.js')` via `src/chart/ensure-chart-loaded.ts`; no Chart CDN). Pipeline scripts run with `tsx` on Node 20+.
 
 ---
 
@@ -24,9 +24,9 @@ npm run canary       # regression canaries (OBS + frame novelty profile + archet
 npm run test:runtime # Runtime hardening tests (refresh plans, DOM contracts)
 
 # Data pipeline (when modifying pipeline/data/*.json)
-npm run pipeline     # validate + export:verify (validate, regenerate generated app data + data.ts, run canaries)
+npm run pipeline     # validate + export:verify (validate, regenerate generated.ts + data.ts + catalog.json, run canaries)
 npm run validate     # Validate frames.json / strings.json against schemas
-npm run export       # Regenerate src/data/generated.ts and data.ts from JSON source files
+npm run export       # Regenerate src/data/generated.ts, data.ts, and public/data/catalog.json from JSON source files
 npm run canary:baseline  # Re-record expected canary values (after intentional engine changes)
 
 # Data ingestion
@@ -46,11 +46,13 @@ Pipeline scripts live in `pipeline/scripts/*.ts` and run with **`tsx`** (TypeScr
 
 ### Startup and module wiring
 
-TypeScript owns all live UI and engine code under `src/`. [`src/main.tsx`](src/main.tsx) is the Vite entry -- it mounts the React app and initializes startup helpers such as the favicon heartbeat. [`src/App.tsx`](src/App.tsx) mounts the shell and calls [`src/bridge/installWindowBridge.ts`](src/bridge/installWindowBridge.ts) for the Digicraft boot sequence plus vanilla shell/bootstrap wiring. There is no root `app.js` monolith.
+TypeScript owns all live UI and engine code under `src/`. [`src/main.tsx`](src/main.tsx) is the Vite entry: it runs [`initCatalog()`](src/data/loader.ts) to `fetch` [`public/data/catalog.json`](public/data/catalog.json), then **dynamically imports** [`src/App.tsx`](src/App.tsx) and mounts the React tree. That keeps the initial chunk from pulling in the full app module graph before the equipment catalog is available, and avoids parsing large inlined catalog data from `generated.ts` on the main bundle path. It also initializes startup helpers such as the favicon heartbeat. [`src/App.tsx`](src/App.tsx) mounts the shell and calls [`src/bridge/installWindowBridge.ts`](src/bridge/installWindowBridge.ts) for the Digicraft boot sequence plus vanilla shell/bootstrap wiring. There is no root `app.js` monolith.
 
 Cross-module behavior now prefers direct imports, delegated listeners, or explicit callback registries. Do not add new `window.*` globals as part of normal feature work.
 
-React Router routes live in `src/App.tsx`, with route wrappers in `src/pages/` and shell UI in `src/components/shell/`. Workspace **orchestration** still lives in `src/ui/pages/*.ts` (for example `tune.ts`, `overview.ts`, `compare/`, and `optimize.ts`). React islands now cover Tune, Overview, Compare, Compendium/Strings/Leaderboard, the My Loadouts dock list, Find My Build result surfaces, and the Optimize results table. They are mounted from their owning `src/ui/pages/*.ts` modules via `createRoot`, using pure view-models (`*-vm.ts`) and `_ensure*ReactRoot` invalidation so roots survive lazy-route unmount. See **`docs/REACT-MIGRATION-PLAN.md`** (roadmap) and **`docs/REACT-MIGRATION-GUIDE.md`** (Zero-Pixel Protocol).
+React Router routes live in `src/App.tsx`, with route wrappers in `src/pages/` and shell UI in `src/components/shell/`. [`src/pages/Workspaces.tsx`](src/pages/Workspaces.tsx) uses `React.lazy()` for Tune, Compare, Optimize, Compendium (covers `/compendium`, `/strings`, `/leaderboard`), and How It Works; Overview is eager. The shell wraps the routed `Outlet` in `<Suspense>`. Workspace **orchestration** still lives in `src/ui/pages/*.ts` (for example `tune.ts`, `overview.ts`, `compare/`, and `optimize.ts`). React islands now cover Tune, Overview, Compare, Compendium/Strings/Leaderboard, the My Loadouts dock list, Find My Build result surfaces, and the Optimize results table. They are mounted from their owning `src/ui/pages/*.ts` modules via `createRoot`, using pure view-models (`*-vm.ts`) and `_ensure*ReactRoot` invalidation so roots survive lazy-route unmount. See **`docs/REACT-MIGRATION-PLAN.md`** (roadmap) and **`docs/REACT-MIGRATION-GUIDE.md`** (Zero-Pixel Protocol).
+
+**Chart.js** loads once in the browser via [`src/chart/ensure-chart-loaded.ts`](src/chart/ensure-chart-loaded.ts) (`import('chart.js')`); Overview radar, Tune sweep, and Compare radar all call into it. After registration, `globalThis.Chart` is set so `Chart.getChart(canvas)` works where needed.
 
 ### Runtime coordination (`src/runtime/`)
 
@@ -80,16 +82,17 @@ On boot, `src/ui/pages/shell.ts` hydrates saved loadouts and then restores the a
 
 - `pipeline/data/frames.json` -- racquet database (source of truth, never edit generated outputs directly)
 - `pipeline/data/strings.json` -- string database (source of truth)
-- `src/data/generated.ts` -- **generated app data module** from `npm run export`; commit after regenerating
+- `src/data/generated.ts` -- **generated app data module** from `npm run export` (same payload as `catalog.json`; used for parity and tooling; do not hand-edit)
 - `data.ts` -- **generated compatibility module** from `npm run export`; commit after regenerating
+- `public/data/catalog.json` -- **generated** from `npm run export`; **runtime** catalog loaded by [`src/data/loader.ts`](src/data/loader.ts) (`initCatalog()`) so the live app does not depend on parsing huge inlined arrays from the main JS bundle
 - `pipeline/schemas/` -- JSON schemas used by `npm run validate`
-- `src/data/loader.ts` -- imports `RACQUETS`, `STRINGS`, `FRAME_META`, `FRAME_NOVELTY_PROFILE` from `src/data/generated.ts`
+- `src/data/loader.ts` -- exposes `RACQUETS`, `STRINGS`, `FRAME_META`, `FRAME_NOVELTY_PROFILE` populated asynchronously from `catalog.json`; mutable arrays/objects keep references stable for modules that snapshot at load time. The engine **worker** (`src/workers/engine-worker.ts`) awaits `initCatalog()` before handling jobs.
 
 ### UI pages (`src/ui/pages/`)
 
 Imperative page modules include `shell.ts`, `overview.ts`, `tune.ts`, `compare/`, `optimize.ts`, `compendium.ts`, `strings.ts`, `find-my-build.ts`, `my-loadouts.ts`, and `leaderboard.ts`. React route wrappers live separately under `src/pages/`.
 
-**Tune** — `tune.ts` drives sweep, slider, and recommendations; **React** components under `src/components/tune/` (OBS, delta, WTTN, gauge explorer, recs, sweep chart, slider adornments, etc.) are mounted into `Tune.tsx` hosts. Chart.js for the sweep uses the global `Chart` from `index.html` inside `tune-sweep-chart.ts`, with `TuneSweepChart.tsx` owning canvas lifecycle.
+**Tune** — `tune.ts` drives sweep, slider, and recommendations; **React** components under `src/components/tune/` (OBS, delta, WTTN, gauge explorer, recs, sweep chart, slider adornments, etc.) are mounted into `Tune.tsx` hosts. Chart.js for the sweep is loaded via `ensureChartLoaded()` in `tune-sweep-chart.ts`, with `TuneSweepChart.tsx` owning canvas lifecycle.
 
 **Find My Build** -- the wizard remains imperative in `find-my-build.ts`, but the result summary and recommended-frame surfaces are React islands mounted into `#fmb-summary` and `#fmb-directions` in `Overview.tsx`.
 
@@ -169,6 +172,7 @@ Values outside **engine norm** lose discrimination (clamped to 0 or 1 in normali
 2. Extracts `_meta` into `FRAME_META` and folds `_novelty` + catalog rarity into `FRAME_NOVELTY_PROFILE`
 3. Writes `RACQUETS[]`, `STRINGS[]`, `FRAME_META{}`, `FRAME_NOVELTY_PROFILE{}` to `src/data/generated.ts`
 4. Writes root `data.ts` compatibility re-export
+5. Writes `public/data/catalog.json` with the same catalog payload for runtime `fetch` in `initCatalog()`
 
 ---
 
@@ -560,7 +564,7 @@ The result is a small attribute boost map applied to frame stats before strings/
 
 ## Critical rules
 
-- **Never edit `src/data/generated.ts` or `data.ts` directly** -- both are generated. Modify `pipeline/data/frames.json` or `pipeline/data/strings.json`, then run `npm run pipeline`.
+- **Never edit `src/data/generated.ts`, `data.ts`, or `public/data/catalog.json` directly** -- all are generated. Modify `pipeline/data/frames.json` or `pipeline/data/strings.json`, then run `npm run pipeline`. After export, commit `catalog.json` alongside `generated.ts` so cold boot can load the catalog.
 - **Swingweight spelling** -- field name in JSON data is `swingweight` (lowercase 'w'), not `swingWeight`.
 - **TypeScript strict mode** -- `src/` (engine, state, UI) must pass `npm run typecheck` with zero errors.
 - **Canary baselines must be refreshed after intentional scoring changes** -- `npm run canary` now checks OBS, frame novelty breakdown/archetypes, and identity expectations. If you intentionally change engine math, run `npm run canary:baseline` to re-record.

@@ -1,10 +1,10 @@
 // Engine batch math — runs off the UI thread (Vite module worker).
 
+import { initCatalog, RACQUETS } from '../data/loader.js';
 import { rankFramesForFmb } from '../compute/fmb-rank.js';
 import { runOptimizerScan } from '../compute/optimizer-scan.js';
 import { computeLeaderboardBuildResults } from '../compute/leaderboard-builds.js';
 import { buildRecommendationPoolForRacquet } from '../compute/recommendation-pool.js';
-import { RACQUETS } from '../data/loader.js';
 import type { Racquet } from '../engine/types.js';
 import type { SetupStats } from '../engine/types.js';
 import { toSetupAttributes } from '../compute/setup-attributes.js';
@@ -50,17 +50,26 @@ function runJob(job: WorkerJob): WorkerResult {
   }
 }
 
+let catalogPromise: Promise<void> | null = null;
+function ensureCatalogLoaded(): Promise<void> {
+  if (!catalogPromise) catalogPromise = initCatalog();
+  return catalogPromise;
+}
+
 self.onmessage = (ev: MessageEvent<MainToWorker>) => {
   const data = ev.data;
   if (data.action === 'abort') return;
   if (data.action !== 'run') return;
   const seq = data.seq;
-  try {
-    const result = runJob(data.job);
-    const msg: WorkerToMain = { seq, ok: true, result };
-    self.postMessage(msg);
-  } catch (e) {
-    const msg: WorkerToMain = { seq, ok: false, error: (e as Error).message || String(e) };
-    self.postMessage(msg);
-  }
+  void (async () => {
+    try {
+      await ensureCatalogLoaded();
+      const result = runJob(data.job);
+      const msg: WorkerToMain = { seq, ok: true, result };
+      self.postMessage(msg);
+    } catch (e) {
+      const msg: WorkerToMain = { seq, ok: false, error: (e as Error).message || String(e) };
+      self.postMessage(msg);
+    }
+  })();
 };

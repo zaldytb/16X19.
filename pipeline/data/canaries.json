@@ -75,12 +75,8 @@
     "baseline": {
       "obs": 79.9,
       "archetype": "Control Platform",
-      "noveltyBonus": 0.8,
-      "noveltyArchetypes": [
-        "preciseSpinner",
-        "controlBomber",
-        "stableWhipper"
-      ]
+      "noveltyBonus": 0,
+      "noveltyArchetypes": []
     }
   },
   {
@@ -92,7 +88,7 @@
     "baseline": {
       "obs": 89,
       "archetype": "Spin Dominator",
-      "noveltyBonus": 1.6,
+      "noveltyBonus": 1.3,
       "noveltyArchetypes": [
         "plushLauncher",
         "comfortableAttacker"

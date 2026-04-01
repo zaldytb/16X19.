@@ -1,7 +1,8 @@
 /**
- * Chart.js tension sweep chart for Tune — extracted from tune.ts (global Chart from index.html CDN).
+ * Chart.js tension sweep chart for Tune — loaded via ensureChartLoaded() on first use.
  */
 
+import { ensureChartLoaded } from '../../chart/ensure-chart-loaded.js';
 import type { SetupAttributes } from '../../engine/types.js';
 
 type ChartInstance = {
@@ -11,18 +12,14 @@ type ChartInstance = {
   update?: (mode?: string) => void;
 };
 
-declare const Chart: new (
-  ctx: CanvasRenderingContext2D,
-  config: Record<string, unknown>
-) => ChartInstance;
-
 export type SweepDataRow = { tension: number; stats: SetupAttributes };
 
-export function createTuneSweepChart(
+export async function createTuneSweepChart(
   ctx: CanvasRenderingContext2D,
   data: SweepDataRow[],
   getTensions: () => { baselineTension: number; exploredTension: number }
-): ChartInstance {
+): Promise<ChartInstance> {
+  const { Chart } = await ensureChartLoaded();
   const tensions = data.map((d) => d.tension);
   const isDark = document.documentElement.dataset.theme === 'dark';
 
@@ -209,7 +206,7 @@ export function createTuneSweepChart(
   return new Chart(ctx, {
     type: 'line',
     data: nextData,
-    options: nextOptions,
-    plugins: [baselinePlugin],
-  });
+    options: nextOptions as never,
+    plugins: [baselinePlugin as never],
+  }) as unknown as ChartInstance;
 }

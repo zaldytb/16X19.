@@ -16,7 +16,7 @@ export function CompareRadarChart({ slots, radarKey }: Props) {
       destroyRadarChart();
       return;
     }
-    renderRadarChart('compare-radar-chart', { slots });
+    void renderRadarChart('compare-radar-chart', { slots });
   }, [radarKey, slots.length]);
 
   useLayoutEffect(() => {

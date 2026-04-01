@@ -21,6 +21,7 @@ type Props = {
 
 export function TuneSweepChart({ sweepData, getTensions, chartTheme, onChartReady }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const chartRef = useRef<TuneSweepChartHandle | null>(null);
   const getTensionsRef = useRef(getTensions);
   getTensionsRef.current = getTensions;
 
@@ -30,11 +31,22 @@ export function TuneSweepChart({ sweepData, getTensions, chartTheme, onChartRead
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const chart = createTuneSweepChart(ctx, sweepData, () => getTensionsRef.current());
-    onChartReady(chart);
+    let cancelled = false;
+
+    void (async () => {
+      const chart = await createTuneSweepChart(ctx, sweepData, () => getTensionsRef.current());
+      if (cancelled) {
+        chart.destroy();
+        return;
+      }
+      chartRef.current = chart;
+      onChartReady(chart);
+    })();
 
     return () => {
-      chart.destroy();
+      cancelled = true;
+      chartRef.current?.destroy();
+      chartRef.current = null;
       onChartReady(null);
     };
   }, [sweepData, chartTheme, onChartReady]);

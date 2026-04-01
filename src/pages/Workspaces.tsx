@@ -1,7 +1,15 @@
 import { lazy } from 'react';
-import { HowItWorks } from './HowItWorks.js';
 import { Overview } from './Overview.js';
-import { Compendium } from './Compendium.js';
+
+const CompendiumPage = lazy(async () => {
+  const module = await import('./Compendium.js');
+  return { default: module.Compendium };
+});
+
+const HowItWorksPage = lazy(async () => {
+  const module = await import('./HowItWorks.js');
+  return { default: module.HowItWorks };
+});
 
 const TunePage = lazy(async () => {
   const module = await import('./Tune.js');
@@ -39,21 +47,21 @@ export function OptimizeWorkspace() {
 }
 
 export function CompendiumWorkspace() {
-  return <Compendium initialTab="rackets" />;
+  return <CompendiumPage initialTab="rackets" />;
 }
 
 /** Strings tab — same component, different initial tab */
 export function StringsWorkspace() {
-  return <Compendium initialTab="strings" />;
+  return <CompendiumPage initialTab="strings" />;
 }
 
 /** Leaderboard tab inside compendium shell */
 export function LeaderboardWorkspace() {
-  return <Compendium initialTab="leaderboard" />;
+  return <CompendiumPage initialTab="leaderboard" />;
 }
 
 export function HowItWorksWorkspace() {
-  return <HowItWorks />;
+  return <HowItWorksPage />;
 }
 
 export function MyLoadoutsWorkspace() {

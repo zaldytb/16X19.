@@ -1,7 +1,8 @@
 /**
- * Chart.js radar chart for Overview — global Chart from index.html CDN.
+ * Chart.js radar chart for Overview — loaded via ensureChartLoaded() on first use.
  */
 
+import { ensureChartLoaded } from '../../chart/ensure-chart-loaded.js';
 import { STAT_KEYS, STAT_LABELS_FULL } from '../../engine/constants.js';
 import type { SetupAttributes } from '../../engine/types.js';
 
@@ -29,11 +30,6 @@ export type OverviewRadarChartHandle = {
   update: (mode: string) => void;
   destroy?: () => void;
 };
-
-declare const Chart: new (
-  ctx: CanvasRenderingContext2D,
-  config: Record<string, unknown>
-) => OverviewRadarChartHandle;
 
 export function radarTooltipHandler(context: {
   tooltip: {
@@ -84,11 +80,12 @@ export function statsToRadarData(stats: SetupAttributes): number[] {
   return STAT_KEYS.map((k) => stats[k as keyof SetupAttributes] as number);
 }
 
-export function createOverviewRadarChart(
+export async function createOverviewRadarChart(
   ctx: CanvasRenderingContext2D,
   statsData: number[],
   chartTheme: 'dark' | 'light'
-): OverviewRadarChartHandle {
+): Promise<OverviewRadarChartHandle> {
+  const { Chart } = await ensureChartLoaded();
   const isDark = chartTheme === 'dark';
   const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
   const angleColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
@@ -122,7 +119,7 @@ export function createOverviewRadarChart(
         legend: { display: false },
         tooltip: {
           enabled: false,
-          external: radarTooltipHandler,
+          external: radarTooltipHandler as never,
         },
       },
       elements: {
@@ -140,7 +137,7 @@ export function createOverviewRadarChart(
       },
       animation: { duration: 800, easing: 'easeOutQuart' },
     },
-  });
+  }) as unknown as OverviewRadarChartHandle;
 }
 
 export function patchOverviewRadarChartData(

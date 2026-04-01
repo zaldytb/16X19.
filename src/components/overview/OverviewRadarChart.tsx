@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { ensureChartLoaded } from '../../chart/ensure-chart-loaded.js';
 import {
   createOverviewRadarChart,
   patchOverviewRadarChartData,
@@ -30,21 +31,36 @@ export function OverviewRadarChart({ statsData, statsDataKey, chartTheme, onChar
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const chartApi = getGlobalChart();
-    const existing = chartInstanceRef.current || chartApi?.getChart?.(canvas) || null;
+    let cancelled = false;
 
-    if (existing) {
-      chartInstanceRef.current = existing;
-      patchOverviewRadarChartData(existing, statsData);
-      patchOverviewRadarChartTheme(existing, chartTheme);
-      existing.update('active');
-      onChartReady(existing);
-      return;
-    }
+    void (async () => {
+      await ensureChartLoaded();
+      if (cancelled) return;
 
-    const chart = createOverviewRadarChart(ctx, statsData, chartTheme);
-    chartInstanceRef.current = chart;
-    onChartReady(chart);
+      const chartApi = getGlobalChart();
+      const existing = chartInstanceRef.current || chartApi?.getChart?.(canvas) || null;
+
+      if (existing) {
+        chartInstanceRef.current = existing;
+        patchOverviewRadarChartData(existing, statsData);
+        patchOverviewRadarChartTheme(existing, chartTheme);
+        existing.update('active');
+        onChartReady(existing);
+        return;
+      }
+
+      const chart = await createOverviewRadarChart(ctx, statsData, chartTheme);
+      if (cancelled) {
+        chart.destroy?.();
+        return;
+      }
+      chartInstanceRef.current = chart;
+      onChartReady(chart);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- statsData aligns with statsDataKey; omitting statsData avoids reruns on fresh array identity
   }, [statsDataKey, chartTheme, onChartReady]);
 

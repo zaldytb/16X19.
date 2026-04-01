@@ -5,9 +5,11 @@ const { spawnSync } = require('child_process');
 
 const ROOT        = path.resolve(__dirname, '../..');
 const DATA_DIR    = path.join(ROOT, 'pipeline', 'data');
+const PUBLIC_DATA_DIR = path.join(ROOT, 'public', 'data');
 const OUT_FILE    = path.join(ROOT, 'data.ts');
 const LEGACY_OUT_FILE = path.join(ROOT, 'data.js');
 const GENERATED_TS_FILE = path.join(ROOT, 'src', 'data', 'generated.ts');
+const CATALOG_JSON_FILE = path.join(PUBLIC_DATA_DIR, 'catalog.json');
 const CANARY_SCRIPT = path.join(ROOT, 'pipeline', 'scripts', 'canary-test.ts');
 const TSX_BIN     = path.join(ROOT, 'node_modules', '.bin', 'tsx' + (process.platform === 'win32' ? '.cmd' : ''));
 
@@ -27,6 +29,19 @@ function buildCompatTsOutput() {
     "export type { FrameMeta, FrameNoveltyProfile, Racquet, StringData } from './src/engine/types.js';",
     ''
   ].join('\n');
+}
+
+function buildCatalogJson(racquets, strings, frameMeta, frameNoveltyProfile) {
+  return JSON.stringify(
+    {
+      racquets,
+      strings,
+      frameMeta,
+      frameNoveltyProfile,
+    },
+    null,
+    0
+  );
 }
 
 function buildTsOutput(racquets, strings, frameMeta, frameNoveltyProfile) {
@@ -230,10 +245,12 @@ function main() {
 
   fs.writeFileSync(OUT_FILE, output);
   fs.writeFileSync(GENERATED_TS_FILE, generatedTsOutput);
+  fs.mkdirSync(PUBLIC_DATA_DIR, { recursive: true });
+  fs.writeFileSync(CATALOG_JSON_FILE, buildCatalogJson(RACQUETS, STRINGS, FRAME_META, FRAME_NOVELTY_PROFILE));
   if (fs.existsSync(LEGACY_OUT_FILE)) {
     fs.unlinkSync(LEGACY_OUT_FILE);
   }
-  console.log(`✓ src/data/generated.ts + data.ts written — ${RACQUETS.length} frames, ${STRINGS.length} strings, ${Object.keys(FRAME_META).length} frame meta entries, ${Object.keys(FRAME_NOVELTY_PROFILE).length} novelty profiles`);
+  console.log(`✓ src/data/generated.ts + data.ts + public/data/catalog.json written — ${RACQUETS.length} frames, ${STRINGS.length} strings, ${Object.keys(FRAME_META).length} frame meta entries, ${Object.keys(FRAME_NOVELTY_PROFILE).length} novelty profiles`);
 
   if (isVerify) {
     console.log('\nRunning canary verification...');

@@ -27,7 +27,7 @@
 | Styling | Tailwind CSS 4.x via `@tailwindcss/vite`, with inline `index.html` config still present, plus `style.css` design tokens |
 | Package manager | npm |
 | Runtime | Node.js 20+ (pipeline via `tsx`) |
-| Charts | Chart.js (`chart.js` where imported; global `Chart` in `index.html` for Tune sweep) |
+| Charts | Chart.js — dynamic `import('chart.js')` via [`src/chart/ensure-chart-loaded.ts`](src/chart/ensure-chart-loaded.ts) (Overview radar, Tune sweep, Compare radar); `globalThis.Chart` is set after first load for `Chart.getChart` |
 | Deploy | GitHub Pages + Vercel |
 
 **Important:** Tailwind is wired through `@tailwindcss/vite`, and `index.html` still carries inline runtime config. Runtime-generated utility strings in TypeScript should stay verbatim to avoid styling drift.
@@ -38,12 +38,13 @@
 
 [`src/main.tsx`](src/main.tsx) is the only application entry. It:
 
-- mounts the React app and router
-- initializes shared startup helpers such as the favicon heartbeat
+- calls [`initCatalog()`](src/data/loader.ts) to `fetch` [`public/data/catalog.json`](public/data/catalog.json) and populate [`src/data/loader.ts`](src/data/loader.ts) (`RACQUETS`, `STRINGS`, frame meta / novelty maps)
+- dynamically imports [`src/App.tsx`](src/App.tsx) after the catalog resolves (smaller initial graph; catalog not parsed from inlined `generated.ts` in the main bundle)
+- initializes shared startup helpers such as the favicon heartbeat before the dynamic import
 
 [`src/App.tsx`](src/App.tsx) mounts the shell and calls [`src/bridge/installWindowBridge.ts`](src/bridge/installWindowBridge.ts) for the Digicraft boot sequence plus vanilla shell/bootstrap wiring.
 
-React Router routes live in [`src/App.tsx`](src/App.tsx), with workspace wrappers in [`src/pages/`](src/pages/) and shell UI in [`src/components/shell/`](src/components/shell/). Lazy routes such as Tune, Compare, and Optimize are owned by [`src/pages/Workspaces.tsx`](src/pages/Workspaces.tsx).
+React Router routes live in [`src/App.tsx`](src/App.tsx), with workspace wrappers in [`src/pages/`](src/pages/) and shell UI in [`src/components/shell/`](src/components/shell/). [`src/pages/Workspaces.tsx`](src/pages/Workspaces.tsx) uses `React.lazy()` for Tune, Compare, Optimize, Compendium (including `/strings` and `/leaderboard`), and How It Works; Overview is eager. The shell wraps the routed content in `<Suspense>`.
 
 [`src/global.d.ts`](src/global.d.ts) is effectively empty now; strict TypeScript no longer relies on a large `Window` augmentation layer.
 
@@ -87,6 +88,7 @@ loadout-lab/
 ├── ts-migration-plan.md
 ├── src/
 │   ├── main.tsx
+│   ├── chart/              # ensure-chart-loaded (dynamic Chart.js)
 │   ├── App.tsx
 │   ├── components/
 │   │   ├── shell/
@@ -172,7 +174,9 @@ Pipeline scripts live in `pipeline/scripts/*.ts` and run with **`tsx`**.
 ## Data pipeline
 
 **Source of truth:** `pipeline/data/frames.json`, `strings.json`, `canaries.json`  
-**Generated:** `src/data/generated.ts` and root compatibility `data.ts` — never hand-edit; regenerate with `npm run export` or `npm run pipeline`. Generated data now includes `FRAME_META` and `FRAME_NOVELTY_PROFILE` alongside `RACQUETS` / `STRINGS`.
+**Generated:** `src/data/generated.ts`, root `data.ts`, and **`public/data/catalog.json`** — never hand-edit; regenerate with `npm run export` or `npm run pipeline`. The export script writes the same catalog to `generated.ts` (for tooling / parity) and to `catalog.json` for **runtime** loading via `initCatalog()` in [`src/data/loader.ts`](src/data/loader.ts). The engine worker also awaits `initCatalog()` before running jobs.
+
+If `catalog.json` is missing after a clone, run `npm run export` before `npm run dev`.
 
 For frame ingestion/modeling:
 
@@ -222,7 +226,7 @@ If you touched state, boot, dock, or tune/compare flows, also refresh the page a
 
 ## Common pitfalls
 
-1. `src/data/generated.ts` and `data.ts` are generated — edit JSON under `pipeline/data/` and re-run the pipeline.  
+1. `src/data/generated.ts`, `data.ts`, and `public/data/catalog.json` are generated — edit JSON under `pipeline/data/` and re-run the pipeline; the app fetches `catalog.json` at boot.  
 2. Tailwind utilities in TS templates should stay stable — avoid risky dynamic class composition when touching runtime-generated markup.  
 3. Dark mode: `data-theme="dark"` on `<html>`.  
 4. JSON field name: **`swingweight`** (lowercase `w`).  

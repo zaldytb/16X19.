@@ -1,6 +1,8 @@
 // src/ui/pages/find-my-build.ts
 // Find My Build wizard implementation
 
+import { createElement } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
 import { RACQUETS } from '../../data/loader.js';
 import type { Racquet, StringData, Loadout } from '../../engine/types.js';
 import { createLoadout, saveLoadout } from '../../state/loadout.js';
@@ -8,6 +10,9 @@ import { generateTopBuilds } from '../../state/presets.js';
 import type { Build } from '../../state/presets.js';
 import { renderDockContextPanel } from '../components/dock-renderers.js';
 import { activateLoadout, switchMode } from './shell.js';
+import { FmbResultsDirections } from '../../components/overview/FmbResultsDirections.js';
+import { FmbResultsSummary } from '../../components/overview/FmbResultsSummary.js';
+import { buildFmbDirectionsViewModel, buildFmbSummaryViewModel } from './find-my-build-vm.js';
 
 // FMB Wizard state
 let _fmbStep: number | 'result' = 1;
@@ -36,6 +41,27 @@ let _fmbLastProfile: {
   sortBy: string;
   notes: string[];
 } | null = null;
+
+type FmbReactMount = { root: Root | null; host: HTMLElement | null };
+
+const _fmbSummaryMount: FmbReactMount = { root: null, host: null };
+const _fmbDirectionsMount: FmbReactMount = { root: null, host: null };
+
+function _ensureFmbReactRoot(mount: FmbReactMount, container: HTMLElement | null): Root | null {
+  if (!container) return null;
+  if (mount.root && mount.host) {
+    if (mount.host !== container || !mount.host.isConnected) {
+      mount.root.unmount();
+      mount.root = null;
+      mount.host = null;
+    }
+  }
+  if (!mount.root) {
+    mount.root = createRoot(container);
+    mount.host = container;
+  }
+  return mount.root;
+}
 
 /**
  * Open the Find My Build wizard
@@ -282,47 +308,19 @@ export function _fmbShowResults(profile: ReturnType<typeof _fmbGenerateProfile>)
   const directionsEl = document.getElementById('fmb-directions');
   if (!summaryEl || !directionsEl) return;
 
-  const swingLabels: Record<string, string> = { compact: 'compact-swing', smooth: 'balanced-swing', heavy: 'heavy-swing' };
-  const ballLabels: Record<string, string> = { flat: 'flat-hitting', moderate: 'moderate-spin', heavy: 'heavy-topspin' };
-  const courtLabels: Record<string, string> = { baseliner: 'baseliner', allcourt: 'all-court', firststrike: 'first-strike', touch: 'touch player' };
-
-  const identity = `${courtLabels[_fmbAnswers.court || ''] || 'all-court'} with a ${swingLabels[_fmbAnswers.swing || ''] || 'balanced'}, ${ballLabels[_fmbAnswers.ball || ''] || 'moderate-spin'} game`;
-
-  const prioLabels = _fmbAnswers.priorities.map(p => p.charAt(0).toUpperCase() + p.slice(1));
-
-  const threshLines = Object.entries(profile.minThresholds)
-    .map(([k, v]) => `<span class="fmb-thresh-tag">${k.charAt(0).toUpperCase() + k.slice(1)} \u2265 ${v}</span>`)
-    .join('');
-
-  summaryEl.innerHTML = `
-    <div class="fmb-profile-card">
-      <div class="fmb-profile-label">YOUR PROFILE</div>
-      <h3 class="fmb-profile-identity">${identity.charAt(0).toUpperCase() + identity.slice(1)}</h3>
-      <div class="fmb-profile-priorities">
-        <span class="fmb-prio-label">Optimizing for:</span>
-        ${prioLabels.map((p, i) => `<span class="fmb-prio-tag">${i + 1}. ${p}</span>`).join('')}
-      </div>
-      ${threshLines ? `<div class="fmb-profile-thresholds">${threshLines}</div>` : ''}
-      ${profile.notes.length ? `<div class="fmb-profile-notes">${profile.notes.map(n => `<div class="fmb-note">${n}</div>`).join('')}</div>` : ''}
-    </div>
-  `;
-
   const rankedFrames = _fmbRankFrames(profile);
   _fmbCurrentFrames = rankedFrames;
 
-  directionsEl.innerHTML = `
-    <div class="fmb-frame-results">
-      <h4 class="fmb-frames-title">Recommended Frames</h4>
-      <p class="fmb-frames-sub">Based on your playstyle profile. Each frame shows its best builds.</p>
-      <div class="fmb-frame-list">
-        ${rankedFrames.map((fr, idx) => _fmbRenderFrameCard(fr, idx)).join('')}
-      </div>
-      <div class="fmb-also-try">
-        <p class="fmb-also-try-text">Want more options?</p>
-        <button class="fmb-dir-btn" data-fmb-action="searchDirection" data-fmb-direction="closest">Search All Strings in Optimizer</button>
-      </div>
-    </div>
-  `;
+  const summaryRoot = _ensureFmbReactRoot(_fmbSummaryMount, summaryEl);
+  const directionsRoot = _ensureFmbReactRoot(_fmbDirectionsMount, directionsEl);
+  if (!summaryRoot || !directionsRoot) return;
+
+  summaryRoot.render(createElement(FmbResultsSummary, {
+    model: buildFmbSummaryViewModel(_fmbAnswers, profile),
+  }));
+  directionsRoot.render(createElement(FmbResultsDirections, {
+    model: buildFmbDirectionsViewModel(rankedFrames),
+  }));
 }
 
 /**
@@ -423,50 +421,6 @@ export function _fmbRankFrames(profile: ReturnType<typeof _fmbGenerateProfile>):
 
   ranked.sort((a, b) => b.score - a.score);
   return ranked.slice(0, 5);
-}
-
-/**
- * Render frame card HTML
- */
-export function _fmbRenderFrameCard(fr: typeof _fmbCurrentFrames[0], idx: number): string {
-  const racquet = fr.racquet;
-  const builds = fr.topBuilds;
-
-  let buildsHtml = '';
-  if (builds && builds.length > 0) {
-    buildsHtml = '<div class="fmb-frame-builds">' +
-      builds.map((build: Build, bIdx: number) => {
-        const isHybrid = build.type === 'hybrid';
-        const name = isHybrid
-          ? `${build.mains?.name} / ${build.crosses?.name}`
-          : build.string?.name || 'Unknown';
-        const tension = isHybrid
-          ? `M:${build.tension} / X:${build.tension - 2} lbs`
-          : `${build.tension} lbs`;
-        const obs = build.score.toFixed(1);
-
-        return `<div class="fmb-build-row">
-          <div class="fmb-build-info">
-            <span class="fmb-build-name">${name}</span>
-            <span class="fmb-build-tension">${tension}</span>
-          </div>
-          <div class="fmb-build-obs">${obs}</div>
-          <div class="fmb-build-actions">
-            <button class="fmb-build-btn" data-fmb-action="activate" data-frame-idx="${idx}" data-build-idx="${bIdx}">Activate</button>
-            <button class="fmb-build-btn fmb-build-btn-secondary" data-fmb-action="save" data-frame-idx="${idx}" data-build-idx="${bIdx}">Save</button>
-          </div>
-        </div>`;
-      }).join('') +
-    '</div>';
-  }
-
-  return `<div class="fmb-frame-card" data-frame-idx="${idx}">
-    <div class="fmb-frame-header">
-      <div class="fmb-frame-name">${racquet.name}</div>
-      <div class="fmb-frame-meta">${racquet.headSize}" \u00B7 ${racquet.weight}g \u00B7 ${racquet.pattern}</div>
-    </div>
-    ${buildsHtml}
-  </div>`;
 }
 
 /**

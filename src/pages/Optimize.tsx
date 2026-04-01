@@ -61,14 +61,16 @@ export function Optimize() {
               </select>
             </div>
             <div className="opt-lock-string-wrap hidden" id="opt-lock-string-wrap">
-              <input
-                type="text"
-                id="opt-lock-string-search"
-                className="opt-search-input"
-                placeholder="Search strings..."
-                autoComplete="off"
-              />
-              <div className="opt-search-dropdown hidden" id="opt-lock-string-dropdown"></div>
+              <div className="opt-search-wrap">
+                <input
+                  type="text"
+                  id="opt-lock-string-search"
+                  className="opt-search-input"
+                  placeholder="Search strings..."
+                  autoComplete="off"
+                />
+                <div className="opt-search-dropdown hidden" id="opt-lock-string-dropdown"></div>
+              </div>
               <input type="hidden" id="opt-lock-string-value" value="" />
             </div>
           </div>

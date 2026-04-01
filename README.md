@@ -1,6 +1,6 @@
 # 16X19 / Tennis Loadout Lab
 
-Frame × String × Tension prediction for tennis setups.
+Frame x String x Tension prediction for tennis setups.
 
 16X19 models how a racquet and string setup performs across 11 attributes:
 power, spin, control, comfort, feel, stability, forgiveness, launch,
@@ -18,18 +18,22 @@ The app lets users:
 - save, restore, and share loadouts
 - persist the current active loadout and saved loadouts across refreshes via local storage
 
-Primary URL: `https://github.com/zaldytb/16X19.`  
+Primary URL: `https://github.com/zaldytb/16X19`  
 Mirror: `https://16x19.vercel.app/`
 
 ## Stack
 
-- **Vite 8** — dev server and production bundle
-- **TypeScript 6** — strict mode for `src/` (engine, state, UI)
-- **Tailwind CSS 4** — `@tailwindcss/vite` for the app build, with inline runtime config/tokens still declared in `index.html`; design tokens and component styles live in `style.css`
-- **Chart.js** — `chart.js` npm package where modules import it (e.g. compare radar); `index.html` also loads Chart.js globally for the Tune tension sweep chart integration
-- **Node.js 20+** — data pipeline and tooling (`tsx` for TypeScript scripts)
+- **Vite 8** - dev server and production bundle
+- **TypeScript 6** - strict mode for `src/` (engine, state, UI)
+- **React 19** - shell, route wrappers, and migrated UI islands
+- **Zustand 5** - app and loadout state store
+- **Tailwind CSS 4** - `@tailwindcss/vite` for the app build, with inline runtime config/tokens still declared in `index.html`; design tokens and component styles live in `style.css`
+- **Chart.js** - `chart.js` npm package where modules import it (for example compare radar); `index.html` also loads Chart.js globally for the Tune tension sweep chart integration
+- **Node.js 20+** - data pipeline and tooling (`tsx` for TypeScript scripts)
 
-There is **no** root `app.js` monolith. The Vite entry is [`src/main.tsx`](src/main.tsx) (React + React Router). [`src/App.tsx`](src/App.tsx) mounts the shell and calls [`src/bridge/installWindowBridge.ts`](src/bridge/installWindowBridge.ts) for boot animation and vanilla shell/bootstrap wiring. Cross-module UI behavior now uses direct imports, delegated listeners, and callback registries rather than a `window.*` bridge.
+There is **no** root `app.js` monolith. The Vite entry is [`src/main.tsx`](src/main.tsx). [`src/App.tsx`](src/App.tsx) mounts the shell and calls [`src/bridge/installWindowBridge.ts`](src/bridge/installWindowBridge.ts) for boot animation and vanilla shell/bootstrap wiring. Cross-module UI behavior uses direct imports, delegated listeners, and callback registries rather than a `window.*` bridge.
+
+Where imperative code must run immediately after a micro-React tree commits, owning modules use `flushSync` around `createRoot().render()` so `getElementById` targets exist before init. That pattern is used in Tune and Compendium/Strings.
 
 ## Quick start
 
@@ -41,18 +45,28 @@ npm run canary
 npm run build
 ```
 
-## Architecture (summary)
+## Architecture
 
 | Layer | Location | Role |
-| -------- | ----------- | ------ |
-| Engine | `src/engine/` | Deterministic prediction (L0–L3 + composite) |
+| --- | --- | --- |
+| Engine | `src/engine/` | Deterministic prediction and OBS scoring |
 | State | `src/state/` | Zustand-backed loadout and app state, plus stable facades for runtime code |
-| React shell | `src/App.tsx`, `src/pages/`, `src/components/` | Routes, shell layout, workspace wrappers, header/dock/footer |
-| React workspace widgets | `src/components/tune/`, `src/components/overview/` | Dumb workspace UI mounted from `src/ui/pages/tune.ts` / `overview.ts` via `createRoot` + host invalidation helpers; pure view-models in `tune-*-vm.ts` / `overview-*-vm.ts` |
-| Runtime | `src/runtime/`, `src/ui/pages/*-runtime-bridge.ts` | Coordinator-driven refresh plans (`getRefreshPlan` includes `compendium` where relevant) and cross-page callback registries |
-| UI | `src/ui/` | Imperative workspace orchestration (`tune.ts`, `overview.ts`, `compare/`, …), dock renderers, shared UI helpers |
+| React shell | `src/App.tsx`, `src/pages/`, `src/components/shell/` | Routes, shell layout, header/dock/footer, workspace wrappers |
+| React workspace widgets | `src/components/tune/`, `overview/`, `compare/`, `compendium/`, `strings/`, `leaderboard/`, `optimize/`, `shell/` | Strangler Fig islands mounted from owning `src/ui/pages/*.ts` modules via `createRoot` + `_ensure*ReactRoot`; pure view-models in `*-vm.ts` |
+| Runtime | `src/runtime/`, `src/ui/pages/*-runtime-bridge.ts` | Coordinator-driven refresh plans and cross-page callback registries |
+| UI orchestration | `src/ui/` | Imperative workspace orchestration (`tune.ts`, `overview.ts`, `compare/`, `optimize.ts`, `compendium.ts`, ...) plus dock/shared helpers |
 | Bootstrap | `src/bridge/installWindowBridge.ts` | Boot animation helpers and vanilla shell/bootstrap wiring |
-| Data | `pipeline/data/*.json` → `npm run export` → `src/data/generated.ts` + `data.ts` | Source of truth plus generated TypeScript data modules |
+| Data | `pipeline/data/*.json` -> `npm run export` -> `src/data/generated.ts` + `data.ts` | Source of truth plus generated TypeScript data modules |
+
+Current React migration status:
+
+- Tune: major panels are React islands
+- Overview: dashboard surfaces are React islands
+- Compare: core panels are React islands
+- Compendium / Strings / Leaderboard: main surfaces are React islands
+- My Loadouts: dock list is a React island
+- Find My Build: results summary/directions are React islands; wizard flow remains imperative
+- Optimize: results table/loading/empty state are React; filters and run loop remain imperative
 
 See [AGENTS.md](AGENTS.md) for agent-oriented detail and debugging notes.
 
@@ -63,23 +77,21 @@ See [AGENTS.md](AGENTS.md) for agent-oriented detail and debugging notes.
 ├── index.html
 ├── vite.config.ts
 ├── style.css
-├── data.ts                 # generated compatibility module — do not edit
+├── data.ts                 # generated compatibility module - do not edit
 ├── src/
-│   ├── main.tsx            # Vite entry (React root)
-│   ├── App.tsx             # React shell, routing, and startup wiring
+│   ├── main.tsx            # Vite entry
+│   ├── App.tsx             # React shell, routing, startup wiring
 │   ├── bridge/             # boot sequence + vanilla shell/bootstrap helpers
-│   ├── components/         # React shell + workspace widgets (e.g. tune/* mounted from ui/pages/tune.ts)
-│   ├── context/            # React providers (theme, etc.)
-│   ├── global.d.ts         # reserved for shared global typing (currently minimal)
+│   ├── components/         # shell + migrated workspace widgets
+│   ├── context/            # React providers
 │   ├── hooks/              # React-facing selectors/hooks over shared app state
 │   ├── pages/              # route wrappers/workspaces used by React Router
-│   ├── routing/            # path ↔ mode helpers and router integration
-│   ├── runtime/            # view coordinator, contracts, diagnostics, refresh bridges
-│   ├── vite-env.d.ts
+│   ├── routing/            # path <-> mode helpers and router integration
+│   ├── runtime/            # coordinator, contracts, diagnostics, bridges
 │   ├── engine/
 │   ├── state/
 │   ├── ui/
-│   │   ├── pages/          # imperative page logic (overview, tune, compare, compendium, …)
+│   │   ├── pages/          # imperative page logic and view-model builders
 │   │   ├── components/
 │   │   └── shared/
 │   ├── data/
@@ -93,7 +105,6 @@ See [AGENTS.md](AGENTS.md) for agent-oriented detail and debugging notes.
 ├── tools/                  # frame-gui, helpers
 └── .github/workflows/
 ```
-
 ## Prediction engine
 
 The engine is deterministic: identical inputs always yield identical outputs.
@@ -112,16 +123,14 @@ Outputs include 11 attribute scores, build identity / archetype, and an OBS comp
 
 The **active loadout** is the source of truth for the live app.
 
-- `src/state/useAppStore.ts` — backing Zustand store for loadout + app state
-- `src/state/store.ts` — stable active/saved loadout facade for runtime and non-React code
-- `src/state/loadout.ts` — saved-loadout CRUD plus localStorage persistence for saved lists
-- `src/state/active-loadout-storage.ts` — active-loadout localStorage persistence and boot restore helpers
-- `src/state/setup-sync.ts` — racquet/string setup derived from the active loadout
-- `src/state/app-state.ts` — stable facade for mode, compare slots, charts, and dock editor context
+- `src/state/useAppStore.ts` - backing Zustand store for loadout + app state
+- `src/state/store.ts` - stable active/saved loadout facade for runtime and non-React code
+- `src/state/loadout.ts` - saved-loadout CRUD plus localStorage persistence for saved lists
+- `src/state/active-loadout-storage.ts` - active-loadout localStorage persistence and boot restore helpers
+- `src/state/setup-sync.ts` - racquet/string setup derived from the active loadout
+- `src/state/app-state.ts` - stable facade for mode, compare slots, charts, and dock editor context
 
-At startup, `src/ui/pages/shell.ts` hydrates saved loadouts first, then restores the active loadout from local storage so dock, overview, tune, and compare flows survive a hard refresh.
-
-Most non-React modules should still depend on `store.ts` / `app-state.ts`; React components can use the hooks/selectors layered over `useAppStore.ts`.
+At startup, `src/ui/pages/shell.ts` hydrates saved loadouts first, then restores the active loadout from local storage so dock, overview, tune, compare, and optimizer flows survive a hard refresh.
 
 ## Data pipeline
 
@@ -136,10 +145,10 @@ Most non-React modules should still depend on `store.ts` / `app-state.ts`; React
 - `src/data/generated.ts` — produced by `npm run export` / `npm run pipeline`, used by the app (`RACQUETS`, `STRINGS`, `FRAME_META`, `FRAME_NOVELTY_PROFILE`)
 - `data.ts` — root compatibility re-export produced by `npm run export` / `npm run pipeline`
 
-For frames, authoring now splits into two internal modeling blocks:
+For frames, authoring splits into two internal modeling blocks:
 
 - `_meta` for construction / technology tendencies
-- `_novelty` for reviewer-authored contradiction hints that are applied at the frame stage before string blending
+- `_novelty` for reviewer-authored contradiction hints applied at the frame stage before string blending
 
 ```bash
 npm run validate          # schema validation
@@ -152,7 +161,7 @@ npm run scrape:twu
 npm run scrape:twu-strings
 ```
 
-Pipeline scripts are **TypeScript** (`.ts`) and run with **`tsx`** (see `package.json`).
+Pipeline scripts are TypeScript and run with `tsx`.
 
 ## Testing and release checks
 
@@ -162,25 +171,25 @@ Before pushing:
 npm run typecheck && npm run canary && npm run build && npm run test:runtime
 ```
 
-Manual smoke (after UI or engine changes): overview hero/radar, tune apply flow, compare slots/editor, compendium/strings, dock save/activate, leaderboard tab roundtrip, and refresh persistence for both active and saved loadouts.
+Manual smoke after UI or engine changes: overview hero/radar, Find My Build results, tune apply flow, compare slots/editor, optimizer results/actions, compendium/strings, dock save/activate/delete-confirm, leaderboard tab roundtrip, and refresh persistence for both active and saved loadouts.
 
 ## Deployment
 
-GitHub Pages builds from `main` (see `.github/workflows/`).
+GitHub Pages builds from `main`.
 
 ```bash
 git push origin main
 ```
 
-Actions: `https://github.com/zaldytb/loadout-lab/actions`  
-Vercel mirror: `https://loadout-lab.vercel.app`
+Actions: `https://github.com/zaldytb/16X19/actions`  
+Vercel mirror: `https://16x19.vercel.app/`
 
 ## Further reading
 
-- [AGENTS.md](AGENTS.md) — conventions for contributors and coding agents  
-- [docs/README.md](docs/README.md) — documentation index (“wiki”)  
-- [docs/Getting-Started.md](docs/Getting-Started.md) — setup, ingest, pipeline  
-- [ts-migration-plan.md](ts-migration-plan.md) — TypeScript / bundler migration snapshot  
-- [docs/REACT-MIGRATION-GUIDE.md](docs/REACT-MIGRATION-GUIDE.md) — Zero-Pixel Protocol for React migration  
-- [docs/REACT-MIGRATION-PLAN.md](docs/REACT-MIGRATION-PLAN.md) — post–Tune React roadmap (Strangler Fig next steps)  
-- [CLAUDE.md](CLAUDE.md) — Claude Code project notes  
+- [AGENTS.md](AGENTS.md) - conventions for contributors and coding agents
+- [docs/README.md](docs/README.md) - documentation index
+- [docs/Getting-Started.md](docs/Getting-Started.md) - setup, ingest, pipeline
+- [ts-migration-plan.md](ts-migration-plan.md) - TypeScript / bundler migration snapshot
+- [docs/REACT-MIGRATION-GUIDE.md](docs/REACT-MIGRATION-GUIDE.md) - Zero-Pixel Protocol for React migration
+- [docs/REACT-MIGRATION-PLAN.md](docs/REACT-MIGRATION-PLAN.md) - React migration status and next targets
+- [CLAUDE.md](CLAUDE.md) - Claude Code project notes

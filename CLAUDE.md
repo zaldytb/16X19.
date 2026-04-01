@@ -50,7 +50,7 @@ TypeScript owns all live UI and engine code under `src/`. [`src/main.tsx`](src/m
 
 Cross-module behavior now prefers direct imports, delegated listeners, or explicit callback registries. Do not add new `window.*` globals as part of normal feature work.
 
-React Router routes live in `src/App.tsx`, with route wrappers in `src/pages/` and shell UI in `src/components/shell/`. Workspace **orchestration** still lives in `src/ui/pages/*.ts` (e.g. `tune.ts`, `overview.ts`, `compare/`). The **Tune** workspace mounts declarative UI from **`src/components/tune/`** into placeholder DOM from `src/pages/Tune.tsx` via `createRoot` in `tune.ts`, using pure view-models (`tune-*-vm.ts`, shared helpers) and **`_ensureTuneReactRoot`** so roots survive lazy-route unmount. See **`docs/REACT-MIGRATION-PLAN.md`** (roadmap) and **`docs/REACT-MIGRATION-GUIDE.md`** (Zero-Pixel Protocol).
+React Router routes live in `src/App.tsx`, with route wrappers in `src/pages/` and shell UI in `src/components/shell/`. Workspace **orchestration** still lives in `src/ui/pages/*.ts` (for example `tune.ts`, `overview.ts`, `compare/`, and `optimize.ts`). React islands now cover Tune, Overview, Compare, Compendium/Strings/Leaderboard, the My Loadouts dock list, Find My Build result surfaces, and the Optimize results table. They are mounted from their owning `src/ui/pages/*.ts` modules via `createRoot`, using pure view-models (`*-vm.ts`) and `_ensure*ReactRoot` invalidation so roots survive lazy-route unmount. See **`docs/REACT-MIGRATION-PLAN.md`** (roadmap) and **`docs/REACT-MIGRATION-GUIDE.md`** (Zero-Pixel Protocol).
 
 ### Runtime coordination (`src/runtime/`)
 
@@ -89,11 +89,15 @@ Imperative page modules include `shell.ts`, `overview.ts`, `tune.ts`, `compare/`
 
 **Tune** — `tune.ts` drives sweep, slider, and recommendations; **React** components under `src/components/tune/` (OBS, delta, WTTN, gauge explorer, recs, sweep chart, slider adornments, etc.) are mounted into `Tune.tsx` hosts. Chart.js for the sweep uses the global `Chart` from `index.html` inside `tune-sweep-chart.ts`, with `TuneSweepChart.tsx` owning canvas lifecycle.
 
-The live Find My Build flow is the imperative `find-my-build.ts` module opened from Overview and dock actions, not a standalone routed workspace.
+**Find My Build** -- the wizard remains imperative in `find-my-build.ts`, but the result summary and recommended-frame surfaces are React islands mounted into `#fmb-summary` and `#fmb-directions` in `Overview.tsx`.
+
+**My Loadouts** -- the dock list is rendered by the React `MyLoadoutsList` island mounted from `my-loadouts.ts` into `#dock-myl-list`, while callback registration and delegated click handling remain imperative.
+
+**Optimize** -- `Optimize.tsx` still provides the page shell and `optimize.ts` still owns the run loop, filters, and delegated actions, but the loading/empty/results table surface at `#opt-results` is now a React island driven by `optimize-results-vm.ts`.
 
 ### Further React migration
 
-After Tune, other workspaces should follow the same **Strangler Fig** pattern: one widget at a time, `createRoot` in the legacy module, dumb components + pure VMs, no visual drift — see **`docs/REACT-MIGRATION-GUIDE.md`** and **`docs/REACT-MIGRATION-PLAN.md`**.
+Further migration should continue with the same **Strangler Fig** pattern: one widget at a time, `createRoot` in the legacy module, dumb components + pure VMs, no visual drift. Current likely next targets are Optimize filter widgets and optional Compendium HUD work — see **`docs/REACT-MIGRATION-GUIDE.md`** and **`docs/REACT-MIGRATION-PLAN.md`**.
 
 ---
 
@@ -564,7 +568,7 @@ The result is a small attribute boost map applied to frame stats before strings/
 - **Stale client state** -- a "working" UI can show wrong numbers if store/setup-sync are out of date. When scores look off, verify the store and `getCurrentSetup()` first.
 - **Persistence contract** -- active loadout and saved loadouts are expected to survive refresh via local storage. If a refresh loses the current build, inspect `src/state/active-loadout-storage.ts`, `src/state/store.ts`, and shell boot restore in `src/ui/pages/shell.ts`.
 - **Tune page sensitivity** -- when changing Tune, verify together: delta card, OBS in Tune, WTTN, recommendations, loadout switching while Tune is open, slider -> apply, sweep chart annotations after theme toggle.
-- **React migration (Zero-Pixel)** -- new workspace UI migrated from imperative TS must use the guide in `docs/REACT-MIGRATION-GUIDE.md`; do not change pixels or Tailwind output casually. Lazy routes require root invalidation (same idea as `_ensureTuneReactRoot`).
+- **React migration (Zero-Pixel)** -- new workspace UI migrated from imperative TS must use the guide in `docs/REACT-MIGRATION-GUIDE.md`; do not change pixels or Tailwind output casually. Lazy routes require root invalidation (same idea as `_ensureTuneReactRoot`, `_ensureOverviewReactRoot`, `_ensureOptimizeResultsReactRoot`, etc.).
 
 ---
 
@@ -578,4 +582,4 @@ Key tokens: `dc-void` (#1A1A1A), `dc-accent` (#FF4500), `dc-platinum` (#DCDFE2).
 
 ## Deployment
 
-Auto-deploys to GitHub Pages on push to `main` via `.github/workflows/deploy.yml`. Vercel mirrors the repo at `loadout-lab.vercel.app`. No manual deployment steps needed beyond pushing.
+Auto-deploys to GitHub Pages on push to `main` via `.github/workflows/deploy.yml`. Vercel mirrors include `loadout-lab.vercel.app` and `16x19.vercel.app` (same app). No manual deployment steps needed beyond pushing.

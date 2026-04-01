@@ -7179,6 +7179,7 @@ textarea:focus-visible {
 }
 
 .opt-lock-string-wrap {
+  position: relative;
   margin-top: var(--space-2);
 }
 

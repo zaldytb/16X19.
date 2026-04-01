@@ -1,19 +1,31 @@
-# React migration plan (post–Tune workspace)
+# React migration plan (Strangler Fig status + next steps)
 
-This document is the **forward roadmap** for continuing the Strangler Fig migration of imperative `src/ui/pages/*.ts` UI into declarative React, **after** the Tune workspace conversion.
+This document tracks what is already React and the forward roadmap for migrating remaining imperative `src/ui/pages/*.ts` UI into declarative React using the same patterns.
 
-It **must** be read together with:
+It must be read together with:
 
-- **[REACT-MIGRATION-GUIDE.md](./REACT-MIGRATION-GUIDE.md)** — authoritative Zero-Pixel Protocol (no visual drift, widget-by-widget, dumb components + pure view-models).
-- **Zero-Pixel acknowledgment** — the same non‑negotiables summarized in the Cursor plan “Zero-Pixel Protocol Ack” (widget scope, `createRoot` inside legacy modules, 1:1 DOM/Tailwind, store separation, quality gates). Repository coding agents should treat `docs/REACT-MIGRATION-GUIDE.md` as the source of truth for rules; this plan tracks **status and next targets**.
+- [REACT-MIGRATION-GUIDE.md](./REACT-MIGRATION-GUIDE.md) - authoritative Zero-Pixel Protocol
+- the repo docs in [../README.md](../README.md), [../AGENTS.md](../AGENTS.md), and [../CLAUDE.md](../CLAUDE.md)
 
 ---
 
-## Current architecture (Tune, completed pattern)
+## Current architecture pattern
 
-Tune remains orchestrated by **`src/ui/pages/tune.ts`** (imperative lifecycle: sweep, slider, `initTuneMode`, coordinator hooks). **Presentation** for major panels is React:
+Across the repo, migrated surfaces follow the same rules:
 
-| Area | React component(s) | View-models / helpers | Mount host(s) in `Tune.tsx` |
+1. `createRoot(container).render(...)` from the owning legacy `.ts` module, not a second app root
+2. `_ensure*ReactRoot` invalidation when lazy routes unmount and hosts are recreated
+3. `flushSync` only when imperative follow-up in the same tick needs committed DOM
+4. pure view-model builders in `*-vm.ts`
+5. props-only leaf components under `src/components/<workspace>/`
+
+---
+
+## Tune workspace (completed)
+
+Tune remains orchestrated by `src/ui/pages/tune.ts`, but its major presentation surfaces are React:
+
+| Area | React component(s) | View-models / helpers | Mount host(s) |
 | --- | --- | --- | --- |
 | Optimal build window | `OptimalBuildWindow` | `tune-optimal-build-window-vm.ts` | `#optimal-content` |
 | Build score (OBS) | `TuneObsBuildScore` | `tune-obs-build-score-vm.ts` | `#obs-content` |
@@ -21,139 +33,172 @@ Tune remains orchestrated by **`src/ui/pages/tune.ts`** (imperative lifecycle: s
 | Delta vs baseline | `TuneDeltaVsBaseline` | `tune-delta-vs-baseline-vm.ts` | `#delta-content` |
 | Gauge explorer | `TuneGaugeExplorer` | `tune-gauge-explorer-vm.ts` | `#gauge-explore-content` |
 | Recommended builds | `TuneRecommendedBuilds` | `tune-recommended-builds-vm.ts` | `#recs-content` |
-| What to try next | `TuneWttn` | `buildWhatToTryNextViewModel` in `recommendations.ts` | `#wttn-content` |
+| What to try next | `TuneWttn` | `recommendations.ts` | `#wttn-content` |
 | Explore prompt | `TuneExplorePrompt` | `tune-explore-prompt-vm.ts` | `#explore-content` |
 | Best value callout | `TuneBestValueCallout` | `tune-best-value-vm.ts` | `#slider-best-value` |
 | Slider adornments | `TuneSliderAdornments` | `tune-slider-adornments-vm.ts` | `#tune-slider-adornments-root` |
-| Sweep chart | `TuneSweepChart` | Chart config in `tune-sweep-chart.ts` | `#sweep-chart-root` |
+| Sweep chart | `TuneSweepChart` | `tune-sweep-chart.ts` | `#sweep-chart-root` |
 
-**Integration rules in use:**
-
-1. **`createRoot(container).render(...)`** from the owning `.ts` module — not a second React root for the whole app.
-2. **`_ensureTuneReactRoot`** (or the same pattern elsewhere): when a lazy route unmounts, DOM nodes are recreated; roots must invalidate if `host !== container` or the host is disconnected, then `createRoot` again.
-3. **Pure view-models** in `*-vm.ts` (or shared helpers); components under **`src/components/tune/`** are **props-only** (no Zustand in dumb leaves).
-4. **Chart.js:** Tune sweep uses the global `Chart` from `index.html` inside `createTuneSweepChart`; the React shell `TuneSweepChart` owns canvas mount/unmount and registers the live chart handle back on `tune.ts` for `update('none')` on slider scrub.
+Still imperative: sweep orchestration, slider flow, apply logic, and route/runtime orchestration in `tune.ts`.
 
 ---
 
 ## Overview workspace (completed)
 
-Orchestrated by **`src/ui/pages/overview.ts`** with **`_ensureOverviewReactRoot`** (same invalidation semantics as Tune). **`renderDashboard`** remains the coordinator entry; **`radarTooltipHandler`** / chart helpers live in **`overview-radar-chart.ts`** and are re-exported from `overview.ts` for compatibility.
+Overview is orchestrated by `src/ui/pages/overview.ts` with React islands for the dashboard surfaces:
 
-| Area | React component(s) | View-models / helpers | Mount host(s) in `Overview.tsx` |
+| Area | React component(s) | View-models / helpers | Mount host(s) |
 | --- | --- | --- | --- |
 | Hero + CTAs | `OverviewHero` | `overview-hero-vm.ts` | `#overview-hero` |
 | Stat bars | `OverviewStatBars` | `overview-stat-bars-vm.ts` | `#stat-bars` |
 | Build DNA highlights | `OverviewBuildDnaHighlights` | `overview-build-dna-vm.ts` | `#build-dna-highlights` |
-| Radar chart | `OverviewRadarChart` | `overview-radar-chart.ts` (Chart.js + tooltip) | `#radar-chart-root` |
+| Radar chart | `OverviewRadarChart` | `overview-radar-chart.ts` | `#radar-chart-root` |
 | OC foundation | `OverviewOCFoundation` | `overview-oc-foundation-vm.ts` | `#oc-foundation` |
 | Fit profile card | `OverviewFitProfileCard` | `overview-fit-profile-vm.ts` | `#fit-grid` |
 | Warnings | `OverviewWarnings` | `overview-warnings-vm.ts` | `#warnings-list` |
 
-**Still imperative:** `renderOCSnapshot` (targets `#oc-snapshot`, not used on the main dashboard card), and **`renderFitProfile`** (single-line fit copy) if called from other modules. FMB wizard markup stays in `Overview.tsx` with logic in `find-my-build.ts`.
+Still imperative: `renderOCSnapshot`, legacy `renderFitProfile` compatibility, delegated actions, and workspace orchestration in `overview.ts`.
 
 ---
 
-## Compendium workspace (partial)
+## Find My Build (partial)
 
-Orchestrated by **`src/ui/pages/compendium.ts`**, **`src/ui/pages/strings.ts`**, and **`src/ui/pages/leaderboard.ts`** with **`_ensureCompendiumReactRoot`** / **`_ensureStringReactRoot`** (same invalidation semantics as Overview). **`cleanupCompendiumPage`**, **`cleanupStringsPage`**, and **`cleanupLeaderboardPage`** run from **`Compendium.tsx`** on unmount. **`comp-base-obs`** contract unchanged.
+The wizard remains imperative in `src/ui/pages/find-my-build.ts`, but the result surfaces are now React islands mounted into the Overview hosts.
+
+| Area | React component(s) | View-models / helpers | Mount host(s) |
+| --- | --- | --- | --- |
+| Profile summary card | `FmbResultsSummary` | `find-my-build-vm.ts` (`buildFmbSummaryViewModel`) | `#fmb-summary` |
+| Recommended frames + build rows + optimizer CTA | `FmbResultsDirections` | `find-my-build-vm.ts` (`buildFmbDirectionsViewModel`) | `#fmb-directions` |
+
+Still imperative: step transitions, progress bar updates, answer selection, next/back gating, delegated result actions, and optimizer handoff population.
+
+---
+
+## Compendium / Strings / Leaderboard (partial)
 
 ### Racket Bible (`compendium.ts`)
 
 | Area | React component(s) | View-models / helpers | Mount host(s) |
 | --- | --- | --- | --- |
 | Hero + spec grid + pills | `CompendiumRacketHero` | `comp-racket-hero-vm.ts` | `#comp-react-hero-root` |
-| Base frame profile (+ string-mod preview overlay) | `CompendiumBaseProfile` | `comp-base-profile-vm.ts` (`buildCompBaseProfileVm(frameBase, previewStats)`) | `#comp-react-base-profile-root` |
+| Base frame profile | `CompendiumBaseProfile` | `comp-base-profile-vm.ts` | `#comp-react-base-profile-root` |
 | Top builds | `CompendiumTopBuilds` | `comp-top-builds-vm.ts` | `#comp-react-top-builds-root` |
-| HUD roster | `CompendiumFrameRoster` | (inline filters in `compendium.ts`) | `#comp-frame-list` |
-| String modulator | `CompendiumStringModulator` | — | `#comp-react-string-modulator-root` |
+| HUD roster | `CompendiumFrameRoster` | inline filtering in `compendium.ts` | `#comp-frame-list` |
+| String modulator shell | `CompendiumStringModulator` | n/a | `#comp-react-string-modulator-root` |
 
-**Still imperative:** `createSearchableSelect` on mains/crosses, **`_compInitStringInjector`**, base-profile preview via **`_compRenderBaseProfileReact`** (engine-driven), and **`data-comp-action`** delegation.
+Still imperative: HUD overlays, searchable selects, string injector init, preview computation, and delegated actions.
 
 ### Strings tab (`strings.ts`)
 
 | Area | React component(s) | View-models / helpers | Mount host(s) |
 | --- | --- | --- | --- |
-| Detail (hero, telemetry, best frames, similar) | `StringCompendiumDetail` | `string-compendium-detail-vm.ts` | `#string-react-detail-root` |
-| HUD list | `StringCompendiumRoster` | — | `#string-list` |
-| Frame injection modulator | `StringFrameInjectionModulator` | — | `#string-react-frame-modulator-root` |
+| Detail surface | `StringCompendiumDetail` | `string-compendium-detail-vm.ts` | `#string-react-detail-root` |
+| HUD list | `StringCompendiumRoster` | inline filtering in `strings.ts` | `#string-list` |
+| Frame injection modulator shell | `StringFrameInjectionModulator` | n/a | `#string-react-frame-modulator-root` |
 
-**Still imperative:** **`_stringInitModulator`**, SearchableSelects (with **`disposeSearchableSelectContainer`** before re-render), **`_stringRenderPreviewBars`** (updates preview segments under the modulator), tension/gauge **`change`** delegation. **`data-string-action`** delegation scoped to **`#mode-compendium`**.
+Still imperative: searchable selects, preview bars, change delegation, and modulator init.
 
 ### Leaderboard (`leaderboard.ts`)
-
-Orchestrated by **`leaderboard.ts`** with **`_ensureLbResultsReactRoot`** (results) and **`_ensureLbShellReactRoot`** (filter shell). **`#comp-leaderboard-root`** wraps **`#lb2-shell-react-root`** (sticky controls + stats) and sibling **`#lb2-results`**. **`cleanupLeaderboardPage`** clears the root, **`_unmountLbShellReact`**, and **`_lbUnmountAllResultsReact`**.
 
 | Area | React component(s) | View-models / helpers | Mount host(s) |
 | --- | --- | --- | --- |
 | Filter / stat shell | `LeaderboardShell` | `leaderboard-shell-vm.ts` | `#lb2-shell-react-root` |
-| Builds table | `LeaderboardBuildResults` | `leaderboard-results-vm.ts` | `#lb2-build-results-react` (under `#lb2-results`) |
+| Builds table | `LeaderboardBuildResults` | `leaderboard-results-vm.ts` | `#lb2-build-results-react` |
 | Frames table | `LeaderboardFrameResults` | `leaderboard-results-vm.ts` | `#lb2-frame-results-react` |
 | Strings table | `LeaderboardStringResults` | `leaderboard-results-vm.ts` | `#lb2-string-results-react` |
 
-**Still imperative:** **`_runLbv2`** scheduling, **`count`** text on **`#lb2-count`**, and **`data-lb-action`** / **`data-lb-arg`** delegation on `document` (click + change for filter selects).
+Still imperative: scheduling, count text updates, and delegated filter/button actions.
 
 ---
 
-## What’s left (other workspaces)
+## Compare workspace (largely migrated)
 
-Imperative modules still own most of: **Compare** (remaining slices if any), **Optimize**, **Find My Build**, **My Loadouts**, plus **shell** chrome that isn’t already in `src/components/shell/`. **Compendium** still has SearchableSelect wiring, **`_compInitStringInjector`** / **`_stringInitModulator`**, and the **HUD overlays** (`#comp-hud`, `#string-hud` in `Compendium.tsx`) — migrating the full HUD (search + filters + roster) is a **separate** slice; not started here.
+Compare is orchestrated by `src/ui/pages/compare/index.ts` with React islands for the major panels:
 
-**Do not** rewrite a full page in one PR. For each slice:
+- slot grid
+- radar
+- diff battery
+- quick-add prompt
+- slot editor modal
 
-1. Snapshot legacy DOM + classes.
-2. Extract a **pure** view-model function.
-3. Add a **dumb** `.tsx` component under `src/components/<workspace>/` (or existing tree).
-4. Mount with **`createRoot`** from the legacy file; delete only that slice’s imperative DOM.
-5. Run **`npm run typecheck && npm run canary && npm run build && npm run test:runtime`**.
+See `src/components/compare/` and `compare-*-vm.ts`.
 
-Suggested **non-binding** order (dependencies and churn vary):
+Still imperative: page orchestration, subscriptions, shell callback registration, and remaining non-React chrome/delegation.
 
-1. **Compare** — panel rows that mirror the Tune pattern (VM + mount + bridge).
-2. **Compendium** — optional React wrapper for SearchableSelect; modulator shells + leaderboard filter shell are React (`#comp-react-string-modulator-root`, `#string-react-frame-modulator-root`, `#lb2-shell-react-root`); result tables use `#lb2-build-results-react` / `#lb2-frame-results-react` / `#lb2-string-results-react`.
-3. **Optimize / Find My Build** — as needed when touching those files.
+---
 
-The **shell** (`App.tsx`, `src/components/shell/`) is already React-first; extend it only when a feature truly belongs in the shell, not to bypass the widget rule.
+## My Loadouts dock list (partial)
+
+The dock list is now React, mounted by `src/ui/pages/my-loadouts.ts` into the existing dock host in `BuildDock.tsx`.
+
+| Area | React component(s) | View-models / helpers | Mount host(s) |
+| --- | --- | --- | --- |
+| Saved loadout list + delete-confirm state | `MyLoadoutsList` | `my-loadouts-vm.ts` (`buildMyLoadoutsViewModel`) | `#dock-myl-list` |
+
+Still imperative: callback registration, delegated click listener binding, and the outer dock shell/actions.
+
+---
+
+## Optimize workspace (partial)
+
+The page shell remains `src/pages/Optimize.tsx` and orchestration remains in `src/ui/pages/optimize.ts`, but the main results surface is now React.
+
+| Area | React component(s) | View-models / helpers | Mount host(s) |
+| --- | --- | --- | --- |
+| Loading / empty / results table / tension filter | `OptimizeResultsTable` | `optimize-results-vm.ts` (`buildOptimizeResultsViewModel`) | `#opt-results` |
+
+Still imperative: filter panel initialization, searchable dropdowns, material/brand checkbox population, exclude tag rendering, optimizer run loop, candidate generation/sorting, and document-level action delegation.
+
+---
+
+## What is left
+
+| Area | Status |
+| --- | --- |
+| Tune / Overview | Migrated |
+| Compare | Core panels are React; follow-ups are incremental |
+| Compendium | Main surfaces are React; HUD overlays and searchable selects remain imperative |
+| Optimize | Results area is React; filter/search/init remain imperative |
+| Find My Build | Results are React; wizard flow remains imperative |
+| My Loadouts | Dock list is React; callback bridge and delegation remain imperative |
+| Shell | Already React |
+
+Do not rewrite a whole page in one PR. Continue one widget or bounded cluster at a time.
+
+---
+
+## Suggested next moves
+
+1. Optimize filters: material/brand shells, exclude tags, and upgrade-mode panel
+2. Compendium HUD: `#comp-hud` / `#string-hud` if we want consistency work
+3. Find My Build wizard shell: only if step markup can stay zero-pixel identical
+4. SearchableSelect: optional thin React wrapper, otherwise keep the current vanilla pattern
 
 ---
 
 ## Coordinator and refresh plans
 
-`src/runtime/coordinator.ts` **`RefreshPlan`** includes **`compendium`** (and overview / tune / compare flags). Any new workspace that syncs off `activeLoadout` or `mode` must:
-
-- Extend **`getRefreshPlan`** only when a new surface needs coordinated refresh (avoid redundant work).
-- Keep **`tests/runtime-hardening.test.ts`** in sync with the plan shape (see compendium test).
+`src/runtime/coordinator.ts` `RefreshPlan` includes `compendium` plus overview/tune/compare flags. Extend it only when a new migrated surface actually needs coordinated refresh behavior, and keep `tests/runtime-hardening.test.ts` in sync.
 
 ---
 
 ## Definition of done (per widget PR)
 
-- [ ] Isolated migration: one widget or one clearly bounded cluster.
-- [ ] JSX matches legacy structure and **Tailwind/class strings** unchanged unless byte-identical output.
-- [ ] No new `window.*` globals for feature wiring.
-- [ ] `npm run typecheck` — zero errors.
-- [ ] `npm run canary` — pass (or `canary:baseline` documented if scoring touched).
-- [ ] `npm run build` — success.
-- [ ] `npm run test:runtime` — pass if refresh contracts or `getRefreshPlan` changed.
-
----
-
-## References
-
-| Doc | Role |
-| --- | --- |
-| [REACT-MIGRATION-GUIDE.md](./REACT-MIGRATION-GUIDE.md) | Zero-Pixel Protocol — mandatory process |
-| [../README.md](../README.md) | Stack and repo layout |
-| [../CLAUDE.md](../CLAUDE.md) | Commands and architecture for agents |
-| [../ts-migration-plan.md](../ts-migration-plan.md) | TypeScript / bundler migration snapshot |
+- isolated migration: one widget or one clearly bounded cluster
+- JSX matches legacy structure and class strings unchanged unless byte-identical output is intended
+- no new `window.*` globals
+- `npm run typecheck`
+- `npm run canary`
+- `npm run build`
+- `npm run test:runtime` if refresh contracts changed
 
 ---
 
 ## Changelog
 
-- **2026-04** — Initial post–Tune plan: Tune widget inventory, integration patterns, remaining workspaces, gates.
-- **2026-04** — Overview dashboard migrated: `src/components/overview/*`, `overview-*-vm.ts`, `overview-radar-chart.ts`, `_ensureOverviewReactRoot`.
-- **2026-04-01** — Compendium milestone: Racket Bible + Strings tab React islands (`src/components/compendium/*`, `src/components/strings/*`), VM modules, modulator HTML shells, `#comp-leaderboard-root` + `cleanupLeaderboardPage`, `Compendium.tsx` cleanup for comp/strings/leaderboard roots.
-- **2026-04-01** — Compendium follow-up: base-profile **preview overlay** in React (`buildCompBaseProfileVm` + optional preview), `disposeSearchableSelectContainer` in `searchable-select.ts`, comp/string **delegation** gated on `#mode-compendium`.
-- **2026-04-01** — Leaderboard v2 result tables: `LeaderboardBuildResults` / `LeaderboardFrameResults` / `LeaderboardStringResults`, `src/components/leaderboard/leaderboard-results-vm.ts`, hosts `#lb2-build-results-react`, `#lb2-frame-results-react`, `#lb2-string-results-react`, `_lbUnmountAllResultsReact` in `cleanupLeaderboardPage` and before loading spinners.
-- **2026-04-01** — Compendium modulator shells + leaderboard filter shell: `CompendiumStringModulator` (`#comp-react-string-modulator-root`), `StringFrameInjectionModulator` (`#string-react-frame-modulator-root`), `LeaderboardShell` + `leaderboard-shell-vm.ts` (`#lb2-shell-react-root`); removed `comp-modulator-shell.ts` / `string-modulator-shell.ts` / imperative `_buildShellHTML`; HUD overlays remain in `Compendium.tsx` (deferred).
+- 2026-04: Tune widgets documented as the baseline Strangler Fig pattern
+- 2026-04: Overview dashboard migrated
+- 2026-04-01: Compendium / Strings / Leaderboard islands migrated
+- 2026-04-01: My Loadouts dock list migrated
+- 2026-04-01: Find My Build result surfaces migrated
+- 2026-04-01: Optimize results surface migrated

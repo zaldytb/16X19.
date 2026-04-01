@@ -1,8 +1,10 @@
 // src/ui/pages/optimize.ts
 // Optimizer page - find best string setups for a frame
 
+import { createElement } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
 import { RACQUETS, STRINGS } from '../../data/loader.js';
-import { predictSetup, buildTensionContext, computeCompositeScore, getObsScoreColor } from '../../engine/index.js';
+import { predictSetup, buildTensionContext, computeCompositeScore } from '../../engine/index.js';
 import type { Racquet, StringData, SetupAttributes, StringConfig } from '../../engine/types.js';
 import {
   STRING_BRANDS,
@@ -17,6 +19,8 @@ import { getActiveLoadout } from '../../state/store.js';
 import { getCurrentSetup } from '../../state/setup-sync.js';
 import { activateLoadout, switchMode } from './shell.js';
 import { getState as compareGetState, setSlotLoadout as compareSetSlotLoadout } from './compare/hooks/useCompareState.js';
+import { OptimizeResultsTable } from '../../components/optimize/OptimizeResultsTable.js';
+import { buildOptimizeResultsViewModel, getOptimizeCandidateKey, type OptimizeCandidateVmSource } from './optimize-results-vm.js';
 
 type OptimizerLoadoutLike = {
   id: string;
@@ -54,6 +58,28 @@ let _optRunToken = 0;
 let _optLastSortBy = 'obs';
 let _optLastDisplayedCandidates: OptimizeCandidate[] = [];
 let _optTargetTension = '';
+let _optSavedCandidateKey: string | null = null;
+let _optSavedCandidateTimeout: number | null = null;
+
+type OptimizeResultsReactMount = { root: Root | null; host: HTMLElement | null };
+
+const _optResultsMount: OptimizeResultsReactMount = { root: null, host: null };
+
+function _ensureOptimizeResultsReactRoot(container: HTMLElement | null): Root | null {
+  if (!container) return null;
+  if (_optResultsMount.root && _optResultsMount.host) {
+    if (_optResultsMount.host !== container || !_optResultsMount.host.isConnected) {
+      _optResultsMount.root.unmount();
+      _optResultsMount.root = null;
+      _optResultsMount.host = null;
+    }
+  }
+  if (!_optResultsMount.root) {
+    _optResultsMount.root = createRoot(container);
+    _optResultsMount.host = container;
+  }
+  return _optResultsMount.root;
+}
 
 function _setOptTargetTension(value: string, rerender = true): void {
   _optTargetTension = value;
@@ -424,10 +450,13 @@ export function runOptimizer(): void {
   const runToken = ++_optRunToken;
 
   _optClearTensionFilter(false);
+  _renderOptimizeResultsState(resultsEl, null, _optLastSortBy || 'obs', _optLastCurrentOBS);
+  scheduleRender('optimizer:run', () => {
+    void _runOptimizerCore(resultsEl, countEl, runToken);
+  });
+  return;
 
-  if (resultsEl) {
-    resultsEl.innerHTML = '<div class="opt-loading">Computing builds…</div>';
-  }
+  _renderOptimizeResultsState(resultsEl, null, _optLastSortBy || 'obs', _optLastCurrentOBS);
 
   scheduleRender('optimizer:run', () => {
     void _runOptimizerCore(resultsEl, countEl, runToken);
@@ -667,92 +696,27 @@ export function renderOptimizerResults(
 ): void {
   const resultsEl = document.getElementById('opt-results');
   if (!resultsEl) return;
+  _renderOptimizeResultsState(resultsEl, candidates as OptimizeCandidateVmSource[], sortBy, currentOBS);
+}
 
-  if (candidates.length === 0) {
-    resultsEl.innerHTML = `
-      <div class="opt-empty">
-        <p class="opt-empty-title">No builds match your filters</p>
-        <p class="opt-empty-sub">Try relaxing the stat minimums or expanding the tension range.</p>
-      </div>`;
-    return;
+function _renderOptimizeResultsState(
+  resultsEl: HTMLElement | null,
+  candidates: OptimizeCandidateVmSource[] | null,
+  sortBy: string,
+  currentOBS: number,
+): void {
+  if (!resultsEl) return;
+  const root = _ensureOptimizeResultsReactRoot(resultsEl);
+  if (!root) return;
+
+  const vm = buildOptimizeResultsViewModel(candidates, currentOBS, _optTargetTension, _optSavedCandidateKey, sortBy);
+  if (vm.state === 'results') {
+    _optLastDisplayedCandidates = vm.rows.map((row) => candidates![row.rowIndex]);
+  } else {
+    _optLastDisplayedCandidates = [];
   }
 
-  const sortColClass = sortBy === 'obs' ? 'obs' : sortBy;
-  const targetTension = _optTargetTension;
-
-  let displayCandidates = candidates;
-  if (targetTension !== '' && !isNaN(parseInt(targetTension))) {
-    const target = parseInt(targetTension);
-    displayCandidates = candidates.filter(c => Math.abs(c.tension - target) <= 1);
-  }
-
-  const top = displayCandidates.slice(0, 200);
-  _optLastDisplayedCandidates = top;
-
-  const filterHTML = '<div class="opt-tension-filter">' +
-    '<label class="opt-tension-label">Target Tension</label>' +
-    '<input type="number" class="opt-tension-input" id="opt-tension-filter" ' +
-      'value="' + (targetTension !== '' ? targetTension : '') + '" ' +
-      'placeholder="All" min="30" max="70" ' +
-      'data-opt-action="tensionFilterChange" ' +
-      '>' +
-    '<span class="opt-tension-hint">±1 lb</span>' +
-    '<button class="opt-tension-clear" data-opt-action="clearTensionFilter" ' +
-      (targetTension === '' ? 'style="display:none"' : '') + '>Clear</button>' +
-  '</div>';
-
-  let html = filterHTML + '<div class="opt-table-wrap"><table class="opt-table">' +
-    '<thead><tr>' +
-      '<th class="opt-th opt-th-rank">#</th>' +
-      '<th class="opt-th opt-th-type">Type</th>' +
-      '<th class="opt-th opt-th-string">String(s)</th>' +
-      '<th class="opt-th opt-th-num' + (sortColClass === 'obs' ? ' opt-th-active' : '') + '">OBS</th>' +
-      '<th class="opt-th opt-th-num opt-th-delta">&Delta;</th>' +
-      '<th class="opt-th opt-th-gauge">Ga.</th>' +
-      '<th class="opt-th opt-th-tension">Tension</th>' +
-      '<th class="opt-th opt-th-num' + (sortColClass === 'spin' ? ' opt-th-active' : '') + '">Spn</th>' +
-      '<th class="opt-th opt-th-num' + (sortColClass === 'power' ? ' opt-th-active' : '') + '">Pwr</th>' +
-      '<th class="opt-th opt-th-num' + (sortColClass === 'control' ? ' opt-th-active' : '') + '">Ctl</th>' +
-      '<th class="opt-th opt-th-num' + (sortColClass === 'comfort' ? ' opt-th-active' : '') + '">Cmf</th>' +
-      '<th class="opt-th opt-th-num' + (sortColClass === 'feel' ? ' opt-th-active' : '') + '">Fel</th>' +
-      '<th class="opt-th opt-th-num' + (sortColClass === 'durability' ? ' opt-th-active' : '') + '">Dur</th>' +
-      '<th class="opt-th opt-th-num' + (sortColClass === 'playability' ? ' opt-th-active' : '') + '">Ply</th>' +
-      '<th class="opt-th opt-th-actions"></th>' +
-    '</tr></thead><tbody>';
-
-  top.forEach((c, i) => {
-    const delta = c.score - currentOBS;
-    const deltaStr = delta > 0 ? `+${delta.toFixed(1)}` : delta.toFixed(1);
-    const deltaCls = delta > 0.5 ? 'opt-delta-pos' : delta < -0.5 ? 'opt-delta-neg' : 'opt-delta-neutral';
-    const tensionLabel = c.type === 'hybrid' ? `${c.tension}/${c.crossesTension}` : `${c.tension}`;
-    const typeTag = c.type === 'hybrid' ? '<span class="opt-tag-hybrid">H</span>' : '<span class="opt-tag-full">F</span>';
-
-    html += `<tr class="opt-row${i === 0 ? ' opt-row-top' : ''}" data-opt-idx="${i}">
-      <td class="opt-td opt-td-rank">${i + 1}</td>
-      <td class="opt-td opt-td-type">${typeTag}</td>
-      <td class="opt-td opt-td-string">${c.label}</td>
-      <td class="opt-td opt-td-num opt-td-obs" style="color:${getObsScoreColor(c.score)};font-weight:700">${c.score.toFixed(1)}</td>
-      <td class="opt-td opt-td-num ${deltaCls}">${deltaStr}</td>
-      <td class="opt-td opt-td-gauge">${c.gauge || '—'}</td>
-      <td class="opt-td opt-td-tension">${tensionLabel}</td>
-      <td class="opt-td opt-td-num">${c.stats.spin?.toFixed(0) || '—'}</td>
-      <td class="opt-td opt-td-num">${c.stats.power?.toFixed(0) || '—'}</td>
-      <td class="opt-td opt-td-num">${c.stats.control?.toFixed(0) || '—'}</td>
-      <td class="opt-td opt-td-num">${c.stats.comfort?.toFixed(0) || '—'}</td>
-      <td class="opt-td opt-td-num">${c.stats.feel?.toFixed(0) || '—'}</td>
-      <td class="opt-td opt-td-num">${c.stats.durability?.toFixed(0) || '—'}</td>
-      <td class="opt-td opt-td-num">${c.stats.playability?.toFixed(0) || '—'}</td>
-      <td class="opt-td opt-td-actions">
-        <button class="opt-act-btn" data-opt-action="view" data-opt-idx="${i}">View</button>
-        <button class="opt-act-btn" data-opt-action="tune" data-opt-idx="${i}">Tune</button>
-        <button class="opt-act-btn" data-opt-action="compare" data-opt-idx="${i}">Compare</button>
-        <button class="opt-act-btn opt-act-save" data-opt-action="save" data-opt-idx="${i}">Save</button>
-      </td>
-    </tr>`;
-  });
-
-  html += '</tbody></table></div>';
-  resultsEl.innerHTML = html;
+  root.render(createElement(OptimizeResultsTable, { model: vm }));
 }
 
 /**
@@ -906,14 +870,21 @@ export function optActionSave(idx: number): void {
   if (lo) {
     saveLoadout(lo);
   }
-
-  const btn = document.querySelector(`tr[data-opt-idx="${idx}"] .opt-act-save`);
-  if (btn) {
-    btn.textContent = '✓';
-    btn.classList.add('opt-act-saved');
-    setTimeout(() => {
-      btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 15 15" fill="none"><path d="M11.5 1H3.5A1.5 1.5 0 002 2.5v10A1.5 1.5 0 003.5 14h8a1.5 1.5 0 001.5-1.5v-10A1.5 1.5 0 0011.5 1z" stroke="currentColor" stroke-width="1.2"/><path d="M5 1v4h5V1" stroke="currentColor" stroke-width="1.2"/><path d="M5 10h5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>';
-      btn.classList.remove('opt-act-saved');
-    }, 1200);
+  _optSavedCandidateKey = getOptimizeCandidateKey(c);
+  if (_optSavedCandidateTimeout != null) {
+    window.clearTimeout(_optSavedCandidateTimeout);
   }
+  _optSavedCandidateTimeout = window.setTimeout(() => {
+    _optSavedCandidateKey = null;
+    _optSavedCandidateTimeout = null;
+    if (_optLastCandidates) {
+      renderOptimizerResults(_optLastCandidates, _optLastSortBy || 'obs', _optLastCurrentOBS);
+    }
+  }, 1200);
+  if (_optLastCandidates) {
+    renderOptimizerResults(_optLastCandidates, _optLastSortBy || 'obs', _optLastCurrentOBS);
+  }
+  return;
+
 }
+

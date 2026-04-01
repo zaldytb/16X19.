@@ -7,6 +7,8 @@
 **Primary URL:** `https://zaldytb.github.io/loadout-lab/`  
 **Mirror:** `https://loadout-lab.vercel.app`
 
+**README / repo aliases:** The root [README.md](README.md) intentionally uses the **`16X19`** GitHub repo path (`github.com/zaldytb/16X19`) and **`16x19.vercel.app`** as the mirror. Those are equivalent entry points for the same app; **do not** replace them with `loadout-lab` URLs when editing README unless the user explicitly asks.
+
 ### Core workflows
 
 - Browse racquets (Racket Bible) and strings (String Compendium)
@@ -236,7 +238,7 @@ Push to `main` for GitHub Pages; Vercel mirrors the repo.
 git push origin main
 ```
 
-Actions: `https://github.com/zaldytb/loadout-lab/actions`
+Actions: `https://github.com/zaldytb/16X19/actions`
 
 ## Further reference
 

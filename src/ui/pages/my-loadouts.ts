@@ -1,10 +1,12 @@
 // src/ui/pages/my-loadouts.ts
 // My Loadouts panel rendering
 
-import { RACQUETS, STRINGS } from '../../data/loader.js';
+import { createElement } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
 import type { Loadout } from '../../engine/types.js';
-import { getObsScoreColor } from '../../engine/index.js';
 import { getActiveLoadout, getSavedLoadouts } from '../../state/store.js';
+import { MyLoadoutsList } from '../../components/shell/MyLoadoutsList.js';
+import { buildMyLoadoutsViewModel } from './my-loadouts-vm.js';
 
 // ---------------------------------------------------------------------------
 // Callback registry — shell.ts registers cross-module actions here at init.
@@ -29,6 +31,27 @@ export function registerMyLoadoutsCallbacks(cbs: Partial<MyLoadoutsCallbacks>): 
 }
 
 let _listenerBound = false;
+let _confirmingRemoveLoadoutId: string | null = null;
+
+type MyLoadoutsReactMount = { root: Root | null; host: HTMLElement | null };
+
+const _myLoadoutsMount: MyLoadoutsReactMount = { root: null, host: null };
+
+function _ensureMyLoadoutsReactRoot(container: HTMLElement | null): Root | null {
+  if (!container) return null;
+  if (_myLoadoutsMount.root && _myLoadoutsMount.host) {
+    if (_myLoadoutsMount.host !== container || !_myLoadoutsMount.host.isConnected) {
+      _myLoadoutsMount.root.unmount();
+      _myLoadoutsMount.root = null;
+      _myLoadoutsMount.host = null;
+    }
+  }
+  if (!_myLoadoutsMount.root) {
+    _myLoadoutsMount.root = createRoot(container);
+    _myLoadoutsMount.host = container;
+  }
+  return _myLoadoutsMount.root;
+}
 
 function _bindMyLoadoutsListeners(): void {
   if (_listenerBound) return;
@@ -41,29 +64,29 @@ function _bindMyLoadoutsListeners(): void {
     const action = btn.dataset.loAction;
     const id = btn.dataset.id ?? '';
     switch (action) {
-      case 'switchToLoadout': _myLoadoutsCbs.switchToLoadout(id); break;
-      case 'shareLoadout': _myLoadoutsCbs.shareLoadout(id); break;
-      case 'addLoadoutToCompare': _myLoadoutsCbs.addLoadoutToCompare(id); break;
+      case 'switchToLoadout':
+        _confirmingRemoveLoadoutId = null;
+        _myLoadoutsCbs.switchToLoadout(id);
+        break;
+      case 'shareLoadout':
+        _confirmingRemoveLoadoutId = null;
+        _myLoadoutsCbs.shareLoadout(id);
+        break;
+      case 'addLoadoutToCompare':
+        _confirmingRemoveLoadoutId = null;
+        _myLoadoutsCbs.addLoadoutToCompare(id);
+        break;
       case 'confirmRemoveLoadout': confirmRemoveLoadout(id); break;
-      case 'removeLoadout': _myLoadoutsCbs.removeLoadout(id); break;
-      case 'renderMyLoadouts': renderMyLoadouts(); break;
+      case 'removeLoadout':
+        _confirmingRemoveLoadoutId = null;
+        _myLoadoutsCbs.removeLoadout(id);
+        break;
+      case 'renderMyLoadouts':
+        _confirmingRemoveLoadoutId = null;
+        renderMyLoadouts();
+        break;
     }
   });
-}
-
-const sourceLabels: Record<string, string> = {
-  quiz: 'Quiz',
-  compendium: 'Bible',
-  manual: '',
-  preset: 'Preset',
-  optimize: 'Opt',
-  shared: 'Shared',
-  import: 'Imp'
-};
-
-function getNumericObs(value: unknown): number {
-  const numeric = typeof value === 'number' ? value : Number(value);
-  return Number.isFinite(numeric) ? numeric : 0;
 }
 
 /**
@@ -78,102 +101,22 @@ export function renderMyLoadouts(): void {
   const activeLoadout = getActiveLoadout();
 
   if (countEl) countEl.textContent = String(savedLoadouts.length);
-
-  if (savedLoadouts.length === 0) {
-    listEl.innerHTML = '<div class="px-3 py-4 text-center font-mono text-[10px] text-dc-storm">No saved loadouts yet</div>';
-    return;
+  if (_confirmingRemoveLoadoutId && !savedLoadouts.some((loadout) => loadout.id === _confirmingRemoveLoadoutId)) {
+    _confirmingRemoveLoadoutId = null;
   }
 
   _bindMyLoadoutsListeners();
+  const root = _ensureMyLoadoutsReactRoot(listEl);
+  if (!root) return;
 
-  listEl.innerHTML = savedLoadouts.map(lo => {
-    const isActive = isLoadoutActive(lo, activeLoadout);
-    const racquet = RACQUETS.find(r => r.id === lo.frameId);
-    const frameName = racquet ? racquet.name : '\u2014';
-    const stringName = getLoadoutStringName(lo);
-    const srcLabel = sourceLabels[lo.source || ''] || '';
-    const obsValue = getNumericObs(lo.obs);
-    const obsColor = getObsScoreColor(obsValue);
-    const activeBorderClass = isActive
-      ? 'border-l-2 border-l-[var(--dc-accent)] bg-[var(--dc-void-lift)]'
-      : 'border-l-2 border-l-transparent hover:bg-[var(--dc-void-lift)]';
-
-    return (
-      '<div class="group relative flex items-stretch border-b border-[var(--dc-border)] last:border-b-0 transition-colors ' + activeBorderClass + '" data-lo-id="' + lo.id + '">' +
-        '<div class="flex items-center gap-2.5 flex-1 min-w-0 px-3 py-2.5 cursor-pointer" data-lo-action="switchToLoadout" data-id="' + lo.id + '">' +
-          '<div class="w-9 h-9 shrink-0 border border-[var(--dc-border)] flex items-center justify-center">' +
-            '<span class="font-mono text-[11px] font-bold" style="color:' + obsColor + '">' + (obsValue > 0 ? obsValue.toFixed(1) : '\u2014') + '</span>' +
-          '</div>' +
-          '<div class="flex-1 min-w-0">' +
-            '<div class="font-sans text-[11px] font-semibold text-[var(--dc-platinum)] leading-tight truncate flex items-center gap-1">' +
-              frameName +
-              (isActive ? '<span class="font-mono text-[7px] uppercase tracking-wider text-[var(--dc-accent)]">Active</span>' : '') +
-              (srcLabel ? '<span class="font-mono text-[7px] text-[var(--dc-storm)] border border-[var(--dc-border)] px-1">' + srcLabel + '</span>' : '') +
-            '</div>' +
-            '<div class="font-mono text-[9px] text-[var(--dc-storm)] truncate leading-tight mt-0.5">' + stringName + '</div>' +
-            '<div class="font-mono text-[8px] text-[var(--dc-storm)]/60 mt-0.5">M' + lo.mainsTension + '/X' + lo.crossesTension + ' lbs</div>' +
-          '</div>' +
-        '</div>' +
-        '<div class="flex items-stretch opacity-0 group-hover:opacity-100 transition-opacity border-l border-[var(--dc-border)]">' +
-          '<button class="w-8 flex items-center justify-center text-[var(--dc-storm)] hover:text-[var(--dc-platinum)] hover:bg-[var(--dc-void)] transition-colors" data-lo-action="shareLoadout" data-id="' + lo.id + '" title="Share">' +
-            '<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7.5L8 4.5M8 4.5V7M8 4.5H5.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="1" y="1" width="10" height="10" rx="2"/></svg>' +
-          '</button>' +
-          '<button class="w-8 flex items-center justify-center text-[var(--dc-storm)] hover:text-[var(--dc-platinum)] hover:bg-[var(--dc-void)] transition-colors border-l border-[var(--dc-border)]" data-lo-action="addLoadoutToCompare" data-id="' + lo.id + '" title="Compare">' +
-            '<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="4" height="10" rx="0.5"/><rect x="7" y="1" width="4" height="10" rx="0.5"/></svg>' +
-          '</button>' +
-          '<button class="w-8 flex items-center justify-center text-[var(--dc-storm)] hover:text-[var(--dc-red)] hover:bg-[var(--dc-void)] transition-colors border-l border-[var(--dc-border)]" data-lo-action="confirmRemoveLoadout" data-id="' + lo.id + '" title="Remove">' +
-            '<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="3" y1="3" x2="9" y2="9"/><line x1="9" y1="3" x2="3" y2="9"/></svg>' +
-          '</button>' +
-        '</div>' +
-      '</div>'
-    );
-  }).join('');
-}
-
-/**
- * Check if a loadout matches the active loadout
- */
-function isLoadoutActive(lo: Loadout, activeLoadout: Loadout | null): boolean {
-  if (!activeLoadout) return false;
-  
-  if (activeLoadout.id === lo.id) return true;
-  
-  // Deep comparison for unsaved active loadouts
-  return activeLoadout.frameId === lo.frameId &&
-    activeLoadout.mainsTension === lo.mainsTension &&
-    activeLoadout.crossesTension === lo.crossesTension &&
-    activeLoadout.isHybrid === (lo.isHybrid || false) &&
-    (lo.isHybrid
-      ? activeLoadout.mainsId === lo.mainsId && activeLoadout.crossesId === lo.crossesId
-      : activeLoadout.stringId === lo.stringId);
-}
-
-/**
- * Get display name for a loadout's string configuration
- */
-function getLoadoutStringName(lo: Loadout): string {
-  if (lo.isHybrid) {
-    const m = STRINGS.find(s => s.id === lo.mainsId);
-    const x = STRINGS.find(s => s.id === lo.crossesId);
-    return (m && x) ? (m.name + ' / ' + x.name) : '\u2014';
-  } else {
-    const str = STRINGS.find(s => s.id === lo.stringId);
-    return str ? str.name : '\u2014';
-  }
+  const vm = buildMyLoadoutsViewModel(savedLoadouts, activeLoadout, _confirmingRemoveLoadoutId);
+  root.render(createElement(MyLoadoutsList, { model: vm }));
 }
 
 /**
  * Two-step remove confirmation (QA-028)
  */
 export function confirmRemoveLoadout(loadoutId: string): void {
-  const item = document.querySelector('[data-lo-id="' + loadoutId + '"]');
-  if (!item) return;
-  const actionBar = item.querySelector('div.flex.items-stretch.opacity-0, div.flex.items-stretch') as HTMLElement | null;
-  if (!actionBar) return;
-  actionBar.style.opacity = '1';
-  actionBar.style.pointerEvents = 'auto';
-  actionBar.innerHTML =
-    '<span class="font-mono text-[8px] text-[var(--dc-storm)] px-2 flex items-center whitespace-nowrap">Delete?</span>' +
-    '<button class="px-2 font-mono text-[9px] font-bold text-[var(--dc-red)] hover:bg-[var(--dc-void)] border-l border-[var(--dc-border)] h-full transition-colors" data-lo-action="removeLoadout" data-id="' + loadoutId + '">Yes</button>' +
-    '<button class="px-2 font-mono text-[9px] text-[var(--dc-storm)] hover:text-[var(--dc-platinum)] border-l border-[var(--dc-border)] h-full transition-colors" data-lo-action="renderMyLoadouts">No</button>';
+  _confirmingRemoveLoadoutId = loadoutId;
+  renderMyLoadouts();
 }

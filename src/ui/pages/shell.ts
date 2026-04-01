@@ -1176,14 +1176,6 @@ export function init(): void {
       },
     });
   });
-  void import('./strings.js').then(({ registerStringCallbacks }) => {
-    registerStringCallbacks({
-      goToCompendiumFrame: (frameId) => {
-        selectLandingFrame(frameId);
-      },
-    });
-  });
-
   renderComparisonPresets();
   document.getElementById('btn-add-slot')?.addEventListener('click', () => addComparisonSlotViaBridge());
 

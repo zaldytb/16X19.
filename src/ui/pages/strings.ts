@@ -15,20 +15,6 @@ import { createSearchableSelect, ssInstances } from '../components/searchable-se
 import { activateLoadout, switchMode } from './shell.js';
 import { getCompBaseObs, setCompBaseObs } from './comp-base-obs.js';
 
-// ---------------------------------------------------------------------------
-// Cross-module callbacks — avoids circular import with compendium.ts.
-// Shell.ts registers 'goToCompendiumFrame' during init().
-// ---------------------------------------------------------------------------
-type StringCallbacks = {
-  goToCompendiumFrame?: (frameId: string) => void;
-};
-
-let _stringCbs: StringCallbacks = {};
-
-export function registerStringCallbacks(cbs: StringCallbacks): void {
-  _stringCbs = { ..._stringCbs, ...cbs };
-}
-
 const RACQUET_DATA = RACQUETS as unknown as Racquet[];
 const STRING_DATA = STRINGS as unknown as StringData[];
 const PREVIEW_STAT_KEYS = ['spin', 'power', 'control', 'launch', 'feel', 'comfort', 'stability', 'forgiveness', 'maneuverability'] as const;
@@ -304,7 +290,7 @@ function _bindStringDelegates(): void {
         if (arg) _stringSelectString(arg);
         break;
       case 'goToFrame':
-        if (arg) _stringCbs.goToCompendiumFrame?.(arg);
+        if (arg) _stringActivateBestFrameAndOverview(arg);
         break;
       case 'toggleHud':
         _stringToggleHud();
@@ -1067,6 +1053,17 @@ export function _stringClearPreview(): void {
 
   const deltaEl = document.getElementById('comp-string-delta');
   if (deltaEl) deltaEl.classList.add('opacity-0');
+}
+
+/**
+ * "Best paired with" card: apply that frame to the current string modulator state,
+ * then set active loadout and go to Overview (same outcome as Set Active after picking the frame).
+ */
+function _stringActivateBestFrameAndOverview(frameId: string): void {
+  if (!frameId) return;
+  _stringOnFrameChange(frameId);
+  hydrateFrameSelection(frameId);
+  _stringSetActiveLoadout();
 }
 
 export function _stringAddToLoadout(): void {

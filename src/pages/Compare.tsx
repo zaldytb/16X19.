@@ -36,6 +36,8 @@ export function Compare() {
           {/* Slots rendered dynamically */}
         </div>
 
+        <div id="compare-qa-host" />
+
         {/* Radar Chart Section */}
         <div className="compare-radar-section">
           <div className="compare-radar-wrapper" id="compare-radar-container">

@@ -4,20 +4,23 @@ type Props = {
   groups: CompBaseStatGroupVm[];
 };
 
-function segmentClass(
-  index: number,
-  row: CompBaseStatRowVm,
-): string {
+/** Same segment classes as Overview stat bars — style.css handles light/dark (incl. empty track contrast). */
+function segmentClass(index: number, row: CompBaseStatRowVm): string {
   const baseFilled = row.filledSegments;
   const previewFilled = row.previewFilledSegments;
   const deltaDirection = row.deltaDirection;
-  let bgClass = 'bg-black/10 dark:bg-white/10';
-  if (index < baseFilled) bgClass = 'bg-dc-void dark:bg-dc-platinum';
-  if (previewFilled != null && deltaDirection === 'up' && index < previewFilled) bgClass = 'bg-dc-red';
-  if (previewFilled != null && deltaDirection === 'down' && index >= previewFilled && index < baseFilled) {
-    bgClass = 'bg-dc-red/40';
+  const isHigh = row.value > 70;
+
+  if (previewFilled != null && deltaDirection === 'up' && index < previewFilled) {
+    return 'stat-bar-segment high active';
   }
-  return `flex-1 h-full rounded-[1px] transition-colors duration-150 ${bgClass}`;
+  if (previewFilled != null && deltaDirection === 'down' && index >= previewFilled && index < baseFilled) {
+    return 'stat-bar-segment preview-down-comp';
+  }
+  if (index < baseFilled) {
+    return isHigh ? 'stat-bar-segment high active' : 'stat-bar-segment filled active';
+  }
+  return 'stat-bar-segment empty';
 }
 
 function ValueCell({ row }: { row: CompBaseStatRowVm }) {
@@ -58,7 +61,7 @@ export function CompendiumBaseProfile({ groups }: Props) {
                     {row.label}
                   </span>
                   <div
-                    className="flex flex-1 gap-[2px] h-1.5 items-center"
+                    className="stat-bar-track flex flex-1 gap-[2px] h-1.5 items-center"
                     id={`comp-track-${row.id}`}
                     data-base={row.value}
                     data-has-preview={row.previewFilledSegments != null ? 'true' : undefined}

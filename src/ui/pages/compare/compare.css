@@ -611,34 +611,47 @@
   }
 }
 
-/* Editor Modal */
+/* Editor Modal — portaled to document.body so position:fixed is viewport-true (workspace-mode uses transform animation). */
 .compare-editor-modal {
   position: fixed;
   inset: 0;
-  z-index: 100;
+  /* Above mobile tab bar (300) and dock overlays */
+  z-index: 500;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1rem;
-}
-
-.compare-editor-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(20, 20, 20, 0.85);
-  backdrop-filter: blur(4px);
+  box-sizing: border-box;
 }
 
 .compare-editor-content {
   position: relative;
   width: 100%;
   max-width: 420px;
-  max-height: 90vh;
+  max-height: min(90vh, 90dvh);
+  min-height: 0;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   background: var(--dc-void);
   border: 1px solid var(--dc-border);
   border-radius: 4px;
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+}
+
+@media (max-width: 1024px) {
+  .compare-editor-modal {
+    align-items: flex-start;
+    justify-content: center;
+    padding: max(0.75rem, env(safe-area-inset-top)) max(0.75rem, env(safe-area-inset-right))
+      max(0.75rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .compare-editor-content {
+    flex-shrink: 0;
+    max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 1.5rem);
+  }
 }
 
 .compare-editor-header {

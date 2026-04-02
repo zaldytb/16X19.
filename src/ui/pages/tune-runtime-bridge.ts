@@ -17,20 +17,28 @@ type TuneRuntimeCallbacks = {
 };
 
 let _callbacks: Partial<TuneRuntimeCallbacks> = {};
+let _isTuneMounted = false;
 
 export function registerTuneRuntimeCallbacks(callbacks: Partial<TuneRuntimeCallbacks>): void {
   _callbacks = { ..._callbacks, ...callbacks };
 }
 
+export function setTuneRuntimeMounted(isMounted: boolean): void {
+  _isTuneMounted = isMounted;
+}
+
 export function initTuneModeViaBridge(setup: TuneSetup): void {
+  if (!_isTuneMounted) return;
   _callbacks.initTuneMode?.(setup);
 }
 
 export function refreshTuneIfActiveViaBridge(): void {
+  if (!_isTuneMounted) return;
   _callbacks.refreshTuneIfActive?.();
 }
 
 export function onTuneSliderInputViaBridge(event: Event): void {
+  if (!_isTuneMounted) return;
   _callbacks.onTuneSliderInput?.(event);
 }
 
@@ -39,5 +47,6 @@ export function resetTunePreviewStateViaBridge(): void {
 }
 
 export function refreshTuneSweepChartViaBridge(setup: TuneSetup): void {
+  if (!_isTuneMounted) return;
   _callbacks.refreshSweepChart?.(setup);
 }

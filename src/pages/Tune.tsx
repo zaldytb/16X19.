@@ -4,26 +4,22 @@
 import { useEffect, useRef } from 'react';
 import { wireTuneSlider } from '../ui/pages/shell.js';
 import { refreshTuneIfActive, tuneSandboxCommit } from '../ui/pages/tune.js';
+import { setTuneRuntimeMounted } from '../ui/pages/tune-runtime-bridge.js';
 
 export function Tune() {
   const initialized = useRef(false);
 
   useEffect(() => {
-    let refreshFrame: number | null = null;
+    setTuneRuntimeMounted(true);
 
     if (!initialized.current) {
       initialized.current = true;
       refreshTuneIfActive();
       wireTuneSlider();
-      refreshFrame = requestAnimationFrame(() => {
-        refreshTuneIfActive();
-      });
     }
 
     return () => {
-      if (refreshFrame != null) {
-        cancelAnimationFrame(refreshFrame);
-      }
+      setTuneRuntimeMounted(false);
     };
   }, []);
 

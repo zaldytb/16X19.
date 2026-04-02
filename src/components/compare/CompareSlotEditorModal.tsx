@@ -1,4 +1,5 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from 'react';
+import { createPortal } from 'react-dom';
 import type { Loadout, Racquet, StringData } from '../../engine/types.js';
 import type { SlotId } from '../../ui/pages/compare/types.js';
 import { getSlotColor } from '../../ui/pages/compare/types.js';
@@ -61,9 +62,15 @@ export function CompareSlotEditorModal({
     setForm((prev) => ({ ...prev, isHybrid }));
   };
 
-  return (
-    <div className="compare-editor-modal" id="compare-editor-modal" data-slot-id={slotId}>
-      <div className="compare-editor-backdrop" role="presentation" onClick={onCancel} />
+  const modal = (
+    <div
+      className="compare-editor-modal"
+      id="compare-editor-modal"
+      data-slot-id={slotId}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onCancel();
+      }}
+    >
       <div className="compare-editor-content">
         <div className="compare-editor-header">
           <span className="compare-editor-title">// EDIT SLOT {color.label}</span>
@@ -115,6 +122,8 @@ export function CompareSlotEditorModal({
       </div>
     </div>
   );
+
+  return createPortal(modal, document.body);
 }
 
 type FormFieldsProps = {

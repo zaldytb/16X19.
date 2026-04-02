@@ -58,7 +58,6 @@ import { renderDockContextPanel, renderDockPanel, hydrateDock, registerDockCallb
 import { renderComparisonPresets, registerPresetCallbacks } from '../shared/presets.js';
 import { ssInstances } from '../components/searchable-select.js';
 import { showShareToast, copyToClipboard, exportLoadoutsToFile, importLoadoutsFromJSON, parseSharedBuildFromURL, generateShareURL } from '../../utils/share.js';
-import { toggleAppTheme } from '../theme-toggle.js';
 import { getScoredSetup } from '../../utils/performance.js';
 import { syncViews } from '../../runtime/coordinator.js';
 import { validateRuntimeContracts } from '../../runtime/contracts.js';
@@ -1199,7 +1198,6 @@ export function init(): void {
   document.getElementById('btn-mode-howitworks-mobile')?.addEventListener('click', () => switchMode('howitworks'));
 
   wireTuneSlider();
-  $('#btn-theme')?.addEventListener('click', toggleAppTheme);
 
   // Legacy single-page DOM had every mode in #workspace; hide non-overview until switch.
   // React Router mounts one route at a time — only one [id^="mode-"] exists; skip or we hide the active view.

@@ -1,4 +1,5 @@
 import { createElement } from 'react';
+import { flushSync } from 'react-dom';
 import { createRoot, type Root } from 'react-dom/client';
 import { RACQUETS, STRINGS } from '../../data/loader.js';
 import {
@@ -73,7 +74,6 @@ let _compCurrentBuilds: BuildWithArchetype[] = [];
 const _compendiumBuildCache: Record<string, BuildWithArchetype[]> = {};
 let _compPreviewFrame: number | null = null;
 let _compRosterTimer: number | null = null;
-let _compSelectorHydrationFrame: number | null = null;
 let _compLastRosterKey = '';
 let _compLastPreviewStats: SetupStats | null = null;
 
@@ -144,10 +144,6 @@ export function cleanupCompendiumPage(): void {
   if (_compPreviewFrame != null) {
     cancelAnimationFrame(_compPreviewFrame);
     _compPreviewFrame = null;
-  }
-  if (_compSelectorHydrationFrame != null) {
-    cancelAnimationFrame(_compSelectorHydrationFrame);
-    _compSelectorHydrationFrame = null;
   }
   if (_compRosterTimer != null) {
     window.clearTimeout(_compRosterTimer);
@@ -528,16 +524,16 @@ export function _compRenderMain(racquet: Racquet): void {
     const buildsRoot = _ensureCompendiumReactRoot(_compTopBuildsMount, shell.topBuilds);
 
     heroRoot?.render(createElement(CompendiumRacketHero, { vm: heroVm }));
-    stringModRoot?.render(createElement(CompendiumStringModulator));
+    // Force the modulator subtree into the DOM before SearchableSelect mounts into #comp-mains-select.
+    // Otherwise rAF/microtask can run before React commits, mainsContainer is null, and selectors stay dead until a later refresh.
+    flushSync(() => {
+      stringModRoot?.render(createElement(CompendiumStringModulator));
+    });
     baseRoot?.render(createElement(CompendiumBaseProfile, { groups: baseProfileGroups }));
     buildsRoot?.render(createElement(CompendiumTopBuilds, { sortTabs: sortTabsVm, cards: cardsVm }));
 
-    if (_compSelectorHydrationFrame != null) {
-      cancelAnimationFrame(_compSelectorHydrationFrame);
-    }
     const selectorHydrationStart = performance.now();
-    _compSelectorHydrationFrame = requestAnimationFrame(() => {
-      _compSelectorHydrationFrame = null;
+    queueMicrotask(() => {
       _compInitStringInjector(racquet);
       _logCompPerf('selector hydration', selectorHydrationStart);
     });

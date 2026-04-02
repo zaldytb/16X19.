@@ -8601,3 +8601,12 @@ textarea:focus-visible {
 [data-theme="light"] .stat-bar-segment.empty {
   background: rgba(0, 0, 0, 0.08);
 }
+
+/* Compendium base profile: string preview down — dimmed red segments (parity with legacy Tailwind bg-dc-red/40) */
+.stat-bar-segment.preview-down-comp {
+  background: rgba(175, 0, 0, 0.4);
+}
+
+[data-theme="light"] .stat-bar-segment.preview-down-comp {
+  background: rgba(175, 0, 0, 0.45);
+}

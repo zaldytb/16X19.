@@ -1,8 +1,20 @@
-import type { StringCompendiumDetailVm } from '../../ui/pages/string-compendium-detail-vm.js';
+import type {
+  StringCompendiumDetailVm,
+  StringTelemetryRowVm,
+} from '../../ui/pages/string-compendium-detail-vm.js';
 
 type Props = {
   vm: StringCompendiumDetailVm;
 };
+
+/** Same segment classes as Overview / racket compendium — style.css handles light/dark empty-track contrast. */
+function segmentClass(index: number, row: StringTelemetryRowVm): string {
+  const isHigh = row.value > 70;
+  if (index < row.filledSegments) {
+    return isHigh ? 'stat-bar-segment high active' : 'stat-bar-segment filled active';
+  }
+  return 'stat-bar-segment empty';
+}
 
 export function StringCompendiumDetail({ vm }: Props) {
   return (
@@ -87,19 +99,10 @@ export function StringCompendiumDetail({ vm }: Props) {
                     <span className="font-mono text-[13px] text-dc-storm group-hover:text-dc-platinum transition-colors uppercase tracking-[0.15em] w-28">
                       {row.label}
                     </span>
-                    <div className="flex flex-1 gap-[2px] h-1.5 items-center">
-                      {Array.from({ length: 25 }, (_, i) => {
-                        const bgClass =
-                          i < row.filledSegments
-                            ? 'bg-dc-void dark:bg-dc-platinum'
-                            : 'bg-black/10 dark:bg-white/10';
-                        return (
-                          <div
-                            key={i}
-                            className={`flex-1 h-full rounded-[1px] transition-colors duration-150 ${bgClass}`}
-                          />
-                        );
-                      })}
+                    <div className="stat-bar-track flex flex-1 gap-[2px] h-1.5 items-center">
+                      {Array.from({ length: 25 }, (_, i) => (
+                        <div key={i} className={segmentClass(i, row)} />
+                      ))}
                     </div>
                     <span className="font-mono text-[13px] font-bold text-dc-platinum w-8 text-right">{row.value}</span>
                   </div>

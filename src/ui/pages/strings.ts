@@ -320,7 +320,7 @@ function updateStringPreviewTrack(
     const el = segment as HTMLElement;
     el.className = 'flex-1 h-full rounded-[1px] transition-colors duration-150';
 
-    let bgClass = 'bg-black/10 dark:bg-white/10';
+    let bgClass = 'bg-black/20 dark:bg-white/10';
     if (index < baseFilled) bgClass = 'bg-dc-void dark:bg-dc-platinum';
     if (previewFilled != null && deltaDirection === 'up' && index < previewFilled) bgClass = 'bg-dc-red';
     if (previewFilled != null && deltaDirection === 'down' && index >= previewFilled && index < baseFilled) bgClass = 'bg-dc-red/40';
@@ -603,7 +603,7 @@ export function _stringRenderBatteryBars(stringItem: StringData): string {
       const filledSegments = Math.round((pct / 100) * totalSegments);
       let batteryHtml = '<div class="flex flex-1 gap-[2px] h-1.5 items-center">';
       for (let index = 0; index < totalSegments; index += 1) {
-        const bgClass = index < filledSegments ? 'bg-dc-void dark:bg-dc-platinum' : 'bg-black/10 dark:bg-white/10';
+        const bgClass = index < filledSegments ? 'bg-dc-void dark:bg-dc-platinum' : 'bg-black/20 dark:bg-white/10';
         batteryHtml += `<div class="flex-1 h-full rounded-[1px] transition-colors duration-150 ${bgClass}"></div>`;
       }
       batteryHtml += '</div>';

@@ -9,11 +9,22 @@ export function Tune() {
   const initialized = useRef(false);
 
   useEffect(() => {
+    let refreshFrame: number | null = null;
+
     if (!initialized.current) {
       initialized.current = true;
       refreshTuneIfActive();
       wireTuneSlider();
+      refreshFrame = requestAnimationFrame(() => {
+        refreshTuneIfActive();
+      });
     }
+
+    return () => {
+      if (refreshFrame != null) {
+        cancelAnimationFrame(refreshFrame);
+      }
+    };
   }, []);
 
   return (

@@ -2,6 +2,7 @@
 // Optimize page - React component wrapper around existing imperative rendering
 
 import { useEffect, useRef } from 'react';
+import { HardwareMount } from '../components/HardwareMount.js';
 import { initOptimize, _toggleOptMS } from '../ui/pages/optimize.js';
 
 export function Optimize() {
@@ -16,6 +17,7 @@ export function Optimize() {
 
   return (
     <section className="workspace-mode" id="mode-optimize" data-mode="optimize">
+      <HardwareMount>
       <div className="opt-layout">
         {/* Filter panel (left) */}
         <aside className="opt-filters" id="opt-filters">
@@ -164,6 +166,7 @@ export function Optimize() {
           </div>
         </div>
       </div>
+      </HardwareMount>
     </section>
   );
 }

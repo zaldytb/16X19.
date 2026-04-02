@@ -2,6 +2,7 @@
 // Tune page - React component wrapper around existing imperative rendering
 
 import { useEffect, useRef } from 'react';
+import { HardwareMount } from '../components/HardwareMount.js';
 import { wireTuneSlider } from '../ui/pages/shell.js';
 import { refreshTuneIfActive, tuneSandboxCommit } from '../ui/pages/tune.js';
 import { setTuneRuntimeMounted } from '../ui/pages/tune-runtime-bridge.js';
@@ -25,6 +26,7 @@ export function Tune() {
 
   return (
     <section className="workspace-mode" id="mode-tune" data-mode="tune">
+      <HardwareMount>
       <div className="tune-layout p-6">
         <div className="flex items-start justify-between mb-6 pb-4 border-b border-dc-border">
           <div className="flex flex-col gap-1">
@@ -143,6 +145,7 @@ export function Tune() {
           </div>
         </div>
       </div>
+      </HardwareMount>
     </section>
   );
 }

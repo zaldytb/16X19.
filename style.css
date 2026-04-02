@@ -8624,3 +8624,47 @@ textarea:focus-visible {
 [data-theme="light"] .stat-bar-segment.preview-down-comp {
   background: rgba(175, 0, 0, 0.45);
 }
+
+/* Grid Sync mount — clip-path print + hardware flicker (parity with Tailwind CDN theme.extend) */
+@keyframes grid-sync {
+  0% {
+    clip-path: inset(100% 0 0 0);
+    opacity: 0.5;
+    filter: brightness(2);
+  }
+  40% {
+    opacity: 1;
+    filter: brightness(1.5);
+  }
+  100% {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+    filter: brightness(1);
+  }
+}
+
+@keyframes hardware-flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  20% {
+    opacity: 0.8;
+    transform: skewY(0.2deg);
+  }
+  30% {
+    opacity: 1;
+    transform: skewY(-0.2deg);
+  }
+  70% {
+    opacity: 0.9;
+  }
+}
+
+.animate-grid-sync {
+  animation: grid-sync 0.3s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+}
+
+.animate-flicker {
+  animation: hardware-flicker 0.15s ease-in-out;
+}

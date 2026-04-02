@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { HardwareMount } from '../components/HardwareMount.js';
 import { FmbWizardBody } from '../components/find-my-build/FmbWizardBody.js';
 import { _initLandingSearch } from '../ui/pages/shell.js';
 import { renderDashboard } from '../ui/pages/overview.js';
@@ -24,6 +25,7 @@ export function Overview() {
 
   return (
     <section className="workspace-mode" id="mode-overview" data-mode="overview">
+      <HardwareMount>
       <div className="route-panel-enter">
         <div id="mobile-loadout-pills" className="mobile-loadout-pills"></div>
 
@@ -128,6 +130,7 @@ export function Overview() {
           <div className="warnings-list" id="warnings-list"></div>
         </div>
       </div>
+      </HardwareMount>
     </section>
   );
 }

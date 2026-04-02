@@ -1,242 +1,535 @@
-# Tennis Loadout Lab — Agent documentation
+# Tennis Loadout Lab (16X19) — Agent Documentation
 
-## Project overview
+## Project Overview
 
-16X19 (Tennis Loadout Lab) is a physics-based tennis equipment analysis tool. It predicts how a racquet and string setup performs across 11 attributes and summarizes the build with an OBS composite score plus identity/archetype output. Frame-level contradiction modeling is applied before the string layer rather than being surfaced as a separate user-facing novelty score.
+**Tennis Loadout Lab** (internally "16X19") is a physics-based tennis equipment analysis tool that predicts how a racquet and string setup performs across 11 attributes: power, spin, control, comfort, feel, stability, forgiveness, launch, maneuverability, durability, and playability.
 
 **Primary URL:** `https://zaldytb.github.io/loadout-lab/`  
-**Mirror:** `https://loadout-lab.vercel.app`
+**Mirror:** `https://loadout-lab.vercel.app`  
+**Repository:** `https://github.com/zaldytb/16X19`
 
-**README / repo aliases:** The root [README.md](README.md) intentionally uses the **`16X19`** GitHub repo path (`github.com/zaldytb/16X19`) and **`16x19.vercel.app`** as the mirror. Those are equivalent entry points for the same app; **do not** replace them with `loadout-lab` URLs when editing README unless the user explicitly asks.
-
-### Core workflows
+### Core Features
 
 - Browse racquets (Racket Bible) and strings (String Compendium)
-- Configure full-bed and hybrid builds
-- Tune tension with live feedback
-- Compare up to three setups
+- Configure full-bed and hybrid string setups
+- Tune tension with live feedback and delta calculations
+- Compare up to three setups side-by-side
 - Optimize and explore recommended builds
 - Save, activate, duplicate, and share loadouts
+- Persist active loadout and saved loadouts across refreshes via localStorage
 
-## Technology stack
+---
 
-| Category | Technology |
-| ---------- | ------------ |
-| Build | Vite 8.x |
-| App language | TypeScript 6.x (strict) under `src/` |
-| Styling | Tailwind CSS 4.x via `@tailwindcss/vite`, with inline `index.html` config still present, plus `style.css` design tokens |
-| Package manager | npm |
-| Runtime | Node.js 20+ (pipeline via `tsx`) |
-| Charts | Chart.js — dynamic `import('chart.js')` via [`src/chart/ensure-chart-loaded.ts`](src/chart/ensure-chart-loaded.ts) (Overview radar, Tune sweep, Compare radar); `globalThis.Chart` is set after first load for `Chart.getChart` |
-| Deploy | GitHub Pages + Vercel |
+## Technology Stack
 
-**Important:** Tailwind is wired through `@tailwindcss/vite`, and `index.html` still carries inline runtime config. Runtime-generated utility strings in TypeScript should stay verbatim to avoid styling drift.
+| Category | Technology | Version |
+|----------|------------|---------|
+| Build Tool | Vite | 8.x |
+| Language | TypeScript | 6.x (strict mode) |
+| UI Framework | React | 19.x |
+| State Management | Zustand | 5.x |
+| Styling | Tailwind CSS | 4.x via `@tailwindcss/vite` |
+| Charts | Chart.js | 4.x (dynamic import) |
+| Routing | React Router | 7.x |
+| Runtime | Node.js | 20+ |
+| Script Runner | tsx | 4.x |
 
-## Runtime architecture
+**Design System:** "Digicraft Brutalism" — monochrome + orange accent (`#FF4500`)
 
-### 1. Vite entry and bootstrap flow
+Key tokens:
+- `dc-void` (#1A1A1A) — primary background
+- `dc-accent` (#FF4500) — accent color
+- `dc-platinum` (#DCDFE2) — text color
+- Fonts: Inter (sans) + JetBrains Mono
 
-[`src/main.tsx`](src/main.tsx) is the only application entry. It:
+Dark mode via `data-theme="dark"` on `<html>` element.
 
-- calls [`initCatalog()`](src/data/loader.ts) to `fetch` [`public/data/catalog.json`](public/data/catalog.json) and populate [`src/data/loader.ts`](src/data/loader.ts) (`RACQUETS`, `STRINGS`, frame meta / novelty maps)
-- dynamically imports [`src/App.tsx`](src/App.tsx) after the catalog resolves (smaller initial graph; catalog not parsed from inlined `generated.ts` in the main bundle)
-- initializes shared startup helpers such as the favicon heartbeat before the dynamic import
+---
 
-[`src/App.tsx`](src/App.tsx) mounts the shell and calls [`src/bridge/installWindowBridge.ts`](src/bridge/installWindowBridge.ts) for the Digicraft boot sequence plus vanilla shell/bootstrap wiring.
+## Project Structure
 
-React Router routes live in [`src/App.tsx`](src/App.tsx), with workspace wrappers in [`src/pages/`](src/pages/) and shell UI in [`src/components/shell/`](src/components/shell/). [`src/pages/Workspaces.tsx`](src/pages/Workspaces.tsx) uses `React.lazy()` for Tune, Compare, Optimize, Compendium (including `/strings` and `/leaderboard`), and How It Works; Overview is eager. The shell wraps the routed content in `<Suspense>`.
-
-[`src/global.d.ts`](src/global.d.ts) is effectively empty now; strict TypeScript no longer relies on a large `Window` augmentation layer.
-
-When debugging startup issues, trace `runVanillaAppInit()` and the boot helpers in [`src/bridge/installWindowBridge.ts`](src/bridge/installWindowBridge.ts). Cross-module UI actions now flow through direct imports, delegated listeners, and callback registries instead of a `window.*` bridge.
-
-### 2. No root `app.js`
-
-The historical `app.js` monolith is **removed**. Live page logic now spans `src/**/*.ts` and `src/**/*.tsx`.
-
-### 3. Runtime view coordination
-
-[`src/runtime/coordinator.ts`](src/runtime/coordinator.ts) is the cross-page refresh coordinator. It computes refresh plans from route + store changes (including a **`compendium`** flag when that shell mode needs loadout sync) and fans out through callback registries such as:
-
-- [`src/ui/pages/overview-runtime-bridge.ts`](src/ui/pages/overview-runtime-bridge.ts)
-- [`src/ui/pages/tune-runtime-bridge.ts`](src/ui/pages/tune-runtime-bridge.ts)
-- [`src/ui/pages/compare-runtime-bridge.ts`](src/ui/pages/compare-runtime-bridge.ts)
-
-Those files are internal callback registries used to keep lazy page modules decoupled from the main shell graph.
-
-### 4. Active loadout is source of truth
-
-[`src/state/useAppStore.ts`](src/state/useAppStore.ts) holds active and saved loadouts. [`src/state/imperative.ts`](src/state/imperative.ts) exposes the same fields for vanilla TS and the coordinator. [`src/state/active-loadout-storage.ts`](src/state/active-loadout-storage.ts) serializes the active loadout (invoked when the store sets active loadout). [`src/state/setup-sync.ts`](src/state/setup-sync.ts) exposes `getCurrentSetup()` and compendium sync derived from the active loadout.
-
-The active loadout and saved loadouts are expected to survive a hard refresh. Boot restore happens from `src/ui/pages/shell.ts` during `Shell.init()`.
-
-### 5. Shared UI state
-
-Mode, compare slots, radar/slot colors, and dock editor context live on the same Zustand store. React surfaces should use `useAppStore` (or [`src/hooks/useStore.ts`](src/hooks/useStore.ts)); imperative code should import [`src/state/imperative.ts`](src/state/imperative.ts) or call `useAppStore.getState()` — not duplicate globals.
-
-## Project structure
-
-```text
-loadout-lab/
-├── index.html
-├── vite.config.ts
-├── style.css
-├── data.ts
-├── README.md
-├── AGENTS.md
-├── CLAUDE.md
-├── ts-migration-plan.md
+```
+16X19/
+├── index.html                    # Entry HTML with Tailwind CDN config
+├── vite.config.ts                # Vite configuration
+├── tsconfig.json                 # TypeScript configuration (strict mode)
+├── package.json                  # npm scripts and dependencies
+├── style.css                     # Design tokens and component styles (~8,600 lines)
+├── data.ts                       # Generated compatibility module (DO NOT EDIT)
+├── AGENTS.md                     # This file
+├── CLAUDE.md                     # Claude Code specific guidance
+├── README.md                     # Human-readable project overview
+│
+├── public/
+│   └── data/
+│       └── catalog.json          # Generated runtime catalog (fetched at boot)
+│
 ├── src/
-│   ├── main.tsx
-│   ├── chart/              # ensure-chart-loaded (dynamic Chart.js)
-│   ├── App.tsx
-│   ├── components/
-│   │   ├── shell/
-│   │   ├── tune/               # Tune workspace widgets (mounted from ui/pages/tune.ts)
-│   │   └── overview/           # Overview dashboard widgets (mounted from ui/pages/overview.ts)
-│   ├── context/
-│   ├── global.d.ts
-│   ├── hooks/                # e.g. useStore.ts — React hooks over Zustand
-│   ├── pages/
-│   │   ├── Workspaces.tsx
-│   │   ├── Overview.tsx
-│   │   ├── Tune.tsx
-│   │   ├── Compare.tsx
-│   │   └── …
-│   ├── routing/
-│   ├── runtime/
-│   │   ├── coordinator.ts
-│   │   ├── contracts.ts
-│   │   └── diagnostics.ts
-│   ├── vite-env.d.ts
-│   ├── engine/
-│   ├── state/
-│   │   ├── useAppStore.ts
-│   │   ├── imperative.ts
-│   │   ├── selectors.ts
-│   │   ├── setup-from-loadout.ts
-│   │   ├── loadout.ts
-│   │   ├── setup-sync.ts
-│   │   ├── active-loadout-storage.ts
-│   │   └── presets.ts
-│   ├── ui/
-│   │   ├── pages/              # imperative page modules + runtime callback registries
-│   │   ├── components/
-│   │   └── shared/
+│   ├── main.tsx                  # Vite entry point (bootstraps catalog, mounts React)
+│   ├── App.tsx                   # React shell with routing
+│   ├── global.d.ts               # Global type declarations
+│   ├── vite-env.d.ts             # Vite environment types
+│   │
+│   ├── bridge/                   # Boot sequence + vanilla helpers
+│   │   └── installWindowBridge.ts
+│   │
+│   ├── chart/                    # Chart.js dynamic loader
+│   │   └── ensure-chart-loaded.ts
+│   │
+│   ├── components/               # React components (shell + workspace widgets)
+│   │   ├── shell/                # Header, Dock, Footer, BootLoader, MobileTabBar
+│   │   ├── overview/             # Overview dashboard widgets
+│   │   ├── tune/                 # Tune workspace widgets
+│   │   ├── compare/              # Compare workspace widgets
+│   │   ├── compendium/           # Compendium/Strings/Leaderboard widgets
+│   │   ├── optimize/             # Optimize results widgets
+│   │   ├── find-my-build/        # FMB wizard components
+│   │   ├── strings/              # String compendium widgets
+│   │   ├── leaderboard/          # Leaderboard widgets
+│   │   └── HardwareMount.tsx     # Utility for mounting React islands
+│   │
+│   ├── context/                  # React context providers
+│   │   └── ThemeContext.tsx
+│   │
+│   ├── data/                     # Data layer
+│   │   ├── loader.ts             # Runtime catalog loading (initCatalog)
+│   │   ├── generated.ts          # Generated data module (DO NOT EDIT)
+│   │   └── derived-facets.ts     # Computed data facets
+│   │
+│   ├── engine/                   # Prediction engine (pure functions)
+│   │   ├── types.ts              # Core type definitions
+│   │   ├── frame-physics.ts      # L0: Frame base score calculation
+│   │   ├── string-profile.ts     # L1: String profile + L2a: String-frame mods
+│   │   ├── tension.ts            # L2b: Tension modifier
+│   │   ├── hybrid.ts             # L3: Hybrid interaction
+│   │   ├── composite.ts          # Final blend + OBS + identity
+│   │   ├── constants.ts          # Engine constants
+│   │   └── index.ts              # Public API exports
+│   │
+│   ├── hooks/                    # React hooks
+│   │   ├── useStore.ts           # Zustand selectors
+│   │   ├── useCompare.ts         # Compare-specific hooks
+│   │   └── useTheme.ts           # Theme context hook
+│   │
+│   ├── pages/                    # Route wrapper components
+│   │   ├── Workspaces.tsx        # Lazy-loaded workspace exports
+│   │   ├── Overview.tsx          # Overview workspace (eager)
+│   │   ├── Tune.tsx              # Tune workspace
+│   │   ├── Compare.tsx           # Compare workspace
+│   │   ├── Optimize.tsx          # Optimize workspace
+│   │   ├── Compendium.tsx        # Compendium workspace
+│   │   └── HowItWorks.tsx        # Documentation page
+│   │
+│   ├── routing/                  # Routing utilities
+│   │   ├── modePaths.ts          # Path <-> mode mapping
+│   │   └── routerNavigate.ts     # Programmatic navigation
+│   │
+│   ├── runtime/                  # Cross-page coordination
+│   │   ├── coordinator.ts        # Refresh coordinator
+│   │   ├── contracts.ts          # DOM/window contract validation
+│   │   └── diagnostics.ts        # Debug utilities
+│   │
+│   ├── state/                    # State management
+│   │   ├── useAppStore.ts        # Zustand store (single source of truth)
+│   │   ├── imperative.ts         # Vanilla TS accessors
+│   │   ├── selectors.ts          # Pure selectors over AppState
+│   │   ├── setup-from-loadout.ts # Loadout → setup resolution
+│   │   ├── setup-sync.ts         # Current setup + compendium sync
+│   │   ├── loadout.ts            # Saved loadout CRUD
+│   │   ├── active-loadout-storage.ts # Active loadout persistence
+│   │   ├── compare-slots.ts      # Compare slot state management
+│   │   ├── presets.ts            # Top builds generation
+│   │   └── legacy-storage.ts     # Legacy localStorage migration
+│   │
+│   ├── ui/                       # Imperative UI orchestration
+│   │   ├── pages/                # Page-level orchestration modules
+│   │   │   ├── shell.ts          # Shell initialization
+│   │   │   ├── overview.ts       # Overview page logic
+│   │   │   ├── tune.ts           # Tune page logic
+│   │   │   ├── compare/          # Compare page logic
+│   │   │   ├── optimize.ts       # Optimize page logic
+│   │   │   ├── compendium.ts     # Compendium page logic
+│   │   │   ├── strings.ts        # Strings page logic
+│   │   │   ├── leaderboard.ts    # Leaderboard page logic
+│   │   │   ├── find-my-build.ts  # FMB wizard logic
+│   │   │   └── my-loadouts.ts    # My Loadouts page logic
+│   │   │
+│   │   ├── components/           # Shared UI components (imperative)
+│   │   └── shared/               # Shared UI utilities
+│   │
+│   ├── utils/                    # Utility functions
+│   │   ├── helpers.ts
+│   │   ├── performance.ts
+│   │   ├── share.ts
+│   │   └── performance-*.ts      # Performance scoring utilities
+│   │
+│   ├── compute/                  # Computation utilities
+│   │   ├── setup-attributes.ts
+│   │   ├── fmb-rank.ts
+│   │   ├── optimizer-scan.ts
+│   │   └── recommendation-pool.ts
+│   │
+│   └── workers/                  # Web Workers
+│       ├── engine-worker.ts
+│       ├── engine-worker-client.ts
+│       └── engine-worker-protocol.ts
+│
+├── pipeline/                     # Data pipeline
 │   ├── data/
-│   └── utils/
-├── pipeline/
-├── docs/
-└── .github/workflows/
+│   │   ├── frames.json           # Racquet database (SOURCE OF TRUTH)
+│   │   ├── strings.json          # String database (SOURCE OF TRUTH)
+│   │   └── canaries.json         # Regression test expectations
+│   │
+│   ├── schemas/                  # JSON schemas for validation
+│   │   ├── frame.schema.json
+│   │   └── string.schema.json
+│   │
+│   ├── scripts/                  # Pipeline scripts (run with tsx)
+│   │   ├── validate.ts           # JSON schema validation
+│   │   ├── export-to-app.ts      # Generate app data modules
+│   │   ├── canary-test.ts        # Regression testing
+│   │   ├── ingest.ts             # Frame/string ingestion
+│   │   ├── scrape-twu.ts         # TWU racquet scraping
+│   │   ├── scrape-twu-strings.ts # TWU string scraping
+│   │   ├── estimate.ts           # String scoring stats
+│   │   └── calibrate.ts          # Coefficient calibration
+│   │
+│   └── engine/                   # Pipeline-only engine utilities
+│
+├── tests/                        # Test files
+│   └── runtime-hardening.test.ts # Runtime contract tests
+│
+├── docs/                         # Documentation
+│   ├── README.md                 # Documentation index
+│   ├── Getting-Started.md        # Setup and usage guide
+│   ├── Frame-ingestion.md        # Frame ingestion details
+│   ├── REACT-MIGRATION-GUIDE.md  # Zero-Pixel Protocol
+│   └── REACT-MIGRATION-PLAN.md   # Migration roadmap
+│
+└── tools/                        # Development tools
+    └── frame-gui/                # Desktop GUI for frame entry
 ```
 
-## Commands
+---
+
+## Build and Development Commands
 
 ### Development
 
 ```bash
-npm run dev
-npm run typecheck
+npm run dev              # Start Vite dev server (opens automatically)
+npm run typecheck        # TypeScript strict check (must pass with zero errors)
+npm run build            # Production build → dist/
+npm run preview          # Preview production build
 ```
 
-### Production
+### Data Pipeline
 
 ```bash
-npm run build
-npm run preview
+npm run pipeline         # Full pipeline: validate + export + canary
+npm run validate         # Validate frames.json/strings.json against schemas
+npm run export           # Regenerate src/data/generated.ts and data.ts
+npm run export:verify    # Export + run canary tests
+npm run canary           # Run regression tests only
+npm run canary:baseline  # Re-record canary baselines (after intentional changes)
 ```
 
-### Data and regression
+### Data Ingestion
 
 ```bash
-npm run validate
-npm run export
-npm run export:verify
-npm run canary
-npm run canary:baseline
-npm run pipeline
+npm run ingest:frame     # Interactive frame (racquet) ingestion
+npm run ingest:string    # Interactive string ingestion
+npm run scrape:twu       # Scrape racquet data from Tennis Warehouse University
+npm run scrape:twu-strings # Scrape string data from TWU
+npm run enrich:twu       # Enrich TWU CSV data
+npm run estimate         # String scoring accuracy statistics
+npm run calibrate        # Re-fit string estimation coefficients
 ```
 
-### Ingestion and TWU tooling
+### Testing
 
 ```bash
-npm run ingest:frame
-npm run ingest:string
-npm run scrape:twu
-npm run scrape:twu-strings
-npm run enrich:twu
-npm run estimate
-npm run calibrate
+npm run test:runtime     # Runtime hardening tests (refresh plans, DOM contracts)
 ```
 
-Pipeline scripts live in `pipeline/scripts/*.ts` and run with **`tsx`**.
+### Pre-Commit Checklist (REQUIRED)
 
-## Data pipeline
-
-**Source of truth:** `pipeline/data/frames.json`, `strings.json`, `canaries.json`  
-**Generated:** `src/data/generated.ts`, root `data.ts`, and **`public/data/catalog.json`** — never hand-edit; regenerate with `npm run export` or `npm run pipeline`. The export script writes the same catalog to `generated.ts` (for tooling / parity) and to `catalog.json` for **runtime** loading via `initCatalog()` in [`src/data/loader.ts`](src/data/loader.ts). The engine worker also awaits `initCatalog()` before running jobs.
-
-If `catalog.json` is missing after a clone, run `npm run export` before `npm run dev`.
-
-For frame ingestion/modeling:
-
-- `_meta` carries construction / technology tendencies (`aeroBonus`, `comfortTech`, `spinTech`, `genBonus`)
-- `_novelty` carries reviewer-authored contradiction hints (`controlBomber`, `plushLauncher`, `stableWhipper`, `preciseSpinner`, `comfortableAttacker`)
-- frame contradiction modeling is applied after frame base calculation and before the string layer, so users infer it through the final stat shape rather than a separate novelty UI
-
-## Debugging notes
-
-### Routing / mode sync
-
-Route changes flow through [`src/App.tsx`](src/App.tsx) and [`src/routing/modePaths.ts`](src/routing/modePaths.ts). `pathToMode()` intentionally aliases some secondary routes like `/strings` and `/leaderboard` back to the Compendium shell mode so shared nav state stays coherent.
-
-### Tune
-
-Sensitive to split state paths. When changing Tune, verify together: delta card, OBS in Tune, WTTN, recommendations, loadout switching while Tune is open, slider → apply.
-
-Because Tune may mutate the active loadout directly before re-rendering, also verify refresh persistence after applying tension or gauge changes.
-
-### Compare
-
-Compare runtime is TypeScript (`src/ui/pages/compare/`). Keep dock actions and Zustand `comparisonSlots` (via the compare module’s mirror into the store) in sync.
-
-### Overview
-
-Overview is TS-owned (`overview.ts`). If the UI looks empty or duplicated, check for a second render pass or stale listeners, not a legacy `app.js` path.
-
-### Find My Build
-
-The live wizard is the imperative module [`src/ui/pages/find-my-build.ts`](src/ui/pages/find-my-build.ts), opened from Overview and dock actions. There is no standalone routed Find My Build workspace in the current shell.
-
-## Testing strategy
-
-**Automated gate (required before commit):**
+Before every commit, run:
 
 ```bash
 npm run typecheck && npm run canary && npm run build && npm run test:runtime
 ```
 
-**Manual smoke** after UI or engine work: overview hero/bars/radar/fit/warnings; tune; compare; compendium/strings; dock create/save/activate; leaderboard tab.
+---
 
-If you touched state, boot, dock, or tune/compare flows, also refresh the page and confirm:
+## Runtime Architecture
 
-- the active loadout restores correctly
-- saved loadouts still render in the dock
-- compare can still seed from the restored active loadout
+### Startup Flow
 
-## Common pitfalls
+1. **`src/main.tsx`** (Vite entry):
+   - Calls `init16x19Favicon()` to start favicon animation
+   - Calls `initCatalog()` to fetch `public/data/catalog.json`
+   - Dynamically imports `App.tsx` after catalog resolves
+   - Mounts React root to `#root`
 
-1. `src/data/generated.ts`, `data.ts`, and `public/data/catalog.json` are generated — edit JSON under `pipeline/data/` and re-run the pipeline; the app fetches `catalog.json` at boot.  
-2. Tailwind utilities in TS templates should stay stable — avoid risky dynamic class composition when touching runtime-generated markup.  
-3. Dark mode: `data-theme="dark"` on `<html>`.  
-4. JSON field name: **`swingweight`** (lowercase `w`).  
-5. Import paths in TS often end in `.js` (bundler resolution to `.ts` sources).  
-6. Stale client state can produce a “working” UI with wrong numbers — verify `useAppStore` / `getCurrentSetup()` when scores look off.
-7. Active-loadout persistence is separate from saved-loadout persistence — check both paths when debugging refresh regressions.
+2. **`src/App.tsx`**:
+   - Sets up `ThemeProvider`, `BrowserRouter`
+   - Registers router navigation helpers
+   - Syncs route changes to store mode
+   - Renders `ShellLayout` with header, dock, workspace, footer
+   - Lazy-loads workspace routes via `React.lazy()`
+
+3. **`src/bridge/installWindowBridge.ts`**:
+   - Runs vanilla app initialization after React mounts
+   - Handles boot animation sequence
+   - Sets up delegated event listeners
+
+### State Management
+
+**Single Source of Truth:** Zustand store (`src/state/useAppStore.ts`)
+
+| Module | Purpose |
+|--------|---------|
+| `useAppStore.ts` | Zustand store with persistence middleware |
+| `imperative.ts` | Vanilla TS accessors: `getActiveLoadout()`, `subscribe(key, cb)` |
+| `selectors.ts` | Pure selectors: `selectCurrentSetup(state)` |
+| `setup-from-loadout.ts` | `getSetupFromLoadout()` with caching |
+| `setup-sync.ts` | `getCurrentSetup()` and compendium sync |
+| `loadout.ts` | Saved loadout CRUD operations |
+| `active-loadout-storage.ts` | Active loadout localStorage helpers |
+
+**Persistence Contract:**
+- Active loadout and saved loadouts survive page refresh
+- Boot restore happens in `src/ui/pages/shell.ts` during `Shell.init()`
+- Compare slots are also persisted
+
+### Data Flow
+
+```
+User Action → Zustand Store → Selectors → Component Re-render
+                    ↓
+            LocalStorage (auto-persist)
+                    ↓
+            Cross-page Sync (coordinator.ts)
+```
+
+### Runtime Coordination
+
+`src/runtime/coordinator.ts` computes refresh plans when state changes:
+
+```typescript
+// Example: active loadout change in overview mode
+getRefreshPlan('overview', { activeLoadout: true })
+// → { dockPanel: true, dockContext: true, overview: true, tune: false, ... }
+```
+
+Runtime bridges (`*-runtime-bridge.ts` files) are callback registries for lazy-loaded modules.
+
+### Prediction Engine
+
+Pure TypeScript functions in `src/engine/` — deterministic, no side effects.
+
+**Pipeline Stages:**
+
+| Stage | Function | Description |
+|-------|----------|-------------|
+| L0 | `calcFrameBase()` | 11 frame base scores from physics |
+| L0.5 | Frame novelty pass | Contradiction modeling from `_meta`, `_novelty` |
+| L1 | `calcBaseStringProfile()` | 7 string profile scores |
+| L2a | `calcStringFrameMod()` | 6 string-frame interaction deltas |
+| L2b | `calcTensionModifier()` | 8 tension deltas (pattern-aware) |
+| L3 | `calcHybridInteraction()` | 8 hybrid pairing deltas |
+| Final | `predictSetup()` | Weighted blend: frame 72% + string 28% |
+| OBS | `computeCompositeScore()` | 0-100 composite score |
+| Identity | `generateIdentity()` | Archetype + description + tags |
+
+**Frame/String Blend Weights:**
+- Frame: 72%
+- String: 28%
+
+**Exceptions (single-source attributes):**
+- Stability, Forgiveness, Maneuverability: Frame only
+- Launch: Frame + mods only
+- Durability, Playability: String + tension only
+
+### Chart Loading
+
+Chart.js is loaded dynamically via `src/chart/ensure-chart-loaded.ts`:
+
+```typescript
+const Chart = await ensureChartLoaded();
+// Chart.register(...) happens once
+// globalThis.Chart set for Chart.getChart() access
+```
+
+Used by: Overview radar, Tune sweep chart, Compare radar.
+
+---
+
+## Code Style Guidelines
+
+### TypeScript
+
+- **Strict mode enabled** — all `src/**/*.ts` and `src/**/*.tsx` must pass `npm run typecheck`
+- Import paths use `.js` extensions (bundler resolves to `.ts`)
+- No implicit `any` — explicit types required
+- Prefer `interface` over `type` for object shapes
+- Use `readonly` arrays where mutation isn't needed
+
+### React Components
+
+- Functional components with hooks
+- Props interfaces named `{ComponentName}Props`
+- Container/presenter pattern: dumb components receive view-models
+- Use `useAppStore` selectors or `hooks/useStore.ts` for state access
+- `flushSync` around `createRoot().render()` for immediate mounting
+
+### Styling
+
+- Tailwind CSS utilities preferred
+- Runtime-generated class strings must stay verbatim (Vite scans static strings)
+- Custom CSS in `style.css` for design tokens and complex animations
+- Color tokens via CSS variables, mapped in Tailwind config
+
+### File Naming
+
+- React components: PascalCase (`OverviewHero.tsx`)
+- Utility modules: kebab-case (`setup-from-loadout.ts`)
+- View-models: suffix with `-vm.ts` (`overview-hero-vm.ts`)
+- Runtime bridges: suffix with `-runtime-bridge.ts`
+
+---
+
+## Testing Strategy
+
+### Automated Tests
+
+**Runtime Hardening Tests** (`tests/runtime-hardening.test.ts`):
+- Refresh plan computation
+- DOM contract validation
+- Window binding validation
+- Compare slot normalization
+
+**Canary Tests** (`pipeline/scripts/canary-test.ts`):
+- Regression tests for OBS scores
+- Frame novelty profile validation
+- Archetype and identity expectations
+
+### Pre-Commit Verification
+
+```bash
+npm run typecheck && npm run canary && npm run build && npm run test:runtime
+```
+
+### Manual Smoke Tests
+
+After UI or engine changes, verify:
+- Overview: hero, radar chart, stat bars, fit profile, warnings
+- Tune: delta card, OBS, WTTN, recommendations, loadout switching, slider apply
+- Compare: slots, editor modal, radar chart, diff battery
+- Compendium: frame roster, string modulator, top builds
+- Dock: create, save, activate, delete with confirmation
+- Leaderboard: tab roundtrip
+- Refresh persistence: active and saved loadouts survive refresh
+
+---
+
+## Data Pipeline Details
+
+### Source of Truth (EDIT THESE)
+
+- `pipeline/data/frames.json` — Racquet database
+- `pipeline/data/strings.json` — String database
+- `pipeline/data/canaries.json` — Regression test expectations
+
+### Generated Files (NEVER HAND-EDIT)
+
+- `src/data/generated.ts` — App data module
+- `data.ts` — Root compatibility re-export
+- `public/data/catalog.json` — Runtime catalog (fetched at boot)
+
+### Frame Schema
+
+**Required fields:**
+- `id`: Kebab-case unique identifier (`^[a-z0-9-]+$`)
+- `name`: Full racquet name (e.g., "Babolat Pure Aero 100 318g")
+- `year`: Release year
+- `headSize`: Head size in sq inches
+- `strungWeight`: Strung weight in grams
+- `swingweight`: Swingweight in kg·cm² (**lowercase 'w'**)
+- `stiffness`: RA stiffness rating
+- `beamWidth`: Beam width profile in mm (1-3 values)
+- `pattern`: String pattern (e.g., "16x19")
+- `tensionRange`: [low, high] in lbs
+- `balance`: Balance point in cm from butt
+
+**Pipeline-only fields:**
+- `_meta`: Technology bonuses (`aeroBonus`, `comfortTech`, `spinTech`, `genBonus`)
+- `_novelty`: Reviewer-authored contradiction hints
+- `_provenance`: Data lineage
+
+### Export Flow
+
+```
+npm run export
+  ↓
+1. Strip internal fields (_provenance, _meta, _novelty, brand, _staging)
+2. Extract _meta → FRAME_META
+3. Fold _novelty + rarity → FRAME_NOVELTY_PROFILE
+4. Write src/data/generated.ts
+5. Write data.ts
+6. Write public/data/catalog.json
+```
+
+### Ingestion Methods
+
+1. **Interactive CLI:** `npm run ingest:frame` / `npm run ingest:string`
+2. **Batch CSV:** `npx tsx pipeline/scripts/ingest.ts --type frame --csv path.csv`
+3. **Desktop GUI:** `cd tools/frame-gui && npm start`
+
+---
+
+## Critical Rules
+
+### Data Integrity
+
+- **NEVER** edit `src/data/generated.ts`, `data.ts`, or `public/data/catalog.json` directly
+- Always modify JSON in `pipeline/data/` and run `npm run pipeline`
+- After fresh clone, run `npm run export` before `npm run dev`
+
+### Naming Conventions
+
+- Field name: `swingweight` (lowercase 'w'), NOT `swingWeight`
+- Attribute: `maneuverability` (full spelling)
+
+### State Access
+
+- React: Use `useAppStore` selectors or `hooks/useStore.ts`
+- Vanilla/Runtime: Import from `state/imperative.ts` or call `useAppStore.getState()`
+- **Never** duplicate global state or use ad-hoc globals
+
+### Styling
+
+- Both `@tailwindcss/vite` and inline Tailwind config in `index.html` are load-bearing
+- Runtime-generated utility strings must stay verbatim
+- Dark mode: `data-theme="dark"` on `<html>`
+
+### Migration Pattern
+
+React migration follows the **Strangler Fig** pattern:
+1. Migrate widget-by-widget, not page-by-page
+2. Mount React islands into existing imperative modules via `createRoot`
+3. Use pure view-models (`*-vm.ts`) for data transformation
+4. Maintain 1:1 DOM structure parity (Zero-Pixel Protocol)
+5. See `docs/REACT-MIGRATION-GUIDE.md` for full protocol
+
+---
 
 ## Deployment
 
-Push to `main` for GitHub Pages; Vercel mirrors the repo.
+### GitHub Pages (Primary)
+
+Auto-deploys on push to `main` via `.github/workflows/deploy.yml`:
 
 ```bash
 git push origin main
@@ -244,10 +537,62 @@ git push origin main
 
 Actions: `https://github.com/zaldytb/16X19/actions`
 
-## Further reference
+### Vercel (Mirror)
 
-- [ts-migration-plan.md](ts-migration-plan.md) — TypeScript / bundler snapshot and React migration pointer  
-- [docs/REACT-MIGRATION-GUIDE.md](docs/REACT-MIGRATION-GUIDE.md) — Zero-Pixel Protocol for React UI migration  
-- [docs/REACT-MIGRATION-PLAN.md](docs/REACT-MIGRATION-PLAN.md) — post–Tune React roadmap  
-- [docs/README.md](docs/README.md) — documentation index  
-- [CLAUDE.md](CLAUDE.md) — Claude Code checklist and commands  
+- `https://loadout-lab.vercel.app`
+- `https://16x19.vercel.app`
+
+Both mirrors auto-deploy from the same repository.
+
+---
+
+## Common Pitfalls
+
+1. **Stale client state** — A "working" UI can show wrong numbers. Verify `useAppStore` / `getCurrentSetup()` when scores look off.
+
+2. **Tune sensitivity** — When changing Tune, verify together: delta card, OBS in Tune, WTTN, recommendations, loadout switching while Tune is open, slider → apply.
+
+3. **Persistence contract** — Active loadout and saved loadouts are expected to survive refresh. Check both paths when debugging refresh regressions.
+
+4. **Chart.js lifecycle** — Charts must be destroyed before canvas removal. Use `ensureChartLoaded()` and proper cleanup.
+
+5. **Compare slot validation** — Invalid slots are normalized back to empty. Check `normalizeCompareSlots()` behavior.
+
+6. **Lazy route root invalidation** — React islands in lazy routes need `_ensure*ReactRoot` invalidation to survive unmount.
+
+---
+
+## Further Reference
+
+| Document | Purpose |
+|----------|---------|
+| `CLAUDE.md` | Claude Code specific notes and engine reference |
+| `README.md` | Human-readable project overview |
+| `docs/Getting-Started.md` | Setup, ingest, pipeline guide |
+| `docs/Frame-ingestion.md` | Frame ingestion deep-dive |
+| `docs/REACT-MIGRATION-GUIDE.md` | Zero-Pixel Protocol for React migration |
+| `docs/REACT-MIGRATION-PLAN.md` | Migration roadmap and targets |
+| `ts-migration-plan.md` | TypeScript migration snapshot |
+
+---
+
+## Debugging Notes
+
+### Startup Issues
+
+Trace `runVanillaAppInit()` and boot helpers in `src/bridge/installWindowBridge.ts`.
+
+### State Issues
+
+Check:
+1. `useAppStore.getState()` for current values
+2. `src/state/imperative.ts` for vanilla accessors
+3. LocalStorage in DevTools → Application → Local Storage
+
+### Routing/Mode Sync
+
+Route changes flow through `App.tsx` and `src/routing/modePaths.ts`. `pathToMode()` aliases `/strings` and `/leaderboard` to the Compendium shell mode.
+
+### DOM Contract Failures
+
+Run `npm run test:runtime` to check DOM contracts and window bindings.

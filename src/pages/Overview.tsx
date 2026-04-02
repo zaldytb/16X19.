@@ -24,10 +24,11 @@ export function Overview() {
 
   return (
     <section className="workspace-mode" id="mode-overview" data-mode="overview">
-      <div id="mobile-loadout-pills" className="mobile-loadout-pills"></div>
+      <div className="route-panel-enter">
+        <div id="mobile-loadout-pills" className="mobile-loadout-pills"></div>
 
-      <div id="empty-state" className="flex flex-col items-center justify-center min-h-[75vh] w-full px-4 md:px-8">
-        <div className="w-full max-w-4xl flex flex-col gap-12 relative">
+        <div id="empty-state" className="flex flex-col items-center justify-center min-h-[75vh] w-full px-4 md:px-8">
+          <div className="w-full max-w-4xl flex flex-col gap-12 relative">
           <div className="flex flex-col gap-2">
             <span className="font-mono text-[10px] text-dc-accent uppercase tracking-[0.2em] flex items-center gap-2">
               <span className="w-2 h-2 bg-dc-accent animate-pulse"></span> AWAITING TELEMETRY
@@ -82,6 +83,7 @@ export function Overview() {
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </div>
           </button>
+          </div>
         </div>
       </div>
 

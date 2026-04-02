@@ -24,15 +24,16 @@ export function Compendium({ initialTab = 'rackets' }: CompendiumProps) {
 
   return (
     <section className="workspace-mode" id="mode-compendium" data-mode="compendium">
-      <div className="w-full max-w-7xl mx-auto mb-10 mt-4">
+      <div className="route-panel-enter">
+        <div className="w-full max-w-7xl mx-auto mb-10 mt-4">
         <div className="grid grid-cols-3 border border-dc-border">
           <button className={`comp-tab-btn py-4 md:py-5 font-mono text-[10px] md:text-xs uppercase tracking-[0.2em] border-r border-dc-border transition-colors ${initialTab === 'rackets' ? 'bg-dc-active-bg text-dc-active-text font-bold' : 'bg-transparent text-dc-storm hover:bg-dc-border/50 hover:text-dc-platinum'}`} data-comp-tab="rackets" onClick={() => _compSwitchTab('rackets')}>Rackets</button>
           <button className={`comp-tab-btn py-4 md:py-5 font-mono text-[10px] md:text-xs uppercase tracking-[0.2em] border-r border-dc-border transition-colors ${initialTab === 'strings' ? 'bg-dc-active-bg text-dc-active-text font-bold' : 'bg-transparent text-dc-storm hover:bg-dc-border/50 hover:text-dc-platinum'}`} data-comp-tab="strings" onClick={() => _compSwitchTab('strings')}>Strings</button>
           <button className={`comp-tab-btn py-4 md:py-5 font-mono text-[10px] md:text-xs uppercase tracking-[0.2em] transition-colors ${initialTab === 'leaderboard' ? 'bg-dc-active-bg text-dc-active-text font-bold' : 'bg-transparent text-dc-storm hover:bg-dc-border/50 hover:text-dc-platinum'}`} data-comp-tab="leaderboard" onClick={() => _compSwitchTab('leaderboard')}>Leaderboard</button>
         </div>
-      </div>
+        </div>
 
-      <div className={`comp-tab-panel ${initialTab === 'rackets' ? '' : 'hidden'}`} id="comp-tab-rackets">
+        <div className={`comp-tab-panel ${initialTab === 'rackets' ? '' : 'hidden'}`} id="comp-tab-rackets">
         <CompendiumFrameHud onClose={() => _compToggleHud()} />
 
         <div className="comp-layout">
@@ -43,9 +44,9 @@ export function Compendium({ initialTab = 'rackets' }: CompendiumProps) {
             </div>
           </div>
         </div>
-      </div>
+        </div>
 
-      <div className={`comp-tab-panel ${initialTab === 'strings' ? '' : 'hidden'}`} id="comp-tab-strings">
+        <div className={`comp-tab-panel ${initialTab === 'strings' ? '' : 'hidden'}`} id="comp-tab-strings">
         <StringCompendiumHud onClose={() => _stringToggleHud()} />
 
         <div id="string-main" className="min-h-[400px] p-8">
@@ -54,10 +55,11 @@ export function Compendium({ initialTab = 'rackets' }: CompendiumProps) {
             <p className="font-mono text-sm">Loading string database...</p>
           </div>
         </div>
-      </div>
+        </div>
 
-      <div className={`comp-tab-panel ${initialTab === 'leaderboard' ? '' : 'hidden'}`} id="comp-tab-leaderboard">
-        <div id="comp-leaderboard-root" className="min-h-full" />
+        <div className={`comp-tab-panel ${initialTab === 'leaderboard' ? '' : 'hidden'}`} id="comp-tab-leaderboard">
+          <div id="comp-leaderboard-root" className="min-h-full" />
+        </div>
       </div>
     </section>
   );

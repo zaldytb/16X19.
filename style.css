@@ -737,6 +737,20 @@ body {
   margin: 0 auto;
 }
 
+/* Overview + Compendium: panel enter matches Compare slot cards (compare.css .compare-slot-card slotEnter) */
+.route-panel-enter {
+  opacity: 0;
+  transform: translateY(12px);
+  animation: routePanelEnter 0.4s ease-out forwards;
+}
+
+@keyframes routePanelEnter {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .workspace-mode.hidden {
   display: none;
 }

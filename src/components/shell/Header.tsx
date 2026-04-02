@@ -7,7 +7,6 @@ import { useTheme } from '../../context/ThemeContext.js';
 import { useAppStore } from '../../state/useAppStore.js';
 import type { AppMode } from '../../state/useAppStore.js';
 import { pathToMode } from '../../routing/modePaths.js';
-import { syncViews } from '../../runtime/coordinator.js';
 import { get16x19FaviconHref } from '../../ui/favicon.js';
 
 const modeIcons: Record<string, React.ReactNode> = {
@@ -83,7 +82,7 @@ export function Header() {
         setCurrentMode(mode as AppMode);
       }
       navigate(path);
-      syncViews('mode-click', { mode: true, dockEditorContext: true });
+      // syncViews is handled by RouteModeSync in App.tsx when the route changes
     },
     [navigate]
   );

@@ -1,4 +1,4 @@
-import { Suspense, useLayoutEffect } from 'react';
+import { Suspense, useEffect, useLayoutEffect } from 'react';
 import {
   BrowserRouter,
   Navigate,
@@ -46,19 +46,16 @@ function RouterRegistration() {
 /** Keep store mode in sync with browser navigation. */
 function RouteModeSync() {
   const location = useLocation();
+  // Sync store mode immediately so child components see the right mode before paint.
   useLayoutEffect(() => {
     const mode = pathToMode(location.pathname);
     const { currentMode, setCurrentMode } = useAppStore.getState();
     if (mode !== currentMode) {
       setCurrentMode(mode);
     }
-    // Update active states on buttons
-    document.querySelectorAll('.mode-btn').forEach((button) => {
-      button.classList.toggle('active', (button as HTMLElement).dataset.mode === mode);
-    });
-    document.querySelectorAll('.mobile-tab-btn').forEach((button) => {
-      button.classList.toggle('active', (button as HTMLElement).dataset.mode === mode);
-    });
+  }, [location.pathname]);
+  // Defer heavy dock/page rendering until after paint so the new page shell appears instantly.
+  useEffect(() => {
     syncViews('route-sync', { mode: true, dockEditorContext: true });
   }, [location.pathname]);
   return null;

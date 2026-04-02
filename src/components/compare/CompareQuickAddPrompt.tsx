@@ -6,7 +6,11 @@ type StringOpt = { id: string; label: string };
 type Props = {
   racquets: RacquetOpt[];
   strings: StringOpt[];
+  frameId: string;
+  stringId: string;
   tension: number;
+  onFrameChange: (value: string) => void;
+  onStringChange: (value: string) => void;
   onTensionChange: (v: number) => void;
   onQuickAdd: () => void;
 };
@@ -14,7 +18,11 @@ type Props = {
 export function CompareQuickAddPrompt({
   racquets,
   strings,
+  frameId,
+  stringId,
   tension,
+  onFrameChange,
+  onStringChange,
   onTensionChange,
   onQuickAdd,
 }: Props) {
@@ -23,7 +31,7 @@ export function CompareQuickAddPrompt({
       <p className="compare-qa-title">Add a second setup to compare</p>
       <p className="compare-qa-sub">Pick a frame and string, or save more loadouts from Racket Bible</p>
       <div className="compare-qa-fields">
-        <select className="dock-qa-select" id="compare-qa-frame" defaultValue="">
+        <select className="dock-qa-select" id="compare-qa-frame" value={frameId} onChange={(e) => onFrameChange(e.target.value)}>
           <option value="">Choose frame...</option>
           {racquets.map((r) => (
             <option key={r.id} value={r.id}>
@@ -31,7 +39,7 @@ export function CompareQuickAddPrompt({
             </option>
           ))}
         </select>
-        <select className="dock-qa-select" id="compare-qa-string" defaultValue="">
+        <select className="dock-qa-select" id="compare-qa-string" value={stringId} onChange={(e) => onStringChange(e.target.value)}>
           <option value="">Choose string...</option>
           {strings.map((s) => (
             <option key={s.id} value={s.id}>

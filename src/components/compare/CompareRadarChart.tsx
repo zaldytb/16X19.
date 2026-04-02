@@ -8,16 +8,17 @@ import {
 type Props = {
   slots: CompareSlot[];
   radarKey: string;
+  themeKey?: string;
 };
 
-export function CompareRadarChart({ slots, radarKey }: Props) {
+export function CompareRadarChart({ slots, radarKey, themeKey = 'light' }: Props) {
   useLayoutEffect(() => {
     if (slots.length === 0) {
       destroyRadarChart();
       return;
     }
     void renderRadarChart('compare-radar-chart', { slots });
-  }, [radarKey, slots.length]);
+  }, [radarKey, slots.length, themeKey]);
 
   useLayoutEffect(() => {
     return () => {

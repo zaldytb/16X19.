@@ -20,19 +20,13 @@ import {
   setSlotColors,
 } from '../../state/imperative.js';
 import {
-  addComparisonSlotFromHomeViaBridge,
-  addComparisonSlotViaBridge,
-  addCompareSlotViaBridge,
-  editCompareSlotViaBridge,
-  initComparePageViaBridge,
-  quickAddCompareSavedViaBridge,
-  registerCompareShellCallbacksViaBridge,
-  removeCompareSlotViaBridge,
-  renderCompareSummariesViaBridge,
-  renderCompareSurfacesViaBridge,
-  showCompareQuickAddPromptViaBridge,
-} from './compare-runtime-bridge.js';
-import { addLoadoutToSlot } from './compare/compare-slot-api.js';
+  addComparisonSlot,
+  addSlot as addCompareSlot,
+  editSlot as editCompareSlot,
+  quickAddSaved as quickAddCompareSaved,
+  registerCompareShellCallbacks,
+  removeSlot as removeCompareSlot,
+} from './compare/compare-actions.js';
 import { clearSlot as clearCompareSlot, getState as getCompareState, setSlotLoadout as setCompareSlotLoadout } from './compare/hooks/useCompareState.js';
 import type { SlotId as CompareSlotId } from './compare/types.js';
 import { SLOT_COLORS } from './compare/types.js';
@@ -54,6 +48,7 @@ import { validateRuntimeContracts } from '../../runtime/contracts.js';
 import { reportRuntimeIssue } from '../../runtime/diagnostics.js';
 import { getRouterNavigate } from '../../routing/routerNavigate.js';
 import { modeToPath } from '../../routing/modePaths.js';
+import { focusOptimizeFrame } from './optimize-route-state.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T | null =>
   document.querySelector(sel) as T | null;
@@ -67,7 +62,6 @@ const scrollPositions: Record<string, number> = {
 };
 
 let _initCalled = false;
-let _compendiumInitialized = false;
 let _compareEditorDirty = false;
 let _pendingActiveRefreshFrame: number | null = null;
 let _storeSubscriptionsInstalled = false;
@@ -94,18 +88,6 @@ export function subscribeCompareEditorDirty(listener: () => void): () => void {
   };
 }
 
-async function ensureOptimizeModule() {
-  return import('./optimize.js');
-}
-
-async function ensureCompendiumModule() {
-  return import('./compendium.js');
-}
-
-function renderCompareSurfaces(): void {
-  renderCompareSurfacesViaBridge();
-}
-
 function syncRuntimeViews(reason: string, changed: Parameters<typeof syncViews>[1]): void {
   syncViews(reason, changed);
 }
@@ -121,40 +103,6 @@ function buildLoadoutName(racquet: Racquet, stringConfig: StringConfig): string 
     return `${stringConfig.mains.name} / ${stringConfig.crosses.name} on ${racquet.name}`;
   }
   return `${stringConfig.string.name} on ${racquet.name}`;
-}
-
-function autoFillCompareFromSaved(): void {
-  const compareState = getCompareState();
-  compareState.slots.forEach((slot) => {
-    clearCompareSlot(slot.id as CompareSlotId);
-  });
-
-  const activeLoadout = getActiveLoadout();
-  const savedLoadouts = getSavedLoadouts();
-  const compareCandidates: Loadout[] = [];
-
-  if (activeLoadout) compareCandidates.push({ ...activeLoadout });
-
-  for (const loadout of savedLoadouts) {
-    if (compareCandidates.length >= 3) break;
-    if (activeLoadout && loadout.id === activeLoadout.id) continue;
-    compareCandidates.push({ ...loadout });
-  }
-
-  if (compareCandidates.length < 2 && savedLoadouts.length > 0) {
-    const first = savedLoadouts[0];
-    const alreadyPresent = compareCandidates.some((candidate) => candidate.id === first.id);
-    if (!alreadyPresent) compareCandidates.push({ ...first });
-  }
-
-  compareCandidates.slice(0, 3).forEach((candidate) => {
-    const setup = getSetupFromLoadout(candidate);
-    if (!setup) return;
-    const stats = getScoredSetup(setup).stats;
-    const latestState = getCompareState();
-    const emptySlot = latestState.slots.find((slot) => slot.loadout === null);
-    if (emptySlot) setCompareSlotLoadout(emptySlot.id as CompareSlotId, candidate, stats);
-  });
 }
 
 function getCompareStateSlot(slotId: string): any | null {
@@ -192,9 +140,7 @@ export function activateLoadout(loadout: Loadout | null): void {
 
   const racquet = RACQUETS.find((frame) => frame.id === loadout.frameId) as Racquet | undefined;
   if (racquet) {
-    void import('./optimize.js').then((m) => {
-      m.syncOptimizeFrameSelectionFromExternal(racquet.name, racquet.id);
-    });
+    focusOptimizeFrame(racquet.name, racquet.id);
   }
 
   syncRuntimeViews('activate-loadout', { activeLoadout: true, dockEditorContext: true });
@@ -500,19 +446,6 @@ export function switchMode(mode: string): void {
   if (!useReactRouter) {
     if (mode === 'compare') {
       runCompareModeActivation();
-    } else if (mode === 'optimize') {
-      void ensureOptimizeModule().then((Optimize) => {
-        Optimize.initOptimize();
-      });
-    } else if (mode === 'compendium') {
-      void ensureCompendiumModule().then((Compendium) => {
-        if (!_compendiumInitialized) {
-          Compendium.initCompendium();
-          _compendiumInitialized = true;
-        } else {
-          Compendium._compSyncWithActiveLoadout();
-        }
-      });
     }
   }
 
@@ -529,16 +462,12 @@ export function switchMode(mode: string): void {
 
 /** Compare tab activation (DOM must exist). Used by route mount and direct mode activation. */
 export function runCompareModeActivation(): void {
-  initComparePageViaBridge();
   renderComparisonPresets();
-  renderCompareSurfaces();
 }
 
 /** Optimize / Compendium first-time init when React route mounts (DOM ready). */
 export function runOptimizeRouteActivation(): void {
-  void ensureOptimizeModule().then((Optimize) => {
-    Optimize.initOptimize();
-  });
+  return;
 }
 
 export type CompendiumWorkspaceTab = 'rackets' | 'strings' | 'leaderboard';
@@ -549,17 +478,7 @@ export type CompendiumWorkspaceTab = 'rackets' | 'strings' | 'leaderboard';
  * activation path or missed on repeat visits.
  */
 export function runCompendiumRouteActivation(options?: { tab?: CompendiumWorkspaceTab }): void {
-  const tab = options?.tab ?? 'rackets';
-  void ensureCompendiumModule().then((Compendium) => {
-    const compendiumDomMounted = !!document.getElementById('comp-main');
-    if (!_compendiumInitialized || !compendiumDomMounted) {
-      Compendium.initCompendium();
-      _compendiumInitialized = true;
-    } else {
-      Compendium._compSyncWithActiveLoadout();
-    }
-    Compendium._compSwitchTab(tab);
-  });
+  void options;
 }
 
 export function openTuneForSlot(slotIndex: number): void {
@@ -851,15 +770,15 @@ export function init(): void {
     switchToLoadout,
     openFindMyBuild: () => { import('./find-my-build.js').then(m => m.openFindMyBuild()); },
     addActiveLoadoutToCompare: addActiveLoadoutToCompare,
-    compareAddSlot: (slotId) => addCompareSlotViaBridge(slotId as CompareSlotId),
-    compareEditSlot: (slotId) => editCompareSlotViaBridge(slotId as CompareSlotId),
-    compareRemoveSlot: (slotId) => removeCompareSlotViaBridge(slotId as CompareSlotId),
+    compareAddSlot: (slotId) => addCompareSlot(slotId as CompareSlotId),
+    compareEditSlot: (slotId) => editCompareSlot(slotId as CompareSlotId),
+    compareRemoveSlot: (slotId) => removeCompareSlot(slotId as CompareSlotId),
     compareClearSlot: (slotId) => clearCompareSlot(slotId as CompareSlotId),
     compareGetState: () => getCompareState(),
-    compareQuickAddSaved: (loadoutId) => quickAddCompareSavedViaBridge(loadoutId),
-    renderCompareAll: () => renderCompareSummariesViaBridge(),
+    compareQuickAddSaved: (loadoutId) => quickAddCompareSaved(loadoutId),
+    renderCompareAll: () => undefined,
   });
-  registerCompareShellCallbacksViaBridge({
+  registerCompareShellCallbacks({
     activateLoadout,
     switchMode,
     renderDockContextPanel,
@@ -867,17 +786,8 @@ export function init(): void {
   registerPresetCallbacks({
     switchMode,
   });
-  void import('./compendium.js').then(({ registerCompendiumTabCallbacks }) => {
-    registerCompendiumTabCallbacks({
-      onStringsTabActivate: () => {
-        void import('./strings.js').then(({ _stringEnsureInitialized }) => {
-          _stringEnsureInitialized();
-        });
-      },
-    });
-  });
   renderComparisonPresets();
-  document.getElementById('btn-add-slot')?.addEventListener('click', () => addComparisonSlotViaBridge());
+  document.getElementById('btn-add-slot')?.addEventListener('click', () => addComparisonSlot());
 
   document.querySelectorAll('.mode-btn').forEach((button) => {
     button.addEventListener('click', () => {

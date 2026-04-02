@@ -2,9 +2,12 @@ import type { CompRacketHeroVm } from '../../ui/pages/comp-racket-hero-vm.js';
 
 type Props = {
   vm: CompRacketHeroVm;
+  deltaObs?: number | null;
+  onToggleHud?: () => void;
 };
 
-export function CompendiumRacketHero({ vm }: Props) {
+export function CompendiumRacketHero({ vm, deltaObs, onToggleHud }: Props) {
+  const hasDelta = typeof deltaObs === 'number' && deltaObs > 0;
   return (
     <div className="relative flex flex-col items-start mb-8">
       <div className="absolute top-6 right-6 md:top-8 md:right-8 flex flex-col items-end">
@@ -15,11 +18,11 @@ export function CompendiumRacketHero({ vm }: Props) {
         </span>
         <div
           id="comp-string-delta"
-          className="flex items-center gap-1 mt-1 opacity-0 transition-opacity duration-200"
+          className={`flex items-center gap-1 mt-1 transition-opacity duration-200${hasDelta ? '' : ' opacity-0'}`}
         >
           <span className="font-mono text-lg font-bold text-dc-red">+</span>
           <span className="font-mono text-lg font-bold text-dc-red" id="comp-string-delta-value">
-            0
+            {hasDelta ? deltaObs : 0}
           </span>
           <span className="font-mono text-xs text-dc-storm/60 ml-0.5">OBS</span>
         </div>
@@ -28,6 +31,7 @@ export function CompendiumRacketHero({ vm }: Props) {
       <h2
         className="text-5xl md:text-[4rem] font-semibold tracking-tight text-dc-platinum leading-none mb-0 pr-[120px] flex items-center gap-3 cursor-pointer group"
         data-comp-action="toggleHud"
+        onClick={onToggleHud}
       >
         {vm.displayTitle}
         <span className="text-2xl text-dc-red opacity-50 group-hover:opacity-100 transition-opacity">

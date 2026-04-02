@@ -5,7 +5,7 @@
 **Tennis Loadout Lab** (internally "16X19") is a physics-based tennis equipment analysis tool that predicts how a racquet and string setup performs across 11 attributes: power, spin, control, comfort, feel, stability, forgiveness, launch, maneuverability, durability, and playability.
 
 **Primary URL:** `https://zaldytb.github.io/loadout-lab/`  
-**Mirror:** `https://loadout-lab.vercel.app`  
+**Mirror:** `https://16x19.vercel.app`  
 **Repository:** `https://github.com/zaldytb/16X19`
 
 ### Core Features
@@ -226,7 +226,7 @@ npm run preview          # Preview production build
 ### Data Pipeline
 
 ```bash
-npm run pipeline         # Full pipeline: validate + export + canary
+npm run pipeline         # Full pipeline: validate + export:verify
 npm run validate         # Validate frames.json/strings.json against schemas
 npm run export           # Regenerate src/data/generated.ts and data.ts
 npm run export:verify    # Export + run canary tests
@@ -425,7 +425,7 @@ npm run typecheck && npm run canary && npm run build && npm run test:runtime
 
 After UI or engine changes, verify:
 - Overview: hero, radar chart, stat bars, fit profile, warnings
-- Tune: delta card, OBS, WTTN, recommendations, loadout switching, slider apply
+- Tune: delta card, OBS in Tune, WTTN, recommendations, loadout switching, slider apply
 - Compare: slots, editor modal, radar chart, diff battery
 - Compendium: frame roster, string modulator, top builds
 - Dock: create, save, activate, delete with confirmation
@@ -489,6 +489,49 @@ npm run export
 
 ---
 
+## Deployment
+
+### GitHub Pages (Primary)
+
+Auto-deploys on push to `main` via `.github/workflows/deploy.yml`:
+
+```bash
+git push origin main
+```
+
+Actions: `https://github.com/zaldytb/16X19/actions`
+
+### Vercel (Mirror)
+
+- `https://loadout-lab.vercel.app`
+- `https://16x19.vercel.app`
+
+Both mirrors auto-deploy from the same repository.
+
+---
+
+## React Migration (Zero-Pixel Protocol)
+
+The project follows a **Strangler Fig** pattern for React migration:
+
+1. Migrate widget-by-widget, not page-by-page
+2. Mount React islands into existing imperative modules via `createRoot`
+3. Use pure view-models (`*-vm.ts`) for data transformation
+4. Maintain 1:1 DOM structure parity
+
+See `docs/REACT-MIGRATION-GUIDE.md` for full protocol.
+
+**Current React migration status:**
+- Tune: major panels are React islands
+- Overview: dashboard surfaces are React islands
+- Compare: core panels are React islands
+- Compendium / Strings / Leaderboard: main surfaces are React islands
+- My Loadouts: dock list is a React island
+- Find My Build: results summary/directions are React islands; wizard flow remains imperative
+- Optimize: results table/loading/empty state are React; filters and run loop remain imperative
+
+---
+
 ## Critical Rules
 
 ### Data Integrity
@@ -513,36 +556,6 @@ npm run export
 - Both `@tailwindcss/vite` and inline Tailwind config in `index.html` are load-bearing
 - Runtime-generated utility strings must stay verbatim
 - Dark mode: `data-theme="dark"` on `<html>`
-
-### Migration Pattern
-
-React migration follows the **Strangler Fig** pattern:
-1. Migrate widget-by-widget, not page-by-page
-2. Mount React islands into existing imperative modules via `createRoot`
-3. Use pure view-models (`*-vm.ts`) for data transformation
-4. Maintain 1:1 DOM structure parity (Zero-Pixel Protocol)
-5. See `docs/REACT-MIGRATION-GUIDE.md` for full protocol
-
----
-
-## Deployment
-
-### GitHub Pages (Primary)
-
-Auto-deploys on push to `main` via `.github/workflows/deploy.yml`:
-
-```bash
-git push origin main
-```
-
-Actions: `https://github.com/zaldytb/16X19/actions`
-
-### Vercel (Mirror)
-
-- `https://loadout-lab.vercel.app`
-- `https://16x19.vercel.app`
-
-Both mirrors auto-deploy from the same repository.
 
 ---
 
@@ -571,8 +584,7 @@ Both mirrors auto-deploy from the same repository.
 | `docs/Getting-Started.md` | Setup, ingest, pipeline guide |
 | `docs/Frame-ingestion.md` | Frame ingestion deep-dive |
 | `docs/REACT-MIGRATION-GUIDE.md` | Zero-Pixel Protocol for React migration |
-| `docs/REACT-MIGRATION-PLAN.md` | Migration roadmap and targets |
-| `ts-migration-plan.md` | TypeScript migration snapshot |
+| `docs/REACT-MIGRATION-PLAN.md` | React migration status and next targets |
 
 ---
 

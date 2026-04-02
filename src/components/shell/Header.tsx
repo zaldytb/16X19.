@@ -142,7 +142,7 @@ export function Header() {
               16<span className="text-dc-accent">X</span>19
             </h1>
             <p className="font-mono text-[9px] text-dc-storm uppercase tracking-[0.3em] mt-1">
-              Prediction Engine // v4.1.0
+              Prediction Engine // v4.5
             </p>
           </div>
         </div>

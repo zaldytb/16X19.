@@ -32,6 +32,11 @@ interface SearchableSelectInstance {
   _cleanup: () => void;
 }
 
+// Virtual scroll settings
+const ITEM_HEIGHT = 40; // Approximate height of each option in pixels
+const BUFFER_ITEMS = 5; // Extra items to render above/below viewport
+const MAX_ITEMS_WITHOUT_VIRTUALIZATION = 50; // Use virtualization above this threshold
+
 interface IndexedOption {
   id: string;
   groupKey: string;
@@ -201,6 +206,15 @@ export function createSearchableSelect(
   let flatOptions: HTMLDivElement[] = []; // all visible option elements for keyboard nav
   let pendingRenderFrame: number | null = null;
   let lastFilter = '';
+  let hasRenderedOptions = false;
+  let renderedValue = value;
+  let highlightedItemIndex = -1;
+
+  // Virtual scroll state
+  let virtualScrollEnabled = false;
+  let currentFilteredItems: IndexedOption[] = [];
+  // Layout rows: interleaved group headers + option items, each occupying one ITEM_HEIGHT slot
+  let layoutRows: Array<{ kind: 'group'; label: string } | { kind: 'item'; item: IndexedOption }> = [];
 
   function getDisplayText(val: string): string {
     if (!val) return '';
@@ -226,17 +240,26 @@ export function createSearchableSelect(
     }
   }
 
-  function renderOptions(filter = ''): void {
-    lastFilter = filter;
-    optionsContainer.replaceChildren();
-    flatOptions = [];
-    highlightIndex = -1;
+  function createOptionElement(item: IndexedOption, isSelected: boolean): HTMLDivElement {
+    const opt = document.createElement('div');
+    opt.className = 'ss-option';
+    if (isSelected) opt.classList.add('ss-selected');
+    opt.dataset.value = item.id;
+
+    if (type === 'custom') {
+      opt.innerHTML = `<span class="ss-opt-primary">${item.primaryText}</span>`;
+    } else {
+      opt.classList.add('ss-option-stacked');
+      opt.innerHTML = `
+        <span class="ss-opt-primary">${item.primaryText}</span>
+        <span class="ss-opt-meta">${item.badgeHTML}<span class="ss-opt-secondary">${item.secondaryText}</span></span>
+      `;
+    }
+    return opt;
+  }
+
+  function getFilteredItems(filter: string): IndexedOption[] {
     const q = filter.toLowerCase().trim();
-
-    let lastGroup = '';
-    let hasResults = false;
-    const fragment = document.createDocumentFragment();
-
     const sourceItems = type === 'custom'
       ? items.map((item) => {
           const customItem = item as CustomOption;
@@ -251,69 +274,129 @@ export function createSearchableSelect(
         })
       : indexedOptions;
 
-    sourceItems.forEach((item) => {
-      const itemId = item.id;
-      const searchText = item.searchText;
-      const groupKey = item.groupKey;
-      const primaryText = item.primaryText;
-      const secondaryText = item.secondaryText;
-      const badgeHTML = item.badgeHTML;
+    if (!q) return sourceItems;
 
-      // Filter
-      if (q) {
-        const words = q.split(/\s+/);
-        const match = words.every(w => searchText.includes(w));
-        if (!match) return;
+    const words = q.split(/\s+/);
+    return sourceItems.filter((item) => words.every(w => item.searchText.includes(w)));
+  }
+
+  function buildLayoutRows(filtered: IndexedOption[]): typeof layoutRows {
+    const rows: typeof layoutRows = [];
+    let lastGroup = '';
+    for (const item of filtered) {
+      if (type !== 'custom' && item.groupKey !== lastGroup) {
+        rows.push({ kind: 'group', label: item.groupKey });
+        lastGroup = item.groupKey;
       }
+      rows.push({ kind: 'item', item });
+    }
+    return rows;
+  }
 
-      hasResults = true;
+  function renderVirtualOptions(filter = ''): void {
+    lastFilter = filter;
+    optionsContainer.replaceChildren();
+    flatOptions = [];
+    highlightIndex = -1;
 
-      // Group header (skip for custom type)
-      if (type !== 'custom' && groupKey !== lastGroup) {
-        const groupLabel = document.createElement('div');
-        groupLabel.className = 'ss-group-label';
-        groupLabel.textContent = groupKey;
-        fragment.appendChild(groupLabel);
-        lastGroup = groupKey;
-      }
+    currentFilteredItems = getFilteredItems(filter);
+    virtualScrollEnabled = currentFilteredItems.length > MAX_ITEMS_WITHOUT_VIRTUALIZATION;
+    layoutRows = buildLayoutRows(currentFilteredItems);
 
-      // Option
-      const opt = document.createElement('div');
-      opt.className = 'ss-option';
-      if (itemId === selectedValue) opt.classList.add('ss-selected');
-      opt.dataset.value = itemId;
-
-      if (type === 'custom') {
-        // Simple layout for custom options
-        opt.innerHTML = `<span class="ss-opt-primary">${primaryText}</span>`;
-      } else if (type === 'string') {
-        // 2-line stacked layout for strings: name on line 1, type+gauge on line 2
-        opt.classList.add('ss-option-stacked');
-        opt.innerHTML = `
-          <span class="ss-opt-primary">${primaryText}</span>
-          <span class="ss-opt-meta">${badgeHTML}<span class="ss-opt-secondary">${secondaryText}</span></span>
-        `;
-      } else {
-        // 2-line stacked layout for racquets: model on line 1, weight+year on line 2
-        opt.classList.add('ss-option-stacked');
-        opt.innerHTML = `
-          <span class="ss-opt-primary">${primaryText}</span>
-          <span class="ss-opt-meta">${badgeHTML}<span class="ss-opt-secondary">${secondaryText}</span></span>
-        `;
-      }
-
-      fragment.appendChild(opt);
-      flatOptions.push(opt);
-    });
-
-    if (!hasResults) {
+    if (currentFilteredItems.length === 0) {
       const noRes = document.createElement('div');
       noRes.className = 'ss-no-results';
       noRes.textContent = 'No matches found';
-      fragment.appendChild(noRes);
+      optionsContainer.appendChild(noRes);
+      hasRenderedOptions = true;
+      renderedValue = selectedValue;
+      return;
     }
 
-    optionsContainer.appendChild(fragment);
+    if (!virtualScrollEnabled) {
+      // Render all items for small lists
+      const fragment = document.createDocumentFragment();
+
+      for (const row of layoutRows) {
+        if (row.kind === 'group') {
+          const groupLabel = document.createElement('div');
+          groupLabel.className = 'ss-group-label';
+          groupLabel.textContent = row.label;
+          fragment.appendChild(groupLabel);
+        } else {
+          const opt = createOptionElement(row.item, row.item.id === selectedValue);
+          fragment.appendChild(opt);
+          flatOptions.push(opt);
+        }
+      }
+
+      optionsContainer.appendChild(fragment);
+    } else {
+      // Set up virtual scrolling for large lists
+      optionsContainer.style.position = 'relative';
+      optionsContainer.style.overflowY = 'auto';
+      optionsContainer.style.maxHeight = '300px';
+
+      const spacer = document.createElement('div');
+      spacer.className = 'ss-virtual-spacer';
+      spacer.style.height = `${layoutRows.length * ITEM_HEIGHT}px`;
+      optionsContainer.appendChild(spacer);
+
+      // Initial render of visible items
+      updateVirtualWindow();
+    }
+
+    hasRenderedOptions = true;
+    renderedValue = selectedValue;
+  }
+
+  function updateVirtualWindow(): void {
+    if (!virtualScrollEnabled) return;
+
+    const scrollTop = optionsContainer.scrollTop;
+    const containerHeight = optionsContainer.clientHeight || 300;
+
+    const startIndex = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - BUFFER_ITEMS);
+    const endIndex = Math.min(layoutRows.length, Math.ceil((scrollTop + containerHeight) / ITEM_HEIGHT) + BUFFER_ITEMS);
+
+    // Remove old virtual items (keep spacer)
+    const spacer = optionsContainer.querySelector('.ss-virtual-spacer') as HTMLElement;
+    const oldItems = optionsContainer.querySelectorAll('.ss-virtual-item');
+    oldItems.forEach(el => el.remove());
+
+    flatOptions = [];
+    const fragment = document.createDocumentFragment();
+
+    for (let i = startIndex; i < endIndex; i++) {
+      const row = layoutRows[i];
+      if (!row) continue;
+
+      const posStyle = `position:absolute;top:${i * ITEM_HEIGHT}px;height:${ITEM_HEIGHT}px;left:0;right:0`;
+
+      if (row.kind === 'group') {
+        const el = document.createElement('div');
+        el.className = 'ss-group-label ss-virtual-item';
+        el.textContent = row.label;
+        el.style.cssText = posStyle;
+        fragment.appendChild(el);
+      } else {
+        const opt = createOptionElement(row.item, row.item.id === selectedValue);
+        opt.classList.add('ss-virtual-item');
+        opt.style.cssText = posStyle;
+        fragment.appendChild(opt);
+        flatOptions.push(opt);
+      }
+    }
+
+    if (spacer) {
+      optionsContainer.insertBefore(fragment, spacer);
+    }
+
+    syncHighlightedOptionClass();
+  }
+
+  function renderOptions(filter = ''): void {
+    renderVirtualOptions(filter);
   }
 
   function queueRenderOptions(filter = ''): void {
@@ -341,23 +424,77 @@ export function createSearchableSelect(
     currentOnChange(val);
   }
 
+  function syncSelectedOptionClasses(): void {
+    if (!hasRenderedOptions) return;
+    const options = optionsContainer.querySelectorAll<HTMLDivElement>('.ss-option');
+    options.forEach((option) => {
+      option.classList.toggle('ss-selected', option.dataset.value === selectedValue);
+    });
+    renderedValue = selectedValue;
+  }
+
+  function syncHighlightedOptionClass(): void {
+    flatOptions.forEach((option) => {
+      const optionIndex = currentFilteredItems.findIndex((item) => item.id === option.dataset.value);
+      option.classList.toggle('ss-highlighted', optionIndex === highlightedItemIndex);
+    });
+  }
+
+  function scrollHighlightedItemIntoView(): void {
+    if (highlightedItemIndex < 0 || highlightedItemIndex >= currentFilteredItems.length) return;
+
+    if (virtualScrollEnabled) {
+      const itemId = currentFilteredItems[highlightedItemIndex]?.id;
+      const layoutIndex = layoutRows.findIndex((row) => row.kind === 'item' && row.item.id === itemId);
+      if (layoutIndex < 0) return;
+      const itemTop = layoutIndex * ITEM_HEIGHT;
+      const itemBottom = itemTop + ITEM_HEIGHT;
+      const viewTop = optionsContainer.scrollTop;
+      const viewBottom = viewTop + (optionsContainer.clientHeight || 300);
+
+      if (itemTop < viewTop) {
+        optionsContainer.scrollTop = itemTop;
+      } else if (itemBottom > viewBottom) {
+        optionsContainer.scrollTop = itemBottom - (optionsContainer.clientHeight || 300);
+      }
+      updateVirtualWindow();
+      return;
+    }
+
+    const itemId = currentFilteredItems[highlightedItemIndex]?.id;
+    const selected = flatOptions.find((option) => option.dataset.value === itemId);
+    selected?.scrollIntoView({ block: 'nearest' });
+  }
+
   function openDropdown(): void {
     container.classList.add('ss-open');
     searchInput.value = '';
-    renderOptions();
-    // Slight delay for DOM to settle before focus
-    requestAnimationFrame(() => searchInput.focus());
-    // Scroll selected into view
-    requestAnimationFrame(() => {
+    // Render synchronously so the list is visible on the same frame as the open
+    if (!hasRenderedOptions || lastFilter !== '') {
+      renderOptions();
+    } else if (renderedValue !== selectedValue) {
+      syncSelectedOptionClasses();
+    }
+    searchInput.focus();
+
+    // Scroll selected into view (handle virtual scroll)
+    if (virtualScrollEnabled && selectedValue) {
+      const layoutIndex = layoutRows.findIndex(row => row.kind === 'item' && row.item.id === selectedValue);
+      if (layoutIndex >= 0) {
+        optionsContainer.scrollTop = layoutIndex * ITEM_HEIGHT;
+        updateVirtualWindow();
+      }
+    } else {
       const sel = optionsContainer.querySelector('.ss-selected');
       if (sel) sel.scrollIntoView({ block: 'nearest' });
-    });
+    }
   }
 
   function closeDropdown(): void {
     container.classList.remove('ss-open');
     searchInput.value = '';
     highlightIndex = -1;
+    highlightedItemIndex = -1;
     if (pendingRenderFrame != null) {
       cancelAnimationFrame(pendingRenderFrame);
       pendingRenderFrame = null;
@@ -380,17 +517,25 @@ export function createSearchableSelect(
 
   // Event: search input
   searchInput.addEventListener('input', () => {
+    highlightedItemIndex = -1;
     queueRenderOptions(searchInput.value);
   });
+
+  // Virtual scroll scroll handler
+  optionsContainer.addEventListener('scroll', () => {
+    if (virtualScrollEnabled) {
+      updateVirtualWindow();
+    }
+  }, { passive: true });
 
   optionsContainer.addEventListener('mousemove', (e) => {
     const option = (e.target as HTMLElement | null)?.closest('.ss-option') as HTMLDivElement | null;
     if (!option) return;
-    const nextIndex = flatOptions.indexOf(option);
-    if (nextIndex < 0 || nextIndex === highlightIndex) return;
-    flatOptions.forEach((entry) => entry.classList.remove('ss-highlighted'));
-    option.classList.add('ss-highlighted');
+    const nextIndex = currentFilteredItems.findIndex((item) => item.id === option.dataset.value);
+    if (nextIndex < 0 || nextIndex === highlightedItemIndex) return;
+    highlightedItemIndex = nextIndex;
     highlightIndex = nextIndex;
+    syncHighlightedOptionClass();
   });
 
   optionsContainer.addEventListener('click', (e) => {
@@ -408,22 +553,22 @@ export function createSearchableSelect(
     }
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      if (flatOptions.length === 0) return;
-      highlightIndex = Math.min(highlightIndex + 1, flatOptions.length - 1);
-      flatOptions.forEach(o => o.classList.remove('ss-highlighted'));
-      flatOptions[highlightIndex].classList.add('ss-highlighted');
-      flatOptions[highlightIndex].scrollIntoView({ block: 'nearest' });
+      if (currentFilteredItems.length === 0) return;
+      highlightedItemIndex = Math.min(highlightedItemIndex + 1, currentFilteredItems.length - 1);
+      highlightIndex = highlightedItemIndex;
+      syncHighlightedOptionClass();
+      scrollHighlightedItemIntoView();
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      if (flatOptions.length === 0) return;
-      highlightIndex = Math.max(highlightIndex - 1, 0);
-      flatOptions.forEach(o => o.classList.remove('ss-highlighted'));
-      flatOptions[highlightIndex].classList.add('ss-highlighted');
-      flatOptions[highlightIndex].scrollIntoView({ block: 'nearest' });
+      if (currentFilteredItems.length === 0) return;
+      highlightedItemIndex = Math.max(highlightedItemIndex - 1, 0);
+      highlightIndex = highlightedItemIndex;
+      syncHighlightedOptionClass();
+      scrollHighlightedItemIntoView();
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      if (highlightIndex >= 0 && flatOptions[highlightIndex]) {
-        const val = flatOptions[highlightIndex].dataset.value;
+      if (highlightedItemIndex >= 0 && currentFilteredItems[highlightedItemIndex]) {
+        const val = currentFilteredItems[highlightedItemIndex].id;
         if (val) selectOption(val);
       }
     } else if (e.key === 'Escape') {
@@ -443,13 +588,26 @@ export function createSearchableSelect(
   // Init
   updateTrigger();
 
+  // Pre-render options at idle so first open is instant
+  if (type !== 'custom') {
+    const prerender = () => { if (!hasRenderedOptions) renderOptions(); };
+    if (typeof requestIdleCallback === 'function') {
+      requestIdleCallback(prerender);
+    } else {
+      setTimeout(prerender, 0);
+    }
+  }
+
   const instance: SearchableSelectInstance = {
     getValue: () => selectedValue,
     setValue: (val: string) => {
       selectedValue = val;
       updateTrigger();
+      highlightedItemIndex = -1;
       if (isOpen()) {
         queueRenderOptions(searchInput.value);
+      } else if (hasRenderedOptions) {
+        syncSelectedOptionClasses();
       }
     },
     setOptions: (newOptions: CustomOption[]) => {
@@ -480,8 +638,11 @@ export function createSearchableSelect(
         selectedValue = config.value;
       }
       updateTrigger();
+      highlightedItemIndex = -1;
       if (isOpen()) {
         queueRenderOptions(searchInput.value);
+      } else if (hasRenderedOptions) {
+        syncSelectedOptionClasses();
       }
     },
     _container: container,

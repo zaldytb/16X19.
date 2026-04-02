@@ -3,9 +3,13 @@ import type { CompBuildCardVm, CompSortTabVm } from '../../ui/pages/comp-top-bui
 type Props = {
   sortTabs: CompSortTabVm[];
   cards: CompBuildCardVm[];
+  onSetSort?: (key: CompSortTabVm['key']) => void;
+  onSetActive?: (index: number) => void;
+  onTune?: (index: number) => void;
+  onSave?: (index: number) => void;
 };
 
-export function CompendiumTopBuilds({ sortTabs, cards }: Props) {
+export function CompendiumTopBuilds({ cards, onSave, onSetActive, onSetSort, onTune, sortTabs }: Props) {
   return (
     <div className="mb-12">
       <div className="flex items-center justify-between mb-4 pb-2 border-b border-dc-border/50">
@@ -23,6 +27,7 @@ export function CompendiumTopBuilds({ sortTabs, cards }: Props) {
                 className={`${baseClasses} ${activeClasses}`}
                 data-comp-action="setSort"
                 data-key={tab.key}
+                onClick={() => onSetSort?.(tab.key)}
               >
                 {tab.label}
               </button>
@@ -64,6 +69,7 @@ export function CompendiumTopBuilds({ sortTabs, cards }: Props) {
                   data-comp-action="buildAction"
                   data-action-name="setActive"
                   data-index={card.index}
+                  onClick={() => onSetActive?.(card.index)}
                 >
                   Set Active
                 </button>
@@ -73,6 +79,7 @@ export function CompendiumTopBuilds({ sortTabs, cards }: Props) {
                   data-comp-action="buildAction"
                   data-action-name="tune"
                   data-index={card.index}
+                  onClick={() => onTune?.(card.index)}
                 >
                   Tune
                 </button>
@@ -82,6 +89,7 @@ export function CompendiumTopBuilds({ sortTabs, cards }: Props) {
                   data-comp-action="buildAction"
                   data-action-name="save"
                   data-index={card.index}
+                  onClick={() => onSave?.(card.index)}
                 >
                   Save
                 </button>

@@ -11,6 +11,7 @@ import { activateLoadout, switchMode } from './shell.js';
 import { FmbResultsDirections } from '../../components/overview/FmbResultsDirections.js';
 import { FmbResultsSummary } from '../../components/overview/FmbResultsSummary.js';
 import { buildFmbDirectionsViewModel, buildFmbSummaryViewModel } from './find-my-build-vm.js';
+import { queueOptimizeSearch } from './optimize-route-state.js';
 import { runFmbRankAsync } from '../../workers/engine-worker-client.js';
 
 // FMB Wizard state
@@ -427,17 +428,15 @@ export function _fmbSearchDirection(direction: 'closest' | 'safer' | 'ceiling'):
     _fmbCurrentFrames && _fmbCurrentFrames.length > 0 ? _fmbCurrentFrames[0].racquet : null;
 
   closeFindMyBuild();
-  switchMode('optimize');
-
-  requestAnimationFrame(() => {
-    void import('./optimize.js').then(({ initOptimize, syncOptimizeFrameSelectionFromExternal }) => {
-      initOptimize();
-      if (topFrameForOpt) {
-        syncOptimizeFrameSelectionFromExternal(topFrameForOpt.name, topFrameForOpt.id);
-      }
-      document.getElementById('opt-run-btn')?.click();
-    });
+  queueOptimizeSearch({
+    frameId: topFrameForOpt?.id || null,
+    frameName: topFrameForOpt?.name || null,
+    setupType: profile.setupPreference as 'both' | 'full' | 'hybrid',
+    sortBy,
+    mins,
+    autorun: true,
   });
+  switchMode('optimize');
 }
 
 /**

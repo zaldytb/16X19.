@@ -5,6 +5,9 @@ import type {
 
 type Props = {
   vm: StringCompendiumDetailVm;
+  onToggleHud?: () => void;
+  onGoToFrame?: (racquetId: string) => void;
+  onSelectString?: (stringId: string) => void;
 };
 
 /** Same segment classes as Overview / racket compendium — style.css handles light/dark empty-track contrast. */
@@ -16,7 +19,7 @@ function segmentClass(index: number, row: StringTelemetryRowVm): string {
   return 'stat-bar-segment empty';
 }
 
-export function StringCompendiumDetail({ vm }: Props) {
+export function StringCompendiumDetail({ onGoToFrame, onSelectString, onToggleHud, vm }: Props) {
   return (
     <>
       <div className="relative flex flex-col items-start mb-8">
@@ -28,6 +31,7 @@ export function StringCompendiumDetail({ vm }: Props) {
         <h2
           className="text-5xl md:text-[4rem] font-semibold tracking-tight text-dc-platinum leading-none mb-0 pr-[120px] flex items-center gap-3 cursor-pointer group"
           data-string-action="toggleHud"
+          onClick={onToggleHud}
         >
           {vm.name}
           <span className="text-2xl text-dc-red opacity-50 group-hover:opacity-100 transition-opacity">&#9660;</span>
@@ -123,6 +127,7 @@ export function StringCompendiumDetail({ vm }: Props) {
               className="bg-transparent border border-dc-border hover:border-dc-storm p-4 flex flex-col cursor-pointer transition-colors group"
               data-string-action="goToFrame"
               data-string-arg={card.racquetId}
+              onClick={() => onGoToFrame?.(card.racquetId)}
             >
               <div className="flex justify-between items-start mb-2">
                 <span className="font-mono text-[10px] text-dc-storm uppercase tracking-widest group-hover:text-dc-platinum transition-colors">
@@ -149,6 +154,7 @@ export function StringCompendiumDetail({ vm }: Props) {
               className="bg-transparent border border-dc-border hover:border-dc-storm p-4 flex flex-col cursor-pointer transition-colors group"
               data-string-action="selectString"
               data-string-arg={card.id}
+              onClick={() => onSelectString?.(card.id)}
             >
               <div className="flex justify-between items-start mb-2">
                 <span className="font-mono text-[10px] text-dc-storm uppercase tracking-widest group-hover:text-dc-platinum transition-colors">

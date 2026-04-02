@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { CompendiumFrameHud } from '../components/compendium/CompendiumFrameHud.js';
-import { StringCompendiumHud } from '../components/compendium/StringCompendiumHud.js';
+import { RacketBibleTab } from '../components/compendium/RacketBibleTab.js';
+import { StringCompendiumTab } from '../components/compendium/StringCompendiumTab.js';
 import { HardwareMount } from '../components/HardwareMount.js';
-import { cleanupCompendiumPage, initCompendium, _compSwitchTab, _compToggleHud } from '../ui/pages/compendium.js';
-import { cleanupLeaderboardPage } from '../ui/pages/leaderboard.js';
-import { cleanupStringsPage, _stringToggleHud } from '../ui/pages/strings.js';
+import { LeaderboardPanel } from '../components/leaderboard/LeaderboardPanel.js';
+import { focusCompendiumFrame, focusCompendiumString, getCompendiumRouteState, clearCompendiumRouteFocus } from '../ui/pages/compendium-route-state.js';
 
 interface CompendiumProps {
   initialTab?: 'rackets' | 'strings' | 'leaderboard';
@@ -20,30 +19,35 @@ export function Compendium({ initialTab = 'rackets' }: CompendiumProps) {
     leaderboard: 0,
   });
   const routeEpochPrimed = useRef(false);
+  const routeState = getCompendiumRouteState();
 
   useEffect(() => {
-    setActiveTab(initialTab);
+    const nextTab = routeState.activeTab ?? initialTab;
+    setActiveTab(nextTab);
     if (routeEpochPrimed.current) {
-      setMountEpoch((e) => ({ ...e, [initialTab]: e[initialTab] + 1 }));
+      setMountEpoch((epoch) => ({ ...epoch, [nextTab]: epoch[nextTab] + 1 }));
     } else {
       routeEpochPrimed.current = true;
     }
-    initCompendium();
-    if (initialTab !== 'rackets') {
-      _compSwitchTab(initialTab);
-    }
-    return () => {
-      cleanupCompendiumPage();
-      cleanupStringsPage();
-      cleanupLeaderboardPage();
-    };
-  }, [initialTab]);
+    clearCompendiumRouteFocus();
+  }, [initialTab, routeState.activeTab]);
 
   const handleTabClick = (tab: CompTab) => {
     if (tab === activeTab) return;
     setActiveTab(tab);
-    setMountEpoch((e) => ({ ...e, [tab]: e[tab] + 1 }));
-    _compSwitchTab(tab);
+    setMountEpoch((epoch) => ({ ...epoch, [tab]: epoch[tab] + 1 }));
+  };
+
+  const handleViewFrame = (racquetId: string) => {
+    focusCompendiumFrame(racquetId);
+    setActiveTab('rackets');
+    setMountEpoch((epoch) => ({ ...epoch, rackets: epoch.rackets + 1 }));
+  };
+
+  const handleViewString = (stringId: string) => {
+    focusCompendiumString(stringId);
+    setActiveTab('strings');
+    setMountEpoch((epoch) => ({ ...epoch, strings: epoch.strings + 1 }));
   };
 
   return (
@@ -78,39 +82,29 @@ export function Compendium({ initialTab = 'rackets' }: CompendiumProps) {
           </div>
         </div>
 
-        <div className={`comp-tab-panel ${activeTab === 'rackets' ? '' : 'hidden'}`} id="comp-tab-rackets">
-          <HardwareMount replayKey={mountEpoch.rackets}>
-            <CompendiumFrameHud onClose={() => _compToggleHud()} />
+        {activeTab === 'rackets' ? (
+          <div className="comp-tab-panel" id="comp-tab-rackets">
+            <HardwareMount replayKey={mountEpoch.rackets}>
+              <RacketBibleTab focusedRacquetId={routeState.racquetId} />
+            </HardwareMount>
+          </div>
+        ) : null}
 
-            <div className="comp-layout">
-              <div className="comp-main" id="comp-main">
-                <div className="comp-empty">
-                  <p className="comp-empty-title">Select a frame</p>
-                  <p className="comp-empty-sub">Click the frame name above to browse the racket database.</p>
-                </div>
-              </div>
-            </div>
-          </HardwareMount>
-        </div>
+        {activeTab === 'strings' ? (
+          <div className="comp-tab-panel" id="comp-tab-strings">
+            <HardwareMount replayKey={mountEpoch.strings}>
+              <StringCompendiumTab focusedStringId={routeState.stringId} onGoToFrame={handleViewFrame} />
+            </HardwareMount>
+          </div>
+        ) : null}
 
-        <div className={`comp-tab-panel ${activeTab === 'strings' ? '' : 'hidden'}`} id="comp-tab-strings">
-          <HardwareMount replayKey={mountEpoch.strings}>
-            <StringCompendiumHud onClose={() => _stringToggleHud()} />
-
-            <div id="string-main" className="min-h-[400px] p-8">
-              <div className="flex flex-col items-center justify-center h-64 text-dc-storm">
-                <span className="font-mono text-4xl mb-4">🔧</span>
-                <p className="font-mono text-sm">Loading string database...</p>
-              </div>
-            </div>
-          </HardwareMount>
-        </div>
-
-        <div className={`comp-tab-panel ${activeTab === 'leaderboard' ? '' : 'hidden'}`} id="comp-tab-leaderboard">
-          <HardwareMount replayKey={mountEpoch.leaderboard}>
-            <div id="comp-leaderboard-root" className="min-h-full" />
-          </HardwareMount>
-        </div>
+        {activeTab === 'leaderboard' ? (
+          <div className="comp-tab-panel" id="comp-tab-leaderboard">
+            <HardwareMount replayKey={mountEpoch.leaderboard}>
+              <LeaderboardPanel onViewFrame={handleViewFrame} onViewString={handleViewString} />
+            </HardwareMount>
+          </div>
+        ) : null}
       </div>
     </section>
   );

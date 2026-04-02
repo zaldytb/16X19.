@@ -4,9 +4,10 @@ type Props = {
   strings: StringData[];
   selectedStringId: string | null;
   getArchetype: (s: StringData) => string;
+  onSelectString?: (stringId: string) => void;
 };
 
-export function StringCompendiumRoster({ strings, selectedStringId, getArchetype }: Props) {
+export function StringCompendiumRoster({ getArchetype, onSelectString, selectedStringId, strings }: Props) {
   return (
     <>
       {strings.map((stringItem) => {
@@ -25,6 +26,7 @@ export function StringCompendiumRoster({ strings, selectedStringId, getArchetype
             data-id={stringItem.id}
             data-string-action="selectString"
             data-string-arg={stringItem.id}
+            onClick={() => onSelectString?.(stringItem.id)}
           >
             <div className="flex justify-between items-start gap-2">
               <span className="text-base font-semibold leading-tight tracking-tight text-dc-platinum">

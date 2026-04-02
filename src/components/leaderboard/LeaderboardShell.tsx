@@ -81,7 +81,28 @@ const STRING_STIFF_OPTS = [
 
 type Props = { vm: LeaderboardShellVm };
 
-export function LeaderboardShell({ vm }: Props) {
+type LeaderboardShellCallbacks = {
+  onSetView?: (viewMode: LeaderboardShellVm['viewMode']) => void;
+  onSetStat?: (statKey: string) => void;
+  onSetFilter?: (filterType: LeaderboardShellVm['filterType']) => void;
+  onSetFrameFilter?: (key: keyof LeaderboardShellVm['frameFilters'], value: string) => void;
+  onClearFrameFilters?: () => void;
+  onSetStringFilter?: (key: keyof LeaderboardShellVm['stringFilters'], value: string) => void;
+  onClearStringFilters?: () => void;
+};
+
+type PropsWithCallbacks = Props & LeaderboardShellCallbacks;
+
+export function LeaderboardShell({
+  onClearFrameFilters,
+  onClearStringFilters,
+  onSetFilter,
+  onSetFrameFilter,
+  onSetStat,
+  onSetStringFilter,
+  onSetView,
+  vm,
+}: PropsWithCallbacks) {
   const { statKey, filterType, viewMode, frameFilters: ff, stringFilters: sf, statOptions, racquetBrands, stringBrands } =
     vm;
 
@@ -109,6 +130,7 @@ export function LeaderboardShell({ vm }: Props) {
                 data-view-mode={v}
                 data-lb-action="setView"
                 data-lb-arg={v}
+                onClick={() => onSetView?.(v)}
               >
                 <span className="text-[10px] font-bold uppercase tracking-[0.12em]">{l}</span>
                 <span className="hidden md:inline text-[8px] tracking-[0.08em] opacity-60">{sub}</span>
@@ -138,6 +160,7 @@ export function LeaderboardShell({ vm }: Props) {
                     data-lb-action="setStat"
                     data-lb-arg={s.key}
                     title={s.desc}
+                    onClick={() => onSetStat?.(s.key)}
                   >
                     <span>{s.icon}</span>
                     <span>{s.label}</span>
@@ -168,6 +191,7 @@ export function LeaderboardShell({ vm }: Props) {
                   data-type-filter={v}
                   data-lb-action="setFilter"
                   data-lb-arg={v}
+                  onClick={() => onSetFilter?.(v)}
                 >
                   {l}
                 </button>
@@ -186,7 +210,7 @@ export function LeaderboardShell({ vm }: Props) {
                 data-lb-action="setFrameFilter"
                 data-lb-arg="brand"
                 value={ff.brand}
-                onChange={() => {}}
+                onChange={(event) => onSetFrameFilter?.('brand', event.target.value)}
               >
                 <option value="">All brands</option>
                 {racquetBrands.map((b) => (
@@ -201,7 +225,7 @@ export function LeaderboardShell({ vm }: Props) {
                 data-lb-action="setFrameFilter"
                 data-lb-arg="pattern"
                 value={ff.pattern}
-                onChange={() => {}}
+                onChange={(event) => onSetFrameFilter?.('pattern', event.target.value)}
               >
                 <option value="">All patterns</option>
                 {FRAME_PATTERN_OPTS.map((o) => (
@@ -216,7 +240,7 @@ export function LeaderboardShell({ vm }: Props) {
                 data-lb-action="setFrameFilter"
                 data-lb-arg="headSize"
                 value={ff.headSize}
-                onChange={() => {}}
+                onChange={(event) => onSetFrameFilter?.('headSize', event.target.value)}
               >
                 <option value="">All head sizes</option>
                 {FRAME_HEAD_OPTS.map((o) => (
@@ -231,7 +255,7 @@ export function LeaderboardShell({ vm }: Props) {
                 data-lb-action="setFrameFilter"
                 data-lb-arg="weight"
                 value={ff.weight}
-                onChange={() => {}}
+                onChange={(event) => onSetFrameFilter?.('weight', event.target.value)}
               >
                 <option value="">All weights</option>
                 {FRAME_WEIGHT_OPTS.map((o) => (
@@ -246,7 +270,7 @@ export function LeaderboardShell({ vm }: Props) {
                 data-lb-action="setFrameFilter"
                 data-lb-arg="stiffness"
                 value={ff.stiffness}
-                onChange={() => {}}
+                onChange={(event) => onSetFrameFilter?.('stiffness', event.target.value)}
               >
                 <option value="">All stiffness</option>
                 {FRAME_STIFF_OPTS.map((o) => (
@@ -261,7 +285,7 @@ export function LeaderboardShell({ vm }: Props) {
                 data-lb-action="setFrameFilter"
                 data-lb-arg="year"
                 value={ff.year}
-                onChange={() => {}}
+                onChange={(event) => onSetFrameFilter?.('year', event.target.value)}
               >
                 <option value="">All years</option>
                 {FRAME_YEAR_OPTS.map((o) => (
@@ -275,6 +299,7 @@ export function LeaderboardShell({ vm }: Props) {
                   type="button"
                   className="font-mono text-[9px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-storm/30 text-dc-storm/60 hover:border-dc-red hover:text-dc-red transition-colors shrink-0"
                   data-lb-action="clearFrameFilters"
+                  onClick={onClearFrameFilters}
                 >
                   Clear
                 </button>
@@ -293,7 +318,7 @@ export function LeaderboardShell({ vm }: Props) {
                 data-lb-action="setStringFilter"
                 data-lb-arg="brand"
                 value={sf.brand}
-                onChange={() => {}}
+                onChange={(event) => onSetStringFilter?.('brand', event.target.value)}
               >
                 <option value="">All brands</option>
                 {stringBrands.map((b) => (
@@ -308,7 +333,7 @@ export function LeaderboardShell({ vm }: Props) {
                 data-lb-action="setStringFilter"
                 data-lb-arg="material"
                 value={sf.material}
-                onChange={() => {}}
+                onChange={(event) => onSetStringFilter?.('material', event.target.value)}
               >
                 <option value="">All materials</option>
                 {STRING_MATERIAL_OPTS.map((o) => (
@@ -323,7 +348,7 @@ export function LeaderboardShell({ vm }: Props) {
                 data-lb-action="setStringFilter"
                 data-lb-arg="shape"
                 value={sf.shape}
-                onChange={() => {}}
+                onChange={(event) => onSetStringFilter?.('shape', event.target.value)}
               >
                 <option value="">All shapes</option>
                 {STRING_SHAPE_OPTS.map((o) => (
@@ -338,7 +363,7 @@ export function LeaderboardShell({ vm }: Props) {
                 data-lb-action="setStringFilter"
                 data-lb-arg="gauge"
                 value={sf.gauge}
-                onChange={() => {}}
+                onChange={(event) => onSetStringFilter?.('gauge', event.target.value)}
               >
                 <option value="">All gauges</option>
                 {STRING_GAUGE_OPTS.map((o) => (
@@ -353,7 +378,7 @@ export function LeaderboardShell({ vm }: Props) {
                 data-lb-action="setStringFilter"
                 data-lb-arg="stiffness"
                 value={sf.stiffness}
-                onChange={() => {}}
+                onChange={(event) => onSetStringFilter?.('stiffness', event.target.value)}
               >
                 <option value="">All stiffness</option>
                 {STRING_STIFF_OPTS.map((o) => (
@@ -367,6 +392,7 @@ export function LeaderboardShell({ vm }: Props) {
                   type="button"
                   className="font-mono text-[9px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-storm/30 text-dc-storm/60 hover:border-dc-red hover:text-dc-red transition-colors shrink-0"
                   data-lb-action="clearStringFilters"
+                  onClick={onClearStringFilters}
                 >
                   Clear
                 </button>

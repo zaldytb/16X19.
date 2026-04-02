@@ -6,6 +6,7 @@ export type LeaderboardFrameResultsProps = {
   footerLeft: string;
   footerIcon: string;
   footerDesc: string;
+  onViewFrame?: (racquetId: string) => void;
 };
 
 export function LeaderboardFrameResults({
@@ -14,6 +15,7 @@ export function LeaderboardFrameResults({
   footerLeft,
   footerIcon,
   footerDesc,
+  onViewFrame,
 }: LeaderboardFrameResultsProps) {
   return (
     <>
@@ -76,6 +78,7 @@ export function LeaderboardFrameResults({
                       className="font-mono text-[8px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-ink transition-colors"
                       data-lb-action="viewFrame"
                       data-racquet-id={entry.racquetId}
+                      onClick={() => onViewFrame?.(entry.racquetId)}
                     >
                       View
                     </button>

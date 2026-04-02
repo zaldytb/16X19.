@@ -6,6 +6,7 @@ export type LeaderboardStringResultsProps = {
   footerLeft: string;
   footerIcon: string;
   footerDesc: string;
+  onViewString?: (stringId: string) => void;
 };
 
 function StringMaterialTag({ material }: { material: string }) {
@@ -37,6 +38,7 @@ export function LeaderboardStringResults({
   footerLeft,
   footerIcon,
   footerDesc,
+  onViewString,
 }: LeaderboardStringResultsProps) {
   return (
     <>
@@ -102,6 +104,7 @@ export function LeaderboardStringResults({
                       className="font-mono text-[8px] font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 border border-dc-accent text-dc-accent hover:bg-dc-accent hover:text-dc-ink transition-colors"
                       data-lb-action="viewString"
                       data-string-id={entry.stringId}
+                      onClick={() => onViewString?.(entry.stringId)}
                     >
                       View
                     </button>

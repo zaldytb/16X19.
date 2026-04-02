@@ -36,13 +36,13 @@ test('active loadout change refreshes only dock surfaces when overview is React-
   });
 });
 
-test('mode switch to compare refreshes compare and dock context only', () => {
+test('mode switch to compare refreshes dock context only when compare is React-owned', () => {
   assert.deepEqual(plan('compare', { mode: true }), {
     dockPanel: false,
     dockContext: true,
     overview: false,
     tune: false,
-    compare: true,
+    compare: false,
     compendium: false,
   });
 });
@@ -58,14 +58,14 @@ test('saved loadout change avoids recomputing active mode surface', () => {
   });
 });
 
-test('active loadout change in compendium mode schedules compendium sync', () => {
+test('active loadout change in compendium mode stays dock-only when compendium is React-owned', () => {
   assert.deepEqual(plan('compendium', { activeLoadout: true }), {
     dockPanel: true,
     dockContext: true,
     overview: false,
     tune: false,
     compare: false,
-    compendium: true,
+    compendium: false,
   });
 });
 

@@ -8,12 +8,16 @@ export type LeaderboardBuildResultsProps = {
   footerLeft: string;
   footerIcon: string;
   footerDesc: string;
+  onView?: (row: LbBuildRowVm) => void;
+  onCompare?: (row: LbBuildRowVm) => void;
 };
 
 export function LeaderboardBuildResults({
   rows,
   primaryStatColumnLabel,
   isObs,
+  onCompare,
+  onView,
   footerLeft,
   footerIcon,
   footerDesc,
@@ -122,6 +126,7 @@ export function LeaderboardBuildResults({
                       data-mains-id={entry.mainsId}
                       data-crosses-id={entry.crossesId}
                       data-crosses-tension={entry.crossesTension}
+                      onClick={() => onView?.(entry)}
                     >
                       View
                     </button>
@@ -136,6 +141,7 @@ export function LeaderboardBuildResults({
                       data-mains-id={entry.mainsId}
                       data-crosses-id={entry.crossesId}
                       data-crosses-tension={entry.crossesTension}
+                      onClick={() => onCompare?.(entry)}
                     >
                       Cmp
                     </button>

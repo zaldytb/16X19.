@@ -3,9 +3,10 @@ import type { Racquet } from '../../engine/types.js';
 type Props = {
   racquets: Racquet[];
   selectedRacquetId: string | null;
+  onSelectFrame?: (racquetId: string) => void;
 };
 
-export function CompendiumFrameRoster({ racquets, selectedRacquetId }: Props) {
+export function CompendiumFrameRoster({ racquets, selectedRacquetId, onSelectFrame }: Props) {
   return (
     <>
       {racquets.map((r) => {
@@ -22,6 +23,7 @@ export function CompendiumFrameRoster({ racquets, selectedRacquetId }: Props) {
             className={`${baseClasses} ${borderClasses}`}
             data-id={r.id}
             data-comp-action="selectFrame"
+            onClick={() => onSelectFrame?.(r.id)}
           >
             <div className="flex justify-between items-start gap-2">
               <span className="text-lg font-semibold leading-tight tracking-tight text-dc-platinum">

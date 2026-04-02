@@ -6460,10 +6460,19 @@ textarea:focus-visible {
 
 .comp-string-select-container {
   width: 100%;
+  position: relative;
+  overflow: visible;
 }
 
 .comp-string-select-container .searchable-select {
   width: 100%;
+  position: relative;
+  overflow: visible;
+  z-index: 2;
+}
+
+.comp-string-select-container .searchable-select.ss-open {
+  z-index: 1200;
 }
 
 .comp-string-select-container .ss-trigger {
@@ -6495,6 +6504,12 @@ textarea:focus-visible {
   max-height: 300px;
   overflow-y: auto;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  z-index: 1200;
+}
+
+.comp-string-select-container .ss-group-label {
+  position: static;
+  top: auto;
 }
 
 [data-theme="light"] .comp-string-select-container .ss-dropdown {

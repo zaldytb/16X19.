@@ -5,10 +5,8 @@ import {
   setDockEditorContext,
 } from '../state/imperative.js';
 import { useAppStore } from '../state/useAppStore.js';
-import { renderCompareRefreshViaBridge } from '../ui/pages/compare-runtime-bridge.js';
 import { renderDockContextPanel, renderDockPanel } from '../ui/components/dock-renderers.js';
 import { reconcileDockEditorContext } from './contracts.js';
-import { reportRuntimeIssue } from './diagnostics.js';
 
 /** Only the latest `syncViews()` invocation may apply deferred async work (dynamic imports + dock context). */
 let _syncViewsGeneration = 0;
@@ -42,8 +40,8 @@ export function getRefreshPlan(mode: string, changed: ViewChangeSet): RefreshPla
     ),
     overview: false,
     tune: mode === 'tune' && !!(changed.activeLoadout || changed.mode),
-    compare: mode === 'compare' && !!(changed.compareState || changed.mode),
-    compendium: mode === 'compendium' && !!(changed.activeLoadout || changed.mode),
+    compare: false,
+    compendium: false,
   };
 }
 
@@ -84,35 +82,8 @@ export function syncViews(reason: string, changed: ViewChangeSet): void {
     );
   }
 
-  if (plan.compare) {
-    try {
-      renderCompareRefreshViaBridge();
-    } catch (error) {
-      reportRuntimeIssue('COMPARE_RENDER', `Compare refresh failed during "${reason}"`, {
-        details: error,
-      });
-    }
-  }
-
   const runAfterPageWork = (): void => {
     if (generation !== _syncViewsGeneration) return;
-    if (plan.compendium) {
-      try {
-        void import('../ui/pages/compendium.js').then((mod) => {
-          if (generation !== _syncViewsGeneration) return;
-          mod._compSyncWithActiveLoadout();
-        });
-        void import('../ui/pages/strings.js').then((mod) => {
-          if (generation !== _syncViewsGeneration) return;
-          mod._stringSyncWithActiveLoadout();
-        });
-      } catch (error) {
-        reportRuntimeIssue('COMPENDIUM_RENDER', `Compendium refresh failed during "${reason}"`, {
-          details: error,
-        });
-      }
-    }
-
     if (plan.dockContext || changed.dockEditorContext) {
       renderDockContextPanel();
     }

@@ -1,6 +1,5 @@
 import { getCurrentMode, getSlotColors, setSlotColors } from '../state/imperative.js';
 import { getCurrentSetup } from '../state/setup-sync.js';
-import { renderCompareRefreshViaBridge } from './pages/compare-runtime-bridge.js';
 import { toggleTheme } from './theme.js';
 
 export function toggleAppTheme(): void {
@@ -16,7 +15,7 @@ export function toggleAppTheme(): void {
         // Overview radar is React-owned and observes theme changes directly.
       },
       refreshComparison: () => {
-        renderCompareRefreshViaBridge();
+        // Compare is React-owned and rerenders from theme context.
       },
       refreshSweepChart: () => {
         const setup = getCurrentSetup();

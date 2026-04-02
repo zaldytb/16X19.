@@ -14,6 +14,7 @@ import { useCurrentSetup } from '../hooks/useStore.js';
 import { getScoredSetup, measurePerformance } from '../utils/performance.js';
 import { _prevObsValues, animateOBSInContainer } from '../ui/components/obs-animation.js';
 import { switchMode } from '../ui/pages/shell.js';
+import { focusCompendiumFrame } from '../ui/pages/compendium-route-state.js';
 import { buildOverviewBuildDnaViewModel } from '../ui/pages/overview-build-dna-vm.js';
 import { buildOverviewFitProfileCardViewModel } from '../ui/pages/overview-fit-profile-vm.js';
 import { buildOverviewHeroViewModel } from '../ui/pages/overview-hero-vm.js';
@@ -94,20 +95,8 @@ export function Overview() {
   }, [dashboard]);
 
   const handleSelectFrame = (racquetId: string) => {
+    focusCompendiumFrame(racquetId);
     switchMode('compendium');
-    window.setTimeout(() => {
-      void import('../ui/pages/compendium.js').then((mod) => {
-        mod.initCompendium();
-        mod._compSelectFrame(racquetId);
-
-        window.setTimeout(() => {
-          const item = document.querySelector(`#comp-frame-list > button[data-id="${racquetId}"]`);
-          if (item instanceof HTMLElement) {
-            item.scrollIntoView({ block: 'center' });
-          }
-        }, 100);
-      });
-    }, 0);
   };
 
   return (

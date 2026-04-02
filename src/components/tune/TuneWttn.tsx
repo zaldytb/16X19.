@@ -4,9 +4,24 @@ import type { WttnViewModel } from '../../ui/shared/recommendations.js';
 
 type Props = {
   model: WttnViewModel;
+  onApply: (build: {
+    stringId: string;
+    tension: number;
+    pickType: string;
+    mainsId?: string;
+    crossesId?: string;
+  }) => void;
+  onSave: (build: {
+    frameId: string;
+    stringId: string;
+    tension: number;
+    pickType: string;
+    mainsId?: string;
+    crossesId?: string;
+  }) => void;
 };
 
-export function TuneWttn({ model }: Props) {
+export function TuneWttn({ model, onApply, onSave }: Props) {
   if (model.kind === 'empty') {
     return <p className="wttn-empty">{model.message}</p>;
   }
@@ -67,24 +82,30 @@ export function TuneWttn({ model }: Props) {
           <div className="wttn-action-row">
             <button
               className="wttn-apply-btn"
-              data-tune-action="wttnApply"
-              data-string-id={b.stringId}
-              data-tension={b.tension}
-              data-type={b.pickType}
-              data-mains-id={b.mainsId}
-              data-crosses-id={b.crossesId}
+              onClick={() =>
+                onApply({
+                  stringId: b.stringId,
+                  tension: b.tension,
+                  pickType: b.pickType,
+                  mainsId: b.mainsId,
+                  crossesId: b.crossesId,
+                })
+              }
             >
               Apply
             </button>
             <button
               className="wttn-save-btn"
-              data-tune-action="wttnSave"
-              data-string-id={b.stringId}
-              data-tension={b.tension}
-              data-type={b.pickType}
-              data-mains-id={b.mainsId}
-              data-crosses-id={b.crossesId}
-              data-frame-id={model.racquetId}
+              onClick={() =>
+                onSave({
+                  frameId: model.racquetId,
+                  stringId: b.stringId,
+                  tension: b.tension,
+                  pickType: b.pickType,
+                  mainsId: b.mainsId,
+                  crossesId: b.crossesId,
+                })
+              }
             >
               Save
             </button>

@@ -36,13 +36,6 @@ import { addLoadoutToSlot } from './compare/compare-slot-api.js';
 import { clearSlot as clearCompareSlot, getState as getCompareState, setSlotLoadout as setCompareSlotLoadout } from './compare/hooks/useCompareState.js';
 import type { SlotId as CompareSlotId } from './compare/types.js';
 import { SLOT_COLORS } from './compare/types.js';
-import { renderOverviewDashboardViaBridge } from './overview-runtime-bridge.js';
-import {
-  initTuneModeViaBridge,
-  onTuneSliderInputViaBridge,
-  refreshTuneIfActiveViaBridge,
-  resetTunePreviewStateViaBridge,
-} from './tune-runtime-bridge.js';
 import { toggleMobileDock } from '../components/mobile-dock.js';
 import {
   populateGaugeDropdown,
@@ -51,7 +44,7 @@ import {
   showFrameSpecs,
   setHybridMode,
 } from '../shared/helpers.js';
-import { renderDockContextPanel, renderDockPanel, hydrateDock, registerDockCallbacks } from '../components/dock-renderers.js';
+import { renderDockContextPanel, renderDockPanel, registerDockCallbacks } from '../components/dock-renderers.js';
 import { renderComparisonPresets, registerPresetCallbacks } from '../shared/presets.js';
 import { ssInstances } from '../components/searchable-select.js';
 import { showShareToast, copyToClipboard, exportLoadoutsToFile, importLoadoutsFromJSON, parseSharedBuildFromURL, generateShareURL } from '../../utils/share.js';
@@ -61,7 +54,6 @@ import { validateRuntimeContracts } from '../../runtime/contracts.js';
 import { reportRuntimeIssue } from '../../runtime/diagnostics.js';
 import { getRouterNavigate } from '../../routing/routerNavigate.js';
 import { modeToPath } from '../../routing/modePaths.js';
-import { registerMyLoadoutsCallbacks } from './my-loadouts.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T | null =>
   document.querySelector(sel) as T | null;
@@ -79,6 +71,28 @@ let _compendiumInitialized = false;
 let _compareEditorDirty = false;
 let _pendingActiveRefreshFrame: number | null = null;
 let _storeSubscriptionsInstalled = false;
+const _compareEditorDirtyListeners = new Set<() => void>();
+
+function notifyCompareEditorDirtyListeners(): void {
+  _compareEditorDirtyListeners.forEach((listener) => listener());
+}
+
+function setCompareEditorDirty(isDirty: boolean): void {
+  if (_compareEditorDirty === isDirty) return;
+  _compareEditorDirty = isDirty;
+  notifyCompareEditorDirtyListeners();
+}
+
+export function getCompareEditorDirty(): boolean {
+  return _compareEditorDirty;
+}
+
+export function subscribeCompareEditorDirty(listener: () => void): () => void {
+  _compareEditorDirtyListeners.add(listener);
+  return () => {
+    _compareEditorDirtyListeners.delete(listener);
+  };
+}
 
 async function ensureOptimizeModule() {
   return import('./optimize.js');
@@ -93,21 +107,13 @@ function renderCompareSurfaces(): void {
 }
 
 function syncRuntimeViews(reason: string, changed: Parameters<typeof syncViews>[1]): void {
-  updateDockEditorTitle();
-  updateDockEditorActionState();
   syncViews(reason, changed);
 }
 
 function initTuneModeCompat(setup: { racquet: Racquet; stringConfig: StringConfig }): void {
-  initTuneModeViaBridge(setup);
-}
-
-function refreshTuneIfActiveCompat(): void {
-  refreshTuneIfActiveViaBridge();
-}
-
-function onTuneSliderInputCompat(event: Event): void {
-  onTuneSliderInputViaBridge(event);
+  void import('./tune.js').then((mod) => {
+    mod.initTuneModeIfMounted(setup);
+  });
 }
 
 function buildLoadoutName(racquet: Racquet, stringConfig: StringConfig): string {
@@ -151,69 +157,6 @@ function autoFillCompareFromSaved(): void {
   });
 }
 
-function updateDockEditorTitle(context = getDockEditorContext()): void {
-  const title = document.getElementById('dock-editor-title');
-  if (!title) return;
-  if (context.kind === 'compare-slot') {
-    title.textContent = `Edit Compare Slot ${context.slotId}`;
-    return;
-  }
-  if (context.kind === 'compare-overview') {
-    title.textContent = 'Compare Slot Editor';
-    return;
-  }
-  title.textContent = 'Edit Active Loadout';
-}
-
-function updateDockEditorActionState(): void {
-  const context = getDockEditorContext();
-  const actions = document.getElementById('dock-editor-compare-actions');
-  const copy = document.getElementById('dock-editor-compare-copy');
-  const applyBtn = document.getElementById('dock-editor-compare-apply') as HTMLButtonElement | null;
-  if (!actions || !copy || !applyBtn) return;
-
-  if (context.kind !== 'compare-slot') {
-    actions.classList.add('hidden');
-    applyBtn.disabled = true;
-    return;
-  }
-
-  actions.classList.remove('hidden');
-  applyBtn.disabled = !_compareEditorDirty;
-  copy.textContent = _compareEditorDirty
-    ? `Draft changes are ready for compare slot ${context.slotId}.`
-    : `Editing compare slot ${context.slotId}. Make changes, then apply them here.`;
-}
-
-function clearDockEditorFields(): void {
-  ssInstances['select-racquet']?.setValue('');
-  ssInstances['select-string-full']?.setValue('');
-  ssInstances['select-string-mains']?.setValue('');
-  ssInstances['select-string-crosses']?.setValue('');
-  setHybridMode(false);
-
-  const tensionIds = [
-    ['input-tension-full-mains', '55'],
-    ['input-tension-full-crosses', '53'],
-    ['input-tension-mains', '55'],
-    ['input-tension-crosses', '53'],
-  ] as const;
-  tensionIds.forEach(([id, value]) => {
-    const input = document.getElementById(id) as HTMLInputElement | null;
-    if (input) input.value = value;
-  });
-
-  ['gauge-select-full', 'gauge-select-mains', 'gauge-select-crosses'].forEach((id) => {
-    const element = document.getElementById(id) as HTMLSelectElement | null;
-    if (!element) return;
-    element.innerHTML = '<option value="">—</option>';
-    element.disabled = true;
-  });
-
-  const specs = document.getElementById('frame-specs');
-  if (specs) specs.classList.add('hidden');
-}
-
 function getCompareStateSlot(slotId: string): any | null {
   const compareState = getCompareState();
   if (!compareState?.slots) return null;
@@ -230,15 +173,9 @@ function getDockEditorTargetLoadout(): Loadout | null {
 }
 
 function primeDockEditor(loadout: Loadout | null): void {
-  if (loadout) {
-    hydrateDock(loadout);
-  } else {
-    clearDockEditorFields();
-  }
-
+  void loadout;
   const editor = document.getElementById('dock-editor-section') as HTMLDetailsElement | null;
   if (editor) editor.open = true;
-  updateDockEditorActionState();
 }
 
 export function activateLoadout(loadout: Loadout | null): void {
@@ -250,9 +187,7 @@ export function activateLoadout(loadout: Loadout | null): void {
   }
 
   setDockEditorContext(getCurrentMode() === 'compare' ? { kind: 'compare-overview' } : { kind: 'active' });
-  _compareEditorDirty = false;
-  updateDockEditorTitle();
-  updateDockEditorActionState();
+  setCompareEditorDirty(false);
   setActiveLoadout(loadout);
 
   const racquet = RACQUETS.find((frame) => frame.id === loadout.frameId) as Racquet | undefined;
@@ -343,40 +278,15 @@ export function removeLoadout(loadoutId: string): void {
 
 export function resetActiveLoadout(): void {
   setDockEditorContext(getCurrentMode() === 'compare' ? { kind: 'compare-overview' } : { kind: 'active' });
-  _compareEditorDirty = false;
-  updateDockEditorTitle();
-  updateDockEditorActionState();
+  setCompareEditorDirty(false);
   setActiveLoadout(null);
 
-  resetTunePreviewStateViaBridge();
-
-  ssInstances['select-racquet']?.setValue('');
-  ssInstances['select-string-full']?.setValue('');
-  ssInstances['select-string-mains']?.setValue('');
-  ssInstances['select-string-crosses']?.setValue('');
-  setHybridMode(false);
-
-  const tfm = document.getElementById('input-tension-full-mains') as HTMLInputElement | null;
-  const tfx = document.getElementById('input-tension-full-crosses') as HTMLInputElement | null;
-  const thm = document.getElementById('input-tension-mains') as HTMLInputElement | null;
-  const thx = document.getElementById('input-tension-crosses') as HTMLInputElement | null;
-  if (tfm) tfm.value = '55';
-  if (tfx) tfx.value = '53';
-  if (thm) thm.value = '55';
-  if (thx) thx.value = '53';
-
-  ['gauge-select-full', 'gauge-select-mains', 'gauge-select-crosses'].forEach((id) => {
-    const element = document.getElementById(id) as HTMLSelectElement | null;
-    if (!element) return;
-    element.innerHTML = '<option value="">—</option>';
-    element.disabled = true;
+  void import('./tune.js').then((mod) => {
+    mod.resetTunePreviewState();
   });
 
   const editor = document.getElementById('dock-editor-section') as HTMLDetailsElement | null;
   if (editor) editor.open = false;
-
-  const specs = document.getElementById('frame-specs');
-  if (specs) specs.classList.add('hidden');
   syncRuntimeViews('reset-active-loadout', { dockEditorContext: true });
 }
 
@@ -446,14 +356,13 @@ export function commitEditorToLoadout(): void {
 
     if (context.kind === 'compare-slot') {
       setCompareSlotLoadout(context.slotId as CompareSlotId, baseLoadout, scored.stats);
-      _compareEditorDirty = false;
+      setCompareEditorDirty(false);
     } else {
       baseLoadout._dirty = getSavedLoadouts().some((loadout) => loadout.id === baseLoadout.id);
       setActiveLoadout(baseLoadout);
     }
   }
 
-  updateDockEditorActionState();
   if (context.kind !== 'active') {
     syncRuntimeViews('commit-editor-compare-slot', { compareState: true });
   }
@@ -470,7 +379,7 @@ export function cancelCompareSlotEditing(): void {
 
   const compareSlot = getCompareStateSlot(context.slotId);
   const loadout = (compareSlot?.loadout as Loadout | null) || getActiveLoadout() || null;
-  _compareEditorDirty = false;
+  setCompareEditorDirty(false);
   primeDockEditor(loadout);
   setDockEditorContext({ kind: 'compare-overview' });
   syncRuntimeViews('cancel-compare-slot-edit', { dockEditorContext: true });
@@ -488,7 +397,7 @@ export function addLoadoutToCompare(loadoutId: string): void {
     const stats = getScoredSetup(setup).stats;
     setCompareSlotLoadout(targetSlotId as CompareSlotId, { ...loadout }, stats);
     setDockEditorContext({ kind: 'compare-overview' });
-    _compareEditorDirty = false;
+    setCompareEditorDirty(false);
   }
 
   if (getCurrentMode() === 'compare') {
@@ -513,7 +422,7 @@ export function addActiveLoadoutToCompare(): void {
   const stats = getScoredSetup(setup).stats;
   setCompareSlotLoadout(targetSlotId as CompareSlotId, { ...activeLoadout }, stats);
   setDockEditorContext({ kind: 'compare-overview' });
-  _compareEditorDirty = false;
+  setCompareEditorDirty(false);
 
   if (getCurrentMode() === 'compare') {
     syncRuntimeViews('add-active-loadout-to-compare', { compareState: true, dockEditorContext: true });
@@ -567,10 +476,8 @@ export function switchMode(mode: string): void {
     }
   } else {
     setDockEditorContext({ kind: 'active' });
-    _compareEditorDirty = false;
+    setCompareEditorDirty(false);
   }
-  updateDockEditorTitle();
-  updateDockEditorActionState();
 
   if (!useReactRouter) {
     const nextSection = document.getElementById(`mode-${mode}`);
@@ -623,21 +530,8 @@ export function switchMode(mode: string): void {
 /** Compare tab activation (DOM must exist). Used by route mount and direct mode activation. */
 export function runCompareModeActivation(): void {
   initComparePageViaBridge();
-  const compareState = getCompareState();
-  const configuredSlots = compareState?.slots?.filter((slot: any) => slot.loadout !== null) || [];
-  if (configuredSlots.length === 0) {
-    if (getSavedLoadouts().length >= 2) {
-      autoFillCompareFromSaved();
-    } else if (getSavedLoadouts().length === 1 || getActiveLoadout()) {
-      addComparisonSlotFromHomeViaBridge();
-      showCompareQuickAddPromptViaBridge();
-    } else {
-      addComparisonSlotFromHomeViaBridge();
-    }
-  } else {
-    renderComparisonPresets();
-    renderCompareSurfaces();
-  }
+  renderComparisonPresets();
+  renderCompareSurfaces();
 }
 
 /** Optimize / Compendium first-time init when React route mounts (DOM ready). */
@@ -668,14 +562,6 @@ export function runCompendiumRouteActivation(options?: { tab?: CompendiumWorkspa
   });
 }
 
-/** Attach tune tension slider handler (call when #tune-slider enters DOM, e.g. React route mount). */
-export function wireTuneSlider(): void {
-  const tuneSlider = $('#tune-slider') as HTMLInputElement | null;
-  if (!tuneSlider || tuneSlider.dataset.bound === 'true') return;
-  tuneSlider.addEventListener('input', onTuneSliderInputCompat);
-  tuneSlider.dataset.bound = 'true';
-}
-
 export function openTuneForSlot(slotIndex: number): void {
   const compareStateSlot = getCompareState()?.slots?.[slotIndex] || null;
 
@@ -702,8 +588,7 @@ export function openTuneForSlot(slotIndex: number): void {
 
 export function _onEditorChange(): void {
   if (getDockEditorContext().kind === 'compare-slot') {
-    _compareEditorDirty = true;
-    updateDockEditorActionState();
+    setCompareEditorDirty(true);
     return;
   }
 
@@ -715,16 +600,13 @@ export function _onEditorChange(): void {
     _pendingActiveRefreshFrame = null;
     if (getActiveLoadout()) {
       commitEditorToLoadout();
-    } else {
-      renderOverviewDashboardViaBridge();
     }
   });
 }
 
 export function startCompareSlotEditing(slotId: string): void {
   setDockEditorContext({ kind: 'compare-slot', slotId: String(slotId) });
-  _compareEditorDirty = false;
-  updateDockEditorTitle();
+  setCompareEditorDirty(false);
 
   const compareSlot = getCompareStateSlot(String(slotId));
   const loadout = (compareSlot?.loadout as Loadout | null) || getActiveLoadout() || null;
@@ -781,33 +663,8 @@ export function _handleHybridToggle(toHybrid: boolean): void {
 
   _onEditorChange();
 }
-
-function selectLandingFrame(racquetId: string): void {
-  void ensureCompendiumModule().then((Compendium) => {
-    const compendiumDomMounted = !!document.getElementById('comp-main');
-    if (!_compendiumInitialized || !compendiumDomMounted) {
-      Compendium.initCompendium();
-      _compendiumInitialized = true;
-    }
-
-    Compendium._compSelectFrame(racquetId);
-    switchMode('compendium');
-
-    window.setTimeout(() => {
-      const item = document.querySelector(`#comp-frame-list > button[data-id="${racquetId}"]`);
-      if (item instanceof HTMLElement) {
-        item.scrollIntoView({ block: 'center' });
-      }
-    }, 100);
-  });
-
-  const searchEl = document.getElementById('landing-search') as HTMLInputElement | null;
-  const dropdown = document.getElementById('landing-search-dropdown');
-  if (searchEl) searchEl.value = '';
-  dropdown?.classList.add('hidden');
-}
-
-export function _initLandingSearch(): void {
+/*
+legacy landing search removed
   const searchEl = document.getElementById('landing-search') as HTMLInputElement | null;
   const dropdownEl = document.getElementById('landing-search-dropdown');
   if (!searchEl || !dropdownEl || searchEl.dataset.initialized === 'true') return;
@@ -902,7 +759,7 @@ export function _initLandingSearch(): void {
     }
   });
 }
-
+*/
 export function _handleSharedBuildURL(): boolean {
   const decoded = parseSharedBuildFromURL();
   if (!decoded?.frameId) return false;
@@ -1007,12 +864,6 @@ export function init(): void {
     switchMode,
     renderDockContextPanel,
   });
-  registerMyLoadoutsCallbacks({
-    switchToLoadout,
-    shareLoadout,
-    addLoadoutToCompare,
-    removeLoadout,
-  });
   registerPresetCallbacks({
     switchMode,
   });
@@ -1042,8 +893,6 @@ export function init(): void {
   });
   document.getElementById('btn-mode-howitworks-mobile')?.addEventListener('click', () => switchMode('howitworks'));
 
-  wireTuneSlider();
-
   // Legacy single-page DOM had every mode in #workspace; hide non-overview until switch.
   // React Router mounts one route at a time — only one [id^="mode-"] exists; skip or we hide the active view.
   const modeSections = document.querySelectorAll('#workspace [id^="mode-"]');
@@ -1072,7 +921,6 @@ export function init(): void {
   } else {
     syncRuntimeViews('shell-init', { activeLoadout: true, savedLoadouts: true, mode: true, dockEditorContext: true });
   }
-  _initLandingSearch();
 
   document.querySelectorAll('.mobile-tab-btn').forEach((button) => {
     button.classList.toggle('active', (button as HTMLElement).dataset.mode === getCurrentMode());

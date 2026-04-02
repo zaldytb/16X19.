@@ -16,10 +16,8 @@ import { getActiveLoadout, getSavedLoadouts, setActiveLoadout, getCurrentMode } 
 import { syncViews } from '../../runtime/coordinator.js';
 import { getCurrentSetup, getSetupFromLoadout } from '../../state/setup-sync.js';
 import { invalidateSetupFromLoadoutCache } from '../../state/setup-from-loadout.js';
-import { activateLoadout, commitEditorToLoadout } from './shell.js';
+import { activateLoadout } from './shell.js';
 import { renderDockPanel } from '../components/dock-renderers.js';
-import { renderOverviewDashboardViaBridge } from './overview-runtime-bridge.js';
-import { registerTuneRuntimeCallbacks } from './tune-runtime-bridge.js';
 import { _prevObsValues, animateOBSInContainer } from '../components/obs-animation.js';
 import {
   generateRecommendedBuilds,
@@ -74,6 +72,7 @@ import type { TuneSweepChartHandle } from '../../components/tune/TuneSweepChart.
 // Window extensions for external dependencies
 // Module-level state
 export let sweepChart: Chart | null = null;
+let _isTunePageMounted = false;
 let _tuneRefreshing = false;
 let _pendingTuneRefresh = false;
 let _tuneRecRenderToken = 0;
@@ -119,6 +118,38 @@ export const tuneState = {
   explored: null as { stats: SetupAttributes; obs: number; identity: { archetype: string; description: string } } | null
 };
 
+export interface TunePageChromeSnapshot {
+  subtitle: string;
+  hasSetup: boolean;
+  deltaTitle: string;
+  sliderMin: number;
+  sliderMax: number;
+  sliderValue: number;
+  sliderCurrentLabel: string;
+  sliderCurrentValue: string;
+  sliderPulseToken: number;
+  applyButtonVisible: boolean;
+  applyButtonText: string;
+}
+
+const DEFAULT_TUNE_SUBTITLE = '\u2014 Select a setup to begin tuning';
+const DEFAULT_TUNE_PAGE_CHROME: TunePageChromeSnapshot = {
+  subtitle: DEFAULT_TUNE_SUBTITLE,
+  hasSetup: false,
+  deltaTitle: 'DELTA VS BASELINE',
+  sliderMin: 40,
+  sliderMax: 70,
+  sliderValue: 55,
+  sliderCurrentLabel: 'Exploring',
+  sliderCurrentValue: '55 lbs',
+  sliderPulseToken: 0,
+  applyButtonVisible: false,
+  applyButtonText: 'Apply changes',
+};
+
+let _tunePageChrome: TunePageChromeSnapshot = { ...DEFAULT_TUNE_PAGE_CHROME };
+const _tunePageChromeListeners = new Set<() => void>();
+
 type RecommendedCandidate = RecommendedBuildsResult['all'][number];
 
 // Chart.js instance (global Chart from index.html CDN; owned by TuneSweepChart.tsx)
@@ -136,19 +167,124 @@ function _resetPendingTuneRenderState(): void {
   }
 }
 
-registerTuneRuntimeCallbacks({
-  initTuneMode,
-  refreshTuneIfActive,
-  onTuneSliderInput,
-  resetPreviewState: () => {
-    _resetPendingTuneRenderState();
-    tuneState.baseline = null;
-    tuneState.explored = null;
-  },
-  refreshSweepChart: (setup) => {
-    renderSweepChart(setup);
-  },
-});
+function _notifyTunePageChromeListeners(): void {
+  _tunePageChromeListeners.forEach((listener) => listener());
+}
+
+function _setTunePageChrome(partial: Partial<TunePageChromeSnapshot>): void {
+  _tunePageChrome = { ..._tunePageChrome, ...partial };
+  _notifyTunePageChromeListeners();
+}
+
+function _resetTunePageChrome(overrides?: Partial<TunePageChromeSnapshot>): void {
+  _tunePageChrome = { ...DEFAULT_TUNE_PAGE_CHROME, ...overrides };
+  _notifyTunePageChromeListeners();
+}
+
+export function getTunePageChrome(): TunePageChromeSnapshot {
+  return _tunePageChrome;
+}
+
+export function subscribeTunePageChrome(listener: () => void): () => void {
+  _tunePageChromeListeners.add(listener);
+  return () => {
+    _tunePageChromeListeners.delete(listener);
+  };
+}
+
+function _buildTuneSubtitle(setup: { racquet: Racquet; stringConfig: StringConfig }): string {
+  const { racquet, stringConfig } = setup;
+  if (stringConfig.isHybrid) {
+    const hybridConfig = stringConfig as StringConfig & { mains: StringData; crosses: StringData };
+    return `${racquet.name} \u2014 ${hybridConfig.mains.name} / ${hybridConfig.crosses.name}`;
+  }
+
+  const fullBedConfig = stringConfig as StringConfig & { string: StringData };
+  return `${racquet.name} \u2014 ${fullBedConfig.string.name}`;
+}
+
+function _buildTuneSliderReadout(
+  setup: { racquet: Racquet; stringConfig: StringConfig } | null,
+  exploredTension: number,
+  hybridDimension: HybridDim,
+): Pick<TunePageChromeSnapshot, 'sliderCurrentLabel' | 'sliderCurrentValue'> {
+  const hasSplitTensions = Boolean(
+    setup && setup.stringConfig.mainsTension !== undefined && setup.stringConfig.crossesTension !== undefined,
+  );
+
+  if (setup && hasSplitTensions && hybridDimension === 'mains') {
+    return {
+      sliderCurrentLabel: 'Exploring Mains',
+      sliderCurrentValue: `${exploredTension} lbs`,
+    };
+  }
+
+  if (setup && hasSplitTensions && hybridDimension === 'crosses') {
+    return {
+      sliderCurrentLabel: 'Exploring Crosses',
+      sliderCurrentValue: `${exploredTension} lbs`,
+    };
+  }
+
+  if (setup && hasSplitTensions && hybridDimension === 'linked') {
+    const diff = setup.stringConfig.mainsTension - setup.stringConfig.crossesTension;
+    const mainsValue = exploredTension;
+    const crossesValue = Math.max(0, exploredTension - diff);
+    return {
+      sliderCurrentLabel: 'Exploring Linked',
+      sliderCurrentValue: `M ${mainsValue} / X ${crossesValue} lbs`,
+    };
+  }
+
+  return {
+    sliderCurrentLabel: 'Exploring',
+    sliderCurrentValue: `${exploredTension} lbs`,
+  };
+}
+
+function _buildTuneDeltaTitle(stringConfig: StringConfig, hybridDimension: HybridDim): string {
+  const hasSplitTensions = stringConfig.mainsTension !== undefined && stringConfig.crossesTension !== undefined;
+
+  if (!hasSplitTensions) {
+    return 'DELTA VS BASELINE';
+  }
+
+  if (hybridDimension === 'mains') {
+    return 'DELTA VS BASELINE \u2014 MAINS ONLY';
+  }
+
+  if (hybridDimension === 'crosses') {
+    return 'DELTA VS BASELINE \u2014 CROSSES ONLY';
+  }
+
+  return 'DELTA VS BASELINE \u2014 LINKED';
+}
+
+export function setTunePageMounted(isMounted: boolean): void {
+  _isTunePageMounted = isMounted;
+}
+
+export function initTuneModeIfMounted(setup: { racquet: Racquet; stringConfig: StringConfig }): void {
+  if (!_isTunePageMounted) return;
+  initTuneMode(setup);
+}
+
+export function refreshTuneIfMounted(): void {
+  if (!_isTunePageMounted) return;
+  refreshTuneIfActive();
+}
+
+export function resetTunePreviewState(): void {
+  _resetPendingTuneRenderState();
+  tuneState.baseline = null;
+  tuneState.explored = null;
+  _resetTunePageChrome();
+}
+
+export function refreshTuneSweepChartIfMounted(setup: { racquet: Racquet; stringConfig: StringConfig }): void {
+  if (!_isTunePageMounted) return;
+  renderSweepChart(setup);
+}
 
 function _applyTuneInteractionFrame(): void {
   _pendingTuneRenderFrame = null;
@@ -181,8 +317,7 @@ export function refreshTuneIfActive(): void {
     if (setup) {
       initTuneMode(setup);
     } else {
-      document.getElementById('tune-empty')?.classList.remove('hidden');
-      document.getElementById('tune-panels')?.classList.add('hidden');
+      _resetTunePageChrome();
     }
   } finally {
     _tuneRefreshing = false;
@@ -206,38 +341,21 @@ export function getHybridBaselineTension(stringConfig: StringConfig, dimension: 
  * Update slider label
  */
 export function updateSliderLabel(): void {
-  const val = tuneState.exploredTension;
-  const dim = tuneState.hybridDimension;
   const setup = getCurrentSetup();
-  const labelEl = document.querySelector('.slider-current-label');
-  const valueEl = document.getElementById('slider-current-value');
-
-  if (!labelEl || !valueEl) return;
-
-  const hasSplitTensions = setup && (setup.stringConfig.mainsTension !== undefined && setup.stringConfig.crossesTension !== undefined);
-
-  if (hasSplitTensions && dim === 'mains') {
-    labelEl.textContent = 'Exploring Mains';
-    valueEl.textContent = `${val} lbs`;
-  } else if (hasSplitTensions && dim === 'crosses') {
-    labelEl.textContent = 'Exploring Crosses';
-    valueEl.textContent = `${val} lbs`;
-  } else if (hasSplitTensions && dim === 'linked') {
-    const diff = setup.stringConfig.mainsTension - setup.stringConfig.crossesTension;
-    const mainsVal = val;
-    const crossesVal = Math.max(0, val - diff);
-    labelEl.textContent = 'Exploring Linked';
-    valueEl.textContent = `M ${mainsVal} / X ${crossesVal} lbs`;
-  } else {
-    labelEl.textContent = 'Exploring';
-    valueEl.textContent = `${val} lbs`;
-  }
+  const readout = _buildTuneSliderReadout(setup, tuneState.exploredTension, tuneState.hybridDimension);
+  _setTunePageChrome({
+    sliderValue: tuneState.exploredTension,
+    ...readout,
+  });
 }
 
 /**
  * Update delta card title
  */
 export function updateDeltaTitle(stringConfig: StringConfig): void {
+  _setTunePageChrome({
+    deltaTitle: _buildTuneDeltaTitle(stringConfig, tuneState.hybridDimension),
+  });
   const titleEl = document.querySelector('#tune-card-delta .tune-card-title');
   if (!titleEl) return;
   const dim = tuneState.hybridDimension;
@@ -317,6 +435,7 @@ export function initTuneMode(setup: { racquet: Racquet; stringConfig: StringConf
     };
   }
 
+  /*
   // Set subtitle
   const subtitleEl = document.getElementById('tune-subtitle');
   if (subtitleEl) {
@@ -332,6 +451,11 @@ export function initTuneMode(setup: { racquet: Racquet; stringConfig: StringConf
   // Show/hide panels
   document.getElementById('tune-empty')?.classList.add('hidden');
   document.getElementById('tune-panels')?.classList.remove('hidden');
+  */
+  _setTunePageChrome({
+    subtitle: _buildTuneSubtitle(setup),
+    hasSetup: true,
+  });
 
   // Set baseline tension
   if (!['mains', 'crosses', 'linked'].includes(tuneState.hybridDimension)) {
@@ -344,16 +468,14 @@ export function initTuneMode(setup: { racquet: Racquet; stringConfig: StringConf
   // Configure slider
   const sliderMin = Math.max(racquet.tensionRange[0] - 5, 30);
   const sliderMax = Math.min(racquet.tensionRange[1] + 5, 75);
-  const slider = document.getElementById('tune-slider') as HTMLInputElement | null;
-  if (slider) {
-    slider.min = String(sliderMin);
-    slider.max = String(sliderMax);
-    slider.value = String(tuneState.baselineTension);
-  }
-  const labelMin = document.getElementById('slider-label-min');
-  const labelMax = document.getElementById('slider-label-max');
-  if (labelMin) labelMin.textContent = String(sliderMin);
-  if (labelMax) labelMax.textContent = String(sliderMax);
+  _setTunePageChrome({
+    sliderMin,
+    sliderMax,
+    sliderValue: tuneState.baselineTension,
+    sliderPulseToken: 0,
+    applyButtonVisible: false,
+    applyButtonText: 'Apply changes',
+  });
 
   updateSliderLabel();
   updateDeltaTitle(stringConfig);
@@ -376,53 +498,9 @@ export function initTuneMode(setup: { racquet: Racquet; stringConfig: StringConf
   void renderRecommendedBuilds(setup);
 
   // Reset Apply button
-  const applyBtn = document.getElementById('tune-apply-btn');
-  if (applyBtn) {
-    applyBtn.classList.add('hidden');
-    applyBtn.textContent = 'Apply changes';
-  }
-
-  _bindTuneDelegates();
-}
-
-let _tuneDelegateBound = false;
-
-function _bindTuneDelegates(): void {
-  if (_tuneDelegateBound) return;
-  _tuneDelegateBound = true;
-
-  document.addEventListener('click', (e: Event) => {
-    const el = (e.target as Element).closest('[data-tune-action]') as HTMLElement | null;
-    if (!el) return;
-    const action = el.dataset.tuneAction!;
-
-    if (action === 'wttnApply') {
-      _applyWttnBuild(el);
-    } else if (action === 'wttnSave') {
-      _saveWttnBuild(el);
-    } else if (action === 'applyGauge') {
-      const gauge = parseFloat(el.dataset.gauge ?? '0');
-      const section = parseInt(el.dataset.section ?? '0', 10);
-      _applyGaugeSelection(gauge, section);
-    } else if (action === 'applyRec') {
-      _applyRecBuild(
-        el.dataset.racquetId ?? '',
-        el.dataset.stringId ?? '',
-        parseInt(el.dataset.tension ?? '0', 10),
-        el.dataset.type ?? 'full',
-        el.dataset.mainsId || undefined,
-        el.dataset.crossesId || undefined
-      );
-    } else if (action === 'saveRec') {
-      _saveRecBuild(
-        el.dataset.racquetId ?? '',
-        el.dataset.stringId ?? '',
-        parseInt(el.dataset.tension ?? '0', 10),
-        el.dataset.type ?? 'full',
-        el.dataset.mainsId || undefined,
-        el.dataset.crossesId || undefined
-      );
-    }
+  _setTunePageChrome({
+    applyButtonVisible: false,
+    applyButtonText: 'Apply changes',
   });
 }
 
@@ -586,7 +664,12 @@ export function renderGaugeExplorer(setup: { racquet: Racquet; stringConfig: Str
 
   const gr = _ensureTuneReactRoot(_tuneGaugeExplorerMount, container);
   if (!gr) return;
-  gr.render(createElement(TuneGaugeExplorer, { model: vm }));
+  gr.render(
+    createElement(TuneGaugeExplorer, {
+      model: vm,
+      onApplyGauge: _applyGaugeSelection,
+    }),
+  );
 }
 
 function _setGaugeSelectByMm(select: HTMLSelectElement | null, mm: number): void {
@@ -799,13 +882,9 @@ export function onTuneSliderInput(e: Event): void {
   tuneState.exploredTension = val;
   updateSliderLabel();
   _updateTuneApplyButton();
-
-  const valueEl = document.getElementById('slider-current-value');
-  if (valueEl) {
-    valueEl.classList.remove('slider-value-pulse');
-    valueEl.offsetHeight;
-    valueEl.classList.add('slider-value-pulse');
-  }
+  _setTunePageChrome({
+    sliderPulseToken: getTunePageChrome().sliderPulseToken + 1,
+  });
 
   if (_pendingTuneRenderFrame != null) {
     cancelAnimationFrame(_pendingTuneRenderFrame);
@@ -888,24 +967,24 @@ export function _recomputeExploredState(): void {
  * Update tune apply button visibility
  */
 export function _updateTuneApplyButton(): void {
-  const btn = document.getElementById('tune-apply-btn');
-  if (!btn) return;
   if (!tuneState.baseline || !tuneState.explored) {
-    btn.classList.add('hidden');
+    _setTunePageChrome({ applyButtonVisible: false, applyButtonText: 'Apply changes' });
     return;
   }
   const tensionChanged = tuneState.exploredTension !== tuneState.baselineTension;
   const delta = tuneState.explored.obs - tuneState.baseline.obs;
   if (!tensionChanged) {
-    btn.classList.add('hidden');
-    btn.textContent = 'Apply changes';
+    _setTunePageChrome({ applyButtonVisible: false, applyButtonText: 'Apply changes' });
     return;
   }
   const sign = delta > 0 ? '+' : '';
-  btn.classList.remove('hidden');
-  btn.textContent = Math.abs(delta) <= 0.05
+  const nextText = Math.abs(delta) <= 0.05
     ? 'Apply explored tension'
     : `Apply changes (${sign}${delta.toFixed(1)} OBS)`;
+  _setTunePageChrome({
+    applyButtonVisible: true,
+    applyButtonText: nextText,
+  });
 }
 
 export function renderOverallBuildScore(
@@ -982,16 +1061,6 @@ function _buildTuneRecommendationLoadout(
   return createLoadout(frameId, type === 'hybrid' ? mainsId || null : stringId, tension, opts);
 }
 
-function _flashActionButton(button: HTMLElement, idleLabel: string, successLabel: string): void {
-  if (!(button instanceof HTMLButtonElement)) return;
-  button.textContent = successLabel;
-  button.disabled = true;
-  window.setTimeout(() => {
-    button.textContent = idleLabel;
-    button.disabled = false;
-  }, 1500);
-}
-
 export function renderWhatToTryNext(
   setup: { racquet: Racquet; stringConfig: StringConfig },
   candidates: RecommendedCandidate[]
@@ -1001,7 +1070,17 @@ export function renderWhatToTryNext(
   const vm = buildWhatToTryNextViewModel(setup, candidates);
   const wr = _ensureTuneReactRoot(_tuneWttnMount, container);
   if (!wr) return;
-  wr.render(createElement(TuneWttn, { model: vm }));
+  wr.render(
+    createElement(TuneWttn, {
+      model: vm,
+      onApply: ({ stringId, tension, pickType, mainsId, crossesId }) => {
+        _applyWttnBuild(setup.racquet.id, stringId, tension, pickType, mainsId, crossesId);
+      },
+      onSave: ({ frameId, stringId, tension, pickType, mainsId, crossesId }) => {
+        _saveWttnBuild(frameId, stringId, tension, pickType, mainsId, crossesId);
+      },
+    }),
+  );
 }
 
 export function renderExplorePrompt(
@@ -1050,30 +1129,36 @@ export async function renderRecommendedBuilds(setup: { racquet: Racquet; stringC
   const recsVm = buildTuneRecsViewModel(setup, recommendations, currentKey);
   const rr = _ensureTuneReactRoot(_tuneRecsMount, container);
   if (!rr) return;
-  rr.render(createElement(TuneRecommendedBuilds, { model: recsVm }));
+  rr.render(
+    createElement(TuneRecommendedBuilds, {
+      model: recsVm,
+      onApply: ({ racquetId, stringId, tension, type, mainsId, crossesId }) => {
+        _applyRecBuild(racquetId, stringId, tension, type, mainsId, crossesId);
+      },
+      onSave: ({ racquetId, stringId, tension, type, mainsId, crossesId }) => {
+        _saveRecBuild(racquetId, stringId, tension, type, mainsId, crossesId);
+      },
+    }),
+  );
 
   renderExplorePrompt(setup, recommendations.isCurrentInTop, topCombined);
   renderWhatToTryNext(setup, recommendations.all);
 }
 
-export function _applyWttnBuild(btn: HTMLElement): void {
-  const setup = getCurrentSetup();
-  if (!setup) return;
-
-  const stringId = btn.dataset.stringId || '';
-  const tension = parseInt(btn.dataset.tension || '', 10);
-  const type = btn.dataset.type || 'full';
-  const mainsId = btn.dataset.mainsId || undefined;
-  const crossesId = btn.dataset.crossesId || undefined;
-
-  const loadout = _buildTuneRecommendationLoadout(setup.racquet.id, stringId, tension, type, mainsId, crossesId);
+export function _applyWttnBuild(
+  frameId: string,
+  stringId: string,
+  tension: number,
+  type: string,
+  mainsId?: string,
+  crossesId?: string,
+): void {
+  const loadout = _buildTuneRecommendationLoadout(frameId, stringId, tension, type, mainsId, crossesId);
   if (loadout) {
     activateLoadout(loadout);
     const newSetup = getCurrentSetup();
     if (newSetup) initTuneMode(newSetup);
   }
-
-  _flashActionButton(btn, 'Apply', 'Applied \u2713');
 }
 
 export function _applyRecBuild(
@@ -1092,18 +1177,17 @@ export function _applyRecBuild(
   }
 }
 
-export function _saveWttnBuild(btn: HTMLElement): void {
-  const frameId = btn.dataset.frameId || '';
-  const stringId = btn.dataset.stringId || '';
-  const tension = parseInt(btn.dataset.tension || '', 10);
-  const type = btn.dataset.type || 'full';
-  const mainsId = btn.dataset.mainsId || undefined;
-  const crossesId = btn.dataset.crossesId || undefined;
-
+export function _saveWttnBuild(
+  frameId: string,
+  stringId: string,
+  tension: number,
+  type: string,
+  mainsId?: string,
+  crossesId?: string,
+): void {
   const loadout = _buildTuneRecommendationLoadout(frameId, stringId, tension, type, mainsId, crossesId);
   if (loadout) {
     saveLoadout(loadout);
-    _flashActionButton(btn, 'Save', 'Saved \u2713');
   }
 }
 
@@ -1142,50 +1226,39 @@ export function tuneSandboxCommit(): void {
     newCrossesTension = tuneState.exploredTension - diff;
   }
 
-  activeLoadout.mainsTension = newMainsTension;
-  activeLoadout.crossesTension = newCrossesTension;
+  const updatedLoadout: Loadout = {
+    ...activeLoadout,
+    mainsTension: newMainsTension,
+    crossesTension: newCrossesTension,
+  };
 
-  const freshSetup = getCurrentSetup();
+  const freshSetup = getSetupFromLoadout(updatedLoadout);
   if (freshSetup) {
     const stats = predictSetup(freshSetup.racquet, freshSetup.stringConfig);
     const tCtx = buildTensionContext(freshSetup.stringConfig, freshSetup.racquet);
-    activeLoadout.stats = stats;
-    activeLoadout.obs = +computeCompositeScore(stats, tCtx).toFixed(1);
-    activeLoadout.identity = generateIdentity(stats, freshSetup.racquet, freshSetup.stringConfig)?.name || '';
+    updatedLoadout.stats = stats;
+    updatedLoadout.obs = +computeCompositeScore(stats, tCtx).toFixed(1);
+    updatedLoadout.identity = generateIdentity(stats, freshSetup.racquet, freshSetup.stringConfig)?.name || '';
   }
-  activeLoadout._dirty = getSavedLoadouts().some((loadout) => loadout.id === activeLoadout.id);
-
-  const mainsInput = document.getElementById('input-tension-mains') as HTMLInputElement | null;
-  const crossesInput = document.getElementById('input-tension-crosses') as HTMLInputElement | null;
-  const fullMainsInput = document.getElementById('input-tension-full-mains') as HTMLInputElement | null;
-  const fullCrossesInput = document.getElementById('input-tension-full-crosses') as HTMLInputElement | null;
-
-  if (activeLoadout.isHybrid) {
-    if (mainsInput) mainsInput.value = String(newMainsTension);
-    if (crossesInput) crossesInput.value = String(newCrossesTension);
-  } else {
-    if (fullMainsInput) fullMainsInput.value = String(newMainsTension);
-    if (fullCrossesInput) fullCrossesInput.value = String(newCrossesTension);
-  }
+  updatedLoadout._dirty = getSavedLoadouts().some((loadout) => loadout.id === updatedLoadout.id);
+  setActiveLoadout(updatedLoadout);
 
   tuneState.baseline = null;
   tuneState.explored = null;
   tuneState.baselineTension = tuneState.exploredTension;
-  persistActiveLoadout(activeLoadout);
+  persistActiveLoadout(updatedLoadout);
 
-  const resetSetup = getCurrentSetup();
+  const resetSetup = getSetupFromLoadout(updatedLoadout);
   if (resetSetup) {
     initTuneMode(resetSetup);
   }
 
-  const btn = document.getElementById('tune-apply-btn');
-  if (btn) {
-    btn.classList.add('hidden');
-    btn.textContent = 'Apply changes';
-  }
+  _setTunePageChrome({
+    applyButtonVisible: false,
+    applyButtonText: 'Apply changes',
+  });
 
   renderDockPanel();
-  renderOverviewDashboardViaBridge();
 }
 
 /**
@@ -1193,41 +1266,5 @@ export function tuneSandboxCommit(): void {
  */
 export function applyExploredTension(): void {
   if (!tuneState.explored) return;
-
-  const setup = getCurrentSetup();
-  if (!setup) return;
-
-  const diff = setup.stringConfig.mainsTension - setup.stringConfig.crossesTension;
-  let newMainsTension = setup.stringConfig.mainsTension;
-  let newCrossesTension = setup.stringConfig.crossesTension;
-
-  if (tuneState.hybridDimension === 'mains') {
-    newMainsTension = tuneState.exploredTension;
-  } else if (tuneState.hybridDimension === 'crosses') {
-    newCrossesTension = tuneState.exploredTension;
-  } else {
-    newMainsTension = tuneState.exploredTension;
-    newCrossesTension = tuneState.exploredTension - diff;
-  }
-
-  // Update input fields
-  const mainsInput = document.getElementById('input-tension-mains') as HTMLInputElement | null;
-  const crossesInput = document.getElementById('input-tension-crosses') as HTMLInputElement | null;
-  const fullMainsInput = document.getElementById('input-tension-full-mains') as HTMLInputElement | null;
-  const fullCrossesInput = document.getElementById('input-tension-full-crosses') as HTMLInputElement | null;
-
-  if (mainsInput) mainsInput.value = String(newMainsTension);
-  if (crossesInput) crossesInput.value = String(newCrossesTension);
-  if (fullMainsInput) fullMainsInput.value = String(newMainsTension);
-  if (fullCrossesInput) fullCrossesInput.value = String(newCrossesTension);
-
-  // Trigger editor change
-  if (getActiveLoadout()) {
-    commitEditorToLoadout();
-  } else {
-    renderOverviewDashboardViaBridge();
-  }
-
-  // Reset tune state
   tuneSandboxCommit();
 }

@@ -13,7 +13,7 @@ import { registerRouterNavigate } from './routing/routerNavigate.js';
 import { pathToMode } from './routing/modePaths.js';
 import { useAppStore } from './state/useAppStore.js';
 import { syncViews } from './runtime/coordinator.js';
-import { runVanillaAppInit } from './bridge/installWindowBridge.js';
+import { init as initShellRuntime } from './ui/pages/shell.js';
 import {
   BootLoader,
   Header,
@@ -63,7 +63,7 @@ function RouteModeSync() {
 
 function ShellLayout() {
   useLayoutEffect(() => {
-    runVanillaAppInit();
+    initShellRuntime();
   }, []);
 
   return (

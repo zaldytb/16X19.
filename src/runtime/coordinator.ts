@@ -1,5 +1,4 @@
 import {
-  getActiveLoadout,
   getComparisonSlots,
   getCurrentMode,
   getDockEditorContext,
@@ -7,9 +6,7 @@ import {
 } from '../state/imperative.js';
 import { useAppStore } from '../state/useAppStore.js';
 import { renderCompareRefreshViaBridge } from '../ui/pages/compare-runtime-bridge.js';
-import { renderOverviewDashboardViaBridge } from '../ui/pages/overview-runtime-bridge.js';
-import { refreshTuneIfActiveViaBridge } from '../ui/pages/tune-runtime-bridge.js';
-import { hydrateDock, renderDockContextPanel, renderDockPanel } from '../ui/components/dock-renderers.js';
+import { renderDockContextPanel, renderDockPanel } from '../ui/components/dock-renderers.js';
 import { reconcileDockEditorContext } from './contracts.js';
 import { reportRuntimeIssue } from './diagnostics.js';
 
@@ -43,7 +40,7 @@ export function getRefreshPlan(mode: string, changed: ViewChangeSet): RefreshPla
       changed.mode ||
       changed.dockEditorContext
     ),
-    overview: mode === 'overview' && !!(changed.activeLoadout || changed.mode),
+    overview: false,
     tune: mode === 'tune' && !!(changed.activeLoadout || changed.mode),
     compare: mode === 'compare' && !!(changed.compareState || changed.mode),
     compendium: mode === 'compendium' && !!(changed.activeLoadout || changed.mode),
@@ -54,10 +51,6 @@ export function syncViews(reason: string, changed: ViewChangeSet): void {
   const generation = ++_syncViewsGeneration;
   const mode = getCurrentMode();
   const plan = getRefreshPlan(mode, changed);
-
-  if (changed.activeLoadout) {
-    hydrateDock(getActiveLoadout());
-  }
 
   if (changed.compareState || changed.dockEditorContext) {
     const currentContext = getDockEditorContext();
@@ -82,12 +75,13 @@ export function syncViews(reason: string, changed: ViewChangeSet): void {
 
   const pageWork: Promise<unknown>[] = [];
 
-  if (plan.overview) {
-    renderOverviewDashboardViaBridge();
-  }
-
   if (plan.tune) {
-    refreshTuneIfActiveViaBridge();
+    pageWork.push(
+      import('../ui/pages/tune.js').then((mod) => {
+        if (generation !== _syncViewsGeneration) return;
+        mod.refreshTuneIfMounted();
+      }),
+    );
   }
 
   if (plan.compare) {

@@ -145,6 +145,7 @@ export function cleanupComparePage(): void {
 
 function handleStateChange(state: typeof _currentState): void {
   _currentState = state;
+  render();
 }
 
 function render(): void {

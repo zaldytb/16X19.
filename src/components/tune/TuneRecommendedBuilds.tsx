@@ -7,9 +7,33 @@ import type {
 
 type Props = {
   model: TuneRecsViewModel;
+  onApply: (item: {
+    racquetId: string;
+    stringId: string;
+    tension: number;
+    type: string;
+    mainsId?: string;
+    crossesId?: string;
+  }) => void;
+  onSave: (item: {
+    racquetId: string;
+    stringId: string;
+    tension: number;
+    type: string;
+    mainsId?: string;
+    crossesId?: string;
+  }) => void;
 };
 
-function RecItem({ item }: { item: TuneRecItemViewModel }) {
+function RecItem({
+  item,
+  onApply,
+  onSave,
+}: {
+  item: TuneRecItemViewModel;
+  onApply: Props['onApply'];
+  onSave: Props['onSave'];
+}) {
   return (
     <div className={`recs-item${item.isCurrent ? ' recs-item-current' : ''}`}>
       <div className="recs-rank">{item.rank}</div>
@@ -30,25 +54,31 @@ function RecItem({ item }: { item: TuneRecItemViewModel }) {
       <div className="recs-action-row">
         <button
           className="recs-apply-btn"
-          data-tune-action="applyRec"
-          data-racquet-id={item.racquetId}
-          data-string-id={item.stringId}
-          data-tension={item.tension}
-          data-type={item.type}
-          data-mains-id={item.mainsId}
-          data-crosses-id={item.crossesId}
+          onClick={() =>
+            onApply({
+              racquetId: item.racquetId,
+              stringId: item.stringId,
+              tension: item.tension,
+              type: item.type,
+              mainsId: item.mainsId,
+              crossesId: item.crossesId,
+            })
+          }
         >
           Apply
         </button>
         <button
           className="recs-save-btn"
-          data-tune-action="saveRec"
-          data-racquet-id={item.racquetId}
-          data-string-id={item.stringId}
-          data-tension={item.tension}
-          data-type={item.type}
-          data-mains-id={item.mainsId}
-          data-crosses-id={item.crossesId}
+          onClick={() =>
+            onSave({
+              racquetId: item.racquetId,
+              stringId: item.stringId,
+              tension: item.tension,
+              type: item.type,
+              mainsId: item.mainsId,
+              crossesId: item.crossesId,
+            })
+          }
         >
           Save
         </button>
@@ -57,7 +87,7 @@ function RecItem({ item }: { item: TuneRecItemViewModel }) {
   );
 }
 
-export function TuneRecommendedBuilds({ model }: Props) {
+export function TuneRecommendedBuilds({ model, onApply, onSave }: Props) {
   return (
     <>
       <div className="recs-split">
@@ -68,7 +98,7 @@ export function TuneRecommendedBuilds({ model }: Props) {
           </div>
           <div className="recs-list">
             {model.fullBed.map((it) => (
-              <RecItem key={`f-${it.rank}-${it.label}`} item={it} />
+              <RecItem key={`f-${it.rank}-${it.label}`} item={it} onApply={onApply} onSave={onSave} />
             ))}
           </div>
         </div>
@@ -79,7 +109,7 @@ export function TuneRecommendedBuilds({ model }: Props) {
           </div>
           <div className="recs-list">
             {model.hybrid.map((it) => (
-              <RecItem key={`h-${it.rank}-${it.label}`} item={it} />
+              <RecItem key={`h-${it.rank}-${it.label}`} item={it} onApply={onApply} onSave={onSave} />
             ))}
           </div>
         </div>

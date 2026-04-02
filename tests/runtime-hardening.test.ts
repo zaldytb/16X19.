@@ -25,11 +25,11 @@ function plan(mode: string, changed: ViewChangeSet) {
   return getRefreshPlan(mode, changed);
 }
 
-test('active loadout change refreshes overview and dock surfaces', () => {
+test('active loadout change refreshes only dock surfaces when overview is React-owned', () => {
   assert.deepEqual(plan('overview', { activeLoadout: true }), {
     dockPanel: true,
     dockContext: true,
-    overview: true,
+    overview: false,
     tune: false,
     compare: false,
     compendium: false,

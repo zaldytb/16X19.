@@ -5,7 +5,6 @@ import { RACQUETS, STRINGS } from '../../data/loader.js';
 import { getActiveLoadout, getSavedLoadouts, getCurrentMode } from '../../state/imperative.js';
 import { createLoadout, saveLoadout } from '../../state/loadout.js';
 import { activateLoadout, switchMode } from '../pages/shell.js';
-import { renderOverviewDashboardViaBridge } from '../pages/overview-runtime-bridge.js';
 import { _initQaSearchable } from './searchable-select.js';
 import type { Loadout } from '../../engine/types.js';
 
@@ -220,8 +219,6 @@ export function _cfActivate(): void {
   if (isFirstLoadout) {
     saveLoadout(lo);
     switchMode('tune');
-  } else if (getCurrentMode() === 'overview') {
-    renderOverviewDashboardViaBridge();
   }
 }
 
@@ -363,4 +360,3 @@ export function _bindDockCreateDelegates(): void {
     }
   });
 }
-

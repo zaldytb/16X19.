@@ -60,9 +60,10 @@ const modes = [
 export function Header() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { theme, toggleTheme } = useTheme();
+  const { toggleTheme } = useTheme();
   const currentMode = pathToMode(location.pathname);
   const [isLogoActive, setIsLogoActive] = useState(true);
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 1024px)').matches);
   const logoHref = get16x19FaviconHref(isLogoActive);
 
   useEffect(() => {
@@ -75,21 +76,50 @@ export function Header() {
     };
   }, []);
 
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 1024px)');
+    const handleChange = (event: MediaQueryListEvent) => {
+      setIsMobile(event.matches);
+    };
+
+    setIsMobile(mediaQuery.matches);
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
   const handleModeClick = useCallback(
     (mode: string, path: string) => {
-      const { currentMode, setCurrentMode } = useAppStore.getState();
-      if (mode !== currentMode) {
+      const { currentMode: activeMode, setCurrentMode } = useAppStore.getState();
+      if (mode !== activeMode) {
         setCurrentMode(mode as AppMode);
       }
       navigate(path);
-      // syncViews is handled by RouteModeSync in App.tsx when the route changes
     },
-    [navigate]
+    [navigate],
   );
 
   const handleReload = useCallback(() => {
     window.location.reload();
   }, []);
+
+  const modeSwitcher = (
+    <nav className="mode-switcher mode-switcher--segmented" id="mode-switcher" aria-label="Main workspace">
+      {modes.map((mode) => (
+        <button
+          key={mode.id}
+          type="button"
+          className={`mode-btn ${currentMode === mode.id ? 'active' : ''}`}
+          data-mode={mode.id}
+          id={`btn-mode-${mode.id}`}
+          title={mode.id === 'compendium' ? 'Racket Bible - frame database' : mode.label}
+          onClick={() => handleModeClick(mode.id, mode.path)}
+        >
+          {modeIcons[mode.id]}
+          <span>{mode.label}</span>
+        </button>
+      ))}
+    </nav>
+  );
 
   return (
     <header className="site-header">
@@ -116,6 +146,8 @@ export function Header() {
             </p>
           </div>
         </div>
+
+        {isMobile ? modeSwitcher : null}
 
         <div className="mobile-header-actions">
           <button
@@ -157,26 +189,7 @@ export function Header() {
 
       <div className="header-workspace-region">
         <div className="header-actions">
-          <nav className="mode-switcher mode-switcher--segmented" id="mode-switcher" aria-label="Main workspace">
-            {modes.map((mode) => (
-              <button
-                key={mode.id}
-                type="button"
-                className={`mode-btn ${currentMode === mode.id ? 'active' : ''}`}
-                data-mode={mode.id}
-                id={`btn-mode-${mode.id}`}
-                title={
-                  mode.id === 'compendium'
-                    ? 'Racket Bible — frame database'
-                    : mode.label
-                }
-                onClick={() => handleModeClick(mode.id, mode.path)}
-              >
-                {modeIcons[mode.id]}
-                <span>{mode.label}</span>
-              </button>
-            ))}
-          </nav>
+          {!isMobile ? modeSwitcher : null}
           <div className="header-actions-trail">
             <button
               type="button"

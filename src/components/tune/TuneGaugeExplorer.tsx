@@ -1,5 +1,4 @@
 // Dumb presentational component — DOM must match legacy renderGaugeExplorer innerHTML 1:1.
-// Clicks use document delegation via data-tune-action (no React onClick).
 
 import { Fragment } from 'react';
 import type { CSSProperties } from 'react';
@@ -7,9 +6,10 @@ import type { TuneGaugeExplorerViewModel } from '../../ui/pages/tune-gauge-explo
 
 type Props = {
   model: Extract<TuneGaugeExplorerViewModel, { kind: 'content' }>;
+  onApplyGauge: (gaugeMm: number, sectionIndex: number) => void;
 };
 
-export function TuneGaugeExplorer({ model }: Props) {
+export function TuneGaugeExplorer({ model, onApplyGauge }: Props) {
   return (
     <>
       {model.sections.map((sec) => (
@@ -25,10 +25,8 @@ export function TuneGaugeExplorer({ model }: Props) {
                 <button
                   key={col.gauge}
                   className={`gauge-explore-col-header${col.headerClassSuffix}`}
-                  data-tune-action="applyGauge"
-                  data-gauge={col.gauge}
-                  data-section={sec.sectionIndex}
                   title={col.title}
+                  onClick={() => onApplyGauge(col.gauge, sec.sectionIndex)}
                 >
                   <span className="gauge-col-short">{col.shortLabel}</span>
                   <span className="gauge-col-mm">{col.mmLabel}</span>

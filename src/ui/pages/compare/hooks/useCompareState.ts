@@ -17,16 +17,62 @@ import { normalizeCompareSlots } from '../../../../runtime/contracts.js';
 import { reportRuntimeIssue } from '../../../../runtime/diagnostics.js';
 import { notifyCompareStateChanged } from '../../../../runtime/compare-refresh-bridge.js';
 
-// Private state
+// ---------------------------------------------------------------------------
+// LocalStorage persistence for compare slots
+// ---------------------------------------------------------------------------
+
+const COMPARE_SLOTS_KEY = 'tll-compare-slots';
+
+function _getStorage(): Storage | null {
+  try { return window.localStorage; } catch { return null; }
+}
+
+type PersistedSlot = { id: SlotId; loadout: Loadout; stats: SetupStats } | null;
+
+function _persistSlots(slots: Slot[]): void {
+  const storage = _getStorage();
+  if (!storage) return;
+  try {
+    const payload: PersistedSlot[] = slots.map(s =>
+      s.loadout && s.stats ? { id: s.id, loadout: s.loadout, stats: s.stats } : null,
+    );
+    // Only write when at least one slot is occupied; clear otherwise.
+    if (payload.some(Boolean)) {
+      storage.setItem(COMPARE_SLOTS_KEY, JSON.stringify(payload));
+    } else {
+      storage.removeItem(COMPARE_SLOTS_KEY);
+    }
+  } catch { /* quota / private mode — ignore */ }
+}
+
+function _loadPersistedSlots(): Slot[] | null {
+  const storage = _getStorage();
+  if (!storage) return null;
+  try {
+    const raw = storage.getItem(COMPARE_SLOTS_KEY);
+    if (!raw) return null;
+    const parsed: PersistedSlot[] = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+
+    return SLOT_COLORS.map((color, i) => {
+      const entry = parsed[i];
+      if (entry && entry.loadout && entry.stats) {
+        return { id: color.id, color, loadout: entry.loadout, stats: entry.stats };
+      }
+      return { id: color.id, color, loadout: null, stats: null };
+    });
+  } catch { return null; }
+}
+
+// Private state — try to restore from localStorage first
+function _freshSlots(): Slot[] {
+  return SLOT_COLORS.map(color => ({ id: color.id, color, loadout: null, stats: null }));
+}
+
 let _state: CompareState = {
-  slots: SLOT_COLORS.map(color => ({
-    id: color.id,
-    color,
-    loadout: null,
-    stats: null
-  })),
+  slots: _loadPersistedSlots() ?? _freshSlots(),
   activeSlotId: null,
-  editingSlotId: null
+  editingSlotId: null,
 };
 
 function syncLegacyMirror(): void {
@@ -86,6 +132,7 @@ function notify(): void {
     _state = { ..._state, slots: normalizedSlots };
   }
   syncLegacyMirror();
+  _persistSlots(_state.slots);
   _subscribers.forEach(fn => fn(_state));
   notifyCompareStateChanged();
 }
@@ -183,14 +230,9 @@ export function moveSlot(fromId: SlotId, toId: SlotId): void {
 
 export function reset(): void {
   _state = {
-    slots: SLOT_COLORS.map(color => ({
-      id: color.id,
-      color,
-      loadout: null,
-      stats: null
-    })),
+    slots: _freshSlots(),
     activeSlotId: null,
-    editingSlotId: null
+    editingSlotId: null,
   };
   notify();
 }

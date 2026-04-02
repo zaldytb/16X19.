@@ -344,6 +344,7 @@ body {
   color: var(--dc-platinum);
   line-height: 1.5;
   min-height: 100vh;
+  padding-bottom: 32px; /* GridMonitorTerminal collapsed height */
 }
 
 ::selection {

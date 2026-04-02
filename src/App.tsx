@@ -20,6 +20,7 @@ import {
   BuildDock,
   MobileTabBar,
   Footer,
+  GridMonitorTerminal,
 } from './components/shell/index.js';
 
 import {
@@ -110,6 +111,7 @@ export default function App() {
           </Route>
         </Routes>
         <Footer />
+        <GridMonitorTerminal />
       </BrowserRouter>
     </ThemeProvider>
   );

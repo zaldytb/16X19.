@@ -61,3 +61,14 @@ export {
   generateIdentity,
   classifySetup
 } from './composite.js';
+
+// Grid Monitor (terminal diagnostics)
+export {
+  generateGridJudgment,
+  generateCommandResponse,
+  shouldAutoOpenTerminal,
+  extractMetricsFromLoadout,
+  getRandomSecretSauce,
+  randInt,
+  type SetupMetrics
+} from './grid-monitor.js';

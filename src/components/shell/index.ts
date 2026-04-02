@@ -6,3 +6,4 @@ export { Header } from './Header.js';
 export { BuildDock } from './BuildDock.js';
 export { MobileTabBar } from './MobileTabBar.js';
 export { Footer } from './Footer.js';
+export { GridMonitorTerminal } from './GridMonitorTerminal.js';

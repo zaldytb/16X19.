@@ -1,4 +1,5 @@
 import type { DockEditorContext } from '../state/useAppStore.js';
+export { normalizeCompareSlots } from '../state/compare-slots.js';
 import { reportRuntimeIssue } from './diagnostics.js';
 
 export interface RuntimeContractResult {
@@ -23,25 +24,6 @@ export function validateWindowBindings(
   }
   const missing = requiredBindings.filter((binding) => typeof target[binding] !== 'function');
   return { ok: missing.length === 0, missing };
-}
-
-type CompareSlotLike = {
-  id: string | number;
-  loadout: unknown | null;
-  stats: unknown | null;
-};
-
-export function normalizeCompareSlots<T extends CompareSlotLike>(slots: T[]): T[] {
-  return slots.map((slot) => {
-    if (slot.loadout !== null && slot.stats == null) {
-      return {
-        ...slot,
-        loadout: null,
-        stats: null,
-      };
-    }
-    return slot;
-  });
 }
 
 export function reconcileDockEditorContext(

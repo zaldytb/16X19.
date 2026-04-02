@@ -12,7 +12,7 @@ export function toggleAppTheme(): void {
   toggleTheme(
     {
       refreshSlotColors: () => {
-        const nextColors = [...getSlotColors<unknown[]>()];
+        const nextColors = [...getSlotColors()];
         setSlotColors(nextColors);
       },
       refreshRadarChart: () => {

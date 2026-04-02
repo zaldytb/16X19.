@@ -6,16 +6,13 @@ import {
   buildTensionContext,
 } from '../../engine/index.js';
 import type { Loadout, Racquet, StringData, StringConfig } from '../../engine/types.js';
-import { createLoadout as createStateLoadout, loadSavedLoadouts, saveLoadout as stateSaveLoadout, saveLoadout, removeLoadout as stateRemoveLoadout, switchToLoadout as getSwitchedLoadout } from '../../state/loadout.js';
-import { loadActiveLoadout, loadActiveLoadoutId } from '../../state/active-loadout-storage.js';
+import { createLoadout as createStateLoadout, saveLoadout as stateSaveLoadout, saveLoadout, removeLoadout as stateRemoveLoadout, switchToLoadout as getSwitchedLoadout } from '../../state/loadout.js';
 import { getCurrentSetup, getSetupFromLoadout } from '../../state/setup-sync.js';
 import {
   getActiveLoadout,
   getSavedLoadouts,
   setActiveLoadout,
-  setSavedLoadouts,
   subscribe as subscribeStore,
-  getComparisonSlots,
   getCurrentMode,
   getDockEditorContext,
   setDockEditorContext,
@@ -66,21 +63,6 @@ import { getRouterNavigate } from '../../routing/routerNavigate.js';
 import { modeToPath } from '../../routing/modePaths.js';
 import { registerMyLoadoutsCallbacks } from './my-loadouts.js';
 
-type CompareSlot = {
-  id: number;
-  racquetId: string;
-  stringId: string;
-  isHybrid: boolean;
-  mainsId: string;
-  crossesId: string;
-  mainsTension: number;
-  crossesTension: number;
-  stats: ReturnType<typeof predictSetup> | null;
-  identity: ReturnType<typeof generateIdentity> | null;
-  sourceLoadoutId?: string | null;
-  snapshotObs?: number;
-};
-
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T | null =>
   document.querySelector(sel) as T | null;
 const scrollPositions: Record<string, number> = {
@@ -104,10 +86,6 @@ async function ensureOptimizeModule() {
 
 async function ensureCompendiumModule() {
   return import('./compendium.js');
-}
-
-function getCompareSlots(): CompareSlot[] {
-  return getComparisonSlots<CompareSlot>();
 }
 
 function renderCompareSurfaces(): void {
@@ -139,102 +117,38 @@ function buildLoadoutName(racquet: Racquet, stringConfig: StringConfig): string 
   return `${stringConfig.string.name} on ${racquet.name}`;
 }
 
-function buildCompareSlotFromLoadout(loadout: Loadout): CompareSlot | null {
-  const setup = getSetupFromLoadout(loadout);
-  if (!setup) return null;
-
-  const scored = getScoredSetup(setup);
-
-  return {
-    id: Date.now() + Math.random(),
-    racquetId: loadout.frameId,
-    stringId: loadout.stringId || '',
-    isHybrid: loadout.isHybrid || false,
-    mainsId: loadout.mainsId || '',
-    crossesId: loadout.crossesId || '',
-    mainsTension: loadout.mainsTension,
-    crossesTension: loadout.crossesTension,
-    stats: scored.stats,
-    identity: scored.identity,
-    sourceLoadoutId: loadout.id || null,
-    snapshotObs: loadout.obs || scored.obs,
-  };
-}
-
 function autoFillCompareFromSaved(): void {
   const compareState = getCompareState();
-  if (compareState?.slots) {
-    compareState.slots.forEach((slot: any) => {
-      clearCompareSlot(slot.id as CompareSlotId);
-    });
+  compareState.slots.forEach((slot) => {
+    clearCompareSlot(slot.id as CompareSlotId);
+  });
 
-    const activeLoadout = getActiveLoadout();
-    const savedLoadouts = getSavedLoadouts();
-    const compareCandidates: Loadout[] = [];
-
-    if (activeLoadout) compareCandidates.push({ ...activeLoadout });
-
-    for (const loadout of savedLoadouts) {
-      if (compareCandidates.length >= 3) break;
-      if (activeLoadout && loadout.id === activeLoadout.id) continue;
-      compareCandidates.push({ ...loadout });
-    }
-
-    if (compareCandidates.length < 2 && savedLoadouts.length > 0) {
-      const first = savedLoadouts[0];
-      const alreadyPresent = compareCandidates.some((candidate) => candidate.id === first.id);
-      if (!alreadyPresent) compareCandidates.push({ ...first });
-    }
-
-    compareCandidates.slice(0, 3).forEach((candidate) => {
-      const setup = getSetupFromLoadout(candidate);
-      if (!setup) return;
-      const stats = getScoredSetup(setup).stats;
-      const latestState = getCompareState();
-      const emptySlot = latestState?.slots?.find((slot: any) => slot.loadout === null);
-      if (emptySlot) setCompareSlotLoadout(emptySlot.id as CompareSlotId, candidate, stats);
-    });
-    return;
-  }
-
-  const slots = getCompareSlots();
-  slots.length = 0;
-  let added = 0;
   const activeLoadout = getActiveLoadout();
   const savedLoadouts = getSavedLoadouts();
+  const compareCandidates: Loadout[] = [];
 
-  if (activeLoadout) {
-    const activeSlot = buildCompareSlotFromLoadout(activeLoadout);
-    if (activeSlot) {
-      slots.push(activeSlot);
-      added++;
-    }
-  }
+  if (activeLoadout) compareCandidates.push({ ...activeLoadout });
 
   for (const loadout of savedLoadouts) {
-    if (added >= 2) break;
+    if (compareCandidates.length >= 3) break;
     if (activeLoadout && loadout.id === activeLoadout.id) continue;
-    const slot = buildCompareSlotFromLoadout(loadout);
-    if (!slot) continue;
-    slots.push(slot);
-    added++;
+    compareCandidates.push({ ...loadout });
   }
 
-  if (added < 2 && savedLoadouts.length > 0) {
+  if (compareCandidates.length < 2 && savedLoadouts.length > 0) {
     const first = savedLoadouts[0];
-    const alreadyPresent = slots.some((slot) =>
-      slot.racquetId === first.frameId &&
-      slot.stringId === (first.stringId || '') &&
-      slot.mainsTension === first.mainsTension &&
-      slot.isHybrid === (first.isHybrid || false)
-    );
-    if (!alreadyPresent) {
-      const slot = buildCompareSlotFromLoadout(first);
-      if (slot) slots.push(slot);
-    }
+    const alreadyPresent = compareCandidates.some((candidate) => candidate.id === first.id);
+    if (!alreadyPresent) compareCandidates.push({ ...first });
   }
 
-  renderCompareSurfaces();
+  compareCandidates.slice(0, 3).forEach((candidate) => {
+    const setup = getSetupFromLoadout(candidate);
+    if (!setup) return;
+    const stats = getScoredSetup(setup).stats;
+    const latestState = getCompareState();
+    const emptySlot = latestState.slots.find((slot) => slot.loadout === null);
+    if (emptySlot) setCompareSlotLoadout(emptySlot.id as CompareSlotId, candidate, stats);
+  });
 }
 
 function updateDockEditorTitle(context = getDockEditorContext()): void {
@@ -567,23 +481,14 @@ export function addLoadoutToCompare(loadoutId: string): void {
   if (!loadout) return;
 
   const compareState = getCompareState();
-  if (compareState?.slots) {
-    const emptySlot = compareState.slots.find((slot: any) => slot.loadout === null);
-    const targetSlotId = emptySlot?.id || compareState.slots[compareState.slots.length - 1]?.id;
-    const setup = getSetupFromLoadout(loadout);
-    if (targetSlotId && setup) {
-      const stats = getScoredSetup(setup).stats;
-      setCompareSlotLoadout(targetSlotId as CompareSlotId, { ...loadout }, stats);
-      setDockEditorContext({ kind: 'compare-overview' });
-      _compareEditorDirty = false;
-    }
-  } else {
-    const slots = getCompareSlots();
-    if (slots.length >= 3) slots.pop();
-
-    const slot = buildCompareSlotFromLoadout(loadout);
-    if (!slot) return;
-    slots.push(slot);
+  const emptySlot = compareState.slots.find((slot) => slot.loadout === null);
+  const targetSlotId = emptySlot?.id || compareState.slots[compareState.slots.length - 1]?.id;
+  const setup = getSetupFromLoadout(loadout);
+  if (targetSlotId && setup) {
+    const stats = getScoredSetup(setup).stats;
+    setCompareSlotLoadout(targetSlotId as CompareSlotId, { ...loadout }, stats);
+    setDockEditorContext({ kind: 'compare-overview' });
+    _compareEditorDirty = false;
   }
 
   if (getCurrentMode() === 'compare') {
@@ -599,7 +504,7 @@ export function addActiveLoadoutToCompare(): void {
 
   const compareState = getCompareState();
   const setup = getSetupFromLoadout(activeLoadout);
-  if (!compareState?.slots || !setup) return;
+  if (!setup) return;
 
   const emptySlot = compareState.slots.find((slot: any) => slot.loadout === null);
   const targetSlotId = emptySlot?.id || compareState.slots[compareState.slots.length - 1]?.id;
@@ -793,66 +698,6 @@ export function openTuneForSlot(slotIndex: number): void {
     return;
   }
 
-  const slot = getCompareSlots()[slotIndex];
-  if (!slot?.stats) return;
-
-  const racquet = RACQUETS.find((frame) => frame.id === slot.racquetId) as Racquet | undefined;
-  if (!racquet) return;
-
-  let stringConfig: StringConfig | null = null;
-  if (slot.isHybrid) {
-    const mains = STRINGS.find((string) => string.id === slot.mainsId);
-    const crosses = STRINGS.find((string) => string.id === slot.crossesId);
-    if (mains && crosses) {
-      stringConfig = {
-        isHybrid: true,
-        mains,
-        crosses,
-        mainsTension: slot.mainsTension,
-        crossesTension: slot.crossesTension,
-      };
-    }
-  } else {
-    const string = STRINGS.find((entry) => entry.id === slot.stringId);
-    if (string) {
-      stringConfig = {
-        isHybrid: false,
-        string,
-        mainsTension: slot.mainsTension,
-        crossesTension: slot.crossesTension,
-      };
-    }
-  }
-
-  if (!stringConfig) return;
-
-  const loadout: Loadout = {
-    id: `compare-${slot.id}`,
-    name: buildLoadoutName(racquet, stringConfig),
-    frameId: racquet.id,
-    stringId: slot.isHybrid ? null : slot.stringId,
-    isHybrid: slot.isHybrid,
-    mainsId: slot.isHybrid ? slot.mainsId : null,
-    crossesId: slot.isHybrid ? slot.crossesId : null,
-    mainsTension: slot.mainsTension,
-    crossesTension: slot.crossesTension,
-    gauge: null,
-    mainsGauge: null,
-    crossesGauge: null,
-    stats: slot.stats,
-    obs: slot.snapshotObs || 0,
-    identity: slot.identity?.name || '',
-    source: 'compare',
-    _dirty: false,
-  };
-
-  activateLoadout(loadout);
-  if (getCurrentMode() !== 'tune') {
-    switchMode('tune');
-  } else {
-    const setup = getCurrentSetup();
-    if (setup) initTuneModeCompat(setup);
-  }
 }
 
 export function _onEditorChange(): void {
@@ -1208,29 +1053,6 @@ export function init(): void {
     document.getElementById('mode-optimize')?.classList.add('hidden');
     document.getElementById('mode-compendium')?.classList.add('hidden');
     document.getElementById('mode-howitworks')?.classList.add('hidden');
-  }
-
-  const storedLoadouts = loadSavedLoadouts();
-  setSavedLoadouts(storedLoadouts);
-
-  try {
-    const storedActiveLoadout = loadActiveLoadout();
-    if (storedActiveLoadout) {
-      setActiveLoadout(storedActiveLoadout);
-    } else {
-      const activeId = loadActiveLoadoutId();
-      if (activeId && storedLoadouts.length > 0) {
-      const saved = storedLoadouts.find((loadout) => loadout.id === activeId);
-      if (saved) {
-        const active = { ...saved, _dirty: false };
-        setActiveLoadout(active);
-      }
-    }
-    }
-  } catch (error) {
-    reportRuntimeIssue('LOAD_ACTIVE_FROM_STORAGE', 'Failed to restore active loadout from storage.', {
-      details: error,
-    });
   }
 
   if (!_storeSubscriptionsInstalled) {

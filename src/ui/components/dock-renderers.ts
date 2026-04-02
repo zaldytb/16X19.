@@ -193,11 +193,23 @@ function _dockCurrentBuildCardHtml(opts: {
 }
 
 function getComparisonSlots(): DockComparisonSlot[] {
-  return getAppComparisonSlots<DockComparisonSlot>();
+  return getAppComparisonSlots()
+    .filter((slot) => slot.loadout !== null && slot.stats !== null)
+    .map((slot) => ({
+      racquetId: slot.loadout.frameId,
+      stringId: slot.loadout.stringId || undefined,
+      mainsId: slot.loadout.mainsId || undefined,
+      crossesId: slot.loadout.crossesId || undefined,
+      mainsTension: slot.loadout.mainsTension,
+      crossesTension: slot.loadout.crossesTension,
+      isHybrid: slot.loadout.isHybrid || false,
+      stats: slot.stats as unknown as Record<string, number>,
+      identity: slot.loadout.identity ? { archetype: slot.loadout.identity } : undefined,
+    }));
 }
 
 function getSlotColors(): DockSlotColor[] {
-  return getAppSlotColors<DockSlotColor>();
+  return getAppSlotColors();
 }
 
 function getDockEditorContext() {

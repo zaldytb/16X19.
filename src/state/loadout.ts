@@ -14,20 +14,18 @@ import {
 import {
   getActiveLoadout as _getActiveLoadout,
   getSavedLoadouts as _getSavedLoadouts,
-  setActiveLoadout as _setActiveLoadout,
-  setSavedLoadouts as _setSavedLoadouts,
   addSavedLoadout as _addSavedLoadout,
   removeSavedLoadout as _removeSavedLoadout,
   updateSavedLoadout as _updateSavedLoadout
 } from './imperative.js';
+import { getSetupFromLoadout } from './setup-sync.js';
+import { getBrowserStorage, loadLegacySavedLoadouts } from './legacy-storage.js';
 
 // Re-export the core store accessors from this loadout-focused surface.
 export { getActiveLoadout, getSavedLoadouts, setActiveLoadout, setSavedLoadouts } from './imperative.js';
 
 // Persistence helper
-const _store = (function(): Storage | null { 
-  try { return window['local' + 'Storage' as keyof Window] as Storage; } catch(e) { return null; }
-})();
+const _store = getBrowserStorage();
 
 interface CreateLoadoutOptions {
   id?: string;
@@ -40,23 +38,6 @@ interface CreateLoadoutOptions {
   mainsGauge?: string | null;
   crossesGauge?: string | null;
   source?: string;
-}
-
-function toFiniteNumber(value: unknown, fallback: number): number {
-  const numeric = typeof value === 'number' ? value : Number(value);
-  return Number.isFinite(numeric) ? numeric : fallback;
-}
-
-function normalizeStoredLoadout(loadout: Loadout): Loadout {
-  return {
-    ...loadout,
-    mainsTension: toFiniteNumber(loadout.mainsTension, 55),
-    crossesTension: toFiniteNumber(loadout.crossesTension, toFiniteNumber(loadout.mainsTension, 53)),
-    obs: toFiniteNumber(loadout.obs, 0),
-    gauge: loadout.gauge == null ? null : String(loadout.gauge),
-    mainsGauge: loadout.mainsGauge == null ? null : String(loadout.mainsGauge),
-    crossesGauge: loadout.crossesGauge == null ? null : String(loadout.crossesGauge),
-  };
 }
 
 /**
@@ -138,19 +119,7 @@ export function persistSavedLoadouts(): void {
  * Load saved loadouts from localStorage
  */
 export function loadSavedLoadouts(): Loadout[] {
-  try {
-    if (!_store) return [];
-    const stored = _store.getItem('tll-loadouts');
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed)) {
-        return parsed
-          .filter((item): item is Loadout => !!item && typeof item === 'object')
-          .map((item) => normalizeStoredLoadout(item));
-      }
-    }
-  } catch(e) {}
-  return [];
+  return loadLegacySavedLoadouts();
 }
 
 /**
@@ -167,7 +136,6 @@ export function saveLoadout(loadout: Loadout): void {
   } else {
     _addSavedLoadout(copy);
   }
-  persistSavedLoadouts();
 }
 
 /**
@@ -175,7 +143,6 @@ export function saveLoadout(loadout: Loadout): void {
  */
 export function removeLoadout(loadoutId: string): void {
   _removeSavedLoadout(loadoutId);
-  persistSavedLoadouts();
 }
 
 /**
@@ -190,42 +157,6 @@ export function switchToLoadout(loadoutId: string): Loadout | null {
     return copy;
   }
   return null;
-}
-
-export interface SetupFromLoadoutResult {
-  racquet: Racquet;
-  stringConfig: StringConfig;
-  loadout: Loadout;
-}
-
-/**
- * Get setup from a loadout object
- */
-export function getSetupFromLoadout(loadout: Loadout | null): SetupFromLoadoutResult | null {
-  if (!loadout) return null;
-  const racquet = RACQUETS.find(r => r.id === loadout.frameId) as Racquet | undefined;
-  if (!racquet) return null;
-
-  let string: StringData | undefined;
-  let mains: StringData | undefined;
-  let crosses: StringData | undefined;
-  if (loadout.isHybrid) {
-    mains = STRINGS.find(s => s.id === loadout.mainsId) as StringData | undefined;
-    crosses = STRINGS.find(s => s.id === loadout.crossesId) as StringData | undefined;
-    if (loadout.mainsGauge && mains) mains = applyGaugeModifier(mains, parseFloat(loadout.mainsGauge));
-    if (loadout.crossesGauge && crosses) crosses = applyGaugeModifier(crosses, parseFloat(loadout.crossesGauge));
-  } else {
-    string = STRINGS.find(s => s.id === loadout.stringId) as StringData | undefined;
-    if (loadout.gauge && string) string = applyGaugeModifier(string, parseFloat(loadout.gauge));
-  }
-
-  // Non-null assertions safe: if loadout.isHybrid, mains/crosses were found above;
-  // if !loadout.isHybrid, string was found above
-  const stringConfig = loadout.isHybrid
-    ? { isHybrid: true as const, mains: mains!, crosses: crosses!, mainsTension: loadout.mainsTension, crossesTension: loadout.crossesTension }
-    : { isHybrid: false as const, string: string!, mainsTension: loadout.mainsTension, crossesTension: loadout.crossesTension };
-
-  return { racquet, stringConfig, loadout };
 }
 
 /**
@@ -258,7 +189,6 @@ export function importLoadouts(jsonString: string): number {
       }
     });
     
-    persistSavedLoadouts();
     return imported;
   } catch(e) {
     return 0;

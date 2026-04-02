@@ -5,7 +5,8 @@
       "Bash(cmd.exe /c \"where node && node --version\")",
       "Bash(powershell.exe -NoProfile -Command \"& { node pipeline/scripts/estimate.js }\")",
       "Bash(npm run:*)",
-      "Bash(node -e \":*)"
+      "Bash(node -e \":*)",
+      "Bash(xargs grep:*)"
     ]
   }
 }

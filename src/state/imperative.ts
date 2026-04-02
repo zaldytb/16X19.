@@ -1,6 +1,7 @@
 // Imperative accessors for vanilla TS / runtime (Zustand is the only source of truth).
 
 import type { Loadout } from '../engine/types.js';
+import type { RadarDataset, Slot, SlotColor, SlotId } from '../ui/pages/compare/types.js';
 import {
   useAppStore,
   type AppMode,
@@ -57,36 +58,56 @@ export function setCurrentMode(mode: AppMode): void {
   useAppStore.getState().setCurrentMode(mode);
 }
 
-export function getComparisonSlots<T = unknown>(): T[] {
-  return useAppStore.getState().comparisonSlots as T[];
+export function getComparisonSlots(): Slot[] {
+  return useAppStore.getState().comparisonSlots;
 }
 
-export function setComparisonSlots<T = unknown>(slots: T[]): void {
-  useAppStore.getState().setComparisonSlots(slots as unknown[]);
+export function setComparisonSlots(slots: Slot[]): void {
+  useAppStore.getState().setComparisonSlots(slots);
 }
 
-export function getComparisonRadarChart<T = unknown>(): T | null {
-  return (useAppStore.getState().comparisonRadarChart as T | null) ?? null;
+export function setCompareSlotLoadout(slotId: SlotId, loadout: Loadout, stats: NonNullable<Loadout['stats']>): void {
+  useAppStore.getState().setCompareSlotLoadout(slotId, loadout, stats);
 }
 
-export function setComparisonRadarChart<T = unknown>(chart: T | null): void {
+export function clearCompareSlot(slotId: SlotId): void {
+  useAppStore.getState().clearCompareSlot(slotId);
+}
+
+export function moveCompareSlot(fromId: SlotId, toId: SlotId): void {
+  useAppStore.getState().moveCompareSlot(fromId, toId);
+}
+
+export function setCompareEditingSlot(slotId: SlotId | null): void {
+  useAppStore.getState().setCompareEditingSlot(slotId);
+}
+
+export function resetCompare(): void {
+  useAppStore.getState().resetCompare();
+}
+
+export function getComparisonRadarChart(): RadarDataset[] | null {
+  return useAppStore.getState().comparisonRadarChart;
+}
+
+export function setComparisonRadarChart(chart: RadarDataset[] | null): void {
   useAppStore.getState().setComparisonRadarChart(chart);
 }
 
-export function getCurrentRadarChart<T = unknown>(): T | null {
-  return (useAppStore.getState().currentRadarChart as T | null) ?? null;
+export function getCurrentRadarChart(): RadarDataset[] | null {
+  return useAppStore.getState().currentRadarChart;
 }
 
-export function setCurrentRadarChart<T = unknown>(chart: T | null): void {
+export function setCurrentRadarChart(chart: RadarDataset[] | null): void {
   useAppStore.getState().setCurrentRadarChart(chart);
 }
 
-export function getSlotColors<T = unknown>(): T[] {
-  return useAppStore.getState().slotColors as T[];
+export function getSlotColors(): SlotColor[] {
+  return useAppStore.getState().slotColors;
 }
 
-export function setSlotColors<T = unknown>(colors: T[]): void {
-  useAppStore.getState().setSlotColors(colors as unknown[]);
+export function setSlotColors(colors: SlotColor[]): void {
+  useAppStore.getState().setSlotColors(colors);
 }
 
 export function getDockEditorContext(): DockEditorContext {

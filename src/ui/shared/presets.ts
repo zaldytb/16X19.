@@ -4,7 +4,7 @@
 import { RACQUETS, STRINGS } from '../../data/loader.js';
 import type { Racquet, StringConfig, StringData } from '../../engine/types.js';
 import type { Loadout } from '../../engine/types.js';
-import { getActiveLoadout, getSavedLoadouts, getComparisonSlots } from '../../state/imperative.js';
+import { getActiveLoadout, getSavedLoadouts } from '../../state/imperative.js';
 import { getCurrentSetup } from '../../state/setup-sync.js';
 import { predictSetup, computeCompositeScore, buildTensionContext } from '../../engine/index.js';
 import { createLoadout } from '../../state/loadout.js';
@@ -369,36 +369,19 @@ export function registerPresetCallbacks(cbs: PresetCallbacks): void {
 
 function getComparisonSlotKeys(): Set<string> {
   const compareState = compareGetState();
-  if (compareState?.slots?.length) {
-    return new Set(
-      compareState.slots
-        .filter((slot: { loadout?: Loadout | null }) => !!slot.loadout)
-        .map((slot: { loadout?: Loadout | null }) => {
-          const loadout = slot.loadout as Loadout;
-          const stringKey = loadout.isHybrid
-            ? `${loadout.mainsId || ''}/${loadout.crossesId || ''}`
-            : loadout.stringId || '';
-          return `${loadout.frameId}|${stringKey}|${loadout.mainsTension}|${loadout.crossesTension}`;
-        })
-    );
+  if (!compareState?.slots?.length) {
+    return new Set();
   }
 
   return new Set(
-    getComparisonSlots<{
-      racquetId: string;
-      stringId?: string;
-      mainsId?: string;
-      crossesId?: string;
-      mainsTension: number;
-      crossesTension: number;
-      isHybrid?: boolean;
-    }>()
-      .filter((slot) => !!slot?.racquetId)
-      .map((slot) => {
-        const stringKey = slot.isHybrid
-          ? `${slot.mainsId || ''}/${slot.crossesId || ''}`
-          : slot.stringId || '';
-        return `${slot.racquetId}|${stringKey}|${slot.mainsTension}|${slot.crossesTension}`;
+    compareState.slots
+      .filter((slot: { loadout?: Loadout | null }) => !!slot.loadout)
+      .map((slot: { loadout?: Loadout | null }) => {
+        const loadout = slot.loadout as Loadout;
+        const stringKey = loadout.isHybrid
+          ? `${loadout.mainsId || ''}/${loadout.crossesId || ''}`
+          : loadout.stringId || '';
+        return `${loadout.frameId}|${stringKey}|${loadout.mainsTension}|${loadout.crossesTension}`;
       })
   );
 }

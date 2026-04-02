@@ -5,13 +5,13 @@ import {
   getDockEditorContext,
   setDockEditorContext,
 } from '../state/imperative.js';
+import { useAppStore } from '../state/useAppStore.js';
 import { renderCompareRefreshViaBridge } from '../ui/pages/compare-runtime-bridge.js';
 import { renderOverviewDashboardViaBridge } from '../ui/pages/overview-runtime-bridge.js';
 import { refreshTuneIfActiveViaBridge } from '../ui/pages/tune-runtime-bridge.js';
 import { hydrateDock, renderDockContextPanel, renderDockPanel } from '../ui/components/dock-renderers.js';
 import { reconcileDockEditorContext } from './contracts.js';
 import { reportRuntimeIssue } from './diagnostics.js';
-import { registerCompareStateRefreshHandler } from './compare-refresh-bridge.js';
 
 /** Only the latest `syncViews()` invocation may apply deferred async work (dynamic imports + dock context). */
 let _syncViewsGeneration = 0;
@@ -63,7 +63,7 @@ export function syncViews(reason: string, changed: ViewChangeSet): void {
     const currentContext = getDockEditorContext();
     const nextContext = reconcileDockEditorContext(
       currentContext,
-      getComparisonSlots<{ id: string | number }>(),
+      getComparisonSlots(),
     );
     if (
       nextContext.kind !== currentContext.kind ||
@@ -131,6 +131,6 @@ export function syncViews(reason: string, changed: ViewChangeSet): void {
   }
 }
 
-registerCompareStateRefreshHandler(() => {
+useAppStore.subscribe((state) => state.comparisonSlots, () => {
   syncViews('compare-state-change', { compareState: true });
 });

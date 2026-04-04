@@ -19,3 +19,6 @@ tools/frame-gui/build/
 
 .vercel
 .firecrawl/
+
+.vercel
+.env*.local

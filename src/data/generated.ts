@@ -7764,6 +7764,90 @@ export const RACQUETS: Racquet[] = [
     "frameProfile": "Spin Effect 18x16, Countervail, high launch",
     "identity": "Burn Spin",
     "notes": "Burn 100S Countervail — 18x16 Spin Effect pattern. Strung specs from RacketLogger / retail: ~318g, 325 swingweight, 4 pts HL, 69 RA. Iconic Wilson spin tweener from the CV generation."
+  },
+  {
+    "id": "mizuno-acrospeed-300-2026",
+    "name": "Mizuno Acrospeed 300 318g",
+    "year": 2026,
+    "headSize": 100,
+    "length": 27,
+    "strungWeight": 318,
+    "balance": 33.02,
+    "balancePts": "4 pts HL",
+    "swingweight": 324,
+    "stiffness": 69,
+    "beamWidth": [
+      24,
+      26,
+      21
+    ],
+    "pattern": "16x19",
+    "powerLevel": "Low-Medium",
+    "strokeStyle": "Medium-Full",
+    "swingSpeed": "Fast",
+    "tensionRange": [
+      45,
+      60
+    ],
+    "frameProfile": "Variable beam with Booster Grommet system, Enerzy beam construction, Dual Spring layup",
+    "identity": "Power Spin Machine",
+    "notes": "Modern player's racquet combining raw speed with easy power and spin. Booster Grommet system increases dwell time and bite. Enerzy beam reduces deformation, Dual Spring carbon fiber returns extra energy."
+  },
+  {
+    "id": "mizuno-acrostrike-305-2026",
+    "name": "Mizuno Acrostrike 305 323g",
+    "year": 2026,
+    "headSize": 98,
+    "length": 27,
+    "strungWeight": 323,
+    "balance": 33.48,
+    "balancePts": "3 pts HL",
+    "swingweight": 325,
+    "stiffness": 63,
+    "beamWidth": [
+      21,
+      23,
+      22
+    ],
+    "pattern": "16x19",
+    "powerLevel": "Low-Medium",
+    "strokeStyle": "Medium-Full",
+    "swingSpeed": "Medium-Fast",
+    "tensionRange": [
+      45,
+      60
+    ],
+    "frameProfile": "Flexible beam with 4WP Grommet system, Enerzy Beam construction, Dual Spring layup",
+    "identity": "Control Precision",
+    "notes": "Controllable power with great feel for intermediate/advanced players. 98 sq inch head with flexible beam for accuracy. 4WP Grommet system helps strings snap back for spin."
+  },
+  {
+    "id": "mizuno-acrostrike-290-2026",
+    "name": "Mizuno Acrostrike 290 303g",
+    "year": 2026,
+    "headSize": 98,
+    "length": 27,
+    "strungWeight": 303,
+    "balance": 33.48,
+    "balancePts": "3 pts HL",
+    "swingweight": 318,
+    "stiffness": 63,
+    "beamWidth": [
+      21,
+      23,
+      22
+    ],
+    "pattern": "16x19",
+    "powerLevel": "Low-Medium",
+    "strokeStyle": "Medium",
+    "swingSpeed": "Medium-Fast",
+    "tensionRange": [
+      45,
+      60
+    ],
+    "frameProfile": "Light flexible beam with 4WP Grommet system (nanoalloy), Enerzy beam, Dual Spring layup",
+    "identity": "Speed Precision",
+    "notes": "Speedy racquet with precision and feel for rising intermediate players. Sub-320 swingweight glides through contact. 4WP Grommet with nanoalloy absorbs vibration for smooth feel."
   }
 ];
 
@@ -10606,13 +10690,31 @@ export const FRAME_META: Record<string, FrameMeta> = {
     "comfortTech": 1,
     "spinTech": 1.5,
     "genBonus": 0
+  },
+  "mizuno-acrospeed-300-2026": {
+    "aeroBonus": 0.5,
+    "comfortTech": 0.5,
+    "spinTech": 1,
+    "genBonus": 0
+  },
+  "mizuno-acrostrike-305-2026": {
+    "aeroBonus": 0,
+    "comfortTech": 1,
+    "spinTech": 0.5,
+    "genBonus": 0
+  },
+  "mizuno-acrostrike-290-2026": {
+    "aeroBonus": 0,
+    "comfortTech": 1,
+    "spinTech": 0.5,
+    "genBonus": 0
   }
 };
 
 export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   "babolat-pure-aero-100-2023": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "midplus",
@@ -10624,12 +10726,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.584,
-      "swingweight": 0.48,
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.479,
       "stiffness": 0.676,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -10653,7 +10755,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "head-speed-mp-2024": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "midplus",
@@ -10665,12 +10767,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.445,
-      "swingweight": 0.922,
-      "stiffness": 0.345,
-      "avgBeam": 0.516,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.444,
+      "swingweight": 0.923,
+      "stiffness": 0.349,
+      "avgBeam": 0.518,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -10689,7 +10791,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "head-speed-mp-legend-2025": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.4,
     "bands": {
       "headSize": "midplus",
@@ -10701,12 +10803,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.584,
-      "swingweight": 0.875,
-      "stiffness": 0.121,
-      "avgBeam": 0.516,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.877,
+      "stiffness": 0.12,
+      "avgBeam": 0.518,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -10747,11 +10849,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "18x20"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.872,
-      "swingweight": 0.861,
-      "stiffness": 0.174,
-      "avgBeam": 0.516,
+      "headSize": 0.859,
+      "strungWeight": 0.873,
+      "swingweight": 0.863,
+      "stiffness": 0.173,
+      "avgBeam": 0.518,
       "openness": 0.06
     },
     "rarityTags": [
@@ -10788,11 +10890,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "18x20"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.797,
-      "swingweight": 0.922,
-      "stiffness": 0.263,
-      "avgBeam": 0.516,
+      "headSize": 0.859,
+      "strungWeight": 0.799,
+      "swingweight": 0.923,
+      "stiffness": 0.261,
+      "avgBeam": 0.518,
       "openness": 0.06
     },
     "rarityTags": [
@@ -10812,7 +10914,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "wilson-blade-98-v8": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "players",
@@ -10824,12 +10926,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
+      "headSize": 0.331,
       "strungWeight": 0.641,
-      "swingweight": 0.619,
-      "stiffness": 0.345,
-      "avgBeam": 0.107,
-      "openness": 0.943
+      "swingweight": 0.616,
+      "stiffness": 0.349,
+      "avgBeam": 0.106,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -10860,12 +10962,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
+      "headSize": 0.859,
       "strungWeight": 0.662,
-      "swingweight": 0.662,
+      "swingweight": 0.658,
       "stiffness": 0.982,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -10889,7 +10991,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "yonex-ezone-100-2024": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.36,
     "bands": {
       "headSize": "midplus",
@@ -10901,12 +11003,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.445,
-      "swingweight": 0.48,
-      "stiffness": 0.854,
-      "avgBeam": 0.883,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.444,
+      "swingweight": 0.479,
+      "stiffness": 0.852,
+      "avgBeam": 0.884,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -10935,7 +11037,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "wilson-pro-staff-97-v14": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "players",
@@ -10948,11 +11050,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     },
     "percentiles": {
       "headSize": 0.085,
-      "strungWeight": 0.797,
-      "swingweight": 0.537,
-      "stiffness": 0.263,
-      "avgBeam": 0.174,
-      "openness": 0.943
+      "strungWeight": 0.799,
+      "swingweight": 0.535,
+      "stiffness": 0.261,
+      "avgBeam": 0.173,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -10983,12 +11085,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x20"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.779,
-      "swingweight": 0.619,
+      "headSize": 0.331,
+      "strungWeight": 0.782,
+      "swingweight": 0.616,
       "stiffness": 0.676,
-      "avgBeam": 0.367,
-      "openness": 0.164
+      "avgBeam": 0.37,
+      "openness": 0.162
     },
     "rarityTags": [
       {
@@ -11012,7 +11114,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "babolat-pure-aero-100-2026": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.48,
     "bands": {
       "headSize": "midplus",
@@ -11024,12 +11126,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.584,
-      "swingweight": 0.537,
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.535,
       "stiffness": 0.676,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -11075,12 +11177,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.31,
-      "swingweight": 0.174,
+      "headSize": 0.859,
+      "strungWeight": 0.306,
+      "swingweight": 0.173,
       "stiffness": 0.676,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -11114,7 +11216,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "head-speed-mp-2026": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.4,
     "bands": {
       "headSize": "midplus",
@@ -11126,12 +11228,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.584,
-      "swingweight": 0.875,
-      "stiffness": 0.121,
-      "avgBeam": 0.516,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.877,
+      "stiffness": 0.12,
+      "avgBeam": 0.518,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -11172,11 +11274,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "18x20"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.872,
-      "swingweight": 0.861,
-      "stiffness": 0.174,
-      "avgBeam": 0.516,
+      "headSize": 0.859,
+      "strungWeight": 0.873,
+      "swingweight": 0.863,
+      "stiffness": 0.173,
+      "avgBeam": 0.518,
       "openness": 0.06
     },
     "rarityTags": [
@@ -11218,12 +11320,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.214,
-      "swingweight": 0.406,
-      "stiffness": 0.174,
-      "avgBeam": 0.516,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.211,
+      "swingweight": 0.401,
+      "stiffness": 0.173,
+      "avgBeam": 0.518,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -11264,11 +11366,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x18"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.779,
-      "swingweight": 0.619,
-      "stiffness": 0.263,
-      "avgBeam": 0.367,
+      "headSize": 0.331,
+      "strungWeight": 0.782,
+      "swingweight": 0.616,
+      "stiffness": 0.261,
+      "avgBeam": 0.37,
       "openness": 1
     },
     "rarityTags": [
@@ -11315,11 +11417,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x18"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.413,
-      "swingweight": 0.324,
+      "headSize": 0.859,
+      "strungWeight": 0.412,
+      "swingweight": 0.32,
       "stiffness": 0.039,
-      "avgBeam": 0.384,
+      "avgBeam": 0.387,
       "openness": 1
     },
     "rarityTags": [
@@ -11371,12 +11473,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
+      "headSize": 0.859,
       "strungWeight": 0.641,
-      "swingweight": 0.619,
-      "stiffness": 0.58,
-      "avgBeam": 0.897,
-      "openness": 0.943
+      "swingweight": 0.616,
+      "stiffness": 0.581,
+      "avgBeam": 0.898,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -11412,11 +11514,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "18x20"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.943,
-      "swingweight": 0.875,
+      "headSize": 0.859,
+      "strungWeight": 0.944,
+      "swingweight": 0.877,
       "stiffness": 0.085,
-      "avgBeam": 0.043,
+      "avgBeam": 0.042,
       "openness": 0.06
     },
     "rarityTags": [
@@ -11441,7 +11543,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "head-gravity-tour-2025": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "players",
@@ -11453,12 +11555,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.779,
-      "swingweight": 0.861,
+      "headSize": 0.331,
+      "strungWeight": 0.782,
+      "swingweight": 0.863,
       "stiffness": 0.085,
-      "avgBeam": 0.367,
-      "openness": 0.943
+      "avgBeam": 0.37,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -11489,12 +11591,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x20"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.413,
-      "swingweight": 0.662,
+      "headSize": 0.859,
+      "strungWeight": 0.412,
+      "swingweight": 0.658,
       "stiffness": 0.039,
-      "avgBeam": 0.367,
-      "openness": 0.164
+      "avgBeam": 0.37,
+      "openness": 0.162
     },
     "rarityTags": [
       {
@@ -11525,12 +11627,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x20"
     },
     "percentiles": {
-      "headSize": 0.356,
-      "strungWeight": 0.584,
-      "swingweight": 0.452,
-      "stiffness": 0.779,
-      "avgBeam": 0.569,
-      "openness": 0.164
+      "headSize": 0.359,
+      "strungWeight": 0.585,
+      "swingweight": 0.447,
+      "stiffness": 0.778,
+      "avgBeam": 0.57,
+      "openness": 0.162
     },
     "rarityTags": [
       {
@@ -11561,12 +11663,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x20"
     },
     "percentiles": {
-      "headSize": 0.356,
-      "strungWeight": 0.31,
-      "swingweight": 0.302,
-      "stiffness": 0.854,
-      "avgBeam": 0.569,
-      "openness": 0.164
+      "headSize": 0.359,
+      "strungWeight": 0.306,
+      "swingweight": 0.299,
+      "stiffness": 0.852,
+      "avgBeam": 0.57,
+      "openness": 0.162
     },
     "rarityTags": [
       {
@@ -11597,12 +11699,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x20"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.779,
-      "swingweight": 0.619,
+      "headSize": 0.331,
+      "strungWeight": 0.782,
+      "swingweight": 0.616,
       "stiffness": 0.676,
-      "avgBeam": 0.367,
-      "openness": 0.164
+      "avgBeam": 0.37,
+      "openness": 0.162
     },
     "rarityTags": [
       {
@@ -11626,7 +11728,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "wilson-rf01-pro-2025": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "players",
@@ -11638,12 +11740,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
+      "headSize": 0.331,
       "strungWeight": 0.986,
-      "swingweight": 0.929,
-      "stiffness": 0.779,
-      "avgBeam": 0.434,
-      "openness": 0.943
+      "swingweight": 0.93,
+      "stiffness": 0.778,
+      "avgBeam": 0.437,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -11674,12 +11776,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.584,
-      "swingweight": 0.491,
-      "stiffness": 0.47,
-      "avgBeam": 0.434,
-      "openness": 0.943
+      "headSize": 0.331,
+      "strungWeight": 0.585,
+      "swingweight": 0.489,
+      "stiffness": 0.472,
+      "avgBeam": 0.437,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -11711,11 +11813,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     },
     "percentiles": {
       "headSize": 0.085,
-      "strungWeight": 0.943,
-      "swingweight": 0.619,
-      "stiffness": 0.345,
-      "avgBeam": 0.117,
-      "openness": 0.164
+      "strungWeight": 0.944,
+      "swingweight": 0.616,
+      "stiffness": 0.349,
+      "avgBeam": 0.116,
+      "openness": 0.162
     },
     "rarityTags": [],
     "hintWeights": {
@@ -11728,7 +11830,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "babolat-pure-strike-98-16x19-2025": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "players",
@@ -11740,12 +11842,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.779,
-      "swingweight": 0.922,
-      "stiffness": 0.47,
-      "avgBeam": 0.217,
-      "openness": 0.943
+      "headSize": 0.331,
+      "strungWeight": 0.782,
+      "swingweight": 0.923,
+      "stiffness": 0.472,
+      "avgBeam": 0.215,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -11781,11 +11883,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "18x20"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.779,
+      "headSize": 0.331,
+      "strungWeight": 0.782,
       "swingweight": 0.947,
-      "stiffness": 0.345,
-      "avgBeam": 0.217,
+      "stiffness": 0.349,
+      "avgBeam": 0.215,
       "openness": 0.06
     },
     "rarityTags": [
@@ -11810,7 +11912,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "babolat-pure-strike-100-16x19-2025": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "midplus",
@@ -11822,12 +11924,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.584,
-      "swingweight": 0.719,
-      "stiffness": 0.345,
-      "avgBeam": 0.217,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.718,
+      "stiffness": 0.349,
+      "avgBeam": 0.215,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -11851,7 +11953,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "solinco-whiteout-v2-290-2025": {
     "bucketKey": "players|16x19|light",
-    "bucketSize": 9,
+    "bucketSize": 10,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "players",
@@ -11863,12 +11965,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
+      "headSize": 0.331,
       "strungWeight": 0.349,
-      "swingweight": 0.388,
-      "stiffness": 0.58,
-      "avgBeam": 0.224,
-      "openness": 0.943
+      "swingweight": 0.384,
+      "stiffness": 0.581,
+      "avgBeam": 0.222,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -11887,7 +11989,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "solinco-whiteout-v2-305-2025": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "players",
@@ -11899,12 +12001,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.779,
-      "swingweight": 0.861,
-      "stiffness": 0.58,
-      "avgBeam": 0.224,
-      "openness": 0.943
+      "headSize": 0.331,
+      "strungWeight": 0.782,
+      "swingweight": 0.863,
+      "stiffness": 0.581,
+      "avgBeam": 0.222,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -11935,12 +12037,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
+      "headSize": 0.859,
       "strungWeight": 0.641,
-      "swingweight": 0.452,
+      "swingweight": 0.447,
       "stiffness": 0.676,
-      "avgBeam": 0.89,
-      "openness": 0.943
+      "avgBeam": 0.891,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -11976,12 +12078,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.31,
-      "swingweight": 0.37,
-      "stiffness": 0.779,
-      "avgBeam": 0.89,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.306,
+      "swingweight": 0.366,
+      "stiffness": 0.778,
+      "avgBeam": 0.891,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -12005,7 +12107,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "head-speed-tour-2026": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.4,
     "bands": {
       "headSize": "players",
@@ -12018,11 +12120,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     },
     "percentiles": {
       "headSize": 0.085,
-      "strungWeight": 0.779,
-      "swingweight": 0.783,
-      "stiffness": 0.174,
-      "avgBeam": 0.516,
-      "openness": 0.943
+      "strungWeight": 0.782,
+      "swingweight": 0.785,
+      "stiffness": 0.173,
+      "avgBeam": 0.518,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -12063,12 +12165,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.146,
-      "swingweight": 0.128,
-      "stiffness": 0.345,
+      "headSize": 0.859,
+      "strungWeight": 0.144,
+      "swingweight": 0.127,
+      "stiffness": 0.349,
       "avgBeam": 0.986,
-      "openness": 0.943
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -12099,12 +12201,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.932,
-      "strungWeight": 0.114,
-      "swingweight": 0.128,
-      "stiffness": 0.263,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "headSize": 0.933,
+      "strungWeight": 0.113,
+      "swingweight": 0.127,
+      "stiffness": 0.261,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -12135,12 +12237,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.05,
+      "headSize": 0.859,
+      "strungWeight": 0.049,
       "swingweight": 0.028,
-      "stiffness": 0.174,
-      "avgBeam": 0.516,
-      "openness": 0.943
+      "stiffness": 0.173,
+      "avgBeam": 0.518,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -12164,7 +12266,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "head-boom-pro-2026": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.28,
     "bands": {
       "headSize": "players",
@@ -12176,12 +12278,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.872,
-      "swingweight": 0.783,
-      "stiffness": 0.47,
-      "avgBeam": 0.231,
-      "openness": 0.943
+      "headSize": 0.331,
+      "strungWeight": 0.873,
+      "swingweight": 0.785,
+      "stiffness": 0.472,
+      "avgBeam": 0.229,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -12205,7 +12307,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "head-boom-mp-2026": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.48,
     "bands": {
       "headSize": "midplus",
@@ -12217,12 +12319,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.413,
-      "swingweight": 0.406,
-      "stiffness": 0.174,
-      "avgBeam": 0.516,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.412,
+      "swingweight": 0.401,
+      "stiffness": 0.173,
+      "avgBeam": 0.518,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -12268,12 +12370,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.146,
-      "swingweight": 0.167,
-      "stiffness": 0.345,
-      "avgBeam": 0.516,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.144,
+      "swingweight": 0.165,
+      "stiffness": 0.349,
+      "avgBeam": 0.518,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -12314,12 +12416,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
+      "headSize": 0.859,
       "strungWeight": 0.014,
       "swingweight": 0.025,
-      "stiffness": 0.263,
-      "avgBeam": 0.516,
-      "openness": 0.943
+      "stiffness": 0.261,
+      "avgBeam": 0.518,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -12357,10 +12459,10 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     "percentiles": {
       "headSize": 0.972,
       "strungWeight": 0.032,
-      "swingweight": 0.345,
-      "stiffness": 0.263,
+      "swingweight": 0.342,
+      "stiffness": 0.261,
       "avgBeam": 0.986,
-      "openness": 0.943
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -12397,11 +12499,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     },
     "percentiles": {
       "headSize": 0.972,
-      "strungWeight": 0.114,
-      "swingweight": 0.285,
-      "stiffness": 0.263,
-      "avgBeam": 0.573,
-      "openness": 0.943
+      "strungWeight": 0.113,
+      "swingweight": 0.282,
+      "stiffness": 0.261,
+      "avgBeam": 0.577,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -12425,7 +12527,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "head-radical-pro-2025": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.3,
     "bands": {
       "headSize": "players",
@@ -12437,12 +12539,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.943,
-      "swingweight": 0.875,
-      "stiffness": 0.58,
+      "headSize": 0.331,
+      "strungWeight": 0.944,
+      "swingweight": 0.877,
+      "stiffness": 0.581,
       "avgBeam": 0.053,
-      "openness": 0.943
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -12478,12 +12580,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.584,
-      "swingweight": 0.662,
+      "headSize": 0.331,
+      "strungWeight": 0.585,
+      "swingweight": 0.658,
       "stiffness": 0.676,
-      "avgBeam": 0.117,
-      "openness": 0.943
+      "avgBeam": 0.116,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -12519,12 +12621,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.875,
-      "strungWeight": 0.214,
-      "swingweight": 0.128,
-      "stiffness": 0.345,
-      "avgBeam": 0.541,
-      "openness": 0.943
+      "headSize": 0.877,
+      "strungWeight": 0.211,
+      "swingweight": 0.127,
+      "stiffness": 0.349,
+      "avgBeam": 0.542,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -12560,12 +12662,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.875,
-      "strungWeight": 0.05,
-      "swingweight": 0.149,
+      "headSize": 0.877,
+      "strungWeight": 0.049,
+      "swingweight": 0.148,
       "stiffness": 0.676,
-      "avgBeam": 0.541,
-      "openness": 0.943
+      "avgBeam": 0.542,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -12589,7 +12691,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "head-extreme-pro-2024": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "players",
@@ -12601,12 +12703,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.779,
-      "swingweight": 0.619,
-      "stiffness": 0.47,
-      "avgBeam": 0.367,
-      "openness": 0.943
+      "headSize": 0.331,
+      "strungWeight": 0.782,
+      "swingweight": 0.616,
+      "stiffness": 0.472,
+      "avgBeam": 0.37,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -12630,7 +12732,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "head-extreme-mp-2024": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "midplus",
@@ -12642,12 +12744,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.584,
-      "swingweight": 0.662,
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.658,
       "stiffness": 0.676,
-      "avgBeam": 0.541,
-      "openness": 0.943
+      "avgBeam": 0.542,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -12683,12 +12785,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.932,
-      "strungWeight": 0.05,
-      "swingweight": 0.149,
-      "stiffness": 0.174,
-      "avgBeam": 0.541,
-      "openness": 0.943
+      "headSize": 0.933,
+      "strungWeight": 0.049,
+      "swingweight": 0.148,
+      "stiffness": 0.173,
+      "avgBeam": 0.542,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -12724,12 +12826,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.214,
-      "swingweight": 0.228,
-      "stiffness": 0.47,
-      "avgBeam": 0.541,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.211,
+      "swingweight": 0.225,
+      "stiffness": 0.472,
+      "avgBeam": 0.542,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -12765,12 +12867,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x20"
     },
     "percentiles": {
-      "headSize": 0.904,
-      "strungWeight": 0.114,
-      "swingweight": 0.149,
+      "headSize": 0.905,
+      "strungWeight": 0.113,
+      "swingweight": 0.148,
       "stiffness": 0.039,
-      "avgBeam": 0.851,
-      "openness": 0.164
+      "avgBeam": 0.852,
+      "openness": 0.162
     },
     "rarityTags": [],
     "hintWeights": {
@@ -12795,12 +12897,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x20"
     },
     "percentiles": {
-      "headSize": 0.904,
-      "strungWeight": 0.114,
-      "swingweight": 0.149,
+      "headSize": 0.905,
+      "strungWeight": 0.113,
+      "swingweight": 0.148,
       "stiffness": 0.039,
-      "avgBeam": 0.851,
-      "openness": 0.164
+      "avgBeam": 0.852,
+      "openness": 0.162
     },
     "rarityTags": [],
     "hintWeights": {
@@ -12825,11 +12927,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "18x20"
     },
     "percentiles": {
-      "headSize": 0.327,
+      "headSize": 0.331,
       "strungWeight": 0.986,
-      "swingweight": 0.719,
-      "stiffness": 0.057,
-      "avgBeam": 0.043,
+      "swingweight": 0.718,
+      "stiffness": 0.056,
+      "avgBeam": 0.042,
       "openness": 0.06
     },
     "rarityTags": [
@@ -12849,7 +12951,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "head-prestige-tour-2023": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "players",
@@ -12862,11 +12964,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     },
     "percentiles": {
       "headSize": 0.032,
-      "strungWeight": 0.943,
-      "swingweight": 0.922,
-      "stiffness": 0.263,
-      "avgBeam": 0.367,
-      "openness": 0.943
+      "strungWeight": 0.944,
+      "swingweight": 0.923,
+      "stiffness": 0.261,
+      "avgBeam": 0.37,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -12897,12 +12999,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "18x19"
     },
     "percentiles": {
-      "headSize": 0.356,
-      "strungWeight": 0.872,
-      "swingweight": 0.829,
-      "stiffness": 0.263,
-      "avgBeam": 0.174,
-      "openness": 0.075
+      "headSize": 0.359,
+      "strungWeight": 0.873,
+      "swingweight": 0.831,
+      "stiffness": 0.261,
+      "avgBeam": 0.173,
+      "openness": 0.074
     },
     "rarityTags": [
       {
@@ -12921,7 +13023,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "head-prestige-mp-l-2023": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "midplus",
@@ -12933,12 +13035,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.356,
-      "strungWeight": 0.584,
-      "swingweight": 0.249,
-      "stiffness": 0.174,
-      "avgBeam": 0.174,
-      "openness": 0.943
+      "headSize": 0.359,
+      "strungWeight": 0.585,
+      "swingweight": 0.246,
+      "stiffness": 0.173,
+      "avgBeam": 0.173,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -12969,12 +13071,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.356,
-      "strungWeight": 0.256,
-      "swingweight": 0.228,
-      "stiffness": 0.345,
-      "avgBeam": 0.174,
-      "openness": 0.943
+      "headSize": 0.359,
+      "strungWeight": 0.254,
+      "swingweight": 0.225,
+      "stiffness": 0.349,
+      "avgBeam": 0.173,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -13005,12 +13107,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
+      "headSize": 0.859,
       "strungWeight": 0.014,
       "swingweight": 0.004,
-      "stiffness": 0.47,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "stiffness": 0.472,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -13056,12 +13158,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.31,
-      "swingweight": 0.103,
-      "stiffness": 0.779,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.306,
+      "swingweight": 0.102,
+      "stiffness": 0.778,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -13097,12 +13199,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.114,
-      "swingweight": 0.149,
-      "stiffness": 0.58,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.113,
+      "swingweight": 0.148,
+      "stiffness": 0.581,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -13138,12 +13240,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
+      "headSize": 0.859,
       "strungWeight": 0.349,
-      "swingweight": 0.662,
-      "stiffness": 0.925,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "swingweight": 0.658,
+      "stiffness": 0.926,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -13179,12 +13281,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
+      "headSize": 0.859,
       "strungWeight": 0.986,
       "swingweight": 1,
       "stiffness": 0.961,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -13208,7 +13310,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "babolat-pure-drive-2021": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "midplus",
@@ -13220,12 +13322,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.584,
-      "swingweight": 0.537,
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.535,
       "stiffness": 0.982,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -13261,12 +13363,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.317,
-      "swingweight": 0.285,
+      "headSize": 0.859,
+      "strungWeight": 0.313,
+      "swingweight": 0.282,
       "stiffness": 0.993,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -13302,12 +13404,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.114,
-      "swingweight": 0.071,
-      "stiffness": 0.925,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.113,
+      "swingweight": 0.07,
+      "stiffness": 0.926,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -13343,12 +13445,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
+      "headSize": 0.859,
       "strungWeight": 0.349,
-      "swingweight": 0.199,
-      "stiffness": 0.47,
-      "avgBeam": 0.217,
-      "openness": 0.943
+      "swingweight": 0.197,
+      "stiffness": 0.472,
+      "avgBeam": 0.215,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -13384,12 +13486,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "18x19"
     },
     "percentiles": {
-      "headSize": 0.327,
+      "headSize": 0.331,
       "strungWeight": 0.641,
       "swingweight": 0.989,
-      "stiffness": 0.47,
-      "avgBeam": 0.406,
-      "openness": 0.075
+      "stiffness": 0.472,
+      "avgBeam": 0.408,
+      "openness": 0.074
     },
     "rarityTags": [
       {
@@ -13420,12 +13522,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "18x19"
     },
     "percentiles": {
-      "headSize": 0.327,
+      "headSize": 0.331,
       "strungWeight": 0.641,
-      "swingweight": 0.719,
-      "stiffness": 0.345,
-      "avgBeam": 0.406,
-      "openness": 0.075
+      "swingweight": 0.718,
+      "stiffness": 0.349,
+      "avgBeam": 0.408,
+      "openness": 0.074
     },
     "rarityTags": [
       {
@@ -13456,12 +13558,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.584,
-      "swingweight": 0.537,
+      "headSize": 0.331,
+      "strungWeight": 0.585,
+      "swingweight": 0.535,
       "stiffness": 0.676,
-      "avgBeam": 0.406,
-      "openness": 0.943
+      "avgBeam": 0.408,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -13492,12 +13594,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.242,
-      "swingweight": 0.128,
-      "stiffness": 0.345,
-      "avgBeam": 0.516,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.239,
+      "swingweight": 0.127,
+      "stiffness": 0.349,
+      "avgBeam": 0.518,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -13528,12 +13630,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.114,
+      "headSize": 0.859,
+      "strungWeight": 0.113,
       "swingweight": 0.085,
-      "stiffness": 0.58,
-      "avgBeam": 0.516,
-      "openness": 0.943
+      "stiffness": 0.581,
+      "avgBeam": 0.518,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -13564,12 +13666,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
+      "headSize": 0.859,
       "strungWeight": 0.014,
-      "swingweight": 0.071,
-      "stiffness": 0.779,
-      "avgBeam": 0.516,
-      "openness": 0.943
+      "swingweight": 0.07,
+      "stiffness": 0.778,
+      "avgBeam": 0.518,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -13600,11 +13702,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "18x20"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.779,
-      "swingweight": 0.861,
-      "stiffness": 0.47,
-      "avgBeam": 0.367,
+      "headSize": 0.331,
+      "strungWeight": 0.782,
+      "swingweight": 0.863,
+      "stiffness": 0.472,
+      "avgBeam": 0.37,
       "openness": 0.06
     },
     "rarityTags": [
@@ -13624,7 +13726,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "tecnifibre-tf40-305-16x19": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "players",
@@ -13636,12 +13738,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
+      "headSize": 0.331,
       "strungWeight": 0.641,
-      "swingweight": 0.537,
-      "stiffness": 0.47,
-      "avgBeam": 0.367,
-      "openness": 0.943
+      "swingweight": 0.535,
+      "stiffness": 0.472,
+      "avgBeam": 0.37,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -13660,7 +13762,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "tecnifibre-tf40-315-16x19": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "players",
@@ -13672,12 +13774,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.943,
-      "swingweight": 0.345,
-      "stiffness": 0.47,
-      "avgBeam": 0.367,
-      "openness": 0.943
+      "headSize": 0.331,
+      "strungWeight": 0.944,
+      "swingweight": 0.342,
+      "stiffness": 0.472,
+      "avgBeam": 0.37,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -13696,7 +13798,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "tecnifibre-tf40-290": {
     "bucketKey": "players|16x19|light",
-    "bucketSize": 9,
+    "bucketSize": 10,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "players",
@@ -13708,12 +13810,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
+      "headSize": 0.331,
       "strungWeight": 0.349,
-      "swingweight": 0.324,
-      "stiffness": 0.58,
-      "avgBeam": 0.367,
-      "openness": 0.943
+      "swingweight": 0.32,
+      "stiffness": 0.581,
+      "avgBeam": 0.37,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -13744,12 +13846,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.413,
-      "swingweight": 0.619,
+      "headSize": 0.331,
+      "strungWeight": 0.412,
+      "swingweight": 0.616,
       "stiffness": 0.982,
-      "avgBeam": 0.516,
-      "openness": 0.943
+      "avgBeam": 0.518,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -13768,7 +13870,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "yonex-ezone-98-2024": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.36,
     "bands": {
       "headSize": "players",
@@ -13780,12 +13882,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.779,
-      "swingweight": 0.537,
-      "stiffness": 0.345,
-      "avgBeam": 0.413,
-      "openness": 0.943
+      "headSize": 0.331,
+      "strungWeight": 0.782,
+      "swingweight": 0.535,
+      "stiffness": 0.349,
+      "avgBeam": 0.415,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -13814,7 +13916,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "yonex-ezone-98l-2024": {
     "bucketKey": "players|16x19|light",
-    "bucketSize": 9,
+    "bucketSize": 10,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "players",
@@ -13826,12 +13928,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.256,
-      "swingweight": 0.228,
-      "stiffness": 0.47,
-      "avgBeam": 0.413,
-      "openness": 0.943
+      "headSize": 0.331,
+      "strungWeight": 0.254,
+      "swingweight": 0.225,
+      "stiffness": 0.472,
+      "avgBeam": 0.415,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -13867,12 +13969,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.31,
-      "swingweight": 0.285,
-      "stiffness": 0.779,
+      "headSize": 0.859,
+      "strungWeight": 0.306,
+      "swingweight": 0.282,
+      "stiffness": 0.778,
       "avgBeam": 0.947,
-      "openness": 0.943
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -13909,11 +14011,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     },
     "percentiles": {
       "headSize": 0.032,
-      "strungWeight": 0.872,
-      "swingweight": 0.662,
-      "stiffness": 0.263,
-      "avgBeam": 0.367,
-      "openness": 0.164
+      "strungWeight": 0.873,
+      "swingweight": 0.658,
+      "stiffness": 0.261,
+      "avgBeam": 0.37,
+      "openness": 0.162
     },
     "rarityTags": [
       {
@@ -13932,7 +14034,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "yonex-vcore-98-2026": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.28,
     "bands": {
       "headSize": "players",
@@ -13944,12 +14046,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.779,
-      "swingweight": 0.552,
-      "stiffness": 0.345,
-      "avgBeam": 0.438,
-      "openness": 0.943
+      "headSize": 0.331,
+      "strungWeight": 0.782,
+      "swingweight": 0.549,
+      "stiffness": 0.349,
+      "avgBeam": 0.44,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -13973,7 +14075,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "yonex-vcore-98l-2026": {
     "bucketKey": "players|16x19|light",
-    "bucketSize": 9,
+    "bucketSize": 10,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "players",
@@ -13985,12 +14087,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
+      "headSize": 0.331,
       "strungWeight": 0.349,
-      "swingweight": 0.285,
-      "stiffness": 0.47,
-      "avgBeam": 0.384,
-      "openness": 0.943
+      "swingweight": 0.282,
+      "stiffness": 0.472,
+      "avgBeam": 0.387,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -14014,7 +14116,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "yonex-vcore-100-2026": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.36,
     "bands": {
       "headSize": "midplus",
@@ -14026,12 +14128,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.584,
-      "swingweight": 0.783,
-      "stiffness": 0.58,
-      "avgBeam": 0.904,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.785,
+      "stiffness": 0.581,
+      "avgBeam": 0.905,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -14072,12 +14174,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.214,
-      "swingweight": 0.345,
+      "headSize": 0.859,
+      "strungWeight": 0.211,
+      "swingweight": 0.342,
       "stiffness": 0.676,
-      "avgBeam": 0.904,
-      "openness": 0.943
+      "avgBeam": 0.905,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -14101,7 +14203,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "yonex-percept-97-2023": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.4,
     "bands": {
       "headSize": "players",
@@ -14114,11 +14216,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     },
     "percentiles": {
       "headSize": 0.085,
-      "strungWeight": 0.872,
-      "swingweight": 0.388,
-      "stiffness": 0.121,
-      "avgBeam": 0.107,
-      "openness": 0.943
+      "strungWeight": 0.873,
+      "swingweight": 0.384,
+      "stiffness": 0.12,
+      "avgBeam": 0.106,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -14147,7 +14249,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "yonex-percept-97h-2023": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.3,
     "bands": {
       "headSize": "players",
@@ -14162,9 +14264,9 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "headSize": 0.085,
       "strungWeight": 0.989,
       "swingweight": 0.961,
-      "stiffness": 0.263,
-      "avgBeam": 0.107,
-      "openness": 0.943
+      "stiffness": 0.261,
+      "avgBeam": 0.106,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -14188,7 +14290,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "yonex-percept-100-2023": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.28,
     "bands": {
       "headSize": "midplus",
@@ -14200,12 +14302,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.445,
-      "swingweight": 0.48,
+      "headSize": 0.859,
+      "strungWeight": 0.444,
+      "swingweight": 0.479,
       "stiffness": 0.676,
-      "avgBeam": 0.516,
-      "openness": 0.943
+      "avgBeam": 0.518,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -14241,12 +14343,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "18x19"
     },
     "percentiles": {
-      "headSize": 0.858,
+      "headSize": 0.859,
       "strungWeight": 0.641,
-      "swingweight": 0.48,
+      "swingweight": 0.479,
       "stiffness": 0.676,
-      "avgBeam": 0.516,
-      "openness": 0.075
+      "avgBeam": 0.518,
+      "openness": 0.074
     },
     "rarityTags": [
       {
@@ -14282,12 +14384,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.904,
-      "strungWeight": 0.242,
-      "swingweight": 0.285,
-      "stiffness": 0.58,
-      "avgBeam": 0.367,
-      "openness": 0.943
+      "headSize": 0.905,
+      "strungWeight": 0.239,
+      "swingweight": 0.282,
+      "stiffness": 0.581,
+      "avgBeam": 0.37,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -14306,7 +14408,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "yonex-regna-98-2024": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.28,
     "bands": {
       "headSize": "players",
@@ -14318,12 +14420,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.872,
-      "swingweight": 0.619,
-      "stiffness": 0.58,
-      "avgBeam": 0.231,
-      "openness": 0.943
+      "headSize": 0.331,
+      "strungWeight": 0.873,
+      "swingweight": 0.616,
+      "stiffness": 0.581,
+      "avgBeam": 0.229,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -14361,10 +14463,10 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     "percentiles": {
       "headSize": 0.085,
       "strungWeight": 0.37,
-      "swingweight": 0.345,
-      "stiffness": 0.854,
-      "avgBeam": 0.569,
-      "openness": 0.943
+      "swingweight": 0.342,
+      "stiffness": 0.852,
+      "avgBeam": 0.57,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -14383,7 +14485,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "wilson-pro-staff-97ul-v14": {
     "bucketKey": "players|16x19|light",
-    "bucketSize": 9,
+    "bucketSize": 10,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "players",
@@ -14396,11 +14498,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     },
     "percentiles": {
       "headSize": 0.085,
-      "strungWeight": 0.117,
-      "swingweight": 0.096,
-      "stiffness": 0.779,
-      "avgBeam": 0.569,
-      "openness": 0.943
+      "strungWeight": 0.116,
+      "swingweight": 0.095,
+      "stiffness": 0.778,
+      "avgBeam": 0.57,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -14431,12 +14533,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.224,
+      "headSize": 0.859,
+      "strungWeight": 0.222,
       "swingweight": 0.025,
-      "stiffness": 0.779,
-      "avgBeam": 0.569,
-      "openness": 0.943
+      "stiffness": 0.778,
+      "avgBeam": 0.57,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -14455,7 +14557,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "wilson-blade-98-16x19-v9": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "players",
@@ -14467,12 +14569,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.779,
-      "swingweight": 0.719,
-      "stiffness": 0.263,
-      "avgBeam": 0.107,
-      "openness": 0.943
+      "headSize": 0.331,
+      "strungWeight": 0.782,
+      "swingweight": 0.718,
+      "stiffness": 0.261,
+      "avgBeam": 0.106,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -14503,11 +14605,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "18x20"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.779,
-      "swingweight": 0.922,
-      "stiffness": 0.121,
-      "avgBeam": 0.107,
+      "headSize": 0.331,
+      "strungWeight": 0.782,
+      "swingweight": 0.923,
+      "stiffness": 0.12,
+      "avgBeam": 0.106,
       "openness": 0.06
     },
     "rarityTags": [
@@ -14532,7 +14634,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "wilson-blade-100-v9": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "midplus",
@@ -14544,12 +14646,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.584,
-      "swingweight": 0.619,
-      "stiffness": 0.121,
-      "avgBeam": 0.367,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.616,
+      "stiffness": 0.12,
+      "avgBeam": 0.37,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -14580,12 +14682,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.31,
-      "swingweight": 0.228,
-      "stiffness": 0.925,
-      "avgBeam": 0.367,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.306,
+      "swingweight": 0.225,
+      "stiffness": 0.926,
+      "avgBeam": 0.37,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -14616,12 +14718,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.114,
-      "swingweight": 0.149,
-      "stiffness": 0.58,
-      "avgBeam": 0.367,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.113,
+      "swingweight": 0.148,
+      "stiffness": 0.581,
+      "avgBeam": 0.37,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -14652,12 +14754,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x20"
     },
     "percentiles": {
-      "headSize": 0.861,
-      "strungWeight": 0.146,
-      "swingweight": 0.128,
-      "stiffness": 0.854,
-      "avgBeam": 0.516,
-      "openness": 0.164
+      "headSize": 0.863,
+      "strungWeight": 0.144,
+      "swingweight": 0.127,
+      "stiffness": 0.852,
+      "avgBeam": 0.518,
+      "openness": 0.162
     },
     "rarityTags": [],
     "hintWeights": {
@@ -14682,12 +14784,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.904,
+      "headSize": 0.905,
       "strungWeight": 0.37,
-      "swingweight": 0.302,
-      "stiffness": 0.47,
-      "avgBeam": 0.367,
-      "openness": 0.943
+      "swingweight": 0.299,
+      "stiffness": 0.472,
+      "avgBeam": 0.37,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -14723,11 +14825,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "18x20"
     },
     "percentiles": {
-      "headSize": 0.356,
-      "strungWeight": 0.943,
+      "headSize": 0.359,
+      "strungWeight": 0.944,
       "swingweight": 0.947,
-      "stiffness": 0.854,
-      "avgBeam": 0.569,
+      "stiffness": 0.852,
+      "avgBeam": 0.57,
       "openness": 0.06
     },
     "rarityTags": [
@@ -14759,12 +14861,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x20"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.872,
-      "swingweight": 0.829,
-      "stiffness": 0.121,
-      "avgBeam": 0.851,
-      "openness": 0.164
+      "headSize": 0.331,
+      "strungWeight": 0.873,
+      "swingweight": 0.831,
+      "stiffness": 0.12,
+      "avgBeam": 0.852,
+      "openness": 0.162
     },
     "rarityTags": [
       {
@@ -14788,7 +14890,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "wilson-clash-100-v2": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.4,
     "bands": {
       "headSize": "midplus",
@@ -14800,12 +14902,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.413,
-      "swingweight": 0.345,
+      "headSize": 0.859,
+      "strungWeight": 0.412,
+      "swingweight": 0.342,
       "stiffness": 0.039,
-      "avgBeam": 0.936,
-      "openness": 0.943
+      "avgBeam": 0.937,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -14846,12 +14948,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x20"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.872,
-      "swingweight": 0.783,
+      "headSize": 0.859,
+      "strungWeight": 0.873,
+      "swingweight": 0.785,
       "stiffness": 0.085,
-      "avgBeam": 0.936,
-      "openness": 0.164
+      "avgBeam": 0.937,
+      "openness": 0.162
     },
     "rarityTags": [
       {
@@ -14892,12 +14994,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.224,
-      "swingweight": 0.167,
-      "stiffness": 0.057,
-      "avgBeam": 0.936,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.222,
+      "swingweight": 0.165,
+      "stiffness": 0.056,
+      "avgBeam": 0.937,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -14938,12 +15040,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
+      "headSize": 0.859,
       "strungWeight": 0.06,
       "swingweight": 0.085,
-      "stiffness": 0.345,
-      "avgBeam": 0.936,
-      "openness": 0.943
+      "stiffness": 0.349,
+      "avgBeam": 0.937,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -14975,11 +15077,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     },
     "percentiles": {
       "headSize": 0.982,
-      "strungWeight": 0.214,
-      "swingweight": 0.783,
-      "stiffness": 0.345,
-      "avgBeam": 0.936,
-      "openness": 0.943
+      "strungWeight": 0.211,
+      "swingweight": 0.785,
+      "stiffness": 0.349,
+      "avgBeam": 0.937,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -14998,7 +15100,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "wilson-ultra-100-v4": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "midplus",
@@ -15010,12 +15112,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.584,
-      "swingweight": 0.452,
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.447,
       "stiffness": 0.961,
       "avgBeam": 0.989,
-      "openness": 0.943
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -15051,12 +15153,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.224,
-      "swingweight": 0.064,
-      "stiffness": 0.779,
-      "avgBeam": 0.95,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.222,
+      "swingweight": 0.063,
+      "stiffness": 0.778,
+      "avgBeam": 0.951,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -15093,8 +15195,8 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     },
     "percentiles": {
       "headSize": 0.982,
-      "strungWeight": 0.114,
-      "swingweight": 0.302,
+      "strungWeight": 0.113,
+      "swingweight": 0.299,
       "stiffness": 0.961,
       "avgBeam": 0.996,
       "openness": 1
@@ -15126,7 +15228,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "wilson-ultra-pro-97-v4": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "players",
@@ -15139,11 +15241,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     },
     "percentiles": {
       "headSize": 0.085,
-      "strungWeight": 0.779,
-      "swingweight": 0.452,
-      "stiffness": 0.263,
-      "avgBeam": 0.05,
-      "openness": 0.943
+      "strungWeight": 0.782,
+      "swingweight": 0.447,
+      "stiffness": 0.261,
+      "avgBeam": 0.049,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -15174,12 +15276,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x20"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.872,
-      "swingweight": 0.922,
-      "stiffness": 0.174,
-      "avgBeam": 0.174,
-      "openness": 0.164
+      "headSize": 0.331,
+      "strungWeight": 0.873,
+      "swingweight": 0.923,
+      "stiffness": 0.173,
+      "avgBeam": 0.173,
+      "openness": 0.162
     },
     "rarityTags": [
       {
@@ -15210,12 +15312,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x20"
     },
     "percentiles": {
-      "headSize": 0.327,
+      "headSize": 0.331,
       "strungWeight": 0.662,
-      "swingweight": 0.619,
-      "stiffness": 0.47,
-      "avgBeam": 0.174,
-      "openness": 0.164
+      "swingweight": 0.616,
+      "stiffness": 0.472,
+      "avgBeam": 0.173,
+      "openness": 0.162
     },
     "rarityTags": [],
     "hintWeights": {
@@ -15240,12 +15342,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x20"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.374,
-      "swingweight": 0.324,
-      "stiffness": 0.47,
-      "avgBeam": 0.174,
-      "openness": 0.164
+      "headSize": 0.331,
+      "strungWeight": 0.373,
+      "swingweight": 0.32,
+      "stiffness": 0.472,
+      "avgBeam": 0.173,
+      "openness": 0.162
     },
     "rarityTags": [
       {
@@ -15264,7 +15366,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "diadem-nova-100": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "midplus",
@@ -15276,12 +15378,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.448,
-      "swingweight": 0.388,
-      "stiffness": 0.925,
-      "avgBeam": 0.569,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.447,
+      "swingweight": 0.384,
+      "stiffness": 0.926,
+      "avgBeam": 0.57,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -15312,12 +15414,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.317,
-      "swingweight": 0.285,
-      "stiffness": 0.925,
-      "avgBeam": 0.569,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.313,
+      "swingweight": 0.282,
+      "stiffness": 0.926,
+      "avgBeam": 0.57,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -15348,11 +15450,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "18x20"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.584,
-      "swingweight": 0.406,
-      "stiffness": 0.779,
-      "avgBeam": 0.427,
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.401,
+      "stiffness": 0.778,
+      "avgBeam": 0.43,
       "openness": 0.06
     },
     "rarityTags": [
@@ -15394,11 +15496,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x18"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.413,
-      "swingweight": 0.324,
-      "stiffness": 0.779,
-      "avgBeam": 0.427,
+      "headSize": 0.859,
+      "strungWeight": 0.412,
+      "swingweight": 0.32,
+      "stiffness": 0.778,
+      "avgBeam": 0.43,
       "openness": 1
     },
     "rarityTags": [
@@ -15440,12 +15542,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.256,
-      "swingweight": 0.128,
+      "headSize": 0.859,
+      "strungWeight": 0.254,
+      "swingweight": 0.127,
       "stiffness": 0.961,
-      "avgBeam": 0.427,
-      "openness": 0.943
+      "avgBeam": 0.43,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -15481,12 +15583,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
+      "headSize": 0.859,
       "strungWeight": 0.641,
-      "swingweight": 0.552,
-      "stiffness": 0.925,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "swingweight": 0.549,
+      "stiffness": 0.926,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -15522,12 +15624,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.31,
-      "swingweight": 0.167,
-      "stiffness": 0.779,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.306,
+      "swingweight": 0.165,
+      "stiffness": 0.778,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -15563,12 +15665,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.114,
-      "swingweight": 0.096,
-      "stiffness": 0.854,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.113,
+      "swingweight": 0.095,
+      "stiffness": 0.852,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -15592,7 +15694,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "dunlop-cx-200-tour-16x19-2024": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "players",
@@ -15605,11 +15707,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     },
     "percentiles": {
       "headSize": 0.032,
-      "strungWeight": 0.872,
-      "swingweight": 0.37,
+      "strungWeight": 0.873,
+      "swingweight": 0.366,
       "stiffness": 0.676,
       "avgBeam": 0.046,
-      "openness": 0.943
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -15628,7 +15730,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "dunlop-cx-200-2024": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "players",
@@ -15640,12 +15742,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
+      "headSize": 0.331,
       "strungWeight": 0.641,
-      "swingweight": 0.37,
-      "stiffness": 0.47,
-      "avgBeam": 0.174,
-      "openness": 0.943
+      "swingweight": 0.366,
+      "stiffness": 0.472,
+      "avgBeam": 0.173,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -15664,7 +15766,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "dunlop-cx-200-ls-2024": {
     "bucketKey": "players|16x19|light",
-    "bucketSize": 9,
+    "bucketSize": 10,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "players",
@@ -15676,12 +15778,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
+      "headSize": 0.331,
       "strungWeight": 0.349,
-      "swingweight": 0.249,
-      "stiffness": 0.345,
-      "avgBeam": 0.174,
-      "openness": 0.943
+      "swingweight": 0.246,
+      "stiffness": 0.349,
+      "avgBeam": 0.173,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -15700,7 +15802,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "dunlop-sx-300-2022": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "midplus",
@@ -15712,12 +15814,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.584,
-      "swingweight": 0.619,
-      "stiffness": 0.854,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.616,
+      "stiffness": 0.852,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -15741,7 +15843,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "dunlop-sx-300-tour-2022": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "players",
@@ -15753,12 +15855,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.779,
-      "swingweight": 0.719,
+      "headSize": 0.331,
+      "strungWeight": 0.782,
+      "swingweight": 0.718,
       "stiffness": 0.676,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -15782,7 +15884,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "babolat-pure-aero-2019": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "midplus",
@@ -15794,12 +15896,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.584,
-      "swingweight": 0.719,
-      "stiffness": 0.779,
-      "avgBeam": 0.367,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.718,
+      "stiffness": 0.778,
+      "avgBeam": 0.37,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -15823,7 +15925,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "babolat-pure-aero-2023": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "midplus",
@@ -15835,12 +15937,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.584,
-      "swingweight": 0.619,
-      "stiffness": 0.58,
-      "avgBeam": 0.367,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.616,
+      "stiffness": 0.581,
+      "avgBeam": 0.37,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -15864,7 +15966,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "babolat-pure-aero-2026": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "midplus",
@@ -15876,12 +15978,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.584,
-      "swingweight": 0.537,
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.535,
       "stiffness": 0.676,
-      "avgBeam": 0.367,
-      "openness": 0.943
+      "avgBeam": 0.37,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -15917,12 +16019,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x20"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.779,
-      "swingweight": 0.829,
-      "stiffness": 0.58,
-      "avgBeam": 0.367,
-      "openness": 0.164
+      "headSize": 0.331,
+      "strungWeight": 0.782,
+      "swingweight": 0.831,
+      "stiffness": 0.581,
+      "avgBeam": 0.37,
+      "openness": 0.162
     },
     "rarityTags": [
       {
@@ -15953,12 +16055,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.128,
-      "swingweight": 0.302,
-      "stiffness": 0.854,
-      "avgBeam": 0.367,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.127,
+      "swingweight": 0.299,
+      "stiffness": 0.852,
+      "avgBeam": 0.37,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -15994,12 +16096,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.114,
-      "swingweight": 0.103,
-      "stiffness": 0.58,
-      "avgBeam": 0.367,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.113,
+      "swingweight": 0.102,
+      "stiffness": 0.581,
+      "avgBeam": 0.37,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -16035,12 +16137,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
+      "headSize": 0.859,
       "strungWeight": 0.641,
-      "swingweight": 0.922,
-      "stiffness": 0.854,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "swingweight": 0.923,
+      "stiffness": 0.852,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -16076,12 +16178,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
+      "headSize": 0.859,
       "strungWeight": 0.641,
       "swingweight": 0.975,
-      "stiffness": 0.58,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "stiffness": 0.581,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -16117,12 +16219,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
+      "headSize": 0.859,
       "strungWeight": 0.641,
-      "swingweight": 0.922,
-      "stiffness": 0.58,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "swingweight": 0.923,
+      "stiffness": 0.581,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -16158,12 +16260,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.31,
-      "swingweight": 0.199,
-      "stiffness": 0.925,
-      "avgBeam": 0.367,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.306,
+      "swingweight": 0.197,
+      "stiffness": 0.926,
+      "avgBeam": 0.37,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -16199,12 +16301,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
+      "headSize": 0.859,
       "strungWeight": 0.961,
-      "swingweight": 0.829,
-      "stiffness": 0.854,
-      "avgBeam": 0.367,
-      "openness": 0.943
+      "swingweight": 0.831,
+      "stiffness": 0.852,
+      "avgBeam": 0.37,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -16228,7 +16330,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "babolat-pure-drive-2012": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "midplus",
@@ -16240,12 +16342,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.42,
-      "swingweight": 0.249,
+      "headSize": 0.859,
+      "strungWeight": 0.419,
+      "swingweight": 0.246,
       "stiffness": 1,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -16282,11 +16384,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     },
     "percentiles": {
       "headSize": 0.972,
-      "strungWeight": 0.157,
-      "swingweight": 0.064,
-      "stiffness": 0.925,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "strungWeight": 0.155,
+      "swingweight": 0.063,
+      "stiffness": 0.926,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -16324,10 +16426,10 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     "percentiles": {
       "headSize": 0.972,
       "strungWeight": 0.349,
-      "swingweight": 0.285,
-      "stiffness": 0.925,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "swingweight": 0.282,
+      "stiffness": 0.926,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -16364,11 +16466,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     },
     "percentiles": {
       "headSize": 0.972,
-      "strungWeight": 0.31,
-      "swingweight": 0.249,
-      "stiffness": 0.854,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "strungWeight": 0.306,
+      "swingweight": 0.246,
+      "stiffness": 0.852,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -16405,11 +16507,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     },
     "percentiles": {
       "headSize": 0.972,
-      "strungWeight": 0.31,
-      "swingweight": 0.199,
-      "stiffness": 0.779,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "strungWeight": 0.306,
+      "swingweight": 0.197,
+      "stiffness": 0.778,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -16446,11 +16548,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     },
     "percentiles": {
       "headSize": 0.972,
-      "strungWeight": 0.242,
-      "swingweight": 0.48,
-      "stiffness": 0.779,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "strungWeight": 0.239,
+      "swingweight": 0.479,
+      "stiffness": 0.778,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -16488,10 +16590,10 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     "percentiles": {
       "headSize": 0.993,
       "strungWeight": 0.018,
-      "swingweight": 0.167,
-      "stiffness": 0.925,
+      "swingweight": 0.165,
+      "stiffness": 0.926,
       "avgBeam": 0.986,
-      "openness": 0.164
+      "openness": 0.162
     },
     "rarityTags": [
       {
@@ -16524,10 +16626,10 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     "percentiles": {
       "headSize": 0.993,
       "strungWeight": 0.014,
-      "swingweight": 0.064,
+      "swingweight": 0.063,
       "stiffness": 0.961,
       "avgBeam": 0.986,
-      "openness": 0.164
+      "openness": 0.162
     },
     "rarityTags": [
       {
@@ -16558,12 +16660,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
+      "headSize": 0.859,
       "strungWeight": 0.662,
-      "swingweight": 0.491,
+      "swingweight": 0.489,
       "stiffness": 0.993,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -16587,7 +16689,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "babolat-pure-drive-2017": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "midplus",
@@ -16599,12 +16701,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.584,
-      "swingweight": 0.719,
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.718,
       "stiffness": 0.982,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -16628,7 +16730,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "babolat-pure-drive-2025": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "midplus",
@@ -16640,12 +16742,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.584,
-      "swingweight": 0.452,
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.447,
       "stiffness": 0.676,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -16669,7 +16771,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "babolat-pure-drive-98-2025": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "players",
@@ -16681,12 +16783,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.779,
-      "swingweight": 0.662,
-      "stiffness": 0.779,
-      "avgBeam": 0.217,
-      "openness": 0.943
+      "headSize": 0.331,
+      "strungWeight": 0.782,
+      "swingweight": 0.658,
+      "stiffness": 0.778,
+      "avgBeam": 0.215,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -16722,12 +16824,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.128,
+      "headSize": 0.859,
+      "strungWeight": 0.127,
       "swingweight": 0.085,
-      "stiffness": 0.925,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "stiffness": 0.926,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -16763,12 +16865,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.114,
+      "headSize": 0.859,
+      "strungWeight": 0.113,
       "swingweight": 0.039,
-      "stiffness": 0.854,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "stiffness": 0.852,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -16792,7 +16894,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "babolat-pure-drive-plus-2018": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "midplus",
@@ -16804,12 +16906,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.584,
-      "swingweight": 0.783,
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.785,
       "stiffness": 0.961,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -16833,7 +16935,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "babolat-pure-drive-plus-2021": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "midplus",
@@ -16845,12 +16947,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.584,
-      "swingweight": 0.719,
-      "stiffness": 0.925,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.718,
+      "stiffness": 0.926,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -16874,7 +16976,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "babolat-pure-drive-plus-2025": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "midplus",
@@ -16886,12 +16988,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.584,
-      "swingweight": 0.783,
-      "stiffness": 0.925,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.785,
+      "stiffness": 0.926,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -16927,12 +17029,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.964,
-      "swingweight": 0.861,
+      "headSize": 0.859,
+      "strungWeight": 0.965,
+      "swingweight": 0.863,
       "stiffness": 0.993,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -16968,12 +17070,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.886,
+      "headSize": 0.859,
+      "strungWeight": 0.887,
       "swingweight": 0.961,
       "stiffness": 1,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -17009,12 +17111,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.31,
-      "swingweight": 0.228,
-      "stiffness": 0.779,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.306,
+      "swingweight": 0.225,
+      "stiffness": 0.778,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -17050,12 +17152,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.943,
-      "swingweight": 0.719,
+      "headSize": 0.859,
+      "strungWeight": 0.944,
+      "swingweight": 0.718,
       "stiffness": 0.982,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -17091,12 +17193,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
+      "headSize": 0.859,
       "strungWeight": 0.961,
-      "swingweight": 0.801,
+      "swingweight": 0.803,
       "stiffness": 0.961,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -17132,12 +17234,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.943,
-      "swingweight": 0.861,
+      "headSize": 0.859,
+      "strungWeight": 0.944,
+      "swingweight": 0.863,
       "stiffness": 0.982,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -17161,7 +17263,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "babolat-pure-stike-98-18x20-2024": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "players",
@@ -17173,12 +17275,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.779,
+      "headSize": 0.331,
+      "strungWeight": 0.782,
       "swingweight": 0.947,
-      "stiffness": 0.345,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "stiffness": 0.349,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -17202,7 +17304,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "babolat-pure-strike-100-2016": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "midplus",
@@ -17214,12 +17316,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.416,
-      "swingweight": 0.199,
-      "stiffness": 0.854,
-      "avgBeam": 0.217,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.415,
+      "swingweight": 0.197,
+      "stiffness": 0.852,
+      "avgBeam": 0.215,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -17255,12 +17357,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.779,
-      "swingweight": 0.537,
-      "stiffness": 0.174,
-      "avgBeam": 0.217,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.782,
+      "swingweight": 0.535,
+      "stiffness": 0.173,
+      "avgBeam": 0.215,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -17296,12 +17398,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.786,
-      "swingweight": 0.719,
-      "stiffness": 0.345,
-      "avgBeam": 0.217,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.789,
+      "swingweight": 0.718,
+      "stiffness": 0.349,
+      "avgBeam": 0.215,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -17325,7 +17427,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "babolat-pure-strike-16x19-2016": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "players",
@@ -17337,12 +17439,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
+      "headSize": 0.331,
       "strungWeight": 0.648,
-      "swingweight": 0.783,
-      "stiffness": 0.58,
-      "avgBeam": 0.217,
-      "openness": 0.943
+      "swingweight": 0.785,
+      "stiffness": 0.581,
+      "avgBeam": 0.215,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -17366,7 +17468,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "babolat-pure-strike-98-16x19-2024": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "players",
@@ -17378,12 +17480,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.779,
-      "swingweight": 0.922,
-      "stiffness": 0.47,
-      "avgBeam": 0.217,
-      "openness": 0.943
+      "headSize": 0.331,
+      "strungWeight": 0.782,
+      "swingweight": 0.923,
+      "stiffness": 0.472,
+      "avgBeam": 0.215,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -17419,12 +17521,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
+      "headSize": 0.859,
       "strungWeight": 0.349,
-      "swingweight": 0.199,
-      "stiffness": 0.47,
-      "avgBeam": 0.217,
-      "openness": 0.943
+      "swingweight": 0.197,
+      "stiffness": 0.472,
+      "avgBeam": 0.215,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -17448,7 +17550,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "dunlop-fx-500-2025": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "midplus",
@@ -17460,12 +17562,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.584,
-      "swingweight": 0.537,
-      "stiffness": 0.854,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.535,
+      "stiffness": 0.852,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -17501,12 +17603,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.31,
-      "swingweight": 0.199,
-      "stiffness": 0.779,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.306,
+      "swingweight": 0.197,
+      "stiffness": 0.778,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -17530,7 +17632,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "dunlop-fx-500-tour-2023": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "players",
@@ -17542,12 +17644,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
+      "headSize": 0.331,
       "strungWeight": 0.641,
-      "swingweight": 0.452,
-      "stiffness": 0.58,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "swingweight": 0.447,
+      "stiffness": 0.581,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -17571,7 +17673,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "dunlop-fx-500-tour-2025": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "players",
@@ -17583,12 +17685,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.779,
-      "swingweight": 0.619,
-      "stiffness": 0.58,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "headSize": 0.331,
+      "strungWeight": 0.782,
+      "swingweight": 0.616,
+      "stiffness": 0.581,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -17625,11 +17727,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     },
     "percentiles": {
       "headSize": 0.972,
-      "strungWeight": 0.797,
-      "swingweight": 0.783,
-      "stiffness": 0.779,
+      "strungWeight": 0.799,
+      "swingweight": 0.785,
+      "stiffness": 0.778,
       "avgBeam": 0.986,
-      "openness": 0.943
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -17658,7 +17760,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "head-boom-mp-2022": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "midplus",
@@ -17670,12 +17772,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.445,
-      "swingweight": 0.48,
-      "stiffness": 0.47,
-      "avgBeam": 0.367,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.444,
+      "swingweight": 0.479,
+      "stiffness": 0.472,
+      "avgBeam": 0.37,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -17694,7 +17796,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "head-boom-mp-2024": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "midplus",
@@ -17706,12 +17808,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.413,
-      "swingweight": 0.452,
-      "stiffness": 0.263,
-      "avgBeam": 0.367,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.412,
+      "swingweight": 0.447,
+      "stiffness": 0.261,
+      "avgBeam": 0.37,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -17730,7 +17832,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "head-boom-pro-2022": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "players",
@@ -17742,12 +17844,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.886,
-      "swingweight": 0.783,
-      "stiffness": 0.779,
-      "avgBeam": 0.367,
-      "openness": 0.943
+      "headSize": 0.331,
+      "strungWeight": 0.887,
+      "swingweight": 0.785,
+      "stiffness": 0.778,
+      "avgBeam": 0.37,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -17766,7 +17868,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "head-boom-pro-2024": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "players",
@@ -17778,12 +17880,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.872,
-      "swingweight": 0.662,
-      "stiffness": 0.47,
-      "avgBeam": 0.367,
-      "openness": 0.943
+      "headSize": 0.331,
+      "strungWeight": 0.873,
+      "swingweight": 0.658,
+      "stiffness": 0.472,
+      "avgBeam": 0.37,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -17814,12 +17916,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.875,
-      "strungWeight": 0.146,
-      "swingweight": 0.249,
-      "stiffness": 0.263,
-      "avgBeam": 0.367,
-      "openness": 0.943
+      "headSize": 0.877,
+      "strungWeight": 0.144,
+      "swingweight": 0.246,
+      "stiffness": 0.261,
+      "avgBeam": 0.37,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -17838,7 +17940,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "head-extreme-mp-2022": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "midplus",
@@ -17850,12 +17952,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.584,
-      "swingweight": 0.619,
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.616,
       "stiffness": 0.676,
       "avgBeam": 0.947,
-      "openness": 0.943
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -17879,7 +17981,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "head-extreme-tour-2022": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "players",
@@ -17891,12 +17993,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
+      "headSize": 0.331,
       "strungWeight": 0.641,
-      "swingweight": 0.452,
-      "stiffness": 0.345,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "swingweight": 0.447,
+      "stiffness": 0.349,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -17932,12 +18034,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x20"
     },
     "percentiles": {
-      "headSize": 0.904,
-      "strungWeight": 0.242,
-      "swingweight": 0.064,
-      "stiffness": 0.121,
-      "avgBeam": 0.367,
-      "openness": 0.164
+      "headSize": 0.905,
+      "strungWeight": 0.239,
+      "swingweight": 0.063,
+      "stiffness": 0.12,
+      "avgBeam": 0.37,
+      "openness": 0.162
     },
     "rarityTags": [],
     "hintWeights": {
@@ -17962,12 +18064,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x20"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.413,
-      "swingweight": 0.662,
-      "stiffness": 0.263,
-      "avgBeam": 0.367,
-      "openness": 0.164
+      "headSize": 0.859,
+      "strungWeight": 0.412,
+      "swingweight": 0.658,
+      "stiffness": 0.261,
+      "avgBeam": 0.37,
+      "openness": 0.162
     },
     "rarityTags": [
       {
@@ -17998,11 +18100,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "18x20"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.943,
+      "headSize": 0.859,
+      "strungWeight": 0.944,
       "swingweight": 0.947,
-      "stiffness": 0.263,
-      "avgBeam": 0.043,
+      "stiffness": 0.261,
+      "avgBeam": 0.042,
       "openness": 0.06
     },
     "rarityTags": [
@@ -18039,12 +18141,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x20"
     },
     "percentiles": {
-      "headSize": 0.904,
-      "strungWeight": 0.31,
-      "swingweight": 0.199,
-      "stiffness": 0.174,
-      "avgBeam": 0.367,
-      "openness": 0.164
+      "headSize": 0.905,
+      "strungWeight": 0.306,
+      "swingweight": 0.197,
+      "stiffness": 0.173,
+      "avgBeam": 0.37,
+      "openness": 0.162
     },
     "rarityTags": [],
     "hintWeights": {
@@ -18069,12 +18171,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.779,
-      "swingweight": 0.783,
-      "stiffness": 0.174,
-      "avgBeam": 0.367,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.782,
+      "swingweight": 0.785,
+      "stiffness": 0.173,
+      "avgBeam": 0.37,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -18105,12 +18207,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x20"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.214,
-      "swingweight": 0.228,
+      "headSize": 0.859,
+      "strungWeight": 0.211,
+      "swingweight": 0.225,
       "stiffness": 0.039,
-      "avgBeam": 0.367,
-      "openness": 0.164
+      "avgBeam": 0.37,
+      "openness": 0.162
     },
     "rarityTags": [
       {
@@ -18141,11 +18243,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "18x20"
     },
     "percentiles": {
-      "headSize": 0.356,
-      "strungWeight": 0.872,
+      "headSize": 0.359,
+      "strungWeight": 0.873,
       "swingweight": 0.975,
       "stiffness": 0.676,
-      "avgBeam": 0.043,
+      "avgBeam": 0.042,
       "openness": 0.06
     },
     "rarityTags": [
@@ -18182,11 +18284,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "18x20"
     },
     "percentiles": {
-      "headSize": 0.327,
+      "headSize": 0.331,
       "strungWeight": 0.986,
-      "swingweight": 0.829,
-      "stiffness": 0.121,
-      "avgBeam": 0.043,
+      "swingweight": 0.831,
+      "stiffness": 0.12,
+      "avgBeam": 0.042,
       "openness": 0.06
     },
     "rarityTags": [
@@ -18226,8 +18328,8 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "headSize": 0.032,
       "strungWeight": 0.961,
       "swingweight": 0.993,
-      "stiffness": 0.58,
-      "avgBeam": 0.043,
+      "stiffness": 0.581,
+      "avgBeam": 0.042,
       "openness": 0.06
     },
     "rarityTags": [
@@ -18264,12 +18366,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.584,
-      "swingweight": 0.662,
-      "stiffness": 0.58,
-      "avgBeam": 0.217,
-      "openness": 0.943
+      "headSize": 0.331,
+      "strungWeight": 0.585,
+      "swingweight": 0.658,
+      "stiffness": 0.581,
+      "avgBeam": 0.215,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -18293,7 +18395,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "head-radical-pro-2023": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.38,
     "bands": {
       "headSize": "players",
@@ -18305,12 +18407,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.943,
-      "swingweight": 0.783,
-      "stiffness": 0.47,
-      "avgBeam": 0.117,
-      "openness": 0.943
+      "headSize": 0.331,
+      "strungWeight": 0.944,
+      "swingweight": 0.785,
+      "stiffness": 0.472,
+      "avgBeam": 0.116,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -18351,12 +18453,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.875,
-      "strungWeight": 0.214,
-      "swingweight": 0.167,
-      "stiffness": 0.345,
-      "avgBeam": 0.541,
-      "openness": 0.943
+      "headSize": 0.877,
+      "strungWeight": 0.211,
+      "swingweight": 0.165,
+      "stiffness": 0.349,
+      "avgBeam": 0.542,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -18380,7 +18482,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "head-speed-mp-2022": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "midplus",
@@ -18392,12 +18494,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.445,
-      "swingweight": 0.662,
-      "stiffness": 0.263,
-      "avgBeam": 0.516,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.444,
+      "swingweight": 0.658,
+      "stiffness": 0.261,
+      "avgBeam": 0.518,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -18428,12 +18530,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.214,
-      "swingweight": 0.345,
-      "stiffness": 0.121,
-      "avgBeam": 0.516,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.211,
+      "swingweight": 0.342,
+      "stiffness": 0.12,
+      "avgBeam": 0.518,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -18464,11 +18566,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "18x20"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.872,
-      "swingweight": 0.801,
-      "stiffness": 0.263,
-      "avgBeam": 0.516,
+      "headSize": 0.859,
+      "strungWeight": 0.873,
+      "swingweight": 0.803,
+      "stiffness": 0.261,
+      "avgBeam": 0.518,
       "openness": 0.06
     },
     "rarityTags": [
@@ -18500,12 +18602,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.932,
-      "strungWeight": 0.114,
-      "swingweight": 0.174,
-      "stiffness": 0.174,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "headSize": 0.933,
+      "strungWeight": 0.113,
+      "swingweight": 0.173,
+      "stiffness": 0.173,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -18536,12 +18638,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.932,
-      "strungWeight": 0.214,
-      "swingweight": 0.406,
-      "stiffness": 0.345,
+      "headSize": 0.933,
+      "strungWeight": 0.211,
+      "swingweight": 0.401,
+      "stiffness": 0.349,
       "avgBeam": 0.986,
-      "openness": 0.943
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -18579,10 +18681,10 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     "percentiles": {
       "headSize": 1,
       "strungWeight": 0.032,
-      "swingweight": 0.922,
-      "stiffness": 0.925,
+      "swingweight": 0.923,
+      "stiffness": 0.926,
       "avgBeam": 1,
-      "openness": 0.943
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -18618,12 +18720,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.872,
-      "swingweight": 0.719,
-      "stiffness": 0.58,
-      "avgBeam": 0.043,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.873,
+      "swingweight": 0.718,
+      "stiffness": 0.581,
+      "avgBeam": 0.042,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -18654,12 +18756,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.872,
-      "swingweight": 0.719,
+      "headSize": 0.859,
+      "strungWeight": 0.873,
+      "swingweight": 0.718,
       "stiffness": 0.085,
-      "avgBeam": 0.043,
-      "openness": 0.943
+      "avgBeam": 0.042,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -18690,12 +18792,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
+      "headSize": 0.859,
       "strungWeight": 0.961,
-      "swingweight": 0.829,
+      "swingweight": 0.831,
       "stiffness": 0.085,
-      "avgBeam": 0.043,
-      "openness": 0.943
+      "avgBeam": 0.042,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -18731,12 +18833,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
+      "headSize": 0.859,
       "strungWeight": 0.349,
-      "swingweight": 0.452,
+      "swingweight": 0.447,
       "stiffness": 0.085,
-      "avgBeam": 0.043,
-      "openness": 0.943
+      "avgBeam": 0.042,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -18767,12 +18869,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.779,
-      "swingweight": 0.537,
+      "headSize": 0.859,
+      "strungWeight": 0.782,
+      "swingweight": 0.535,
       "stiffness": 0.085,
-      "avgBeam": 0.043,
-      "openness": 0.943
+      "avgBeam": 0.042,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -18804,9 +18906,9 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     },
     "percentiles": {
       "headSize": 0.972,
-      "strungWeight": 0.779,
-      "swingweight": 0.537,
-      "stiffness": 0.263,
+      "strungWeight": 0.782,
+      "swingweight": 0.535,
+      "stiffness": 0.261,
       "avgBeam": 0,
       "openness": 1
     },
@@ -18844,12 +18946,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.05,
-      "swingweight": 0.228,
-      "stiffness": 0.58,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.049,
+      "swingweight": 0.225,
+      "stiffness": 0.581,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -18885,12 +18987,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.214,
-      "swingweight": 0.388,
+      "headSize": 0.859,
+      "strungWeight": 0.211,
+      "swingweight": 0.384,
       "stiffness": 0.676,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -18914,7 +19016,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "prince-ripcord-100-300g-2025": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "midplus",
@@ -18926,12 +19028,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.584,
-      "swingweight": 0.619,
-      "stiffness": 0.854,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.616,
+      "stiffness": 0.852,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -18967,12 +19069,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.214,
-      "swingweight": 0.452,
+      "headSize": 0.859,
+      "strungWeight": 0.211,
+      "swingweight": 0.447,
       "stiffness": 0.676,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -18996,7 +19098,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "prince-ripstick-100-300g-2025": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "midplus",
@@ -19008,12 +19110,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.584,
-      "swingweight": 0.801,
-      "stiffness": 0.779,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.803,
+      "stiffness": 0.778,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -19037,7 +19139,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "prince-ripstick-98-2025": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "players",
@@ -19049,12 +19151,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.779,
-      "swingweight": 0.861,
-      "stiffness": 0.779,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "headSize": 0.331,
+      "strungWeight": 0.782,
+      "swingweight": 0.863,
+      "stiffness": 0.778,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -19078,7 +19180,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "prince-textreme-tour-100-290-2019": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "midplus",
@@ -19090,12 +19192,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
+      "headSize": 0.859,
       "strungWeight": 0.37,
-      "swingweight": 0.783,
-      "stiffness": 0.58,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "swingweight": 0.785,
+      "stiffness": 0.581,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -19131,12 +19233,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.872,
-      "swingweight": 0.829,
-      "stiffness": 0.58,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.873,
+      "swingweight": 0.831,
+      "stiffness": 0.581,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -19172,12 +19274,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.05,
-      "swingweight": 0.37,
-      "stiffness": 0.58,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.049,
+      "swingweight": 0.366,
+      "stiffness": 0.581,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -19213,12 +19315,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.872,
-      "swingweight": 0.719,
+      "headSize": 0.859,
+      "strungWeight": 0.873,
+      "swingweight": 0.718,
       "stiffness": 0.676,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -19242,7 +19344,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "prince-textreme-tour-95-2019": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "players",
@@ -19256,10 +19358,10 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     "percentiles": {
       "headSize": 0.032,
       "strungWeight": 0.986,
-      "swingweight": 0.783,
-      "stiffness": 0.47,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "swingweight": 0.785,
+      "stiffness": 0.472,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -19283,7 +19385,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "prokennex-black-ace-300-2024": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "midplus",
@@ -19295,12 +19397,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.584,
-      "swingweight": 0.719,
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.718,
       "stiffness": 0.007,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -19336,12 +19438,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.932,
-      "strungWeight": 0.584,
-      "swingweight": 0.619,
-      "stiffness": 0.263,
+      "headSize": 0.933,
+      "strungWeight": 0.585,
+      "swingweight": 0.616,
+      "stiffness": 0.261,
       "avgBeam": 0.986,
-      "openness": 0.943
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -19370,7 +19472,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "prokennex-black-ace-pro-2024": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "players",
@@ -19383,11 +19485,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     },
     "percentiles": {
       "headSize": 0.085,
-      "strungWeight": 0.779,
-      "swingweight": 0.783,
+      "strungWeight": 0.782,
+      "swingweight": 0.785,
       "stiffness": 0.039,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -19423,12 +19525,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
+      "headSize": 0.859,
       "strungWeight": 0.641,
-      "swingweight": 0.922,
+      "swingweight": 0.923,
       "stiffness": 0.961,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -19464,12 +19566,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.932,
+      "headSize": 0.933,
       "strungWeight": 0.032,
-      "swingweight": 0.406,
+      "swingweight": 0.401,
       "stiffness": 0.961,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -19505,12 +19607,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.932,
-      "strungWeight": 0.445,
-      "swingweight": 0.719,
-      "stiffness": 0.779,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "headSize": 0.933,
+      "strungWeight": 0.444,
+      "swingweight": 0.718,
+      "stiffness": 0.778,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -19539,7 +19641,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "prokennex-ki-5-300-2018": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "midplus",
@@ -19551,12 +19653,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.445,
-      "swingweight": 0.783,
+      "headSize": 0.859,
+      "strungWeight": 0.444,
+      "swingweight": 0.785,
       "stiffness": 0.961,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -19592,12 +19694,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
+      "headSize": 0.859,
       "strungWeight": 0.986,
-      "swingweight": 0.719,
-      "stiffness": 0.779,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "swingweight": 0.718,
+      "stiffness": 0.778,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -19634,11 +19736,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     },
     "percentiles": {
       "headSize": 0.993,
-      "strungWeight": 0.242,
-      "swingweight": 0.537,
-      "stiffness": 0.854,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "strungWeight": 0.239,
+      "swingweight": 0.535,
+      "stiffness": 0.852,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -19674,12 +19776,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.943,
+      "headSize": 0.859,
+      "strungWeight": 0.944,
       "swingweight": 0.975,
-      "stiffness": 0.779,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "stiffness": 0.778,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -19703,7 +19805,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "prokennex-ki-q-tour-315-2019": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "players",
@@ -19715,12 +19817,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.943,
-      "swingweight": 0.552,
-      "stiffness": 0.47,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "headSize": 0.331,
+      "strungWeight": 0.944,
+      "swingweight": 0.549,
+      "stiffness": 0.472,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -19744,7 +19846,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "volkl-c10-pro-2012": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.3,
     "bands": {
       "headSize": "players",
@@ -19756,12 +19858,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
+      "headSize": 0.331,
       "strungWeight": 0.993,
-      "swingweight": 0.929,
-      "stiffness": 0.58,
-      "avgBeam": 0.043,
-      "openness": 0.943
+      "swingweight": 0.93,
+      "stiffness": 0.581,
+      "avgBeam": 0.042,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -19797,12 +19899,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.904,
+      "headSize": 0.905,
       "strungWeight": 0.37,
-      "swingweight": 0.37,
-      "stiffness": 0.057,
-      "avgBeam": 0.107,
-      "openness": 0.943
+      "swingweight": 0.366,
+      "stiffness": 0.056,
+      "avgBeam": 0.106,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -19838,12 +19940,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.904,
+      "headSize": 0.905,
       "strungWeight": 0,
-      "swingweight": 0.128,
-      "stiffness": 0.121,
-      "avgBeam": 0.107,
-      "openness": 0.943
+      "swingweight": 0.127,
+      "stiffness": 0.12,
+      "avgBeam": 0.106,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -19862,7 +19964,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "wilson-blade-93-2013": {
     "bucketKey": "players|16x19|light",
-    "bucketSize": 9,
+    "bucketSize": 10,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "players",
@@ -19875,11 +19977,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     },
     "percentiles": {
       "headSize": 0,
-      "strungWeight": 0.153,
-      "swingweight": 0.662,
-      "stiffness": 0.854,
-      "avgBeam": 0.107,
-      "openness": 0.943
+      "strungWeight": 0.151,
+      "swingweight": 0.658,
+      "stiffness": 0.852,
+      "avgBeam": 0.106,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -19898,7 +20000,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "wilson-blade-98-16x19-2015": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.3,
     "bands": {
       "headSize": "players",
@@ -19910,12 +20012,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.886,
+      "headSize": 0.331,
+      "strungWeight": 0.887,
       "swingweight": 0.996,
-      "stiffness": 0.925,
-      "avgBeam": 0.107,
-      "openness": 0.943
+      "stiffness": 0.926,
+      "avgBeam": 0.106,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -19939,7 +20041,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "wilson-blade-98-16x19-2013": {
     "bucketKey": "players|16x19|light",
-    "bucketSize": 9,
+    "bucketSize": 10,
     "rarityScore": 0.3,
     "bands": {
       "headSize": "players",
@@ -19951,12 +20053,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.149,
+      "headSize": 0.331,
+      "strungWeight": 0.148,
       "swingweight": 0.989,
-      "stiffness": 0.925,
-      "avgBeam": 0.107,
-      "openness": 0.943
+      "stiffness": 0.926,
+      "avgBeam": 0.106,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -19992,11 +20094,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "18x20"
     },
     "percentiles": {
-      "headSize": 0.327,
+      "headSize": 0.331,
       "strungWeight": 0.662,
       "swingweight": 0.961,
-      "stiffness": 0.47,
-      "avgBeam": 0.107,
+      "stiffness": 0.472,
+      "avgBeam": 0.106,
       "openness": 0.06
     },
     "rarityTags": [
@@ -20033,11 +20135,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "18x20"
     },
     "percentiles": {
-      "headSize": 0.327,
+      "headSize": 0.331,
       "strungWeight": 0.06,
-      "swingweight": 0.861,
-      "stiffness": 0.47,
-      "avgBeam": 0.107,
+      "swingweight": 0.863,
+      "stiffness": 0.472,
+      "avgBeam": 0.106,
       "openness": 0.06
     },
     "rarityTags": [
@@ -20079,11 +20181,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "18x20"
     },
     "percentiles": {
-      "headSize": 0.327,
+      "headSize": 0.331,
       "strungWeight": 0.377,
-      "swingweight": 0.922,
-      "stiffness": 0.47,
-      "avgBeam": 0.107,
+      "swingweight": 0.923,
+      "stiffness": 0.472,
+      "avgBeam": 0.106,
       "openness": 0.06
     },
     "rarityTags": [
@@ -20113,7 +20215,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "wilson-pro-staff-95s-2014": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "players",
@@ -20126,11 +20228,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     },
     "percentiles": {
       "headSize": 0.032,
-      "strungWeight": 0.875,
+      "strungWeight": 0.877,
       "swingweight": 0.085,
-      "stiffness": 0.58,
-      "avgBeam": 0.174,
-      "openness": 0.943
+      "stiffness": 0.581,
+      "avgBeam": 0.173,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -20149,7 +20251,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "wilson-pro-staff-95s-2015": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "players",
@@ -20163,10 +20265,10 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     "percentiles": {
       "headSize": 0.032,
       "strungWeight": 0.648,
-      "swingweight": 0.37,
-      "stiffness": 0.263,
-      "avgBeam": 0.174,
-      "openness": 0.943
+      "swingweight": 0.366,
+      "stiffness": 0.261,
+      "avgBeam": 0.173,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -20185,7 +20287,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "wilson-pro-staff-97-2016": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "players",
@@ -20198,11 +20300,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     },
     "percentiles": {
       "headSize": 0.085,
-      "strungWeight": 0.89,
-      "swingweight": 0.801,
-      "stiffness": 0.854,
-      "avgBeam": 0.174,
-      "openness": 0.943
+      "strungWeight": 0.891,
+      "swingweight": 0.803,
+      "stiffness": 0.852,
+      "avgBeam": 0.173,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -20221,7 +20323,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "wilson-pro-staff-97-ls-black-2016": {
     "bucketKey": "players|16x19|light",
-    "bucketSize": 9,
+    "bucketSize": 10,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "players",
@@ -20235,10 +20337,10 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     "percentiles": {
       "headSize": 0.085,
       "strungWeight": 0.352,
-      "swingweight": 0.064,
-      "stiffness": 0.854,
-      "avgBeam": 0.174,
-      "openness": 0.943
+      "swingweight": 0.063,
+      "stiffness": 0.852,
+      "avgBeam": 0.173,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -20257,7 +20359,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "wilson-pro-staff-97s-2016": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "players",
@@ -20270,11 +20372,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     },
     "percentiles": {
       "headSize": 0.085,
-      "strungWeight": 0.786,
-      "swingweight": 0.452,
-      "stiffness": 0.779,
-      "avgBeam": 0.174,
-      "openness": 0.943
+      "strungWeight": 0.789,
+      "swingweight": 0.447,
+      "stiffness": 0.778,
+      "avgBeam": 0.173,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -20293,7 +20395,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "wilson-pro-staff-rf97-autograph-2016": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "players",
@@ -20307,10 +20409,10 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     "percentiles": {
       "headSize": 0.085,
       "strungWeight": 0.996,
-      "swingweight": 0.619,
-      "stiffness": 0.925,
-      "avgBeam": 0.174,
-      "openness": 0.943
+      "swingweight": 0.616,
+      "stiffness": 0.926,
+      "avgBeam": 0.173,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -20329,7 +20431,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "wilson-pro-staff-rf97-autograph-2018": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "players",
@@ -20344,9 +20446,9 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "headSize": 0.085,
       "strungWeight": 1,
       "swingweight": 0.982,
-      "stiffness": 0.854,
-      "avgBeam": 0.174,
-      "openness": 0.943
+      "stiffness": 0.852,
+      "avgBeam": 0.173,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -20365,7 +20467,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "yonex-ezone-100-2025": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "midplus",
@@ -20377,12 +20479,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.584,
-      "swingweight": 0.388,
-      "stiffness": 0.854,
-      "avgBeam": 0.883,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.384,
+      "stiffness": 0.852,
+      "avgBeam": 0.884,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -20406,7 +20508,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "yonex-ezone-100-2022": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "midplus",
@@ -20418,12 +20520,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.584,
-      "swingweight": 0.452,
-      "stiffness": 0.779,
-      "avgBeam": 0.883,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.447,
+      "stiffness": 0.778,
+      "avgBeam": 0.884,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -20459,12 +20561,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.114,
+      "headSize": 0.859,
+      "strungWeight": 0.113,
       "swingweight": 0.046,
       "stiffness": 0.676,
-      "avgBeam": 0.883,
-      "openness": 0.943
+      "avgBeam": 0.884,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -20500,12 +20602,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.31,
-      "swingweight": 0.285,
-      "stiffness": 0.779,
-      "avgBeam": 0.883,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.306,
+      "swingweight": 0.282,
+      "stiffness": 0.778,
+      "avgBeam": 0.884,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -20541,9 +20643,9 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x18"
     },
     "percentiles": {
-      "headSize": 0.932,
-      "strungWeight": 0.146,
-      "swingweight": 0.324,
+      "headSize": 0.933,
+      "strungWeight": 0.144,
+      "swingweight": 0.32,
       "stiffness": 0.676,
       "avgBeam": 0.947,
       "openness": 1
@@ -20575,7 +20677,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "yonex-ezone-98-2025": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "players",
@@ -20587,12 +20689,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.779,
-      "swingweight": 0.537,
-      "stiffness": 0.345,
-      "avgBeam": 0.883,
-      "openness": 0.943
+      "headSize": 0.331,
+      "strungWeight": 0.782,
+      "swingweight": 0.535,
+      "stiffness": 0.349,
+      "avgBeam": 0.884,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -20616,7 +20718,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "yonex-ezone-98-2022": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "players",
@@ -20628,12 +20730,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.779,
-      "swingweight": 0.48,
-      "stiffness": 0.58,
-      "avgBeam": 0.883,
-      "openness": 0.943
+      "headSize": 0.331,
+      "strungWeight": 0.782,
+      "swingweight": 0.479,
+      "stiffness": 0.581,
+      "avgBeam": 0.884,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -20657,7 +20759,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "yonex-ezone-98-tour-2025": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "players",
@@ -20669,12 +20771,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.943,
+      "headSize": 0.331,
+      "strungWeight": 0.944,
       "swingweight": 0.982,
-      "stiffness": 0.263,
-      "avgBeam": 0.883,
-      "openness": 0.943
+      "stiffness": 0.261,
+      "avgBeam": 0.884,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -20698,7 +20800,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "yonex-ezone-98-tour-2022": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "players",
@@ -20710,12 +20812,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.943,
+      "headSize": 0.331,
+      "strungWeight": 0.944,
       "swingweight": 0.947,
-      "stiffness": 0.47,
-      "avgBeam": 0.883,
-      "openness": 0.943
+      "stiffness": 0.472,
+      "avgBeam": 0.884,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -20751,12 +20853,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
+      "headSize": 0.859,
       "strungWeight": 0.947,
       "swingweight": 0.961,
       "stiffness": 0.676,
-      "avgBeam": 0.897,
-      "openness": 0.943
+      "avgBeam": 0.898,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -20793,11 +20895,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     },
     "percentiles": {
       "headSize": 0.032,
-      "strungWeight": 0.872,
-      "swingweight": 0.783,
-      "stiffness": 0.263,
-      "avgBeam": 0.107,
-      "openness": 0.164
+      "strungWeight": 0.873,
+      "swingweight": 0.785,
+      "stiffness": 0.261,
+      "avgBeam": 0.106,
+      "openness": 0.162
     },
     "rarityTags": [
       {
@@ -20829,11 +20931,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     },
     "percentiles": {
       "headSize": 0.032,
-      "strungWeight": 0.872,
-      "swingweight": 0.552,
-      "stiffness": 0.174,
-      "avgBeam": 0.107,
-      "openness": 0.164
+      "strungWeight": 0.873,
+      "swingweight": 0.549,
+      "stiffness": 0.173,
+      "avgBeam": 0.106,
+      "openness": 0.162
     },
     "rarityTags": [],
     "hintWeights": {
@@ -20858,11 +20960,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x18"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.779,
-      "swingweight": 0.48,
-      "stiffness": 0.263,
-      "avgBeam": 0.367,
+      "headSize": 0.331,
+      "strungWeight": 0.782,
+      "swingweight": 0.479,
+      "stiffness": 0.261,
+      "avgBeam": 0.37,
       "openness": 1
     },
     "rarityTags": [
@@ -20904,11 +21006,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x18"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.943,
-      "swingweight": 0.801,
-      "stiffness": 0.345,
-      "avgBeam": 0.367,
+      "headSize": 0.331,
+      "strungWeight": 0.944,
+      "swingweight": 0.803,
+      "stiffness": 0.349,
+      "avgBeam": 0.37,
       "openness": 1
     },
     "rarityTags": [
@@ -20950,11 +21052,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x18"
     },
     "percentiles": {
-      "headSize": 0.327,
-      "strungWeight": 0.779,
+      "headSize": 0.331,
+      "strungWeight": 0.782,
       "swingweight": 0.975,
       "stiffness": 0.676,
-      "avgBeam": 0.367,
+      "avgBeam": 0.37,
       "openness": 1
     },
     "rarityTags": [
@@ -20984,7 +21086,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "yonex-vcore-pro-97-310-2018": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "players",
@@ -20997,11 +21099,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     },
     "percentiles": {
       "headSize": 0.085,
-      "strungWeight": 0.872,
-      "swingweight": 0.452,
-      "stiffness": 0.47,
-      "avgBeam": 0.541,
-      "openness": 0.943
+      "strungWeight": 0.873,
+      "swingweight": 0.447,
+      "stiffness": 0.472,
+      "avgBeam": 0.542,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -21037,12 +21139,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.256,
+      "headSize": 0.859,
+      "strungWeight": 0.254,
       "swingweight": 0.025,
-      "stiffness": 0.47,
-      "avgBeam": 0.406,
-      "openness": 0.943
+      "stiffness": 0.472,
+      "avgBeam": 0.408,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -21073,12 +21175,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
+      "headSize": 0.331,
       "strungWeight": 0.356,
       "swingweight": 0.039,
-      "stiffness": 0.47,
-      "avgBeam": 0.406,
-      "openness": 0.943
+      "stiffness": 0.472,
+      "avgBeam": 0.408,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -21097,7 +21199,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "tecnifibre-tfight-rs-320": {
     "bucketKey": "players|16x19|tour",
-    "bucketSize": 51,
+    "bucketSize": 52,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "players",
@@ -21109,12 +21211,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.327,
+      "headSize": 0.331,
       "strungWeight": 0.641,
-      "swingweight": 0.285,
-      "stiffness": 0.47,
-      "avgBeam": 0.406,
-      "openness": 0.943
+      "swingweight": 0.282,
+      "stiffness": 0.472,
+      "avgBeam": 0.408,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -21145,11 +21247,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x18"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.413,
-      "swingweight": 0.043,
-      "stiffness": 0.174,
-      "avgBeam": 0.851,
+      "headSize": 0.859,
+      "strungWeight": 0.412,
+      "swingweight": 0.042,
+      "stiffness": 0.173,
+      "avgBeam": 0.852,
       "openness": 1
     },
     "rarityTags": [
@@ -21201,11 +21303,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x18"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.214,
+      "headSize": 0.859,
+      "strungWeight": 0.211,
       "swingweight": 0.007,
-      "stiffness": 0.057,
-      "avgBeam": 0.384,
+      "stiffness": 0.056,
+      "avgBeam": 0.387,
       "openness": 1
     },
     "rarityTags": [
@@ -21257,11 +21359,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x18"
     },
     "percentiles": {
-      "headSize": 0.858,
+      "headSize": 0.859,
       "strungWeight": 0.053,
       "swingweight": 0,
       "stiffness": 0.085,
-      "avgBeam": 0.384,
+      "avgBeam": 0.387,
       "openness": 1
     },
     "rarityTags": [
@@ -21314,10 +21416,10 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     },
     "percentiles": {
       "headSize": 0.972,
-      "strungWeight": 0.214,
+      "strungWeight": 0.211,
       "swingweight": 0.039,
       "stiffness": 0.011,
-      "avgBeam": 0.427,
+      "avgBeam": 0.43,
       "openness": 1
     },
     "rarityTags": [
@@ -21357,7 +21459,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "wilson-clash-100-v3-2025": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.4,
     "bands": {
       "headSize": "midplus",
@@ -21369,12 +21471,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.413,
-      "swingweight": 0.228,
+      "headSize": 0.859,
+      "strungWeight": 0.412,
+      "swingweight": 0.225,
       "stiffness": 0.004,
-      "avgBeam": 0.936,
-      "openness": 0.943
+      "avgBeam": 0.937,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -21415,12 +21517,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x20"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.779,
-      "swingweight": 0.829,
+      "headSize": 0.859,
+      "strungWeight": 0.782,
+      "swingweight": 0.831,
       "stiffness": 0.039,
-      "avgBeam": 0.936,
-      "openness": 0.164
+      "avgBeam": 0.937,
+      "openness": 0.162
     },
     "rarityTags": [
       {
@@ -21461,12 +21563,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.214,
-      "swingweight": 0.096,
+      "headSize": 0.859,
+      "strungWeight": 0.211,
+      "swingweight": 0.095,
       "stiffness": 0.004,
-      "avgBeam": 0.936,
-      "openness": 0.943
+      "avgBeam": 0.937,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -21508,11 +21610,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     },
     "percentiles": {
       "headSize": 0.982,
-      "strungWeight": 0.214,
-      "swingweight": 0.324,
-      "stiffness": 0.057,
-      "avgBeam": 0.936,
-      "openness": 0.943
+      "strungWeight": 0.211,
+      "swingweight": 0.32,
+      "stiffness": 0.056,
+      "avgBeam": 0.937,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -21541,7 +21643,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "wilson-ultra-100-v5-2025": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "midplus",
@@ -21553,12 +21655,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.584,
-      "swingweight": 0.619,
-      "stiffness": 0.779,
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.616,
+      "stiffness": 0.778,
       "avgBeam": 0.986,
-      "openness": 0.943
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -21594,11 +21696,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x18"
     },
     "percentiles": {
-      "headSize": 0.356,
-      "strungWeight": 0.779,
-      "swingweight": 0.922,
-      "stiffness": 0.925,
-      "avgBeam": 0.384,
+      "headSize": 0.359,
+      "strungWeight": 0.782,
+      "swingweight": 0.923,
+      "stiffness": 0.926,
+      "avgBeam": 0.387,
       "openness": 1
     },
     "rarityTags": [
@@ -21640,12 +21742,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.214,
-      "swingweight": 0.285,
-      "stiffness": 0.47,
+      "headSize": 0.859,
+      "strungWeight": 0.211,
+      "swingweight": 0.282,
+      "stiffness": 0.472,
       "avgBeam": 0.986,
-      "openness": 0.943
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -21681,12 +21783,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
+      "headSize": 0.859,
       "strungWeight": 0.032,
       "swingweight": 0.025,
-      "stiffness": 0.58,
+      "stiffness": 0.581,
       "avgBeam": 0.986,
-      "openness": 0.943
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -21723,7 +21825,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     },
     "percentiles": {
       "headSize": 0.996,
-      "strungWeight": 0.114,
+      "strungWeight": 0.113,
       "swingweight": 0.025,
       "stiffness": 0.676,
       "avgBeam": 0.993,
@@ -21756,7 +21858,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "head-instinct-mp-318g-2024": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.24,
     "bands": {
       "headSize": "midplus",
@@ -21768,12 +21870,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.584,
-      "swingweight": 0.37,
-      "stiffness": 0.47,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.366,
+      "stiffness": 0.472,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -21809,12 +21911,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.31,
-      "swingweight": 0.249,
-      "stiffness": 0.58,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.306,
+      "swingweight": 0.246,
+      "stiffness": 0.581,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -21851,11 +21953,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
     },
     "percentiles": {
       "headSize": 0.972,
-      "strungWeight": 0.128,
-      "swingweight": 0.302,
-      "stiffness": 0.47,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "strungWeight": 0.127,
+      "swingweight": 0.299,
+      "stiffness": 0.472,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -21879,7 +21981,7 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
   },
   "wilson-burn-100-cv-318g-2017": {
     "bucketKey": "midplus|16x19|standard",
-    "bucketSize": 44,
+    "bucketSize": 45,
     "rarityScore": 0.16,
     "bands": {
       "headSize": "midplus",
@@ -21891,12 +21993,12 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "16x19"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.584,
-      "swingweight": 0.491,
-      "stiffness": 0.925,
-      "avgBeam": 0.851,
-      "openness": 0.943
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.489,
+      "stiffness": 0.926,
+      "avgBeam": 0.852,
+      "openness": 0.944
     },
     "rarityTags": [
       {
@@ -21927,11 +22029,11 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "pattern": "18x16"
     },
     "percentiles": {
-      "headSize": 0.858,
-      "strungWeight": 0.584,
-      "swingweight": 0.783,
-      "stiffness": 0.925,
-      "avgBeam": 0.851,
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.785,
+      "stiffness": 0.926,
+      "avgBeam": 0.852,
       "openness": 1
     },
     "rarityTags": [
@@ -21951,6 +22053,129 @@ export const FRAME_NOVELTY_PROFILE: Record<string, FrameNoveltyProfile> = {
       "plushLauncher": 0,
       "stableWhipper": 0,
       "preciseSpinner": 0,
+      "comfortableAttacker": 0
+    }
+  },
+  "mizuno-acrospeed-300-2026": {
+    "bucketKey": "midplus|16x19|standard",
+    "bucketSize": 45,
+    "rarityScore": 0.24,
+    "bands": {
+      "headSize": "midplus",
+      "weight": "standard",
+      "swingweight": "balanced",
+      "stiffness": "firm",
+      "beam": "mid",
+      "density": "open",
+      "pattern": "16x19"
+    },
+    "percentiles": {
+      "headSize": 0.859,
+      "strungWeight": 0.585,
+      "swingweight": 0.718,
+      "stiffness": 0.926,
+      "avgBeam": 0.577,
+      "openness": 0.944
+    },
+    "rarityTags": [
+      {
+        "id": "openPattern",
+        "label": "very open pattern",
+        "score": 0.16
+      },
+      {
+        "id": "variableBeam",
+        "label": "variable beam profile",
+        "score": 0.08
+      }
+    ],
+    "hintWeights": {
+      "controlBomber": 0.5,
+      "plushLauncher": 0,
+      "stableWhipper": 0.5,
+      "preciseSpinner": 0.5,
+      "comfortableAttacker": 0
+    }
+  },
+  "mizuno-acrostrike-305-2026": {
+    "bucketKey": "players|16x19|tour",
+    "bucketSize": 52,
+    "rarityScore": 0.24,
+    "bands": {
+      "headSize": "players",
+      "weight": "tour",
+      "swingweight": "plow",
+      "stiffness": "modern",
+      "beam": "mid",
+      "density": "open",
+      "pattern": "16x19"
+    },
+    "percentiles": {
+      "headSize": 0.331,
+      "strungWeight": 0.782,
+      "swingweight": 0.785,
+      "stiffness": 0.349,
+      "avgBeam": 0.37,
+      "openness": 0.944
+    },
+    "rarityTags": [
+      {
+        "id": "openPattern",
+        "label": "very open pattern",
+        "score": 0.16
+      },
+      {
+        "id": "variableBeam",
+        "label": "variable beam profile",
+        "score": 0.08
+      }
+    ],
+    "hintWeights": {
+      "controlBomber": 0,
+      "plushLauncher": 0.5,
+      "stableWhipper": 0,
+      "preciseSpinner": 0.5,
+      "comfortableAttacker": 0.5
+    }
+  },
+  "mizuno-acrostrike-290-2026": {
+    "bucketKey": "players|16x19|light",
+    "bucketSize": 10,
+    "rarityScore": 0.24,
+    "bands": {
+      "headSize": "players",
+      "weight": "light",
+      "swingweight": "balanced",
+      "stiffness": "modern",
+      "beam": "mid",
+      "density": "open",
+      "pattern": "16x19"
+    },
+    "percentiles": {
+      "headSize": 0.331,
+      "strungWeight": 0.349,
+      "swingweight": 0.479,
+      "stiffness": 0.349,
+      "avgBeam": 0.37,
+      "openness": 0.944
+    },
+    "rarityTags": [
+      {
+        "id": "openPattern",
+        "label": "very open pattern",
+        "score": 0.16
+      },
+      {
+        "id": "variableBeam",
+        "label": "variable beam profile",
+        "score": 0.08
+      }
+    ],
+    "hintWeights": {
+      "controlBomber": 0,
+      "plushLauncher": 0.5,
+      "stableWhipper": 0.5,
+      "preciseSpinner": 0.5,
       "comfortableAttacker": 0
     }
   }

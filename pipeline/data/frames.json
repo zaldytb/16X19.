@@ -11070,5 +11070,125 @@
     "brand": "Wilson",
     "_meta": { "aeroBonus": 0.5, "comfortTech": 1, "spinTech": 1.5, "genBonus": 0 },
     "_provenance": { "source": "RacketLogger / Do It Tennis (Burn 100S Countervail)", "dateAdded": "2026-03-29", "confidence": "medium" }
+  },
+  {
+    "id": "mizuno-acrospeed-300-2026",
+    "name": "Mizuno Acrospeed 300 318g",
+    "year": 2026,
+    "headSize": 100,
+    "length": 27,
+    "strungWeight": 318,
+    "balance": 33.02,
+    "balancePts": "4 pts HL",
+    "swingweight": 324,
+    "stiffness": 69,
+    "beamWidth": [24, 26, 21],
+    "pattern": "16x19",
+    "powerLevel": "Low-Medium",
+    "strokeStyle": "Medium-Full",
+    "swingSpeed": "Fast",
+    "tensionRange": [45, 60],
+    "frameProfile": "Variable beam with Booster Grommet system, Enerzy beam construction, Dual Spring layup",
+    "identity": "Power Spin Machine",
+    "notes": "Modern player's racquet combining raw speed with easy power and spin. Booster Grommet system increases dwell time and bite. Enerzy beam reduces deformation, Dual Spring carbon fiber returns extra energy.",
+    "brand": "Mizuno",
+    "_meta": {
+      "aeroBonus": 0.5,
+      "comfortTech": 0.5,
+      "spinTech": 1.0,
+      "genBonus": 0
+    },
+    "_novelty": {
+      "controlBomber": 0.5,
+      "plushLauncher": 0,
+      "stableWhipper": 0.5,
+      "preciseSpinner": 0.5,
+      "comfortableAttacker": 0
+    },
+    "_provenance": {
+      "source": "tennis-warehouse-scrape",
+      "dateAdded": "2026-04-04",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "mizuno-acrostrike-305-2026",
+    "name": "Mizuno Acrostrike 305 323g",
+    "year": 2026,
+    "headSize": 98,
+    "length": 27,
+    "strungWeight": 323,
+    "balance": 33.48,
+    "balancePts": "3 pts HL",
+    "swingweight": 325,
+    "stiffness": 63,
+    "beamWidth": [21, 23, 22],
+    "pattern": "16x19",
+    "powerLevel": "Low-Medium",
+    "strokeStyle": "Medium-Full",
+    "swingSpeed": "Medium-Fast",
+    "tensionRange": [45, 60],
+    "frameProfile": "Flexible beam with 4WP Grommet system, Enerzy Beam construction, Dual Spring layup",
+    "identity": "Control Precision",
+    "notes": "Controllable power with great feel for intermediate/advanced players. 98 sq inch head with flexible beam for accuracy. 4WP Grommet system helps strings snap back for spin.",
+    "brand": "Mizuno",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1.0,
+      "spinTech": 0.5,
+      "genBonus": 0
+    },
+    "_novelty": {
+      "controlBomber": 0,
+      "plushLauncher": 0.5,
+      "stableWhipper": 0,
+      "preciseSpinner": 0.5,
+      "comfortableAttacker": 0.5
+    },
+    "_provenance": {
+      "source": "tennis-warehouse-scrape",
+      "dateAdded": "2026-04-04",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "mizuno-acrostrike-290-2026",
+    "name": "Mizuno Acrostrike 290 303g",
+    "year": 2026,
+    "headSize": 98,
+    "length": 27,
+    "strungWeight": 303,
+    "balance": 33.48,
+    "balancePts": "3 pts HL",
+    "swingweight": 318,
+    "stiffness": 63,
+    "beamWidth": [21, 23, 22],
+    "pattern": "16x19",
+    "powerLevel": "Low-Medium",
+    "strokeStyle": "Medium",
+    "swingSpeed": "Medium-Fast",
+    "tensionRange": [45, 60],
+    "frameProfile": "Light flexible beam with 4WP Grommet system (nanoalloy), Enerzy beam, Dual Spring layup",
+    "identity": "Speed Precision",
+    "notes": "Speedy racquet with precision and feel for rising intermediate players. Sub-320 swingweight glides through contact. 4WP Grommet with nanoalloy absorbs vibration for smooth feel.",
+    "brand": "Mizuno",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 1.0,
+      "spinTech": 0.5,
+      "genBonus": 0
+    },
+    "_novelty": {
+      "controlBomber": 0,
+      "plushLauncher": 0.5,
+      "stableWhipper": 0.5,
+      "preciseSpinner": 0.5,
+      "comfortableAttacker": 0
+    },
+    "_provenance": {
+      "source": "tennis-warehouse-scrape",
+      "dateAdded": "2026-04-04",
+      "confidence": "high"
+    }
   }
 ]

@@ -2,24 +2,15 @@
  * Pure view-model for Compare diff battery (stat comparison table).
  */
 
-import { STAT_LABELS } from '../../../engine/constants.js';
+import { STAT_KEYS, STAT_LABELS } from '../../../engine/constants.js';
 import type { SetupStats } from '../../../engine/types.js';
 import type { CompareSlot, SlotColor, SlotId } from './types.js';
 
 const TOTAL_SEGMENTS = 10;
-const DIFF_STATS: Array<keyof SetupStats> = [
-  'power',
-  'control',
-  'spin',
-  'comfort',
-  'feel',
-  'stability',
-  'forgiveness',
-  'launch',
-  'maneuverability',
-  'durability',
-  'playability',
-];
+const DIFF_STATS = [...STAT_KEYS] as Array<keyof SetupStats>;
+const STAT_LABEL_BY_KEY = Object.fromEntries(
+  STAT_KEYS.map((statKey, index) => [statKey, STAT_LABELS[index] || statKey]),
+) as Record<keyof SetupStats, string>;
 
 export interface DiffRow {
   stat: string;
@@ -70,9 +61,7 @@ function calculateDiffs(slots: CompareSlot[]): DiffRow[] {
   if (slots.length === 0) return [];
 
   const baseline = slots[0];
-  const labels = STAT_LABELS;
-
-  return DIFF_STATS.map((stat, index) => {
+  return DIFF_STATS.map((stat) => {
     const baselineValue = getStatValue(baseline.stats, stat);
 
     const values = slots.map((slot) => ({
@@ -88,7 +77,7 @@ function calculateDiffs(slots: CompareSlot[]): DiffRow[] {
 
     return {
       stat,
-      label: labels[index] || stat,
+      label: STAT_LABEL_BY_KEY[stat] || stat,
       values,
       baselineValue,
       winner,

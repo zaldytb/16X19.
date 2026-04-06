@@ -4,7 +4,7 @@
  */
 
 import { ensureChartLoaded } from '../../../../chart/ensure-chart-loaded.js';
-import { STAT_KEYS } from '../../../../engine/constants.js';
+import { STAT_KEYS, STAT_LABELS } from '../../../../engine/constants.js';
 import type { SetupStats } from '../../../../engine/types.js';
 import type { CompareSlot } from '../types.js';
 
@@ -14,19 +14,7 @@ export interface RadarChartProps {
   slots: CompareSlot[];
 }
 
-const OUTER_LABELS = [
-  'Power',
-  'Control',
-  'Spin',
-  'Comfort',
-  'Feel',
-  'Stability',
-  'Forgiveness',
-  'Launch',
-  'Maneuver',
-  'Durability',
-  'Playability',
-];
+const OUTER_LABELS = [...STAT_LABELS];
 
 function createDatasets(slots: CompareSlot[]) {
   const pointStyles = ['circle', 'rectRot', 'triangle'];

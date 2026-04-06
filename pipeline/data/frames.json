@@ -11190,5 +11190,125 @@
       "dateAdded": "2026-04-04",
       "confidence": "high"
     }
+  },
+  {
+    "id": "wilson-pro-staff-97-classic-2026",
+    "name": "Wilson Pro Staff 97 Classic 332g",
+    "year": 2026,
+    "headSize": 97,
+    "length": 27,
+    "strungWeight": 332,
+    "balance": 32,
+    "balancePts": "7 pts HL",
+    "swingweight": 325,
+    "stiffness": 66,
+    "beamWidth": [21.5, 21.5, 21.5],
+    "pattern": "16x19",
+    "powerLevel": "Low",
+    "strokeStyle": "Full",
+    "swingSpeed": "Fast",
+    "tensionRange": [47, 57],
+    "frameProfile": "Constant thin beam with Aramid/Graphite, Paradigm Bending, FORTYFIVE technology",
+    "identity": "Classic Control",
+    "notes": "Classic Pro Staff cosmetic with same specs as v14. Aramid fibers for legendary feel. Paradigm Bending optimizes flex between hoop and shaft. FORTYFIVE technology aligns graphite fibers at 45 degrees for increased dwell time and pocketing.",
+    "brand": "Wilson",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    },
+    "_novelty": {
+      "controlBomber": 0,
+      "plushLauncher": 0,
+      "stableWhipper": 0.5,
+      "preciseSpinner": 0.5,
+      "comfortableAttacker": 0
+    },
+    "_provenance": {
+      "source": "tennis-warehouse-scrape",
+      "dateAdded": "2026-04-04",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "wilson-pro-staff-97l-classic-2026",
+    "name": "Wilson Pro Staff 97L Classic 306g",
+    "year": 2026,
+    "headSize": 97,
+    "length": 27,
+    "strungWeight": 306,
+    "balance": 33.32,
+    "balancePts": "3 pts HL",
+    "swingweight": 313,
+    "stiffness": 68,
+    "beamWidth": [23.5, 23.5, 23.5],
+    "pattern": "16x19",
+    "powerLevel": "Low-Medium",
+    "strokeStyle": "Medium-Full",
+    "swingSpeed": "Medium-Fast",
+    "tensionRange": [47, 57],
+    "frameProfile": "Constant beam with Paradigm Bending, FORTYFIVE technology, String Mapping",
+    "identity": "Light Control",
+    "notes": "Lighter Pro Staff for intermediate players. Sub-315 swingweight for easy swinging. Paradigm Bending pairs flexible shaft with stiffer perimeter. String Mapping combines denser center spacing with wider margins.",
+    "brand": "Wilson",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0.5,
+      "spinTech": 0,
+      "genBonus": 0
+    },
+    "_novelty": {
+      "controlBomber": 0,
+      "plushLauncher": 0,
+      "stableWhipper": 0,
+      "preciseSpinner": 0.5,
+      "comfortableAttacker": 0
+    },
+    "_provenance": {
+      "source": "tennis-warehouse-scrape",
+      "dateAdded": "2026-04-04",
+      "confidence": "high"
+    }
+  },
+  {
+    "id": "wilson-pro-staff-team-classic-2026",
+    "name": "Wilson Pro Staff Team Classic 295g",
+    "year": 2026,
+    "headSize": 100,
+    "length": 27,
+    "strungWeight": 295,
+    "balance": 33.48,
+    "balancePts": "3 pts HL",
+    "swingweight": 294,
+    "stiffness": 69,
+    "beamWidth": [23.5, 23.5, 23.5],
+    "pattern": "16x19",
+    "powerLevel": "Low-Medium",
+    "strokeStyle": "Medium",
+    "swingSpeed": "Medium",
+    "tensionRange": [47, 57],
+    "frameProfile": "Constant beam, entry-level Pro Staff",
+    "identity": "Accessible Control",
+    "notes": "Entry-level Pro Staff for rising intermediate players. Under 11 ounces with fast swing speed. Easy to whip up spin or react at net. Great value option with Pro Staff DNA.",
+    "brand": "Wilson",
+    "_meta": {
+      "aeroBonus": 0,
+      "comfortTech": 0,
+      "spinTech": 0,
+      "genBonus": 0
+    },
+    "_novelty": {
+      "controlBomber": 0,
+      "plushLauncher": 0,
+      "stableWhipper": 0,
+      "preciseSpinner": 0,
+      "comfortableAttacker": 0
+    },
+    "_provenance": {
+      "source": "tennis-warehouse-scrape",
+      "dateAdded": "2026-04-04",
+      "confidence": "high"
+    }
   }
 ]

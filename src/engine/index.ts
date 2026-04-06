@@ -51,6 +51,14 @@ export {
   calcHybridInteraction
 } from './hybrid.js';
 
+// Pairing Affinity
+export {
+  computePairingAffinity,
+  deriveFriction,
+  deriveRotationalResistance,
+  type AffinityBreakdown,
+} from './pairingAffinity.js';
+
 // Composite / scoring
 export {
   predictSetup,

@@ -2,6 +2,7 @@
 // Hybrid string interaction calculations
 
 import type { StringData, HybridMod } from './types';
+import { computePairingAffinity } from './pairingAffinity.js';
 
 /**
  * PREDICTION LAYER 3 — Hybrid interaction analysis.
@@ -129,6 +130,31 @@ export function calcHybridInteraction(mainsData: StringData, crossesData: String
       mods.feelMod -= 1;
       mods.controlMod -= 0.5;
     }
+
+    // ── Pairing affinity — physical interaction model ──
+    // Converts four dimension scores into attribute deltas. Each dimension
+    // is centered at 0.5 (neutral); above adds benefit, below adds penalty.
+    // Multipliers reflect the physical sensitivity of each attribute to each
+    // interaction dimension.
+    const affinity = computePairingAffinity(mainsData, crossesData);
+
+    // Friction interaction -> snapback quality -> spin efficiency and feel
+    mods.spinMod += (affinity.frictionInteraction - 0.5) * 3;
+    mods.feelMod += (affinity.frictionInteraction - 0.5) * 2;
+
+    // Stiffness differential -> load absorption -> comfort and dwell time (power)
+    mods.comfortMod += (affinity.stiffnessDifferential - 0.5) * 3;
+    mods.powerMod += (affinity.stiffnessDifferential - 0.5) * 1.5;
+
+    // Geometry interaction -> mains rotation freedom -> spin consistency, control
+    mods.spinMod += (affinity.geometryInteraction - 0.5) * 2;
+    mods.controlMod += (affinity.geometryInteraction - 0.5) * 1;
+
+    // Spin compatibility -> response consistency -> feel, playability
+    mods.feelMod += (affinity.spinCompatibility - 0.5) * 2;
+    mods.playabilityMod += (affinity.spinCompatibility - 0.5) * 1.5;
+
+    mods._affinityBreakdown = affinity;
   }
 
   // CASE 3: POLY MAINS + GUT/MULTI CROSSES

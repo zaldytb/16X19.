@@ -175,6 +175,15 @@ export interface TensionMod {
   _differential: number;
 }
 
+/** Pairing affinity breakdown for poly×poly hybrid interactions */
+export interface AffinityBreakdown {
+  frictionInteraction: number;
+  stiffnessDifferential: number;
+  geometryInteraction: number;
+  spinCompatibility: number;
+  total: number;
+}
+
 /** Modifier deltas produced by calcHybridInteraction */
 export interface HybridMod {
   powerMod: number;
@@ -185,6 +194,8 @@ export interface HybridMod {
   durabilityMod: number;
   playabilityMod: number;
   launchMod: number;
+  /** Populated for poly×poly hybrids only (Case 2) */
+  _affinityBreakdown?: AffinityBreakdown;
 }
 
 /** Final 11-attribute scores used throughout the UI */

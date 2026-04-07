@@ -15,6 +15,7 @@ import type {
   TensionContext,
   IdentityResult,
 } from '../engine/types.js';
+import { deriveHybridRole } from '../engine/hybridRole.js';
 
 interface BuildConfig {
   isHybrid: boolean;
@@ -128,15 +129,11 @@ export function computeLeaderboardBuildResults(
   }
 
   if (filterType !== 'full') {
+    // Use the affinity engine's hybrid role derivation to identify cross candidates.
+    // CROSS and VERSATILE strings are eligible; MAINS-classified strings are excluded.
     const crossPool = (STRINGS as StringData[]).filter((s: StringData) => {
-      const shape = (s.shape || '').toLowerCase();
-      return (
-        shape.includes('round') ||
-        shape.includes('slick') ||
-        shape.includes('coated') ||
-        s.material === 'Co-Polyester (elastic)' ||
-        (s.material === 'Polyester' && s.stiffness < 195)
-      );
+      const role = deriveHybridRole(s).role;
+      return role === 'CROSS' || role === 'VERSATILE';
     });
 
     const globalFull: Array<{ id: string; score: number }> = [];
@@ -202,16 +199,20 @@ export function computeLeaderboardBuildResults(
   candidates.sort((a, b) => b.rankVal - a.rankVal);
 
   const seen = new Set<string>();
+  const frameCount = new Map<string, number>();
+  const MAX_PER_FRAME = 3;
   const deduped: LeaderboardBuildComputeResult[] = [];
   for (const c of candidates) {
     const key =
       c.racquet.id +
       '|' +
       (c.type === 'hybrid' ? c.mains!.id + '/' + c.crosses!.id : c.string!.id);
-    if (!seen.has(key)) {
-      seen.add(key);
-      deduped.push(c);
-    }
+    if (seen.has(key)) continue;
+    const frameSlots = frameCount.get(c.racquet.id) ?? 0;
+    if (frameSlots >= MAX_PER_FRAME) continue;
+    seen.add(key);
+    frameCount.set(c.racquet.id, frameSlots + 1);
+    deduped.push(c);
     if (deduped.length >= 60) break;
   }
 

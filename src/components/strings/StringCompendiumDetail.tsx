@@ -2,6 +2,7 @@ import type {
   StringCompendiumDetailVm,
   StringTelemetryRowVm,
 } from '../../ui/pages/string-compendium-detail-vm.js';
+import type { HybridRole } from '../../engine/hybridRole.js';
 
 type Props = {
   vm: StringCompendiumDetailVm;
@@ -9,6 +10,12 @@ type Props = {
   onGoToFrame?: (racquetId: string) => void;
   onSelectString?: (stringId: string) => void;
 };
+
+function hybridRoleBadgeClass(role: HybridRole): string {
+  if (role === 'MAINS') return 'text-dc-accent border border-dc-accent';
+  if (role === 'CROSS') return 'text-dc-platinum border border-dc-storm';
+  return 'text-dc-storm border border-dc-border';
+}
 
 /** Same segment classes as Overview / racket compendium — style.css handles light/dark empty-track contrast. */
 function segmentClass(index: number, row: StringTelemetryRowVm): string {
@@ -41,6 +48,13 @@ export function StringCompendiumDetail({ onGoToFrame, onSelectString, onToggleHu
           <span className="text-dc-platinum">{vm.materialUpper}</span>
           <span className="text-dc-accent opacity-60 text-[13px]">//</span>
           <span className="text-dc-storm uppercase tracking-[0.15em]">{vm.shape}</span>
+          <span className="text-dc-accent opacity-60 text-[13px]">//</span>
+          <span
+            className={`font-mono text-[11px] px-2 py-0.5 tracking-[0.2em] uppercase ${hybridRoleBadgeClass(vm.hybridRole)}`}
+            title={vm.hybridRoleSubtext}
+          >
+            {vm.hybridRoleLabel}
+          </span>
         </div>
 
         {vm.notesHtml ? (
@@ -143,6 +157,43 @@ export function StringCompendiumDetail({ onGoToFrame, onSelectString, onToggleHu
           ))}
         </div>
       </div>
+
+      {vm.partnerCards.length > 0 && (
+        <div className="mb-12">
+          <h3 className="font-mono text-xs tracking-[0.15em] text-dc-platinum uppercase mb-1">{vm.partnerSectionTitle}</h3>
+          <p className="text-xs text-dc-storm mb-6 italic">{vm.partnerSectionSubtext}</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {vm.partnerCards.map((card) => (
+              <div
+                key={card.id}
+                className="bg-transparent border border-dc-border hover:border-dc-storm p-4 flex flex-col cursor-pointer transition-colors group"
+                data-string-action="selectString"
+                data-string-arg={card.id}
+                onClick={() => onSelectString?.(card.id)}
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <span
+                    className={`font-mono text-[10px] px-1.5 py-0.5 tracking-[0.15em] uppercase ${
+                      card.partnerRole === 'mains'
+                        ? 'text-dc-accent border border-dc-accent'
+                        : 'text-dc-platinum border border-dc-storm'
+                    }`}
+                  >
+                    {card.partnerRole.toUpperCase()}
+                  </span>
+                  <span className="font-mono text-lg font-bold text-dc-accent">{card.affinityScore}</span>
+                </div>
+                <div className="text-sm font-semibold text-dc-platinum mb-1 mt-1">{card.name}</div>
+                <div className="font-mono text-[12px] text-dc-storm">{card.material}</div>
+                <div className="font-mono text-[11px] text-dc-storm opacity-70 mt-0.5">{card.shape}</div>
+                <div className="font-mono text-[10px] text-dc-storm mt-2 pt-2 border-t border-dc-border uppercase tracking-[0.1em]">
+                  {card.compatibilityLabel}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="mb-12">
         <h3 className="font-mono text-xs tracking-[0.15em] text-dc-platinum uppercase mb-1">// SIMILAR STRINGS</h3>

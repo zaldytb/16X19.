@@ -7,6 +7,7 @@ import { StringFrameInjectionModulator } from '../strings/StringFrameInjectionMo
 import { RACQUETS, STRINGS } from '../../data/loader.js';
 import { GAUGE_LABELS, applyGaugeModifier, buildTensionContext, calcFrameBase, computeCompositeScore, getGaugeOptions, predictSetup } from '../../engine/index.js';
 import type { Racquet, SetupStats, StringConfig, StringData } from '../../engine/types.js';
+import { deriveHybridRole, findBestHybridPartners } from '../../engine/hybridRole.js';
 import { createLoadout, saveLoadout } from '../../state/loadout.js';
 import { useCurrentSetup } from '../../hooks/useStore.js';
 import { filterStringsForHud, type StringHudFilters } from '../../ui/pages/string-hud-filters-vm.js';
@@ -142,7 +143,21 @@ export function StringCompendiumTab({ focusedStringId, onGoToFrame }: StringComp
     setPreviewEnabled(true);
   }, [currentSetup, selectedString]);
 
-  const stringDetailVm = useMemo(() => selectedString ? buildStringCompendiumDetailVm(selectedString, buildPills(selectedString), findSimilarStrings(selectedString.id), findBestFrames(selectedString.id), getArchetype, getFrameIdentityLabel) : null, [selectedString]);
+  const stringDetailVm = useMemo(() => {
+    if (!selectedString) return null;
+    const hybridRoleResult = deriveHybridRole(selectedString);
+    const partnerCards = findBestHybridPartners(selectedString, STRINGS as StringData[]);
+    return buildStringCompendiumDetailVm(
+      selectedString,
+      buildPills(selectedString),
+      findSimilarStrings(selectedString.id),
+      findBestFrames(selectedString.id),
+      getArchetype,
+      getFrameIdentityLabel,
+      hybridRoleResult,
+      partnerCards,
+    );
+  }, [selectedString]);
   const crossesString = useMemo(() => mode === 'hybrid' && crossesId && crossesId !== selectedStringId ? (STRINGS as StringData[]).find((entry) => entry.id === crossesId) || selectedString : selectedString, [crossesId, mode, selectedString, selectedStringId]);
   const previewStats = useMemo(() => {
     if (!selectedString || !selectedFrame || !baseStats || !previewEnabled) return null;
@@ -175,7 +190,7 @@ export function StringCompendiumTab({ focusedStringId, onGoToFrame }: StringComp
         onShapeChange={(value) => setFilters((current) => ({ ...current, shape: value }))}
         onStiffnessChange={(value) => setFilters((current) => ({ ...current, stiffness: value }))}
       >
-        <StringCompendiumRoster strings={strings} selectedStringId={selectedStringId} getArchetype={getArchetype} onSelectString={(stringId) => { setSelectedStringId(stringId); setHudOpen(false); }} />
+        <StringCompendiumRoster strings={strings} selectedStringId={selectedStringId} getArchetype={getArchetype} getHybridRole={(s) => deriveHybridRole(s).role} onSelectString={(stringId) => { setSelectedStringId(stringId); setHudOpen(false); }} />
       </StringCompendiumHud>
 
       <div id="string-main" className="min-h-[400px] p-8">

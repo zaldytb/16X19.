@@ -8,6 +8,7 @@ import {
 } from '../engine/index.js';
 import type { Racquet, StringConfig, SetupAttributes, StringData } from '../engine/types.js';
 import { toSetupAttributes } from './setup-attributes.js';
+import { deriveHybridRole } from '../engine/hybridRole.js';
 
 export type RecommendationPoolCandidate = {
   type: 'full' | 'hybrid';
@@ -89,12 +90,12 @@ export function buildRecommendationPoolForRacquet(racquet: Racquet): {
     }
   });
 
+  // Use the affinity engine's hybrid role derivation to identify cross candidates.
+  // CROSS and VERSATILE strings are eligible; MAINS-classified strings are excluded.
+  // This replaces the previous hardcoded shape/material heuristic.
   const crossCandidates = STRINGS.filter((s) => {
-    const shape = (s.shape || '').toLowerCase();
-    const isRoundSlick = shape.includes('round') || shape.includes('slick') || shape.includes('coated');
-    const isElastic = s.material === 'Co-Polyester (elastic)';
-    const isSoftPoly = s.material === 'Polyester' && s.stiffness < 200;
-    return isRoundSlick || isElastic || isSoftPoly;
+    const role = deriveHybridRole(s).role;
+    return role === 'CROSS' || role === 'VERSATILE';
   });
 
   topMainsIds.forEach((mainsId) => {

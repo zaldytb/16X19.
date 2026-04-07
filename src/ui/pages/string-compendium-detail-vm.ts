@@ -1,4 +1,5 @@
 import type { Racquet, StringData } from '../../engine/types.js';
+import type { HybridRole, HybridPartnerCard } from '../../engine/hybridRole.js';
 
 export interface StringPillsVm {
   bestFor: string[];
@@ -49,6 +50,12 @@ export interface StringCompendiumDetailVm {
   telemetryGroups: StringTelemetryGroupVm[];
   similarCards: StringSimilarCardVm[];
   bestFrameCards: StringBestFrameCardVm[];
+  hybridRole: HybridRole;
+  hybridRoleLabel: string;       // e.g. "Mains String" / "Cross String" / "Versatile"
+  hybridRoleSubtext: string;     // one-line physical rationale
+  partnerCards: HybridPartnerCard[];
+  partnerSectionTitle: string;   // "Best Cross Partners" / "Best Mains Partners" / "Hybrid Partners"
+  partnerSectionSubtext: string; // short description for the section
 }
 
 const SEGMENTS = 25;
@@ -91,6 +98,41 @@ function buildTelemetryGroups(stringItem: StringData): StringTelemetryGroupVm[] 
   }));
 }
 
+function buildHybridRoleLabel(role: HybridRole): string {
+  if (role === 'MAINS') return 'Mains String';
+  if (role === 'CROSS') return 'Cross String';
+  return 'Versatile';
+}
+
+function buildHybridRoleSubtext(role: HybridRole, stringItem: StringData): string {
+  if (role === 'MAINS') {
+    return `Shaped geometry and stiffness optimized for snapback generation. Best used in the mains position of a hybrid setup.`;
+  }
+  if (role === 'CROSS') {
+    return `Round profile and low stiffness provide a compliant platform for the mains to snap against. Best used as the cross string.`;
+  }
+  return `Balanced properties across edge geometry, stiffness, and tension maintenance — performs well in either mains or cross position.`;
+}
+
+function buildPartnerSectionMeta(role: HybridRole): { title: string; subtext: string } {
+  if (role === 'MAINS') {
+    return {
+      title: '// BEST CROSS PARTNERS',
+      subtext: 'Cross strings that maximize snapback quality, platform compliance, and tension maintenance compatibility with this mains.',
+    };
+  }
+  if (role === 'CROSS') {
+    return {
+      title: '// BEST MAINS PARTNERS',
+      subtext: 'Mains strings whose edge geometry and spin profile pair optimally with this cross string.',
+    };
+  }
+  return {
+    title: '// HYBRID PARTNERS',
+    subtext: 'Top pairing options when using this string in either the mains or cross position.',
+  };
+}
+
 export function buildStringCompendiumDetailVm(
   stringItem: StringData,
   pills: StringPillsVm,
@@ -98,6 +140,8 @@ export function buildStringCompendiumDetailVm(
   bestFrames: Array<{ racquet: Racquet; obs: number }>,
   getArchetype: (s: StringData) => string,
   getFrameIdentityLabel: (r: Racquet) => string,
+  hybridRoleResult: { role: HybridRole },
+  partnerCards: HybridPartnerCard[],
 ): StringCompendiumDetailVm {
   const twScores = stringItem.twScore || {};
   const twuComposite = Math.round(
@@ -138,6 +182,9 @@ export function buildStringCompendiumDetailVm(
     strungWeight: frameResult.racquet.strungWeight,
   }));
 
+  const { role } = hybridRoleResult;
+  const partnerMeta = buildPartnerSectionMeta(role);
+
   return {
     twuComposite,
     name: stringItem.name,
@@ -153,5 +200,11 @@ export function buildStringCompendiumDetailVm(
     telemetryGroups: buildTelemetryGroups(stringItem),
     similarCards,
     bestFrameCards,
+    hybridRole: role,
+    hybridRoleLabel: buildHybridRoleLabel(role),
+    hybridRoleSubtext: buildHybridRoleSubtext(role, stringItem),
+    partnerCards,
+    partnerSectionTitle: partnerMeta.title,
+    partnerSectionSubtext: partnerMeta.subtext,
   };
 }

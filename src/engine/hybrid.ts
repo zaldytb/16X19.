@@ -2,7 +2,7 @@
 // Hybrid string interaction calculations
 
 import type { StringData, HybridMod } from './types';
-import { computePairingAffinity } from './pairingAffinity.js';
+import { computePairingAffinity, deriveEdgeAcuity } from './pairingAffinity.js';
 
 /**
  * PREDICTION LAYER 3 — Hybrid interaction analysis.
@@ -132,27 +132,28 @@ export function calcHybridInteraction(mainsData: StringData, crossesData: String
     }
 
     // ── Pairing affinity — physical interaction model ──
-    // Converts four dimension scores into attribute deltas. Each dimension
-    // is centered at 0.5 (neutral); above adds benefit, below adds penalty.
-    // Multipliers reflect the physical sensitivity of each attribute to each
-    // interaction dimension.
+    // Five physically grounded dimensions, each centered at 0.5 (neutral).
+    // edgeContactStress is a risk score (high = bad), routed to durabilityMod directly.
     const affinity = computePairingAffinity(mainsData, crossesData);
 
-    // Friction interaction -> snapback quality -> spin efficiency and feel
+    // D1: Sliding friction → snapback efficiency → spin and feel
     mods.spinMod += (affinity.frictionInteraction - 0.5) * 3;
     mods.feelMod += (affinity.frictionInteraction - 0.5) * 2;
 
-    // Stiffness differential -> load absorption -> comfort and dwell time (power)
-    mods.comfortMod += (affinity.stiffnessDifferential - 0.5) * 3;
-    mods.powerMod += (affinity.stiffnessDifferential - 0.5) * 1.5;
+    // D2: Platform compliance → cross absorbs shock → comfort and power dwell
+    mods.comfortMod += (affinity.platformCompliance - 0.5) * 3;
+    mods.powerMod   += (affinity.platformCompliance - 0.5) * 1.5;
 
-    // Geometry interaction -> mains rotation freedom -> spin consistency, control
-    mods.spinMod += (affinity.geometryInteraction - 0.5) * 2;
+    // D3: Pivot freedom (bidirectional) → clean mains return → spin consistency and control
+    mods.spinMod    += (affinity.geometryInteraction - 0.5) * 2;
     mods.controlMod += (affinity.geometryInteraction - 0.5) * 1;
 
-    // Spin compatibility -> response consistency -> feel, playability
-    mods.feelMod += (affinity.spinCompatibility - 0.5) * 2;
-    mods.playabilityMod += (affinity.spinCompatibility - 0.5) * 1.5;
+    // D4: Tension maintenance compatibility → control consistency over play duration
+    mods.controlMod     += (affinity.tensionMaintenanceDiff - 0.5) * 2.5;
+    mods.playabilityMod += (affinity.tensionMaintenanceDiff - 0.5) * 1.5;
+
+    // Db: Edge contact stress → durability notching risk (unidirectional — always negative)
+    mods.durabilityMod -= affinity.edgeContactStress * 4;
 
     mods._affinityBreakdown = affinity;
   }
@@ -177,6 +178,18 @@ export function calcHybridInteraction(mainsData: StringData, crossesData: String
       mods.durabilityMod -= 3;
       mods.comfortMod -= 1;
     }
+
+    // Shaped poly mains on soft cross: Hertzian edge stress notching penalty.
+    // Continuous function over acuity × tensionLoss so partial shapes get partial penalty.
+    // Threshold at tensionLoss=20 below which cross material is firm enough to resist.
+    {
+      const mainsAcuity = deriveEdgeAcuity(mainsData.shape);
+      const crossLoss = crossesData.tensionLoss || 0;
+      if (mainsAcuity > 0 && crossLoss > 20) {
+        const notchingRisk = mainsAcuity * ((crossLoss - 20) / 30);
+        mods.durabilityMod -= notchingRisk * 5;
+      }
+    }
   }
 
   // CASE 4: GUT MAINS + GUT CROSSES (full gut)
@@ -194,6 +207,20 @@ export function calcHybridInteraction(mainsData: StringData, crossesData: String
     mods.comfortMod += 1;
     mods.durabilityMod -= 1;
     mods.controlMod -= 1;
+  }
+
+  // ── Tension maintenance divergence penalty (all non-poly×poly cases) ──
+  // Case 2 (poly×poly) handles this through affinity D4 (tensionMaintenanceDiff).
+  // For all other material pairings, apply a direct penalty when tension-loss rates
+  // diverge significantly: the bed becomes geometrically asymmetric over play duration,
+  // degrading control consistency and setup longevity.
+  if (!(isPolyMains && isPolyCross)) {
+    const tensionDelta = Math.abs((mainsData.tensionLoss || 20) - (crossesData.tensionLoss || 20));
+    if (tensionDelta > 12) {
+      const excess = tensionDelta - 12;
+      mods.controlMod     -= excess * 0.15;
+      mods.playabilityMod -= excess * 0.10;
+    }
   }
 
   return mods;

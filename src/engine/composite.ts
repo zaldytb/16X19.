@@ -84,8 +84,20 @@ export function predictSetup(racquet: Racquet, stringConfig: StringConfig, frame
       launchMod: mainsMod.launchMod * 0.7 + crossesMod.launchMod * 0.3 + hybridMods.launchMod
     };
 
+    // Hybrid power ceiling: diminishing returns above threshold.
+    // Above ~78, additional power-profile contributions reduce shot certainty
+    // (control consistency and ball contact precision) rather than adding
+    // meaningful extra velocity. Applies only in the hybrid path where two
+    // power profiles are being compounded.
+    const HYBRID_POWER_THRESHOLD = 78;
+    const HYBRID_POWER_ABSORPTION = 0.45; // 55% of excess above threshold is returned
+    const rawHybridPower = mainsProfile.power * 0.7 + crossesProfile.power * 0.3;
+    const hybridPower = rawHybridPower <= HYBRID_POWER_THRESHOLD
+      ? rawHybridPower
+      : HYBRID_POWER_THRESHOLD + (rawHybridPower - HYBRID_POWER_THRESHOLD) * (1 - HYBRID_POWER_ABSORPTION);
+
     stringProfile = {
-      power: mainsProfile.power * 0.7 + crossesProfile.power * 0.3,
+      power: hybridPower,
       spin: mainsProfile.spin * 0.6 + crossesProfile.spin * 0.4,
       control: mainsProfile.control * 0.4 + crossesProfile.control * 0.6,
       feel: mainsProfile.feel * 0.7 + crossesProfile.feel * 0.3,

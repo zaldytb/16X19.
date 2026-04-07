@@ -177,11 +177,12 @@ export interface TensionMod {
 
 /** Pairing affinity breakdown for poly×poly hybrid interactions */
 export interface AffinityBreakdown {
-  frictionInteraction: number;
-  stiffnessDifferential: number;
-  geometryInteraction: number;
-  spinCompatibility: number;
-  total: number;
+  frictionInteraction: number;     // 0-1 — sliding friction efficiency at mains-cross interface
+  edgeContactStress: number;       // 0-1 — mains edge acuity × cross susceptibility; high = durability risk
+  platformCompliance: number;      // 0-1 — cross compliance as snapback platform
+  geometryInteraction: number;     // 0-1 — bidirectional pivot freedom (mains rotation × cross resistance)
+  tensionMaintenanceDiff: number;  // 0-1 — tension loss rate compatibility; high = compatible
+  total: number;                   // 0-1 weighted composite (excludes edgeContactStress)
 }
 
 /** Modifier deltas produced by calcHybridInteraction */

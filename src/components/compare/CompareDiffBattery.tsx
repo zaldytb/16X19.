@@ -44,49 +44,28 @@ export function CompareDiffBattery({ vm, onToggleShowAll }: Props) {
             <div className="diff-label">{row.label}</div>
             <div className="diff-battery-wrap">
               <div className="diff-battery-stack">
-                <div className="diff-battery">
-                  <div className="diff-battery-layers">
-                    {row.layers.map((layer) => (
-                      <div
-                        key={layer.slotId}
-                        className={`diff-bar-layer slot-${layer.slotId.toLowerCase()}`}
-                        style={{ top: `${layer.offsetPx}px` }}
-                      >
-                        <span className="stat-bar-track diff-bar-segments">
-                          {layer.segmentStates.map((isFilled, segIndex) => (
-                            <span
-                              key={segIndex}
-                              className={`stat-bar-segment diff-bar-segment ${isFilled ? 'is-filled' : 'empty'} slot-${layer.slotId.toLowerCase()}`}
-                              style={
-                                isFilled
-                                  ? ({ '--segment-color': layer.borderColor } as CSSProperties)
-                                  : undefined
-                              }
-                            />
-                          ))}
-                        </span>
+                {row.layers.map((layer) => (
+                  <div
+                    key={layer.slotId}
+                    className={`diff-battery-row slot-${layer.slotId.toLowerCase()}`}
+                  >
+                    <span className="diff-slot-label">{layer.slotId}</span>
+                    <span className="stat-bar-track diff-bar-track">
+                      {layer.segmentStates.map((isFilled, segIndex) => (
                         <span
-                          className="diff-bar-cap"
-                          style={{
-                            background: layer.borderColor,
-                            left: `calc(${Math.min(100, layer.value)}% - 5px)`,
-                          }}
+                          key={segIndex}
+                          className={`stat-bar-segment diff-bar-segment ${isFilled ? 'is-filled' : 'empty'} slot-${layer.slotId.toLowerCase()}`}
+                          style={
+                            isFilled
+                              ? ({ '--segment-color': layer.borderColor } as CSSProperties)
+                              : undefined
+                          }
                         />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="diff-value-chips">
-                  {row.valueChips.map((chip) => (
-                    <span
-                      key={chip.slotId}
-                      className="diff-value-chip"
-                      style={{ color: chip.color }}
-                    >
-                      {chip.slotId} {Math.round(chip.value)}
+                      ))}
                     </span>
-                  ))}
-                </div>
+                    <span className="diff-bar-value">{Math.round(layer.value)}</span>
+                  </div>
+                ))}
               </div>
             </div>
             <div className="diff-value">{row.diffPercentDisplay}</div>

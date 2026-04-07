@@ -13,6 +13,7 @@ import { setEditingSlot } from '../ui/pages/compare/hooks/useCompareState.js';
 import { addLoadoutToSlot } from '../ui/pages/compare/compare-slot-api.js';
 import { buildCompareSlotGridViewModel } from '../ui/pages/compare/compare-slot-grid-vm.js';
 import { buildCompareDiffBatteryViewModel } from '../ui/pages/compare/compare-diff-battery-vm.js';
+import { buildCompareVerdictViewModel } from '../ui/pages/compare/compare-verdict-vm.js';
 import {
   addSlot,
   cancelEditor,
@@ -25,6 +26,7 @@ import {
 import { CompareSlotGrid } from '../components/compare/CompareSlotGrid.js';
 import { CompareRadarChart } from '../components/compare/CompareRadarChart.js';
 import { CompareDiffBattery } from '../components/compare/CompareDiffBattery.js';
+import { CompareVerdict } from '../components/compare/CompareVerdict.js';
 import { CompareSlotEditorModal } from '../components/compare/CompareSlotEditorModal.js';
 
 function getConfiguredSlots(slots: ReturnType<typeof useCompareState>['slots']): CompareSlot[] {
@@ -53,6 +55,10 @@ export function Compare() {
   const diffVm = useMemo(
     () => buildCompareDiffBatteryViewModel(configuredSlots, 6, showAllStats),
     [configuredSlots, showAllStats],
+  );
+  const verdictVm = useMemo(
+    () => buildCompareVerdictViewModel(configuredSlots),
+    [configuredSlots],
   );
   const radarKey = useMemo(
     () => configuredSlots.map((slot) => `${slot.id}:${slot.loadout.id}:${slot.loadout.obs || 0}`).join('|'),
@@ -98,6 +104,8 @@ export function Compare() {
             />
           </div>
         </div>
+
+        <CompareVerdict vm={verdictVm} />
 
         <div className="compare-diff-section" id="compare-diff-container">
           <CompareDiffBattery

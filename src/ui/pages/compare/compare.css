@@ -358,6 +358,231 @@
   color: var(--dc-storm);
 }
 
+/* Verdict Section */
+.compare-verdict-section {
+  background: var(--dc-void-lift);
+  border: 1px solid var(--dc-border);
+  border-radius: 4px;
+  padding: clamp(1.25rem, 2.5vw, 2rem);
+  background-image:
+    radial-gradient(circle at bottom right, rgba(255, 69, 0, 0.04), transparent 50%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.015), transparent 100%);
+}
+
+.compare-verdict-container {
+  width: min(100%, 980px);
+  margin: 0 auto;
+}
+
+.compare-verdict-title-row {
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--dc-border);
+}
+
+.compare-verdict-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dc-platinum);
+}
+
+/* Summaries row */
+.compare-verdict-summaries {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.compare-verdict-summary-chip {
+  flex: 1;
+  min-width: 180px;
+  border: 1px solid var(--dc-border);
+  border-left-width: 3px;
+  border-radius: 2px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.compare-verdict-summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.compare-verdict-summary-slot {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.compare-verdict-summary-obs {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--dc-platinum);
+  letter-spacing: -0.02em;
+}
+
+.compare-verdict-summary-identity {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--dc-storm);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.compare-verdict-summary-wins {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.compare-verdict-summary-win-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--dc-accent);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 69, 0, 0.3);
+  padding: 1px 6px;
+  border-radius: 2px;
+}
+
+/* Overall verdict sentence */
+.compare-verdict-overall {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--dc-storm);
+  margin-bottom: 1.5rem;
+  padding-left: 0.75rem;
+  border-left: 2px solid var(--dc-accent);
+  font-style: italic;
+}
+
+/* Category groups grid */
+.compare-verdict-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.compare-verdict-group {
+  border: 1px solid var(--dc-border);
+  border-radius: 2px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.compare-verdict-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--dc-border);
+}
+
+.compare-verdict-group-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--dc-platinum);
+}
+
+.compare-verdict-winner-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 2px;
+}
+
+.compare-verdict-winner-badge.slot-a-accent {
+  color: rgba(175, 0, 0, 0.9);
+  background: rgba(175, 0, 0, 0.08);
+}
+
+.compare-verdict-winner-badge.slot-b-accent {
+  color: rgba(188, 160, 255, 0.95);
+  background: rgba(188, 160, 255, 0.1);
+}
+
+.compare-verdict-winner-badge.slot-c-accent {
+  color: rgba(210, 255, 74, 0.95);
+  background: rgba(210, 255, 74, 0.1);
+}
+
+.compare-verdict-winner-badge.tie {
+  color: var(--dc-storm);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* Stat rows inside group */
+.compare-verdict-stat-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.compare-verdict-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.compare-verdict-stat-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--dc-storm);
+  letter-spacing: 0.05em;
+}
+
+.compare-verdict-stat-values {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.compare-verdict-stat-chip {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--dc-storm);
+  padding: 0 4px;
+  border: 1px solid transparent;
+  border-radius: 2px;
+}
+
+.compare-verdict-stat-chip.is-max {
+  color: var(--dc-platinum);
+  font-weight: 600;
+  border-color: currentColor;
+}
+
+/* Insight text */
+.compare-verdict-insight {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--dc-storm);
+  margin: 0;
+  padding-top: 0.35rem;
+  border-top: 1px solid var(--dc-border);
+}
+
 /* Diff Battery Section */
 .compare-diff-section {
   background: var(--dc-void-lift);
@@ -439,31 +664,53 @@
 }
 
 .diff-battery {
-  position: relative;
   width: 100%;
-  min-height: 36px;
 }
 
-.diff-battery-layers {
-  position: relative;
-  min-height: 36px;
+.diff-battery-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.diff-bar-layer {
-  position: absolute;
-  left: 0;
-  width: 100%;
-  height: 10px;
-  overflow: visible;
+.diff-battery-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
 }
 
-.diff-bar-segments {
-  height: 100%;
+.diff-slot-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  min-width: 1.25rem;
+  text-align: center;
+}
+
+.diff-battery-row.slot-a .diff-slot-label {
+  color: #af0000;
+}
+
+.diff-battery-row.slot-b .diff-slot-label {
+  color: #bca0ff;
+}
+
+.diff-battery-row.slot-c .diff-slot-label {
+  color: #d2ff4a;
+}
+
+.diff-bar-track {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 0.125rem;
+  height: 0.5rem;
 }
 
 .diff-bar-segment {
   border-radius: 1px;
-  transition: transform 180ms ease, opacity 180ms ease, background-color 180ms ease;
+  transition: background-color 180ms ease;
 }
 
 .diff-bar-segment.empty {
@@ -472,53 +719,42 @@
 
 .diff-bar-segment.is-filled {
   background: var(--segment-color);
-  box-shadow: none;
 }
 
-.diff-bar-layer.slot-a .diff-bar-segment.is-filled {
-  transform: translateY(0);
+.diff-battery-row.slot-a .diff-bar-segment.is-filled {
+  background: #af0000;
+  box-shadow: 0 0 4px rgba(175, 0, 0, 0.4);
 }
 
-.diff-bar-layer.slot-b .diff-bar-segment.is-filled,
-.diff-bar-layer.slot-c .diff-bar-segment.is-filled {
-  opacity: 0.96;
+.diff-battery-row.slot-b .diff-bar-segment.is-filled {
+  background: #bca0ff;
+  box-shadow: 0 0 4px rgba(188, 160, 255, 0.35);
 }
 
-.diff-bar-layer.slot-b .diff-bar-segment.is-filled {
-  background: color-mix(in srgb, var(--segment-color) 88%, #ffffff 12%);
+.diff-battery-row.slot-c .diff-bar-segment.is-filled {
+  background: #d2ff4a;
+  box-shadow: 0 0 4px rgba(210, 255, 74, 0.3);
 }
 
-.diff-bar-layer.slot-c .diff-bar-segment.is-filled {
-  background: color-mix(in srgb, var(--segment-color) 90%, #ffffff 10%);
-}
-
-.diff-bar-cap {
-  position: absolute;
-  top: 50%;
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  transform: translateY(-50%);
-  box-shadow:
-    0 0 0 2px rgba(20, 20, 20, 0.85),
-    0 0 0 4px rgba(255, 255, 255, 0.04);
-}
-
-.diff-value-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-}
-
-.diff-value-chip {
+.diff-bar-value {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 0.2rem 0.4rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.035);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--dc-platinum-dim);
+  min-width: 1.75rem;
+  text-align: right;
+}
+
+.diff-battery-row.slot-a .diff-bar-value {
+  color: #af0000;
+}
+
+.diff-battery-row.slot-b .diff-bar-value {
+  color: #bca0ff;
+}
+
+.diff-battery-row.slot-c .diff-bar-value {
+  color: #d2ff4a;
 }
 
 .diff-value {
@@ -594,14 +830,6 @@
     grid-template-columns: minmax(0, 1fr);
     gap: 0.6rem;
     padding: 0.9rem;
-  }
-
-  .diff-battery {
-    min-height: 46px;
-  }
-
-  .diff-battery-layers {
-    min-height: 46px;
   }
 
   .diff-value,

@@ -8,6 +8,7 @@ import { generateBuildReason, generateTopBuilds, type Build } from '../../state/
 import { useCurrentSetup } from '../../hooks/useStore.js';
 import { buildCompBaseProfileVm } from '../../ui/pages/comp-base-profile-vm.js';
 import { buildCompRacketHeroVm } from '../../ui/pages/comp-racket-hero-vm.js';
+import { buildCompSimilarRacketsVm } from '../../ui/pages/comp-similar-rackets-vm.js';
 import { buildCompBuildCardsVm, buildCompSortTabsVm, type SortKeyVm } from '../../ui/pages/comp-top-builds-vm.js';
 import { filterRacquetsForHud, type CompFrameHudFilters } from '../../ui/pages/comp-hud-filters-vm.js';
 import { activateLoadout, switchMode } from '../../ui/pages/shell.js';
@@ -15,6 +16,7 @@ import { CompendiumBaseProfile } from './CompendiumBaseProfile.js';
 import { CompendiumFrameHud } from './CompendiumFrameHud.js';
 import { CompendiumFrameRoster } from './CompendiumFrameRoster.js';
 import { CompendiumRacketHero } from './CompendiumRacketHero.js';
+import { CompendiumSimilarRackets } from './CompendiumSimilarRackets.js';
 import { CompendiumStringModulator } from './CompendiumStringModulator.js';
 import { CompendiumTopBuilds } from './CompendiumTopBuilds.js';
 
@@ -157,6 +159,7 @@ export function RacketBibleTab({ focusedRacquetId }: RacketBibleTabProps) {
   const sortedBuilds = useMemo(() => [...builds].sort((left, right) => sortKey === 'score' ? right.score - left.score : (right.stats[sortKey] || 0) - (left.stats[sortKey] || 0)), [builds, sortKey]);
   const sortTabs = useMemo(() => buildCompSortTabsVm(sortKey), [sortKey]);
   const buildCards = useMemo(() => (frameBase ? buildCompBuildCardsVm(sortedBuilds, frameBase, generateBuildReason) : []), [frameBase, sortedBuilds]);
+  const similarCards = useMemo(() => (selectedRacquetId && frameBase ? buildCompSimilarRacketsVm(selectedRacquetId, frameBase) : []), [selectedRacquetId, frameBase]);
 
   return (
     <div className="comp-layout">
@@ -223,6 +226,10 @@ export function RacketBibleTab({ focusedRacquetId }: RacketBibleTabProps) {
               crossesSelect={<SearchableSelectMount registryKey="comp-crosses-select" type="string" placeholder="Select Cross String..." value={crossesId} onChange={(value) => { setCrossesId(value); setCrossesGauge(''); }} />}
             />
             <CompendiumBaseProfile groups={baseGroups} />
+            <CompendiumSimilarRackets
+              cards={similarCards}
+              onSelectRacquet={(id) => { setSelectedRacquetId(id); document.getElementById('comp-main')?.scrollTo(0, 0); }}
+            />
             <CompendiumTopBuilds
               sortTabs={sortTabs}
               cards={buildCards}

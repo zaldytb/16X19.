@@ -1,4 +1,9 @@
 import { lazy } from 'react';
+
+const CompassPage = lazy(async () => {
+  const module = await import('./Compass.js');
+  return { default: module.Compass };
+});
 import { Overview } from './Overview.js';
 
 const CompendiumPage = lazy(async () => {
@@ -77,4 +82,8 @@ export function MyLoadoutsWorkspace() {
       </div>
     </section>
   );
+}
+
+export function CompassWorkspace() {
+  return <CompassPage />;
 }

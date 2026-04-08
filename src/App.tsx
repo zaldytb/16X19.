@@ -33,6 +33,7 @@ import {
   LeaderboardWorkspace,
   HowItWorksWorkspace,
   MyLoadoutsWorkspace,
+  CompassWorkspace,
 } from './pages/Workspaces.js';
 
 function RouterRegistration() {
@@ -107,6 +108,7 @@ export default function App() {
             <Route path="leaderboard" element={<LeaderboardWorkspace />} />
             <Route path="how-it-works" element={<HowItWorksWorkspace />} />
             <Route path="my-loadouts" element={<MyLoadoutsWorkspace />} />
+            <Route path="compass" element={<CompassWorkspace />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

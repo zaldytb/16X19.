@@ -47,6 +47,16 @@ const modeIcons: Record<string, React.ReactNode> = {
       <path d="M2 11.5l3.5-3.5 2 2L11 5.5M11 5.5H8M11 5.5v3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
+  compass: (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+      <circle cx="7.5" cy="7.5" r="6" stroke="currentColor" strokeWidth="1.3" />
+      <line x1="7.5" y1="1" x2="7.5" y2="3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      <line x1="7.5" y1="11.5" x2="7.5" y2="14" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      <line x1="1" y1="7.5" x2="3.5" y2="7.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      <line x1="11.5" y1="7.5" x2="14" y2="7.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      <polygon points="7.5,4 9,9 7.5,8 6,9" fill="currentColor" opacity="0.7" />
+    </svg>
+  ),
 };
 
 const modes = [
@@ -55,6 +65,7 @@ const modes = [
   { id: 'tune', label: 'Tune', path: '/tune' },
   { id: 'compare', label: 'Compare', path: '/compare' },
   { id: 'optimize', label: 'Optimize', path: '/optimize' },
+  { id: 'compass', label: 'Compass', path: '/compass' },
 ];
 
 export function Header() {

@@ -12,6 +12,7 @@ const MODE_TO_PATH: Record<string, string> = {
   leaderboard: '/leaderboard',
   howitworks: '/how-it-works',
   myloadouts: '/my-loadouts',
+  compass: '/compass',
 };
 
 /**
@@ -29,6 +30,7 @@ const PATH_TO_MODE: Record<string, string> = {
   '/leaderboard': 'compendium',
   '/how-it-works': 'howitworks',
   '/my-loadouts': 'overview',
+  '/compass': 'compass',
 };
 
 export function modeToPath(mode: string): string {
